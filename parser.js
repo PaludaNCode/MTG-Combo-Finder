@@ -130,13 +130,48 @@
     };
   }
 
-  // Pulls the public deck id out of a Moxfield deck URL.
-  function moxfieldDeckId(url) {
-    const m = String(url || '').match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/);
-    return m ? m[1] : null;
+  // Extracts { commanders, main } from an Archidekt API deck payload
+  // (https://archidekt.com/api/decks/{id}/). Card categories decide the board:
+  // "Commander" -> commanders; categories flagged includedInDeck:false at the
+  // deck level (plus the usual Maybeboard/Sideboard names) are skipped.
+  function fromArchidekt(deck) {
+    const commanders = [];
+    const main = [];
+
+    const excluded = new Set(['maybeboard', 'sideboard', 'considering', 'wishlist']);
+    if (deck && Array.isArray(deck.categories)) {
+      for (const cat of deck.categories) {
+        if (cat && cat.includedInDeck === false && cat.name) {
+          excluded.add(String(cat.name).toLowerCase());
+        }
+      }
+    }
+
+    for (const entry of (deck && deck.cards) || []) {
+      if (!entry || typeof entry !== 'object') continue;
+      const card = entry.card || {};
+      const name = (card.oracleCard && card.oracleCard.name) || card.name || entry.name;
+      if (typeof name !== 'string' || !name) continue;
+      const cats = (entry.categories || []).map((c) => String(c).toLowerCase());
+      if (cats.some((c) => excluded.has(c))) continue;
+      const target = cats.includes('commander') ? commanders : main;
+      target.push({ card: name, quantity: entry.quantity || 1 });
+    }
+
+    return { commanders, main };
   }
 
-  const api = { parseDecklist, parseLine, fromMoxfield, moxfieldDeckId };
+  // Recognizes deck URLs from supported sites -> { site, id } or null.
+  function parseDeckUrl(url) {
+    const s = String(url || '');
+    let m = s.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/);
+    if (m) return { site: 'moxfield', id: m[1] };
+    m = s.match(/archidekt\.com\/(?:api\/)?decks\/(\d+)/);
+    if (m) return { site: 'archidekt', id: m[1] };
+    return null;
+  }
+
+  const api = { parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

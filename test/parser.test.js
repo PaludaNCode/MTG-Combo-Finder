@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { parseDecklist, parseLine, fromMoxfield, moxfieldDeckId } = require('../parser.js');
+const { parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl } = require('../parser.js');
 
 test('parseLine: plain name', () => {
   assert.deepStrictEqual(parseLine('Sol Ring'), { name: 'Sol Ring', quantity: 1, sideboardPrefix: false });
@@ -97,9 +97,35 @@ test('fromMoxfield: v2 flat shape', () => {
   assert.deepStrictEqual(deck.main, [{ card: 'Sol Ring', quantity: 1 }]);
 });
 
-test('moxfieldDeckId: extracts id from URL', () => {
-  assert.strictEqual(moxfieldDeckId('https://moxfield.com/decks/aBc123_-xyz'), 'aBc123_-xyz');
-  assert.strictEqual(moxfieldDeckId('https://www.moxfield.com/decks/aBc123/primer'), 'aBc123');
-  assert.strictEqual(moxfieldDeckId('https://example.com/nope'), null);
-  assert.strictEqual(moxfieldDeckId(''), null);
+test('parseDeckUrl: recognizes Moxfield and Archidekt URLs', () => {
+  assert.deepStrictEqual(parseDeckUrl('https://moxfield.com/decks/aBc123_-xyz'), { site: 'moxfield', id: 'aBc123_-xyz' });
+  assert.deepStrictEqual(parseDeckUrl('https://www.moxfield.com/decks/aBc123/primer'), { site: 'moxfield', id: 'aBc123' });
+  assert.deepStrictEqual(parseDeckUrl('https://archidekt.com/decks/12345/my_deck'), { site: 'archidekt', id: '12345' });
+  assert.deepStrictEqual(parseDeckUrl('https://www.archidekt.com/api/decks/9876/'), { site: 'archidekt', id: '9876' });
+  assert.strictEqual(parseDeckUrl('https://example.com/nope'), null);
+  assert.strictEqual(parseDeckUrl(''), null);
+});
+
+test('fromArchidekt: commander category and excluded boards', () => {
+  const deck = fromArchidekt({
+    categories: [
+      { name: 'Commander', includedInDeck: true },
+      { name: 'Cut cards', includedInDeck: false },
+    ],
+    cards: [
+      { quantity: 1, categories: ['Commander'], card: { oracleCard: { name: 'Kinnan, Bonder Prodigy' } } },
+      { quantity: 1, categories: ['Ramp'], card: { oracleCard: { name: 'Sol Ring' } } },
+      { quantity: 1, categories: ['Maybeboard'], card: { oracleCard: { name: 'Mystic Remora' } } },
+      { quantity: 1, categories: ['Cut cards'], card: { oracleCard: { name: 'Pithing Needle' } } },
+    ],
+  });
+  assert.deepStrictEqual(deck.commanders, [{ card: 'Kinnan, Bonder Prodigy', quantity: 1 }]);
+  assert.deepStrictEqual(deck.main, [{ card: 'Sol Ring', quantity: 1 }]);
+});
+
+test('fromArchidekt: tolerates missing categories and card.name fallback', () => {
+  const deck = fromArchidekt({
+    cards: [{ quantity: 2, card: { name: 'Island' } }],
+  });
+  assert.deepStrictEqual(deck.main, [{ card: 'Island', quantity: 2 }]);
 });

@@ -15,10 +15,10 @@
 
   <main>
     <form id="deck-form">
-      <label for="moxfield-url">Moxfield deck URL <span class="hint">(optional — fills the boxes below)</span></label>
+      <label for="deck-url">Deck URL <span class="hint">(Moxfield or Archidekt — fills the boxes below; other sites: paste their text export)</span></label>
       <div class="url-row">
-        <input type="url" id="moxfield-url" placeholder="https://moxfield.com/decks/…" autocomplete="off">
-        <button type="button" id="load-moxfield">Load</button>
+        <input type="url" id="deck-url" placeholder="https://moxfield.com/decks/… or https://archidekt.com/decks/…" autocomplete="off">
+        <button type="button" id="load-deck">Load</button>
       </div>
 
       <label for="commanders">Commander(s) <span class="hint">(one per line, optional)</span></label>
@@ -38,7 +38,8 @@
     <section id="results" hidden>
       <div id="identity"></div>
       <div id="included"></div>
-      <div id="almost"></div>
+      <div id="suggestions"></div>
+      <div id="offcolor"></div>
     </section>
   </main>
 
@@ -48,6 +49,7 @@
   </footer>
 
   <script src="parser.js"></script>
+  <script src="combos.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

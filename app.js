@@ -1,11 +1,12 @@
 // Page logic: reads the form, asks Commander Spellbook's find-my-combos
-// endpoint about the deck, renders the result.
+// endpoint about the deck, renders combos found + ranked card suggestions.
 (function () {
   'use strict';
 
   const SPELLBOOK_API = 'https://backend.commanderspellbook.com/find-my-combos';
   const SPELLBOOK_COMBO_URL = 'https://commanderspellbook.com/combo/';
   const MOXFIELD_API = 'https://api2.moxfield.com/v3/decks/all/';
+  const ARCHIDEKT_API = 'https://archidekt.com/api/decks/';
 
   const $ = (id) => document.getElementById(id);
 
@@ -22,18 +23,24 @@
     return node;
   }
 
+  function link(href, text) {
+    const a = el('a', null, text);
+    a.href = href;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    return a;
+  }
+
   // ---- Rendering -----------------------------------------------------------
 
-  function comboCard(variant) {
+  function comboCard(variant, deckNames) {
     const card = el('article', 'combo');
 
-    const cards = (variant.uses || [])
-      .map((u) => (u.card && u.card.name) || u.name)
-      .filter(Boolean);
     const header = el('h3');
-    cards.forEach((name, i) => {
+    DeckCombos.variantCardNames(variant).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
-      header.appendChild(el('span', 'card-name', name));
+      const inDeck = !deckNames || deckNames.has(DeckCombos.nameKey(name));
+      header.appendChild(el('span', inDeck ? 'card-name' : 'card-name missing', name));
     });
     card.appendChild(header);
 
@@ -57,28 +64,48 @@
 
     if (variant.id) {
       const p = el('p', 'combo-link');
-      const a = el('a', null, 'View on Commander Spellbook →');
-      a.href = SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/';
-      a.target = '_blank';
-      a.rel = 'noopener';
-      p.appendChild(a);
+      p.appendChild(link(SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
       card.appendChild(p);
     }
 
     return card;
   }
 
-  function renderSection(container, title, variants, emptyText) {
-    container.textContent = '';
-    container.appendChild(el('h2', null, title + (variants.length ? ` (${variants.length})` : '')));
-    if (!variants.length) {
-      if (emptyText) container.appendChild(el('p', 'empty', emptyText));
-      return;
-    }
-    variants.forEach((v) => container.appendChild(comboCard(v)));
+  function suggestionCard(suggestion, rank, deckNames) {
+    const card = el('article', 'combo suggestion');
+
+    const header = el('h3');
+    header.appendChild(el('span', 'rank', rank + '. '));
+    header.appendChild(el('span', 'card-name', suggestion.card));
+    header.appendChild(el('span', 'badge', '+' + suggestion.unlocks.length + ' combo' + (suggestion.unlocks.length === 1 ? '' : 's')));
+    card.appendChild(header);
+
+    const links = el('p', 'card-links');
+    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(suggestion.card), 'EDHREC'));
+    links.appendChild(document.createTextNode(' · '));
+    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + suggestion.card + '"'), 'Scryfall'));
+    card.appendChild(links);
+
+    const details = el('details');
+    details.appendChild(el('summary', null, 'Combos this unlocks'));
+    suggestion.unlocks.forEach((v) => details.appendChild(comboCard(v, deckNames)));
+    card.appendChild(details);
+
+    return card;
   }
 
-  function renderResults(results) {
+  function renderSuggestions(container, title, suggestions, deckNames, emptyText) {
+    container.textContent = '';
+    if (!suggestions.length && !emptyText) return;
+    container.appendChild(el('h2', null, title + (suggestions.length ? ` (${suggestions.length} cards)` : '')));
+    if (!suggestions.length) {
+      container.appendChild(el('p', 'empty', emptyText));
+      return;
+    }
+    suggestions.forEach((s, i) => container.appendChild(suggestionCard(s, i + 1, deckNames)));
+  }
+
+  function renderResults(results, deckNames) {
     $('results').hidden = false;
 
     const identity = $('identity');
@@ -87,21 +114,31 @@
       identity.appendChild(el('p', 'identity-line', 'Deck color identity: ' + String(results.identity).toUpperCase()));
     }
 
-    renderSection(
-      $('included'),
-      'Combos in your deck',
-      results.included || [],
-      'No known combos found in this deck.'
+    const included = results.included || [];
+    const includedEl = $('included');
+    includedEl.textContent = '';
+    includedEl.appendChild(el('h2', null, 'Combos in your deck' + (included.length ? ` (${included.length})` : '')));
+    if (included.length) {
+      included.forEach((v) => includedEl.appendChild(comboCard(v, null)));
+    } else {
+      includedEl.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
+    }
+
+    renderSuggestions(
+      $('suggestions'),
+      'Suggested additions — ranked by combos unlocked',
+      DeckCombos.computeSuggestions(results.almostIncluded || [], deckNames),
+      deckNames,
+      'No single-card additions would complete a combo (within your color identity).'
     );
 
-    const almost = results.almostIncluded || [];
-    renderSection(
-      $('almost'),
-      'One card away',
-      almost,
-      ''
+    renderSuggestions(
+      $('offcolor'),
+      'Outside your color identity',
+      DeckCombos.computeSuggestions(results.almostIncludedByAddingColors || [], deckNames),
+      deckNames,
+      '' // hide section entirely when empty
     );
-    if (!almost.length) $('almost').textContent = '';
   }
 
   // ---- API calls -----------------------------------------------------------
@@ -117,29 +154,36 @@
     return data.results || data;
   }
 
-  async function loadMoxfield() {
-    const url = $('moxfield-url').value.trim();
-    const id = DeckParser.moxfieldDeckId(url);
-    if (!id) {
-      setStatus('That does not look like a Moxfield deck URL (expected https://moxfield.com/decks/…).', true);
+  async function loadDeckUrl() {
+    const url = $('deck-url').value.trim();
+    const ref = DeckParser.parseDeckUrl(url);
+    if (!ref) {
+      setStatus('Unsupported deck URL — expected moxfield.com/decks/… or archidekt.com/decks/…. For other sites, paste the text export below.', true);
       return;
     }
-    setStatus('Loading deck from Moxfield…');
+    setStatus('Loading deck from ' + ref.site + '…');
     try {
-      const res = await fetch(MOXFIELD_API + encodeURIComponent(id));
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const deck = await res.json();
-      const { commanders, main } = DeckParser.fromMoxfield(deck);
+      let parsed;
+      if (ref.site === 'moxfield') {
+        const res = await fetch(MOXFIELD_API + encodeURIComponent(ref.id));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        parsed = DeckParser.fromMoxfield(await res.json());
+      } else {
+        const res = await fetch(ARCHIDEKT_API + encodeURIComponent(ref.id) + '/');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        parsed = DeckParser.fromArchidekt(await res.json());
+      }
+      const { commanders, main } = parsed;
       if (!main.length && !commanders.length) throw new Error('Deck appears to be empty');
       $('commanders').value = commanders.map((c) => c.card).join('\n');
       $('decklist').value = main.map((c) => `${c.quantity} ${c.card}`).join('\n');
-      setStatus(`Loaded ${main.length} cards${commanders.length ? ' + ' + commanders.length + ' commander(s)' : ''} from Moxfield.`);
+      setStatus(`Loaded ${main.length} cards${commanders.length ? ' + ' + commanders.length + ' commander(s)' : ''} from ${ref.site}.`);
     } catch (err) {
-      // Moxfield blocks cross-origin browser requests for some decks/setups;
-      // pasting the export is the reliable fallback.
+      // Some deck sites block cross-origin browser requests; pasting the
+      // site's text export is the reliable fallback.
       setStatus(
-        'Could not load the deck from Moxfield (' + err.message + '). ' +
-        'Open the deck on Moxfield, use More → Export → copy the list, and paste it below instead.',
+        'Could not load the deck from ' + ref.site + ' (' + err.message + '). ' +
+        'Use the site’s Export feature, copy the list, and paste it below instead.',
         true
       );
     }
@@ -167,7 +211,7 @@
     try {
       const results = await findCombos(commanders, main);
       setStatus('');
-      renderResults(results);
+      renderResults(results, DeckCombos.deckNameSet(commanders.concat(main)));
     } catch (err) {
       setStatus('Combo search failed: ' + err.message, true);
     } finally {
@@ -176,5 +220,5 @@
   }
 
   $('deck-form').addEventListener('submit', onSubmit);
-  $('load-moxfield').addEventListener('click', loadMoxfield);
+  $('load-deck').addEventListener('click', loadDeckUrl);
 })();

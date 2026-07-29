@@ -82,7 +82,22 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .combo h3 { margin: 0 0 .35rem; font-size: 1rem; }
 .card-name { color: var(--text); }
+.card-name.missing { color: var(--accent); font-style: italic; }
 .plus { color: var(--accent); font-weight: 700; }
+
+.suggestion .rank { color: var(--muted); }
+.badge {
+  margin-left: .6rem;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #17130a;
+  font-size: .8rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
+.suggestion details .combo { background: var(--panel-2); margin-top: .5rem; }
 .produces { margin: .25rem 0; color: var(--ok); font-size: .9rem; }
 .description p { margin: .35rem 0; color: var(--muted); font-size: .9rem; }
 summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
