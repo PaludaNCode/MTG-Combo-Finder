@@ -1,0 +1,96 @@
+:root {
+  --bg: #12141a;
+  --panel: #1b1e27;
+  --panel-2: #232734;
+  --text: #e8e9ee;
+  --muted: #9aa0b0;
+  --accent: #d4a24e;
+  --error: #e06c75;
+  --ok: #7bc275;
+  --radius: 10px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto;
+  max-width: 860px;
+  padding: 1.5rem 1rem 3rem;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+header h1 { margin: 0 0 .25rem; font-size: 1.7rem; }
+.tagline { margin: 0 0 1.5rem; color: var(--muted); }
+
+a { color: var(--accent); }
+
+form {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+label { font-weight: 600; margin-top: .5rem; }
+.hint { font-weight: 400; color: var(--muted); font-size: .85rem; }
+
+input, textarea, button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid #333a4d;
+  border-radius: 6px;
+  padding: .5rem .65rem;
+}
+
+textarea { resize: vertical; }
+
+input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.url-row { display: flex; gap: .5rem; }
+.url-row input { flex: 1; }
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  color: #17130a;
+  font-weight: 700;
+  border: none;
+}
+button:disabled { opacity: .6; cursor: wait; }
+#load-moxfield { flex: 0 0 auto; }
+#find-combos { margin-top: .75rem; padding: .65rem; }
+
+#status { min-height: 1.5em; color: var(--muted); }
+#status.error { color: var(--error); }
+
+.identity-line { color: var(--muted); }
+
+#results h2 { margin: 1.5rem 0 .75rem; font-size: 1.2rem; }
+.empty { color: var(--muted); }
+
+.combo {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: .85rem 1rem;
+  margin-bottom: .75rem;
+}
+.combo h3 { margin: 0 0 .35rem; font-size: 1rem; }
+.card-name { color: var(--text); }
+.plus { color: var(--accent); font-weight: 700; }
+.produces { margin: .25rem 0; color: var(--ok); font-size: .9rem; }
+.description p { margin: .35rem 0; color: var(--muted); font-size: .9rem; }
+summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
+.combo-link { margin: .5rem 0 0; font-size: .85rem; }
+
+footer { margin-top: 2.5rem; color: var(--muted); font-size: .85rem; }
+
+@media (max-width: 480px) {
+  body { padding: 1rem .6rem 2rem; }
+  .url-row { flex-direction: column; }
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MTG Combo Finder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>MTG Combo Finder</h1>
+    <p class="tagline">Paste a decklist and find the combos hiding in it — powered by the
+      <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook</a> database.</p>
+  </header>
+
+  <main>
+    <form id="deck-form">
+      <label for="moxfield-url">Moxfield deck URL <span class="hint">(optional — fills the boxes below)</span></label>
+      <div class="url-row">
+        <input type="url" id="moxfield-url" placeholder="https://moxfield.com/decks/…" autocomplete="off">
+        <button type="button" id="load-moxfield">Load</button>
+      </div>
+
+      <label for="commanders">Commander(s) <span class="hint">(one per line, optional)</span></label>
+      <textarea id="commanders" rows="2" placeholder="Kinnan, Bonder Prodigy"></textarea>
+
+      <label for="decklist">Decklist <span class="hint">(one card per line — plain names, or Moxfield/Arena exports like &quot;1 Sol Ring (C21) 263&quot;)</span></label>
+      <textarea id="decklist" rows="14" placeholder="1 Basalt Monolith
+1 Rings of Brighthearth
+1 Walking Ballista
+…"></textarea>
+
+      <button type="submit" id="find-combos">Find combos</button>
+    </form>
+
+    <p id="status" role="status"></p>
+
+    <section id="results" hidden>
+      <div id="identity"></div>
+      <div id="included"></div>
+      <div id="almost"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Combo data &amp; search by the <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook</a> project.
+      This site just asks it about <em>your</em> deck.</p>
+  </footer>
+
+  <script src="parser.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

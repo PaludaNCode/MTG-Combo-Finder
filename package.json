@@ -1,0 +1,9 @@
+{
+  "name": "mtg-combo-finder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paste an MTG decklist, find the combos in it (Commander Spellbook powered)",
+  "scripts": {
+    "test": "node --test"
+  }
+}
