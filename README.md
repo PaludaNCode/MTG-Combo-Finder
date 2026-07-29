@@ -62,6 +62,23 @@ for f in $(git ls-files '*.js'); do node --check "$f"; done
 npx serve .   # or python3 -m http.server
 ```
 
+## Branching strategy
+
+Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk-based,
+short-lived branches.
+
+1. Branch off `main`: `feat/<thing>` or `fix/<thing>`
+2. Push, open a PR — CI runs (`checks` job: JS syntax check + unit tests)
+3. Merge when green. Merging to `main` **is** the release: the deploy workflow fires
+   on push to `main` and publishes to GitHub Pages (once Pages is available — see
+   Deploying below).
+
+`main` should be protected: PRs need the `checks` job green before merge; force-pushes
+and deletion blocked. **Not enabled yet** — flip it on under
+Settings → Branches → Add branch ruleset (require status checks: `checks`) when ready;
+until then the flow above is convention. Repo admins can push directly in a pinch
+(escape hatch — prefer PRs).
+
 ## Deploying
 
 `.github/workflows/deploy.yml` publishes the repo root to GitHub Pages on every push
