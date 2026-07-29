@@ -14,7 +14,7 @@ because it literally asks Commander Spellbook's public API about your deck.
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
 - **Outside your color identity** — the same ranking for cards that would require changing
   your deck's colors, shown separately.
-- **Deck import** — paste a Moxfield or Archidekt deck URL, or paste any text export
+- **Deck import** — paste an Archidekt deck URL, or paste any site's text export
   (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
 
 ## How it works
@@ -45,9 +45,22 @@ the same data rather than independent sources:
 - The backend is open source: [SpaceCowMedia/commander-spellbook-backend](https://github.com/SpaceCowMedia/commander-spellbook-backend);
   API root at [backend.commanderspellbook.com](https://backend.commanderspellbook.com/).
 
-So "multi-site" here means multi-site **deck import** (Moxfield URL, Archidekt URL via its
+So "multi-site" here means multi-site **deck import** (Archidekt URL via its
 [public API](https://archidekt.com/api/decks/), text exports from everything else) rather
 than multiple combo databases.
+
+### Why Moxfield URLs can't be loaded
+
+Moxfield has no public API and deliberately gates `api2.moxfield.com`: requests need a
+User-Agent it whitelists on request, behind Cloudflare bot protection
+([moxfield-public#143](https://github.com/moxfield/moxfield-public/issues/143)). A browser
+can't satisfy either — `fetch` forbids setting `User-Agent`, a Cloudflare challenge can't be
+answered cross-origin, and no CORS headers come back. That's a deliberate access policy, not
+a bug to work around, so the app detects Moxfield links and points at the deck's Export
+instead of burning a request that cannot succeed. Routing through a public CORS proxy would
+circumvent that policy and put user decklists through an unrelated third party, so we don't.
+Loading Moxfield decks properly would need a small server of our own with a whitelisted
+User-Agent — a real option, but it ends the zero-backend design.
 
 ## Commands
 
