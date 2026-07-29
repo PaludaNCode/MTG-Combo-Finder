@@ -15,11 +15,13 @@
 
   <main>
     <form id="deck-form">
-      <label for="deck-url">Deck URL <span class="hint">(Moxfield or Archidekt — fills the boxes below; other sites: paste their text export)</span></label>
+      <label for="deck-url">Archidekt deck URL <span class="hint">(fills the boxes below)</span></label>
       <div class="url-row">
-        <input type="url" id="deck-url" placeholder="https://moxfield.com/decks/… or https://archidekt.com/decks/…" autocomplete="off">
+        <input type="url" id="deck-url" placeholder="https://archidekt.com/decks/…" autocomplete="off">
         <button type="button" id="load-deck">Load</button>
       </div>
+      <p class="note">Moxfield blocks other websites from reading decks, so its links can't be loaded here —
+        use <strong>More (…) → Export</strong> on the deck page and paste the list below. Same for any other site.</p>
 
       <label for="commanders">Commander(s) <span class="hint">(one per line, optional)</span></label>
       <textarea id="commanders" rows="2" placeholder="Kinnan, Bonder Prodigy"></textarea>

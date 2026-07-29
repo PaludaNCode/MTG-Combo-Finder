@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl } = require('../parser.js');
+const {
+  parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl, describeLoadFailure,
+} = require('../parser.js');
 
 test('parseLine: plain name', () => {
   assert.deepStrictEqual(parseLine('Sol Ring'), { name: 'Sol Ring', quantity: 1, sideboardPrefix: false });
@@ -98,12 +100,35 @@ test('fromMoxfield: v2 flat shape', () => {
 });
 
 test('parseDeckUrl: recognizes Moxfield and Archidekt URLs', () => {
-  assert.deepStrictEqual(parseDeckUrl('https://moxfield.com/decks/aBc123_-xyz'), { site: 'moxfield', id: 'aBc123_-xyz' });
-  assert.deepStrictEqual(parseDeckUrl('https://www.moxfield.com/decks/aBc123/primer'), { site: 'moxfield', id: 'aBc123' });
-  assert.deepStrictEqual(parseDeckUrl('https://archidekt.com/decks/12345/my_deck'), { site: 'archidekt', id: '12345' });
-  assert.deepStrictEqual(parseDeckUrl('https://www.archidekt.com/api/decks/9876/'), { site: 'archidekt', id: '9876' });
+  assert.strictEqual(parseDeckUrl('https://moxfield.com/decks/aBc123_-xyz').id, 'aBc123_-xyz');
+  assert.strictEqual(parseDeckUrl('https://www.moxfield.com/decks/aBc123/primer').site, 'moxfield');
+  assert.strictEqual(parseDeckUrl('https://archidekt.com/decks/12345/my_deck').id, '12345');
+  assert.strictEqual(parseDeckUrl('https://www.archidekt.com/api/decks/9876/').site, 'archidekt');
   assert.strictEqual(parseDeckUrl('https://example.com/nope'), null);
   assert.strictEqual(parseDeckUrl(''), null);
+});
+
+test('parseDeckUrl: Moxfield is flagged as un-loadable from a browser', () => {
+  const mox = parseDeckUrl('https://moxfield.com/decks/aBc123');
+  assert.strictEqual(mox.browserImport, false);
+  assert.match(mox.exportHint, /Export/);
+  assert.strictEqual(parseDeckUrl('https://archidekt.com/decks/1').browserImport, true);
+});
+
+test('describeLoadFailure: a blocked request is not reported as a missing deck', () => {
+  // Browsers surface a CORS/network block as a TypeError carrying no status.
+  const blocked = describeLoadFailure(new TypeError('Load failed'), 'moxfield');
+  assert.match(blocked, /blocked/i);
+  assert.doesNotMatch(blocked, /HTTP/);
+
+  const notFound = describeLoadFailure(Object.assign(new Error('HTTP 404'), { status: 404 }), 'archidekt');
+  assert.match(notFound, /private|check the URL/i);
+
+  const forbidden = describeLoadFailure(Object.assign(new Error('HTTP 403'), { status: 403 }), 'archidekt');
+  assert.match(forbidden, /private/i);
+
+  const odd = describeLoadFailure(Object.assign(new Error('HTTP 500'), { status: 500 }), 'archidekt');
+  assert.match(odd, /HTTP 500/);
 });
 
 test('fromArchidekt: commander category and excluded boards', () => {

@@ -52,6 +52,16 @@ textarea { resize: vertical; }
 
 input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
+.note {
+  margin: .1rem 0 0;
+  font-size: .85rem;
+  line-height: 1.45;
+  color: var(--muted);
+  border-left: 2px solid #333a4d;
+  padding-left: .6rem;
+}
+.note strong { color: var(--text); font-weight: 600; }
+
 .url-row { display: flex; gap: .5rem; }
 .url-row input { flex: 1; }
 

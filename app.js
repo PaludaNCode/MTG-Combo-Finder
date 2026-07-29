@@ -5,7 +5,6 @@
 
   const SPELLBOOK_API = 'https://backend.commanderspellbook.com/find-my-combos';
   const SPELLBOOK_COMBO_URL = 'https://commanderspellbook.com/combo/';
-  const MOXFIELD_API = 'https://api2.moxfield.com/v3/decks/all/';
   const ARCHIDEKT_API = 'https://archidekt.com/api/decks/';
 
   const $ = (id) => document.getElementById(id);
@@ -154,38 +153,43 @@
     return data.results || data;
   }
 
+  async function fetchJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = new Error('HTTP ' + res.status);
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
+  }
+
   async function loadDeckUrl() {
     const url = $('deck-url').value.trim();
     const ref = DeckParser.parseDeckUrl(url);
     if (!ref) {
-      setStatus('Unsupported deck URL — expected moxfield.com/decks/… or archidekt.com/decks/…. For other sites, paste the text export below.', true);
+      setStatus('That’s not a deck URL we can read. Archidekt links work here; for Moxfield and everywhere else, paste the deck’s text export below.', true);
       return;
     }
-    setStatus('Loading deck from ' + ref.site + '…');
+    if (!ref.browserImport) {
+      // Fetching would fail no matter what — say so up front instead of
+      // spending a round trip to show the same advice.
+      setStatus(ref.why + ' ' + ref.exportHint, true);
+      return;
+    }
+
+    setStatus('Loading deck from ' + ref.label + '…');
     try {
-      let parsed;
-      if (ref.site === 'moxfield') {
-        const res = await fetch(MOXFIELD_API + encodeURIComponent(ref.id));
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        parsed = DeckParser.fromMoxfield(await res.json());
-      } else {
-        const res = await fetch(ARCHIDEKT_API + encodeURIComponent(ref.id) + '/');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        parsed = DeckParser.fromArchidekt(await res.json());
-      }
+      const parsed = DeckParser.fromArchidekt(await fetchJson(ARCHIDEKT_API + encodeURIComponent(ref.id) + '/'));
       const { commanders, main } = parsed;
-      if (!main.length && !commanders.length) throw new Error('Deck appears to be empty');
+      if (!main.length && !commanders.length) {
+        setStatus(`That ${ref.label} deck came back empty. ${ref.exportHint}`, true);
+        return;
+      }
       $('commanders').value = commanders.map((c) => c.card).join('\n');
       $('decklist').value = main.map((c) => `${c.quantity} ${c.card}`).join('\n');
-      setStatus(`Loaded ${main.length} cards${commanders.length ? ' + ' + commanders.length + ' commander(s)' : ''} from ${ref.site}.`);
+      setStatus(`Loaded ${main.length} cards${commanders.length ? ' + ' + commanders.length + ' commander(s)' : ''} from ${ref.label}.`);
     } catch (err) {
-      // Some deck sites block cross-origin browser requests; pasting the
-      // site's text export is the reliable fallback.
-      setStatus(
-        'Could not load the deck from ' + ref.site + ' (' + err.message + '). ' +
-        'Use the site’s Export feature, copy the list, and paste it below instead.',
-        true
-      );
+      setStatus(DeckParser.describeLoadFailure(err, ref.site), true);
     }
   }
 

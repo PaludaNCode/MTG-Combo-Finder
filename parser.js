@@ -161,17 +161,57 @@
     return { commanders, main };
   }
 
-  // Recognizes deck URLs from supported sites -> { site, id } or null.
+  // Deck sites we can recognize, and whether a *browser* can read their API.
+  //
+  // Moxfield deliberately gates its API: requests need a User-Agent it has
+  // whitelisted on request, and Cloudflare bot protection sits in front. A page
+  // can't set User-Agent (fetch forbids it) or answer a Cloudflare challenge
+  // cross-origin, and no CORS headers come back either — so a static site can
+  // never load a Moxfield deck, however the URL is written. Don't attempt the
+  // fetch; send people straight to the export, which always works.
+  const SITES = {
+    moxfield: {
+      label: 'Moxfield',
+      browserImport: false,
+      why: 'Moxfield blocks deck reads from other websites.',
+      exportHint: 'Open the deck on Moxfield → More (…) → Export → copy, then paste below.',
+    },
+    archidekt: {
+      label: 'Archidekt',
+      browserImport: true,
+      why: '',
+      exportHint: 'Open the deck on Archidekt → Export → Text → copy, then paste below.',
+    },
+  };
+
+  // Recognizes deck URLs -> { site, id, label, browserImport, why, exportHint } or null.
   function parseDeckUrl(url) {
     const s = String(url || '');
     let m = s.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/);
-    if (m) return { site: 'moxfield', id: m[1] };
+    if (m) return Object.assign({ site: 'moxfield', id: m[1] }, SITES.moxfield);
     m = s.match(/archidekt\.com\/(?:api\/)?decks\/(\d+)/);
-    if (m) return { site: 'archidekt', id: m[1] };
+    if (m) return Object.assign({ site: 'archidekt', id: m[1] }, SITES.archidekt);
     return null;
   }
 
-  const api = { parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl };
+  // Turns a failed deck fetch into something the user can act on. A browser
+  // reports a blocked cross-origin request as a TypeError with no status
+  // ("Failed to fetch" in Chrome, "Load failed" in Safari), which is a very
+  // different problem from the deck being missing or private.
+  function describeLoadFailure(err, site) {
+    const label = (SITES[site] && SITES[site].label) || site;
+    const hint = (SITES[site] && SITES[site].exportHint) || 'Copy the deck’s text export and paste it below.';
+    const status = err && err.status;
+    if (status === 404) return `${label} has no public deck with that ID — check the URL, or that the deck isn’t private. ${hint}`;
+    if (status === 403) return `${label} refused the request (the deck may be private). ${hint}`;
+    if (status) return `${label} returned HTTP ${status}. ${hint}`;
+    return `Your browser blocked the request to ${label} — it doesn’t allow other websites to read decks. ${hint}`;
+  }
+
+  const api = {
+    parseDecklist, parseLine, fromMoxfield, fromArchidekt,
+    parseDeckUrl, describeLoadFailure, SITES,
+  };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
