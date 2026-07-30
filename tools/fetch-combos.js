@@ -18,19 +18,47 @@ const PAGE_SIZE = 100; // CustomPagination.max_limit
 const OUT = process.argv[2] || path.join(__dirname, '..', 'combos.json');
 const MAX_PAGES = Number(process.env.MAX_PAGES || 0); // 0 = no cap; set for smoke tests
 
+// Commander Spellbook rate-limits, and rightly so — this walks their whole
+// database. Pace the requests deliberately rather than going as fast as the
+// runner allows, and back off for a long time when asked to.
+// The first run sped up to ~4 requests/second once their cache warmed and was
+// rate-limited at ~12,000 combos. Hold to roughly one request per second.
+const DELAY_MS = Number(process.env.DELAY_MS || 750);
+const MAX_ATTEMPTS = 8;
+const MAX_BACKOFF_MS = 60_000;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function getJson(url, attempt = 1) {
+  let res;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (res.status === 429 || res.status >= 500) throw new Error('HTTP ' + res.status);
-    if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { fatal: true });
-    return await res.json();
-  } catch (err) {
-    if (err.fatal || attempt > 5) throw err;
-    const wait = 2 ** attempt * 500;
-    console.warn(`  retry ${attempt} after ${wait}ms (${err.message})`);
-    await new Promise((r) => setTimeout(r, wait));
+    res = await fetch(url, {
+      headers: { Accept: 'application/json', 'User-Agent': 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder)' },
+    });
+  } catch (networkErr) {
+    if (attempt >= MAX_ATTEMPTS) throw networkErr;
+    const wait = Math.min(MAX_BACKOFF_MS, 2 ** attempt * 1000);
+    console.warn(`  network retry ${attempt}/${MAX_ATTEMPTS} in ${wait}ms (${networkErr.message})`);
+    await sleep(wait);
     return getJson(url, attempt + 1);
   }
+
+  if (res.ok) return res.json();
+
+  const retryable = res.status === 429 || res.status >= 500;
+  if (!retryable || attempt >= MAX_ATTEMPTS) {
+    throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
+  }
+
+  // Honour Retry-After when the server tells us how long to wait; otherwise
+  // exponential backoff, capped high enough to actually outlast a rate limit.
+  const retryAfter = Number(res.headers.get('retry-after'));
+  const wait = Number.isFinite(retryAfter) && retryAfter > 0
+    ? Math.min(MAX_BACKOFF_MS, retryAfter * 1000)
+    : Math.min(MAX_BACKOFF_MS, 2 ** attempt * 1000);
+  console.warn(`  HTTP ${res.status} — waiting ${(wait / 1000).toFixed(0)}s (attempt ${attempt}/${MAX_ATTEMPTS})`);
+  await sleep(wait);
+  return getJson(url, attempt + 1);
 }
 
 // The API renders camelCase (CamelCaseJSONRenderer), but tolerate snake_case
@@ -85,13 +113,14 @@ async function main() {
       }
     }
     pages += 1;
-    if (pages % 20 === 0) console.log(`  ${pages} pages, ${combos.length} combos…`);
+    if (pages % 25 === 0) console.log(`  ${pages} pages, ${combos.length} combos…`);
     if (MAX_PAGES && pages >= MAX_PAGES) {
       console.log(`  stopping early at ${MAX_PAGES} pages (MAX_PAGES set)`);
       break;
     }
     url = page.next || null;
     if (!results.length) break;
+    if (url) await sleep(DELAY_MS);
   }
 
   if (!combos.length) throw new Error('No combos fetched — refusing to write an empty file');
@@ -110,5 +139,9 @@ async function main() {
 
 main().catch((err) => {
   console.error('Fetch failed:', err.message);
+  if (err.status === 429) {
+    console.error('Rate limited by Commander Spellbook even after backing off.');
+    console.error('Re-run later, or slow the walk down further with DELAY_MS=1500.');
+  }
   process.exit(1);
 });
