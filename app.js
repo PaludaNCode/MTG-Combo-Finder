@@ -101,15 +101,79 @@
     return card;
   }
 
-  function renderSuggestions(container, title, suggestions, deckNames, emptyText) {
+  // ---- collapsible sections -----------------------------------------------
+
+  // Remember which sections the reader closed, so a new search doesn't reopen
+  // everything they just tidied away.
+  const COLLAPSE_KEY = 'mtg-combo-finder.collapsed';
+
+  function readCollapsed() {
+    try {
+      return JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {};
+    } catch (err) {
+      return {}; // private mode, or someone put junk in there
+    }
+  }
+
+  function writeCollapsed(state) {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state));
+    } catch (err) {
+      /* not worth bothering the reader about */
+    }
+  }
+
+  // A titled section whose header is the collapse control. Using a real
+  // <button> gets keyboard and screen-reader behaviour for free.
+  function panel(container, key, title, count) {
     container.textContent = '';
-    if (!suggestions.length && !emptyText) return;
-    container.appendChild(el('h2', null, title + (suggestions.length ? ` (${suggestions.length} cards)` : '')));
-    if (!suggestions.length) {
-      container.appendChild(el('p', 'empty', emptyText));
+
+    const section = el('section', 'panel');
+    const head = el('button', 'panel-head');
+    head.type = 'button';
+    const bodyId = 'panel-' + key;
+    head.setAttribute('aria-controls', bodyId);
+
+    head.appendChild(el('span', 'chev', '▸'));
+    head.appendChild(el('h2', 'panel-title', title));
+    if (count != null) head.appendChild(el('span', 'panel-count', String(count)));
+
+    const body = el('div', 'panel-body');
+    body.id = bodyId;
+
+    const apply = (collapsed) => {
+      section.classList.toggle('is-collapsed', collapsed);
+      head.setAttribute('aria-expanded', String(!collapsed));
+      head.title = collapsed ? 'Expand' : 'Collapse';
+      body.hidden = collapsed;
+    };
+    apply(Boolean(readCollapsed()[key]));
+
+    head.addEventListener('click', () => {
+      const collapsed = !section.classList.contains('is-collapsed');
+      apply(collapsed);
+      const state = readCollapsed();
+      state[key] = collapsed;
+      writeCollapsed(state);
+    });
+
+    section.appendChild(head);
+    section.appendChild(body);
+    container.appendChild(section);
+    return body;
+  }
+
+  function renderSuggestions(container, key, title, suggestions, deckNames, emptyText) {
+    if (!suggestions.length && !emptyText) {
+      container.textContent = '';
       return;
     }
-    suggestions.forEach((s, i) => container.appendChild(suggestionCard(s, i + 1, deckNames)));
+    const body = panel(container, key, title, suggestions.length || null);
+    if (!suggestions.length) {
+      body.appendChild(el('p', 'empty', emptyText));
+      return;
+    }
+    suggestions.forEach((s, i) => body.appendChild(suggestionCard(s, i + 1, deckNames)));
   }
 
   function renderResults(results, deckNames) {
@@ -123,18 +187,17 @@
     }
 
     const included = results.included;
-    const includedEl = $('included');
-    includedEl.textContent = '';
-    includedEl.appendChild(el('h2', null, 'Combos in your deck' + (included.length ? ` (${included.length})` : '')));
+    const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
     if (included.length) {
-      included.forEach((v) => includedEl.appendChild(comboCard(v, null)));
+      included.forEach((v) => includedBody.appendChild(comboCard(v, null)));
     } else {
-      includedEl.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
+      includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
 
     renderSuggestions(
       $('suggestions'),
-      'Suggested additions — ranked by combos unlocked',
+      'suggestions',
+      'Suggested additions',
       DeckCombos.computeSuggestions(results.almostIncluded, deckNames),
       deckNames,
       'No single-card additions would complete a combo (within your color identity).'
@@ -142,6 +205,7 @@
 
     renderSuggestions(
       $('offcolor'),
+      'offcolor',
       'Outside your color identity',
       DeckCombos.computeSuggestions(results.almostIncludedByAddingColors, deckNames),
       deckNames,

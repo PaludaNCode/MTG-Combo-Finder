@@ -16,6 +16,20 @@ because it literally asks Commander Spellbook's public API about your deck.
   your deck's colors, shown separately.
 - **Deck import** — paste an Archidekt deck URL, or paste any site's text export
   (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
+- **Collapsible results** — every section header is a collapse control, and what
+  you close stays closed (kept in `localStorage`) across searches and visits.
+
+## Layout
+
+One column on phones and tablets; from 900px the decklist sits in a sticky left
+column beside the results, so you can edit the list while reading suggestions.
+Section headers are 48px tall for thumbs, and `tools/verify-layout.js` asserts
+all of it — see Commands.
+
+The layout test loads the page in a **sized iframe** rather than resizing the
+browser window: media queries follow the iframe's width, and the full Chrome
+build silently clamps `--window-size` to 500px, which quietly turned a "390px"
+run into a 500px one that proved nothing.
 
 ## How it works
 
@@ -152,6 +166,11 @@ node tools/fetch-combos.js
 
 # Unit tests (node:test, zero deps)
 npm test
+
+# Layout smoke test — REQUIRED after any UI change. Renders the real page at
+# 390/768/1440 px and fails on horizontal overflow, a collapse control that
+# doesn't collapse, or the desktop columns not splitting.
+npm run verify
 
 # Syntax-check everything (same as CI)
 for f in $(git ls-files '*.js'); do node --check "$f"; done

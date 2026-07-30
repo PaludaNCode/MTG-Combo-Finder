@@ -4,6 +4,7 @@
   "private": true,
   "description": "Paste an MTG decklist, find the combos in it (Commander Spellbook powered)",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "verify": "node tools/verify-layout.js"
   }
 }
