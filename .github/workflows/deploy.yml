@@ -22,6 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Stamp asset URLs with the commit SHA so fresh HTML always pulls fresh
+      # JS/CSS. Pages' CDN caches by full URL and a deploy purges nothing, so
+      # unversioned URLs can serve a stale page — or worse, new HTML with old
+      # JS — for up to ~20 minutes. index.html itself stays cacheable; this
+      # only guarantees the HTML and its assets always match.
+      - name: Cache-bust asset URLs with the commit SHA
+        run: |
+          sed -i "s/\(href=\"style\.css\|src=\"parser\.js\|src=\"combos\.js\|src=\"app\.js\)\"/\1?v=${GITHUB_SHA}\"/g" index.html
+          # Fail the deploy rather than publish a page that silently kept the
+          # old URLs — a rename here would otherwise go unnoticed.
+          test "$(grep -c "?v=${GITHUB_SHA}" index.html)" = "4"
+
+      - name: Stamp the build id so the page says what it is running
+        run: |
+          sed -i "s|<code id=\"build\">[^<]*</code>|<code id=\"build\">${GITHUB_SHA:0:7}</code>|" index.html
+          grep -q "<code id=\"build\">${GITHUB_SHA:0:7}</code>" index.html
+
       - uses: actions/configure-pages@v5
         with:
           enablement: true

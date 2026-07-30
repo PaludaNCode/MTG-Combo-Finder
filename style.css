@@ -320,6 +320,9 @@ button.result.more:hover { color: var(--text); filter: none; }
 summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 .combo-link { margin: .5rem 0 0; font-size: .85rem; }
 
+.build { margin: .4rem 0 0; font-size: .78rem; opacity: .75; }
+.build code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
 footer { margin-top: 2.5rem; color: var(--muted); font-size: .85rem; }
 
 @media (max-width: 480px) {
