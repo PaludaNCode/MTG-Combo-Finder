@@ -117,3 +117,27 @@ test('scanner: a keyed document still ignores earlier arrays', () => {
   for (let i = 0; i < doc.length; i += 5) push(doc.slice(i, i + 5));
   assert.deepStrictEqual(out.map((v) => v.id), ['keep']);
 });
+
+test('bodyChunks: gzipped bodies are decompressed, plain bodies pass through', async () => {
+  const zlib = require('node:zlib');
+  const { bodyChunks } = require('../tools/fetch-combos.js');
+  const text = '{"name":"Sol Ring","color_identity":[]}\n{"name":"Kinnan","color_identity":["G","U"]}\n';
+
+  const fakeRes = (buf, chunkSize) => ({
+    body: (async function* () {
+      for (let i = 0; i < buf.length; i += chunkSize) yield buf.subarray(i, i + chunkSize);
+    })(),
+  });
+  const collect = async (res) => {
+    let out = '';
+    const dec = new TextDecoder('utf-8');
+    for await (const c of bodyChunks(res)) out += dec.decode(c, { stream: true });
+    return out + dec.decode();
+  };
+
+  const gz = zlib.gzipSync(Buffer.from(text));
+  for (const size of [1, 13, 4096]) {
+    assert.strictEqual(await collect(fakeRes(gz, size)), text, `gzip chunk ${size}`);
+    assert.strictEqual(await collect(fakeRes(Buffer.from(text), size)), text, `plain chunk ${size}`);
+  }
+});

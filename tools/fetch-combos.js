@@ -12,6 +12,8 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const zlib = require('node:zlib');
+const { Readable } = require('node:stream');
 
 // The bulk export their own frontend reads (see commander-spellbook-site,
 // src/pages/combo-sitemap.xml.ts). One request for the whole database.
@@ -28,6 +30,46 @@ const MAX_ATTEMPTS = 5;
 const MAX_BACKOFF_MS = 60_000;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Scryfall serves its bulk files as .jsonl.gz — a gzipped *file*, not a
+// gzip-Content-Encoded response, so fetch hands back the compressed bytes
+// untouched and JSON.parse chokes on the \x1f\x8b header. Sniff the magic
+// number rather than trusting the URL or headers, so a body that fetch already
+// decompressed is passed straight through.
+async function* bodyChunks(res) {
+  const iterator = res.body[Symbol.asyncIterator]();
+
+  // Pull until at least two bytes are in hand: a chunk boundary must not be
+  // able to hide the magic number and silently skip decompression.
+  const parts = [];
+  let primed = 0;
+  while (primed < 2) {
+    const next = await iterator.next();
+    if (next.done) break;
+    parts.push(Buffer.from(next.value));
+    primed += next.value.length;
+  }
+  if (!parts.length) return;
+
+  const head = parts.length === 1 ? parts[0] : Buffer.concat(parts);
+  const rest = async function* () {
+    yield head;
+    for (let next = await iterator.next(); !next.done; next = await iterator.next()) {
+      yield next.value;
+    }
+  };
+
+  if (!(head.length > 1 && head[0] === 0x1f && head[1] === 0x8b)) {
+    yield* rest();
+    return;
+  }
+
+  const gunzip = zlib.createGunzip();
+  const source = Readable.from(rest());
+  source.on('error', (err) => gunzip.destroy(err));
+  source.pipe(gunzip);
+  yield* gunzip;
+}
 
 // The API renders camelCase (CamelCaseJSONRenderer), but tolerate snake_case
 // too so a change on their side degrades rather than silently empties the file.
@@ -159,7 +201,7 @@ async function streamVariants(url, onVariant, attempt = 1, key = 'variants') {
   const push = createVariantScanner(onVariant, key);
   const decoder = new TextDecoder('utf-8');
   let bytes = 0;
-  for await (const chunk of res.body) {
+  for await (const chunk of bodyChunks(res)) {
     bytes += chunk.length;
     push(decoder.decode(chunk, { stream: true }));
   }
@@ -191,7 +233,7 @@ async function streamJsonLines(url, onObject) {
       if (trimmed) onObject(JSON.parse(trimmed));
     }
   };
-  for await (const chunk of res.body) {
+  for await (const chunk of bodyChunks(res)) {
     buf += decoder.decode(chunk, { stream: true });
     flush(false);
   }
@@ -266,7 +308,7 @@ async function main() {
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, ${mb} MB`);
 }
 
-module.exports = { createVariantScanner, compact };
+module.exports = { createVariantScanner, compact, bodyChunks };
 
 if (require.main === module) {
   main().catch((err) => {
