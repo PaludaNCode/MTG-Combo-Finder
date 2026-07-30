@@ -19,5 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Investigate
+      - name: Investigate sources
         run: node tools/research-sources.js
+
+      - name: Investigate coverage
+        run: node tools/research-coverage.js
