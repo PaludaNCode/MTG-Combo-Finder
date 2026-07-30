@@ -1,0 +1,23 @@
+name: Research combo sources
+
+# Manual only. This is an investigation, not part of the build: it answers what
+# a Spellbook "template" contains, and where other sites get combos Spellbook
+# does not have. Nothing it produces is published — the output is a report in
+# the run summary for a person to read.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Investigate
+        run: node tools/research-sources.js
