@@ -58,13 +58,18 @@
 
     const shown = results.slice(0, RESULTS_SHOWN);
     const hidden = results.slice(RESULTS_SHOWN);
-    shown.forEach((r) => wrap.appendChild(el('span', r.win ? 'result win' : 'result', r.name)));
+    const chip = (r) => {
+      const node = el('span', 'result tier-' + r.tier, r.name);
+      if (r.why) node.title = r.why; // the caveat, on hover
+      return node;
+    };
+    shown.forEach((r) => wrap.appendChild(chip(r)));
 
     if (hidden.length) {
       const more = el('button', 'result more', '+' + hidden.length + ' more');
       more.type = 'button';
       more.addEventListener('click', () => {
-        hidden.forEach((r) => wrap.insertBefore(el('span', r.win ? 'result win' : 'result', r.name), more));
+        hidden.forEach((r) => wrap.insertBefore(chip(r), more));
         more.remove();
       });
       wrap.appendChild(more);

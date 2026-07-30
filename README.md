@@ -33,10 +33,26 @@ Two steps, because the raw data is noisy in two different ways:
    lists nothing but utilities, they're kept, since a combo with no stated
    result is worse than a vague one.
 2. **At render time**, `summarizeResults()` dedupes case- and
-   whitespace-insensitively and sorts wins to the front.
+   whitespace-insensitively and sorts results into three tiers.
 
 Their wording is left intact — rewriting "Infinite ETB triggers" into something
 snappier risks claiming the combo does something it doesn't.
+
+### Three tiers, because "does this win?" has three answers
+
+| Tier | Meaning | Style |
+|---|---|---|
+| `win` | The combo says so: *Win the game*, *Each opponent loses the game* | Filled green |
+| `decisive` | Ends most games without saying so | Outlined, with the caveat on hover |
+| `other` | Enablers — mana, storm count, untaps | Plain |
+
+The middle tier exists because a binary is wrong. **Infinite lifegain beats
+almost every deck, but poison ignores life totals entirely, and mill or an
+alternate win condition goes straight over the top of it.** Marking it a win
+would be false in exactly the games where the distinction matters; marking it a
+plain result undersells it. So it gets its own tier and each entry carries *why*
+it falls short, shown on hover. Same for infinite mill (Thassa's Oracle, a
+shuffle-back) and infinite turns (still needs something that closes).
 
 ## Layout
 

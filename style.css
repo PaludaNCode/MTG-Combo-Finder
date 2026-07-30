@@ -235,13 +235,27 @@ button:disabled { opacity: .6; cursor: wait; }
   box-shadow: inset 0 0 0 1px rgba(123, 194, 117, .3);
 }
 
-/* A result that ends the game is the one worth spotting first. */
-.result.win {
+/* A stated win is the one worth spotting first: filled, unmissable. */
+.result.tier-win {
   background: var(--ok);
   color: #10240f;
   font-weight: 650;
   box-shadow: none;
+  cursor: help;
 }
+
+/* Ends most games without saying so — infinite life, damage, mill, turns.
+   Deliberately not styled as a win: infinite life loses to poison, mill and
+   alternate win conditions, so overstating it would be a lie in the cases
+   that actually matter. Hover gives the caveat. */
+.result.tier-decisive {
+  background: var(--brass-soft, rgba(212, 162, 78, .14));
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(212, 162, 78, .45);
+  cursor: help;
+}
+
+.result.tier-other { color: var(--ok); }
 
 button.result.more {
   background: none;

@@ -49,7 +49,7 @@ const FIXTURE = {
   },
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
-      p: ['Infinite storm count', 'Win the game', 'Infinite colorless mana', 'Infinite ETB triggers', 'Infinite LTB triggers', 'Infinite untap'],
+      p: ['Infinite storm count', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite ETB triggers', 'Infinite LTB triggers', 'Infinite untap'],
       i: 'GU', pop: 50 },
     { id: '2', c: ['Basalt Monolith', 'Rings of Brighthearth'], p: ['Infinite colorless mana'], i: 'C', pop: 90 },
     { id: '3', c: ['Palinchron', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
@@ -80,7 +80,9 @@ function measure(win, doc) {
   }));
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
-    text: c.textContent, win: c.classList.contains('win'), more: c.classList.contains('more'),
+    text: c.textContent, win: c.classList.contains('tier-win'),
+    decisive: c.classList.contains('tier-decisive'), more: c.classList.contains('more'),
+    title: c.title || '',
   })) : [];
   const form = doc.querySelector('.col-input').getBoundingClientRect();
   const out = doc.querySelector('.col-output').getBoundingClientRect();
@@ -206,6 +208,9 @@ function serve(dir, extra) {
     // Empty chips must fail: otherwise every assertion below passes vacuously.
     if (!v.chips.length) problems.push('the first combo listed no results at all');
     if (v.chips.length && v.chips[0].win !== true) problems.push('a game-winning result was not listed first');
+    const decisive = v.chips.filter((c) => c.decisive);
+    if (!decisive.length) problems.push('the decisive tier rendered nothing');
+    if (decisive.some((c) => !c.title)) problems.push('a decisive result carries no explanation on hover');
     if (v.chips.length > 5) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
@@ -222,7 +227,7 @@ function serve(dir, extra) {
     if (!wide && v.sideBySide) problems.push('narrow viewport did not stack to one column');
 
     const layout = wide ? `two columns (${v.formWidth}px + ${v.outWidth}px)` : `stacked (${v.outWidth}px)`;
-    const chipNote = `${v.chips.length} result chips [${v.chips.map((c) => (c.win ? '*' : '') + c.text).join(', ')}]`;
+    const chipNote = `${v.chips.length} chips [${v.chips.map((c) => (c.win ? '*' : c.decisive ? '~' : '') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);

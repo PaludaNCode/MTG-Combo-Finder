@@ -95,7 +95,7 @@ test('summarizeResults: game-ending results come first', () => {
     'Infinite colorless mana',
   ]);
   assert.strictEqual(out[0].name, 'Win the game');
-  assert.strictEqual(out[0].win, true);
+  assert.strictEqual(out[0].tier, 'win');
   assert.deepStrictEqual(out.slice(1).map((r) => r.name), ['Infinite colorless mana', 'Infinite storm count']);
   assert.ok(out.slice(1).every((r) => r.win === false));
 });
@@ -108,12 +108,48 @@ test('summarizeResults: recognises the ways a combo can end a game', () => {
     'All opponents lose the game',
   ];
   for (const w of wins) {
-    assert.strictEqual(summarizeResults([w])[0].win, true, w);
+    assert.strictEqual(summarizeResults([w])[0].tier, 'win', w);
   }
-  // "Infinite lifegain" is great but is not a win, and must not be marked as one.
-  for (const notWin of ['Infinite lifegain', 'Infinite ETB triggers', 'Near-infinite damage']) {
-    assert.strictEqual(summarizeResults([notWin])[0].win, false, notWin);
+});
+
+test('summarizeResults: game-deciding results are their own tier, not wins', () => {
+  // Infinite life beats most decks but is not a win: poison ignores life
+  // totals, and mill or an alternate win condition goes over the top. Claiming
+  // it wins would be wrong in exactly the games where it matters.
+  for (const decisive of [
+    'Infinite lifegain',
+    'Infinite life',
+    'Near-infinite damage',
+    'Infinite damage to each opponent',
+    'Infinite mill',
+    'Infinite turns',
+    'Infinite combats',
+  ]) {
+    const r = summarizeResults([decisive])[0];
+    assert.strictEqual(r.tier, 'decisive', decisive);
+    assert.strictEqual(r.win, false, decisive + ' must not claim to win');
+    assert.ok(r.why.length > 0, decisive + ' should explain its caveat');
   }
+});
+
+test('summarizeResults: enablers stay plain results', () => {
+  for (const plain of ['Infinite colorless mana', 'Infinite ETB triggers', 'Infinite storm count', 'Infinite untap']) {
+    assert.strictEqual(summarizeResults([plain])[0].tier, 'other', plain);
+  }
+});
+
+test('summarizeResults: tiers sort win, then decisive, then the rest', () => {
+  const out = summarizeResults([
+    'Infinite storm count',
+    'Infinite lifegain',
+    'Win the game',
+    'Infinite colorless mana',
+    'Infinite mill',
+  ]);
+  assert.deepStrictEqual(out.map((r) => r.tier), ['win', 'decisive', 'decisive', 'other', 'other']);
+  assert.strictEqual(out[0].name, 'Win the game');
+  // Within a tier, alphabetical keeps the output stable.
+  assert.deepStrictEqual(out.slice(1, 3).map((r) => r.name), ['Infinite lifegain', 'Infinite mill']);
 });
 
 test('summarizeResults: duplicates collapse regardless of case or spacing', () => {
@@ -132,10 +168,11 @@ test('summarizeResults: blanks and nullish entries are dropped', () => {
   assert.deepStrictEqual(summarizeResults(null), []);
 });
 
-test('summarizeResults: ties are ordered alphabetically so output is stable', () => {
+test('summarizeResults: ordering is stable regardless of input order', () => {
   const names = ['Infinite damage', 'Infinite mill', 'Infinite untap', 'Infinite mana'];
   const first = summarizeResults(names).map((r) => r.name);
   const second = summarizeResults([...names].reverse()).map((r) => r.name);
   assert.deepStrictEqual(first, second);
-  assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mana', 'Infinite mill', 'Infinite untap']);
+  // Decisive results lead, each tier alphabetical within itself.
+  assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mill', 'Infinite mana', 'Infinite untap']);
 });
