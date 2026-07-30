@@ -213,6 +213,12 @@
     },
   ];
 
+  // A lock isn't unbounded in the "Infinite X" sense, so it sits outside the
+  // magnitude gate. The word boundary matters: "unlocking of Rooms" and
+  // "can't block" must not be caught by it.
+  const LOCK_RE = /\block(?:s|ed)?\b/i;
+  const LOCK_WHY = 'Stops opponents playing, but something still has to close the game out.';
+
   function classify(name) {
     if (WIN_RE.test(name)) {
       if (!WIN_NEGATED_RE.test(name)) {
@@ -223,6 +229,7 @@
         why: 'Reads like a win but is conditional or purely protective — it does not end the game by itself.',
       };
     }
+    if (LOCK_RE.test(name)) return { tier: 'decisive', why: LOCK_WHY };
     if (UNBOUNDED_RE.test(name)) {
       for (const entry of DECISIVE) {
         if (entry.re.test(name)) return { tier: 'decisive', why: entry.why };
@@ -231,13 +238,42 @@
     return { tier: 'other', why: '' };
   }
 
+  const TIER_RANK = { win: 0, decisive: 1, other: 2 };
+
+  // Splits results into what to show and what to fold away. Grey is quieter
+  // than the rest, not hidden — so a tier that is present never disappears
+  // entirely behind "+N more", even when a combo produces a dozen results.
+  function splitResults(results, limit) {
+    if (!Array.isArray(results)) return { shown: [], hidden: [] };
+    if (results.length <= limit) return { shown: results.slice(), hidden: [] };
+
+    const shown = results.slice(0, limit);
+    const hidden = results.slice(limit);
+
+    for (const tier of ['win', 'decisive', 'other']) {
+      const swapIn = hidden.findIndex((r) => r.tier === tier);
+      if (swapIn === -1 || shown.some((r) => r.tier === tier)) continue;
+
+      // Give up a slot from whichever tier is already best represented.
+      const counts = shown.reduce((acc, r) => Object.assign(acc, { [r.tier]: (acc[r.tier] || 0) + 1 }), {});
+      const fullest = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+      const dropAt = shown.map((r) => r.tier).lastIndexOf(fullest);
+      if (dropAt === -1) continue;
+
+      hidden.push(shown[dropAt]);
+      shown.splice(dropAt, 1);
+      shown.push(hidden.splice(swapIn, 1)[0]);
+    }
+
+    const byTier = (a, b) => (TIER_RANK[a.tier] - TIER_RANK[b.tier]) || a.name.localeCompare(b.name);
+    return { shown: shown.sort(byTier), hidden: hidden.sort(byTier) };
+  }
+
   // Commander Spellbook lists results as feature names. They arrive unordered,
   // sometimes repeated with different casing, and a long combo can produce a
   // dozen — so dedupe and rank rather than printing the raw list. Their wording
   // is left alone: rewriting "Infinite ETB triggers" into something snappier
   // risks saying something the combo does not actually do.
-  const TIER_ORDER = { win: 0, decisive: 1, other: 2 };
-
   function summarizeResults(names) {
     const seen = new Set();
     const out = [];
@@ -250,7 +286,7 @@
       const { tier, why } = classify(name);
       out.push({ name, tier, why, win: tier === 'win' });
     }
-    out.sort((a, b) => (TIER_ORDER[a.tier] - TIER_ORDER[b.tier]) || a.name.localeCompare(b.name));
+    out.sort((a, b) => (TIER_RANK[a.tier] - TIER_RANK[b.tier]) || a.name.localeCompare(b.name));
     return out;
   }
 
@@ -265,7 +301,7 @@
 
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
-    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces,
+    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
