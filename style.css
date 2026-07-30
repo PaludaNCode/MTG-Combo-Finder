@@ -380,12 +380,12 @@ button:disabled { opacity: .6; cursor: wait; }
   border-radius: 999px;
 }
 
-/* Green — the combo says it ends the game. Filled, so it reads at a glance
-   and nothing else competes with it. */
+/* Green — the combo says it ends the game. Same quiet tint-and-border
+   treatment as the yellow tier; the colour alone carries the meaning. */
 .result.tier-win {
-  background: var(--ok);
-  color: #10240f;
-  font-weight: 650;
+  background: rgba(123, 194, 117, .10);
+  color: var(--ok);
+  box-shadow: inset 0 0 0 1px rgba(123, 194, 117, .30);
   cursor: help;
 }
 
