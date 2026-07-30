@@ -1,0 +1,30 @@
+name: Who needs this template
+
+# Manual. Given a template name, prints which combos require it and — the part
+# that matters — which named cards demand it. A slot like "Nonartifact creature
+# with MV <= 5" is 14,368 cards, and whether that is useful or noise depends
+# entirely on the card asking for it. Reports only; publishes nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      template:
+        description: 'Template name (a substring is enough)'
+        required: true
+        default: 'Nonartifact creature with MV <= 5'
+
+permissions:
+  contents: read
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Find the combos
+        env:
+          TEMPLATE: ${{ inputs.template }}
+        run: node tools/template-users.js

@@ -1,24 +1,72 @@
-name: Measure template resolution
+name: Regenerate template card lists
 
-# Manual. Answers whether turning Spellbook's 135 queryable templates into real
-# card lists is practical: how many requests it takes, how big the result is,
-# and whether the resolved sets look right. Reports only — publishes nothing.
+# Manual, and rarely needed. Turns Commander Spellbook's templates ("a Persist
+# Creature") into the real card lists that fill them and commits templates.json
+# to the branch it was run from.
+#
+# Run it when the daily "Update combo data" job reports templates it has not
+# seen — that happens when a set ships, a few times a year. Doing this nightly
+# instead would cost 23 minutes and 465 Scryfall requests to learn that nothing
+# had changed.
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  measure:
+  regenerate:
     runs-on: ubuntu-latest
-    # The 40-page run took 15 minutes; lifting the cap and waiting out 503s
-    # makes it longer, and a timeout mid-run costs the whole measurement.
     timeout-minutes: 60
     steps:
+      # Never onto main: this repo's rule is branch -> PR -> checks -> merge, and
+      # a workflow with a write token is not an excuse to skip it.
+      - name: Refuse to run against the default branch
+        if: github.ref_name == github.event.repository.default_branch
+        run: |
+          echo "Run this from a branch; it commits templates.json and main is protected." >&2
+          exit 1
+
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - name: Resolve every template
-        run: node tools/research-resolve-templates.js
+        run: node tools/templates.js templates.json
+
+      - name: Commit the result
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Stage first, then compare the index. `git diff` alone only looks at
+          # tracked files, so the very first run — where templates.json is new —
+          # reported "unchanged" and threw away 16 minutes of resolving.
+          git add templates.json
+          if git diff --cached --quiet -- templates.json; then
+            echo "templates.json is unchanged — nothing to commit."
+            exit 0
+          fi
+          git commit -q -m "Regenerate template card lists"
+          git push -q origin "HEAD:${GITHUB_REF_NAME}"
+          echo "Committed templates.json to ${GITHUB_REF_NAME}. Open a PR for it."
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "## templates.json"
+            echo
+            if [ -f templates.json ]; then
+              node -e '
+                const t = require("./templates.json");
+                console.log("- " + Object.keys(t.templates).length + " templates resolved");
+                console.log("- " + Object.keys(t.unresolvable).length + " have no Scryfall query and stay excluded");
+                console.log("- " + Object.keys(t.cards).length + " distinct cards fill at least one");
+                console.log("- generated " + t.generatedAt);
+              '
+            else
+              echo "Nothing was written — the run failed."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
