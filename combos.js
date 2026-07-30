@@ -30,9 +30,24 @@
       .filter(Boolean);
   }
 
+  // How much of the world plays a combo. Spellbook publishes it per variant and
+  // the fetcher carries it through as `pop`; a variant without one counts as
+  // zero rather than as unknown, so ordering never depends on a missing field.
+  const popularity = (variant) => Number((variant && variant.pop) || 0);
+
+  // The most-played combo in a set of them. Used to rank a suggestion by the
+  // company it keeps: two cards each unlocking three combos are not equally
+  // good if one of them unlocks three combos nobody plays.
+  const bestPopularity = (variants) => (variants || []).reduce(
+    (best, v) => Math.max(best, popularity(v)), 0
+  );
+
+  const byPopularity = (a, b) => popularity(b) - popularity(a);
+
   // variants: Spellbook combo variants the deck is close to (e.g. almostIncluded).
   // deckNames: Set from deckNameSet() of every card already in the deck.
-  // Returns [{ card, unlocks: [variant, ...] }] sorted by combos unlocked desc.
+  // Returns [{ card, unlocks: [variant, ...] }], most combos unlocked first and
+  // the most-played combos breaking the ties.
   function computeSuggestions(variants, deckNames) {
     const byCard = new Map();
     for (const variant of variants || []) {
@@ -46,8 +61,13 @@
       }
       entry.unlocks.push(variant);
     }
+    // Inside a suggestion too: "combos this unlocks" should open on the one
+    // people actually play, not on whichever the database happened to list first.
+    for (const entry of byCard.values()) entry.unlocks.sort(byPopularity);
     return [...byCard.values()].sort(
-      (a, b) => b.unlocks.length - a.unlocks.length || a.card.localeCompare(b.card)
+      (a, b) => b.unlocks.length - a.unlocks.length
+        || bestPopularity(b.unlocks) - bestPopularity(a.unlocks)
+        || a.card.localeCompare(b.card)
     );
   }
 
@@ -97,7 +117,9 @@
     }
     for (const group of groups.values()) group.cards.sort((a, b) => a.localeCompare(b));
     return [...groups.values()].sort(
-      (a, b) => b.unlocks.length - a.unlocks.length || a.cards[0].localeCompare(b.cards[0])
+      (a, b) => b.unlocks.length - a.unlocks.length
+        || bestPopularity(b.unlocks) - bestPopularity(a.unlocks)
+        || a.cards[0].localeCompare(b.cards[0])
     );
   }
 
@@ -252,6 +274,13 @@
   // turn can strand a later slot whose only option is already spoken for, so
   // this is a real matching (Kuhn's algorithm) rather than a greedy pass. Slots
   // are few and candidates never leave the deck, so it costs nothing.
+  //
+  // Returns { filled, unfilled }: the card assigned to each slot, and the
+  // indexes of the slots nothing was left for. It does not stop at the first
+  // failure, because "which slot are you short of" is the useful answer — a
+  // combo whose every named card you own and whose one slot you cannot fill is
+  // a combo worth telling someone about. A failed augmenting path mutates
+  // nothing, so the slots that did match are still a real assignment.
   function assignSlots(slots) {
     const takenBy = new Map(); // card key -> index of the slot holding it
     const filled = new Array(slots.length).fill(null);
@@ -270,43 +299,118 @@
       return false;
     }
 
+    const unfilled = [];
     for (let i = 0; i < slots.length; i += 1) {
-      if (!assign(i, new Set())) return null;
+      if (!assign(i, new Set())) unfilled.push(i);
     }
-    return filled;
+    return { filled, unfilled };
   }
 
-  // How the deck fills a combo's template slots, or null when it cannot.
+  // How the deck stands against a combo's template slots: which the deck fills,
+  // and which it is short of. Null means the question cannot be asked at all.
   //
   // Cards the combo already names are not eligible: a slot is an extra card the
   // combo needs, not a second job for one that is already in it. Where that is
   // stricter than Spellbook intends we lose a combo rather than claim one that
   // does not work, which is the error worth making.
-  function fillTemplates(combo, byTemplate, templateNames) {
+  function resolveSlots(combo, byTemplate, templateNames) {
     const ids = combo.t;
-    if (!ids) return [];
+    if (!ids) return { fills: [], gaps: [] };
     // Data published before templates were resolved records only how many slots
     // a combo has, not which. There is nothing to check against, so those stay
     // excluded exactly as they were — the page and the data branch update
     // independently, and a stale combos.json must not start claiming combos.
     if (!Array.isArray(ids)) return null;
-    if (!ids.length) return [];
+    if (!ids.length) return { fills: [], gaps: [] };
 
+    const nameOf = (id) => (templateNames && templateNames[id]) || null;
     const named = new Set((combo.c || []).map(nameKey));
-    const slots = [];
-    for (const id of ids) {
-      const candidates = (byTemplate.get(id) || []).filter((c) => !named.has(c.key));
-      if (!candidates.length) return null;
-      slots.push(candidates);
+    const slots = ids.map((id) => (byTemplate.get(id) || []).filter((c) => !named.has(c.key)));
+
+    const { filled, unfilled } = assignSlots(slots);
+    const short = new Set(unfilled);
+    const fills = [];
+    const gaps = [];
+    ids.forEach((id, i) => {
+      if (short.has(i)) gaps.push({ id: id === undefined ? null : id, slot: nameOf(id) || 'an unnamed slot' });
+      else fills.push({ id, slot: nameOf(id) || 'a card', card: filled[i].name });
+    });
+    return { fills, gaps };
+  }
+
+  // How the deck fills a combo's template slots, or null when it cannot fill
+  // them all. A combo is claimed only when every slot has its own card.
+  function fillTemplates(combo, byTemplate, templateNames) {
+    const slots = resolveSlots(combo, byTemplate, templateNames);
+    if (!slots || slots.gaps.length) return null;
+    return slots.fills;
+  }
+
+  // ---- the cards that would fill a slot you are short of ---------------------
+  //
+  // A slot has no single card to suggest — 394 cards are a "Noncreature Artifact
+  // with MV<=1" — so this does not pretend to make a recommendation. It reports
+  // how many cards fill the slot, and names a few, ranked by how many of *your*
+  // blocked combos each one would complete. That ranking is read off your own
+  // list rather than from anything about the card.
+
+  // key -> the spelling Scryfall uses, front face only. The published template
+  // lists are keyed by comparison key, so without this a candidate could only be
+  // shown lowercased.
+  function spellingIndex(cardIdentity) {
+    const byKey = Object.create(null);
+    for (const name of Object.keys(cardIdentity || {})) {
+      const key = nameKey(name);
+      if (byKey[key]) continue;
+      byKey[key] = name.split('//')[0].trim();
+    }
+    return byKey;
+  }
+
+  // rows: the one-slot-away combos, each carrying its `gaps`.
+  // Returns { [templateId]: { total, inColour, names } } — `total` counts every
+  // card Spellbook's query matched, `names` only the ones your deck could play.
+  function slotCandidates(dataset, rows, deckNames, identity, limit) {
+    const wanted = new Map(); // template id (as string) -> combos waiting on it
+    for (const row of rows || []) {
+      for (const gap of (row && row.gaps) || []) {
+        if (gap.id === null || gap.id === undefined) continue;
+        const id = String(gap.id);
+        wanted.set(id, (wanted.get(id) || 0) + 1);
+      }
+    }
+    const out = Object.create(null);
+    if (!wanted.size) return out;
+
+    const lookup = (dataset && dataset.templateCards) || {};
+    const identities = identityIndex(dataset && dataset.cardIdentity);
+    const spelling = spellingIndex(dataset && dataset.cardIdentity);
+    for (const id of wanted.keys()) out[id] = { total: 0, inColour: 0, names: [] };
+
+    const scored = new Map(); // template id -> [{ name, score }]
+    for (const key of Object.keys(lookup)) {
+      const ids = (lookup[key] || []).map(String).filter((id) => wanted.has(id));
+      if (!ids.length) continue;
+      for (const id of ids) out[id].total += 1;
+      // A card you already play is not an addition, and a card outside your
+      // colours is noise — the same line the suggestion tabs draw.
+      if (deckNames && deckNames.has(key)) continue;
+      if (!withinIdentity({ i: identities[key] }, identity)) continue;
+      // How many of the combos you are short on this one card would complete.
+      const score = ids.reduce((sum, id) => sum + wanted.get(id), 0);
+      for (const id of ids) {
+        out[id].inColour += 1;
+        if (!scored.has(id)) scored.set(id, []);
+        scored.get(id).push({ name: spelling[key] || key, score });
+      }
     }
 
-    const filled = assignSlots(slots);
-    if (!filled) return null;
-    return filled.map((candidate, i) => ({
-      id: ids[i],
-      slot: (templateNames && templateNames[ids[i]]) || 'a card',
-      card: candidate.name,
-    }));
+    const cap = limit || 6;
+    for (const [id, cards] of scored) {
+      cards.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+      out[id].names = cards.slice(0, cap).map((c) => c.name);
+    }
+    return out;
   }
 
   // Splits the dataset against a deck the same way find-my-combos does:
@@ -318,11 +422,16 @@
   function matchDeck(dataset, deckNames, deckEntries) {
     const combos = (dataset && dataset.combos) || [];
     const identity = deckIdentity(dataset && dataset.cardIdentity, deckNames);
-    const templateNames = (dataset && dataset.templates) || {};
+    const templateNames = Object.assign(
+      {},
+      (dataset && dataset.unresolvable) || {}, // named, but no card list to match against
+      (dataset && dataset.templates) || {}
+    );
     const byTemplate = deckTemplateIndex(dataset, deckNames, deckEntries);
     const included = [];
     const almost = [];
     const almostByAddingColors = [];
+    const oneSlotAway = [];
 
     for (const combo of combos) {
       const cards = combo.c || [];
@@ -339,9 +448,26 @@
       // "a Creature with Haste" — so a combo counts only once the deck already
       // fills every slot it has. Unresolvable templates have no card list at
       // all, which lands here as "cannot fill" and keeps them excluded.
-      const fills = combo.t ? fillTemplates(combo, byTemplate, templateNames) : [];
-      if (!fills) continue;
-      const row = fills.length ? Object.assign({}, combo, { fills }) : combo;
+      const slots = combo.t ? resolveSlots(combo, byTemplate, templateNames) : { fills: [], gaps: [] };
+      if (!slots) continue;
+
+      if (slots.gaps.length) {
+        // Not claimable — but silence is the wrong answer. A deck holding every
+        // card a combo names and short of one slot is one card from the combo,
+        // and that card is a real deckbuilding decision. Reported apart from the
+        // combos the deck can actually assemble, and never counted among them.
+        //
+        // Only one gap, only when nothing else is missing, and only inside the
+        // deck's colours: two gaps is two cards away, and a slot whose id the
+        // data could not record has nothing to say about what would fill it.
+        if (missing === 0 && slots.gaps.length === 1 && slots.gaps[0].id !== null
+          && withinIdentity(combo, identity)) {
+          oneSlotAway.push(Object.assign({}, combo, { fills: slots.fills, gaps: slots.gaps }));
+        }
+        continue;
+      }
+
+      const row = slots.fills.length ? Object.assign({}, combo, { fills: slots.fills }) : combo;
 
       if (missing === 0) {
         included.push(row);
@@ -350,9 +476,21 @@
       }
     }
 
-    const byPopularity = (a, b) => (b.pop || 0) - (a.pop || 0);
+    // Most-played first, everywhere. The suggestion lists were left unsorted
+    // before, so "combos this unlocks" opened on whatever order the database
+    // happened to publish.
     included.sort(byPopularity);
-    return { identity, included, almostIncluded: almost, almostIncludedByAddingColors: almostByAddingColors };
+    almost.sort(byPopularity);
+    almostByAddingColors.sort(byPopularity);
+    oneSlotAway.sort(byPopularity);
+    return {
+      identity,
+      included,
+      oneSlotAway,
+      slotCandidates: slotCandidates(dataset, oneSlotAway, deckNames, identity),
+      almostIncluded: almost,
+      almostIncludedByAddingColors: almostByAddingColors,
+    };
   }
 
   // Normalizes a dataset combo into the shape the renderer expects, so the
@@ -363,9 +501,14 @@
       uses: (combo.c || []).map((name) => ({ card: { name } })),
       produces: (combo.p || []).map((name) => ({ feature: { name } })),
       identity: combo.i,
+      // Carried through so ranking survives expansion: the renderer sorts and
+      // groups these, and a dropped field would silently mean "unplayed".
+      pop: combo.pop,
       // Which of the deck's cards was credited with each template slot, so the
       // page can show it rather than asking anyone to take the match on trust.
       fills: combo.fills || undefined,
+      // And which slot it is short of, for the combos it cannot assemble.
+      gaps: combo.gaps || undefined,
     };
   }
 
@@ -483,7 +626,7 @@
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
-    deckTemplateIndex, fillTemplates,
+    deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

@@ -451,6 +451,12 @@ async function main() {
     count: combos.length,
     cardIdentity,
     templates,
+    // The 29 templates Spellbook gives no Scryfall query for, by name only.
+    // There is no card list to match against and there never will be, so these
+    // can never make a combo count — but a combo the deck is one slot short of
+    // is worth naming the slot for, and "Haste Enabler" says more than "id 84".
+    // tools/try-deck.js already reads this field.
+    unresolvable: templateData.unresolvable || {},
     templateCards,
     combos,
   };

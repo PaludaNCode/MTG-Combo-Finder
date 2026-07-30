@@ -144,6 +144,28 @@ async function main() {
   }
   say();
 
+  // What the page makes of that. The count above is every template blocking
+  // anything; this is the narrower set the page reports — one slot short, every
+  // named card present, inside the deck's colours — with what would fill it.
+  const stuck = matched.oneSlotAway.map(DeckCombos.expand);
+  say(`### One slot away (${stuck.length} shown on the page)`);
+  say();
+  if (!stuck.length) {
+    say('Nothing is one slot away, so the page shows no such section.');
+  } else {
+    for (const row of stuck.slice(0, 15)) {
+      const gap = (row.gaps || [])[0] || {};
+      const found = matched.slotCandidates[String(gap.id)] || {};
+      const examples = (found.names || []).slice(0, 4).join(', ');
+      say(`- ${DeckCombos.variantCardNames(row).join(' + ')} **+ ${gap.slot}** — `
+        + (found.total
+          ? `${found.total} card(s) fill it, ${found.inColour} in colour${examples ? `: ${examples}` : ''}`
+          : 'no card list published for it'));
+    }
+    if (stuck.length > 15) say(`- …and ${stuck.length - 15} more`);
+  }
+  say();
+
   say('| # | combo | slot filled by | best result |');
   say('|---:|---|---|---|');
   groups.forEach((g, i) => {

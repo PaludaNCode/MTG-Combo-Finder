@@ -11,10 +11,14 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 ## Features
 
 - **Combos in your deck** — every known combo your current 99 (or 60) can already pull off,
-  with what it produces, how it works, and a link to the combo's Spellbook page.
+  with what it produces and a link to the combo's Spellbook page for the steps.
 - **Suggested additions** — every combo you're *one card away* from, aggregated per missing
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
+  **Ties break on popularity** — see [Ranking, and what popularity is for](#ranking-and-what-popularity-is-for).
+- **One slot away** — combos you hold every named card for and cannot assemble because
+  nothing in your deck fills their slot ("a Persist Creature"). Reported separately, never
+  counted among the combos you have — see [Template slots](#template-slots-a-persist-creature).
 - **Interchangeable cards are one decision, not many** — Spellbook stores one variant per
   concrete card list, so a combo its own site shows as *"Spike Feeder + 1 of 8 cards"*
   arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
@@ -39,6 +43,14 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   cannot be wrong about it.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
+- **Your decklist survives a reload** — the list is the whole input, and losing it to a
+  refresh was a strange thing for this page to do. It's kept in `localStorage` (it never
+  leaves the browser), **Clear** empties it in one press, and **Copy link** puts the deck
+  in the URL so it can be shared or bookmarked. A link beats the stored list: opening
+  someone's deck means seeing theirs, not the one you were last working on.
+- **The data's date is on the page** — a footer line says which daily snapshot you're
+  looking at, and how it got there. That matters more now a copy is kept between visits;
+  see [Downloading the database once, not once a visit](#downloading-the-database-once-not-once-a-visit).
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
   results sort first and are highlighted, duplicates collapse, and anything past
   the fourth folds behind "+N more".
@@ -124,6 +136,30 @@ combos), LTB (57k), death triggers (45k), sacrifice triggers (43k). They explain
 hidden: up to eight results are listed before the rest fold behind "+N more", and
 `splitResults()` guarantees a tier that exists never disappears entirely into the
 fold.
+
+### Ranking, and what popularity is for
+
+Spellbook publishes a `popularity` per variant — how many decks in its own corpus play
+that combo — and the fetcher carries it through as `pop`. It used to order the combos
+you already have, and nothing else. Two consequences, both of them wrong:
+
+- **Suggestions ranked on count alone, ties broken alphabetically.** Two cards each
+  unlocking three combos are not equally good if one of them unlocks three combos nobody
+  plays, and `Aetherflux Reservoir` is not a better recommendation than `Basalt Monolith`
+  for being earlier in the alphabet.
+- **The lists inside a suggestion were never sorted at all.** "Combos this unlocks" opened
+  on whatever order the database happened to publish.
+
+Now: **most combos unlocked first, then the most-played of them, then alphabetical.** Count
+still leads — a card unlocking four combos beats one unlocking three however popular the
+three are — because "+N combos" is what the page claims and the ranking has to match it.
+Popularity decides between cards that make the same claim, and orders every list of combos
+on the page.
+
+Popularity is a tie-break rather than the ranking, and `pop` is absent from some variants:
+a missing one counts as zero, so ordering never depends on whether a field is there. With
+no popularity anywhere — old data, or a test fixture — the order falls back to alphabetical
+exactly as before.
 
 ### Collapsing interchangeable cards
 
@@ -252,10 +288,12 @@ for **544 combos that can never be filled**. That is the concrete cost of the
 
 Four rules, all of them about not overclaiming:
 
-- **A slot is filled or the combo does not appear.** There is no one card to
+- **A slot is filled or the combo is not counted.** There is no one card to
   suggest for "a Creature with Haste" — 612 cards fill it — so a template combo
   only counts once the deck already fills every slot it has. Templates with no
-  query (29 of 178) can never be filled and stay excluded, exactly as before.
+  query (29 of 178) can never be filled and are never counted, exactly as before.
+  What changed is that not counting a combo no longer means saying nothing about
+  it — see "One slot away" below.
 - **Every slot gets its own card.** A card cannot hold two slots, and a card the
   combo already names cannot also fill one. Assignment is a real matching
   (Kuhn's algorithm), not a greedy pass: taking the first candidate for each slot
@@ -269,6 +307,42 @@ Four rules, all of them about not overclaiming:
   existed records only a slot *count*, which is treated the same way — the page
   and the data branch update independently, and a stale `combos.json` must never
   start claiming combos.
+
+### One slot away
+
+Not counting a combo is right. *Silence* about it was not: a deck holding Rings of
+Brighthearth and short only of a Persist Creature is one card from a combo, and the
+old behaviour was to drop the row and mention nothing. It's now its own section,
+below the combos the deck can actually assemble and never counted among them.
+
+Four decisions, all narrowing:
+
+- **One gap, and nothing else missing.** Every card the combo names is in the deck and
+  exactly one slot is unfilled. Two unfilled slots is two cards away; a missing named card
+  *plus* a slot is likewise two, and the existing one-card-away suggestions already refuse
+  to cross that line.
+- **Inside the deck's colours.** A combo the deck could not legally run is not a decision
+  anyone has to make. (The off-colour tab exists for *suggestions*, where the card is the
+  subject; here the combo is.)
+- **A slot with no id says nothing.** `compact()` writes `null` for a requirement it could
+  not read, and data predating template resolution records only a slot count. Neither can
+  say what would fill it, so neither appears — the same rule as everywhere else here.
+- **It is not phrased as a recommendation.** There is no single card to recommend for a slot
+  394 cards fill. The row names the slot, counts the cards that fill it, says how many are
+  in your colours, and lists a few.
+
+Which few is itself read off the data: candidates are **ranked by how many of your own stuck
+combos each one would complete**, then alphabetically. A card that unsticks three of them is
+a better thing to know about than a card that unsticks one, and that ordering needs nothing
+known about the card itself. Cards already in the deck are never offered, and off-colour
+cards are counted but not named.
+
+**Making the slot nameable cost one field.** The published data carried names only for
+templates that resolved, so a combo blocked by *Haste Enabler* — one of the 29 with no
+Scryfall query — could only be described as needing "a card". `unresolvable` (43 short
+names, all told) is now published alongside, so the row reads "Needs Haste Enabler — no card
+list published for this slot yet". It cannot make a combo count, because matching only ever
+consults the card lists. `tools/try-deck.js` was already reading that field.
 
 **Resolving against the Scryfall bulk file was considered and rejected.** We
 already download it for colour identity, so it looks free. It isn't: the bulk
@@ -294,6 +368,18 @@ browser window: media queries follow the iframe's width, and the full Chrome
 build silently clamps `--window-size` to 500px, which quietly turned a "390px"
 run into a 500px one that proved nothing.
 
+It also runs the browser **on the real clock, and has the page POST its verdict back**
+to the test process. It used to run under `--virtual-time-budget --dump-dom`, which is
+tidier — one command, DOM on stdout — and stopped working the moment the search moved
+into a worker and started keeping a cached copy: under a virtual clock **`caches.open()`
+and a worker's `fetch` both return promises that never settle**, so Chrome waits forever
+for a page that cannot finish and prints nothing at all. Not a subtle failure, but a
+confusing one, since neither feature is visibly about timers. On the real clock the same
+page reports in ~450ms.
+
+That discovery is also why `search.js` never *waits* on the cache: see
+[Downloading the database once](#downloading-the-database-once-not-once-a-visit).
+
 ## How it works
 
 Static site, zero dependencies, no build step:
@@ -310,11 +396,16 @@ Static site, zero dependencies, no build step:
   against live data and flagging anything unclassified.
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
-  double-faced cards, ties broken alphabetically), and collapses interchangeable
+  double-faced cards, ties broken on popularity then alphabetically), works out which
+  template slots the deck fills and which it is short of, and collapses interchangeable
   cards via `groupSuggestions()` / `groupVariants()`.
-- `app.js` — reads the form, downloads the combo database, renders the sections
-  above. On failure it shows a copyable report (endpoint, HTTP status, what was
-  sent, which lines were skipped) instead of a bare "it didn't work".
+- `search.js` — downloading the database, keeping a copy, and running the match
+  (`ComboSearch`). No DOM, so it runs in a worker, in the page, or under Node.
+- `search-worker.js` — the worker that does all of the above off the thread drawing
+  the page. Imports the three files above.
+- `app.js` — reads the form, asks for a search, renders the sections above. On failure it
+  shows a copyable report (endpoint, HTTP status, what was sent, which lines were skipped)
+  instead of a bare "it didn't work".
 - `tools/fetch-combos.js` — downloads Commander Spellbook's bulk export and
   writes a compact `combos.json`. Run by CI, not by the page.
 
@@ -348,13 +439,52 @@ prices. The `data` branch is a build artifact — never branch from it or PR int
 Consequences worth knowing:
 
 - Combo data is as fresh as the last workflow run (daily cron + manual dispatch),
-  not live.
+  not live. Which snapshot you have is printed at the bottom of the page.
 - Combos requiring a *template* ("a Persist Creature") are excluded from
-  suggestions, since no single named card completes them — but not from results:
-  see "Template slots" above.
+  suggestions, since no single named card completes them — but not from results,
+  and no longer from the page: see "Template slots" and "One slot away" above.
 - Deck colour identity is the union of the colours of the cards pasted in. If
   none of them is recognised, colour filtering is switched off rather than
   guessed at.
+
+### Downloading the database once, not once a visit
+
+The published file is **2.9 MB on the wire** (~25 MB parsed), and
+`raw.githubusercontent.com` serves it with `cache-control: max-age=300`. So every visit
+downloaded the whole database again — and so did any reload five minutes into a session,
+to learn that a once-a-day cron had not run since. The parsed copy was held in a variable,
+which covers repeat searches in one visit and nothing else.
+
+It is now kept in **Cache Storage**, keyed on the URL. A visit that finds a copy uses it
+and checks for a newer one **in the background**, conditionally: `If-None-Match` against
+the stored ETag, so a 304 costs a few hundred bytes instead of 2.9 MB. When something has
+changed, the new copy is stored for next time rather than swapped in mid-session — the data
+refresh runs daily, so a page showing this morning's snapshot instead of this afternoon's
+is not worth a surprise. The footer says which one it is either way.
+
+**Nothing ever waits on the cache.** Every call to it is raced against a 1.5s deadline and
+a slow cache is treated as an absent one, because Cache Storage can do worse than fail: in
+headless Chrome under a virtual clock, `caches.open()` returns a promise that **never
+settles at all**. Awaiting one on the way to the data gives you a page that loads, says
+"Downloading the combo database…" and stays that way forever — strictly worse than not
+caching. Writes are never awaited either; storing a copy is next visit's business.
+
+That deadline is why `test/search.test.js` exists: a cache that hangs, a cache that
+throws, a cache that returns a stale copy, and a 304 versus a 200 are all cheap to fake
+and impossible to notice by hand.
+
+### The search runs beside the page, not in it
+
+Downloading ~25 MB of JSON, parsing it, and walking ~100k combos all used to happen
+between one paint and the next. None of it touches the DOM, so `search-worker.js` does
+all three off-thread and posts back only what gets drawn — a few hundred rows, not the
+database. The dataset is parsed once and kept there, so the second search of a session is
+a walk over data already in memory.
+
+A browser with no `Worker`, or a worker that fails to start or dies mid-search, falls back
+to searching in the page: slower, but working, and the same code either way — `search.js`
+is loaded both ways rather than duplicated. The layout test runs one viewport with `Worker`
+deleted from the page to prove the fallback isn't a branch nobody has ever executed.
 
 ### Colours come from the cards, not from a commander
 
@@ -498,7 +628,10 @@ npm test
 
 # Layout smoke test — REQUIRED after any UI change. Renders the real page at
 # 390/768/1440 px and fails on horizontal overflow, a collapse control that
-# doesn't collapse, or the desktop columns not splitting.
+# doesn't collapse, or the desktop columns not splitting. Also asserts the
+# behaviour that is invisible when it breaks: the kept copy of the database
+# being used on the second load, the decklist surviving a search, Clear
+# actually clearing, and the same output with Worker taken away.
 npm run verify
 
 # Syntax-check everything (same as CI)

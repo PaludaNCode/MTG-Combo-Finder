@@ -1,11 +1,12 @@
-// Page logic: reads the form, matches the deck against the combo database,
-// renders combos found + ranked card suggestions.
+// Page logic: reads the form, asks search.js to match the deck against the
+// combo database, renders combos found + ranked card suggestions.
 //
-// The matching happens here rather than through Commander Spellbook's
+// The matching happens on this side rather than through Commander Spellbook's
 // find-my-combos endpoint because that endpoint only accepts browser requests
 // from their own site and localhost. A GitHub Action publishes the database to
 // the `data` branch and we fetch it from there — the same split MTG-Pricerunner
-// uses for prices.
+// uses for prices. Downloading and matching it happens in a worker; this file
+// only draws what comes back.
 (function () {
   'use strict';
 
@@ -16,6 +17,17 @@
     : 'combos.json'; // local checkout / any other host
 
   const $ = (id) => document.getElementById(id);
+
+  // The deploy rewrites every asset URL in the HTML to carry `?v=<commit sha>`,
+  // because the Pages CDN caches by full URL and a deploy purges nothing — so
+  // unversioned URLs can serve new HTML with old JS. The worker is loaded from
+  // here rather than from the HTML, so it has to carry the same stamp, and this
+  // file's own URL is where to find it. No stamp locally, which is fine.
+  const ASSET_VERSION = (() => {
+    const src = (document.currentScript && document.currentScript.src) || '';
+    const query = src.indexOf('?');
+    return query === -1 ? '' : src.slice(query);
+  })();
 
   function setStatus(msg, isError) {
     const el = $('status');
@@ -134,17 +146,10 @@
 
     card.appendChild(resultChips(variant));
 
-    if (variant.description) {
-      const details = el('details');
-      details.appendChild(el('summary', null, 'How it works'));
-      const steps = el('div', 'description');
-      String(variant.description).split(/\r?\n/).forEach((line) => {
-        if (line.trim()) steps.appendChild(el('p', null, line.trim()));
-      });
-      details.appendChild(steps);
-      card.appendChild(details);
-    }
-
+    // No "how it works" here on purpose. Spellbook writes one, but the fetcher
+    // does not publish it (test/scanner.test.js pins that): a description for
+    // every one of ~100k combos would multiply the download the page already
+    // makes. The link below goes to the combo's own page, which has the steps.
     if (variant.id) {
       const p = el('p', 'combo-link');
       p.appendChild(link(SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
@@ -341,6 +346,92 @@
     return card;
   }
 
+  // How many cards that fill a slot to name before the number has to speak for
+  // itself. Six is enough to recognise what kind of card is wanted.
+  const CANDIDATES_SHOWN = 6;
+
+  // A combo you hold every named card for, and cannot assemble because nothing
+  // in the deck fills its slot. These used to be dropped in silence, which is
+  // the one thing they should not be: "you have Rings of Brighthearth and need
+  // any Persist Creature" is a deckbuilding decision, and an invisible one.
+  //
+  // It is deliberately not phrased as a suggestion. There is no single card to
+  // recommend for a slot 394 cards fill, so the row reports the slot, how many
+  // cards fill it, and a few of them — ranked by how many of *your* stuck combos
+  // each would complete, which is read off your own list.
+  function slotAwayCard(variant, candidates) {
+    const card = el('article', 'combo slot-away');
+
+    const header = el('h3');
+    DeckCombos.variantCardNames(variant).forEach((name, i) => {
+      if (i > 0) header.appendChild(el('span', 'plus', ' + '));
+      header.appendChild(el('span', 'card-name', name));
+    });
+    (variant.fills || []).forEach((fill) => {
+      header.appendChild(el('span', 'plus', ' + '));
+      const slot = el('span', 'slot', fill.slot);
+      slot.title = 'A slot, not a specific card — filled here by ' + fill.card;
+      header.appendChild(slot);
+    });
+    (variant.gaps || []).forEach((gap) => {
+      header.appendChild(el('span', 'plus', ' + '));
+      header.appendChild(el('span', 'slot slot-missing', gap.slot));
+    });
+    card.appendChild(header);
+
+    (variant.gaps || []).forEach((gap) => {
+      const need = el('p', 'gap');
+      const found = candidates && candidates[String(gap.id)];
+      if (!found || !found.total) {
+        // Spellbook attaches no Scryfall query to 29 of its templates, so there
+        // is no card list to offer. Saying so beats implying the slot is narrow.
+        need.appendChild(el('span', 'gap-label', 'Needs ' + gap.slot + ' — '));
+        need.appendChild(document.createTextNode('no card list published for this slot yet.'));
+        card.appendChild(need);
+        return;
+      }
+      need.appendChild(el('span', 'gap-label', 'Needs ' + gap.slot + ' — '));
+      need.appendChild(document.createTextNode(
+        found.total + ' card' + (found.total === 1 ? '' : 's') + ' fill it'
+        + (found.inColour < found.total ? `, ${found.inColour} in your colours` : '') + '.'
+      ));
+      card.appendChild(need);
+
+      if (found.names.length) {
+        const list = el('p', 'candidates');
+        list.appendChild(el('span', 'gap-label', 'For example: '));
+        found.names.slice(0, CANDIDATES_SHOWN).forEach((name, i) => {
+          if (i > 0) list.appendChild(document.createTextNode(' · '));
+          list.appendChild(el('span', 'card-name', name));
+          list.appendChild(cardLinks(name));
+        });
+        card.appendChild(list);
+      }
+    });
+
+    card.appendChild(resultChips(variant));
+
+    if (variant.id) {
+      const p = el('p', 'combo-link');
+      p.appendChild(link(SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
+      card.appendChild(p);
+    }
+
+    return card;
+  }
+
+  function renderSlots(container, rows, candidates) {
+    if (!rows.length) {
+      container.textContent = '';
+      return;
+    }
+    const body = panel(container, 'slots', 'One slot away', rows.length);
+    body.appendChild(el('p', 'empty',
+      'Every card these combos name is already in your deck. What each one is short of is a slot — '
+      + 'a kind of card rather than a specific one — so there is no single card to recommend.'));
+    rows.forEach((row) => body.appendChild(slotAwayCard(row, candidates)));
+  }
+
   function renderPieces(container, included) {
     if (!included.length) {
       container.textContent = '';
@@ -466,6 +557,8 @@
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
 
+    renderSlots($('slots'), results.oneSlotAway || [], results.slotCandidates || {});
+
     renderPieces($('pieces'), included);
 
     renderSuggestions(
@@ -478,52 +571,80 @@
   }
 
   // ---- combo database ------------------------------------------------------
+  //
+  // Downloading, parsing and matching all happen in search-worker.js. The
+  // published file is ~25 MB of JSON over ~100k combos, and doing that here
+  // meant the page stopped responding for as long as it took.
 
   // Everything we learn about a load, kept so a failure can be shown in full
-  // rather than reduced to "it didn't work".
+  // rather than reduced to "it didn't work". The worker sends it back with every
+  // reply, success or failure.
   let lastDiagnostics = null;
-  let dataset = null; // cached for the session — it's a few MB
+  let lastSent = {}; // what the last search was handed, for the failure report
+  let loadedOnce = false; // is the database already in the worker's memory?
+  let worker = null;
+  let useWorker = typeof Worker === 'function';
+  let inFlight = null; // only one search runs at a time — the button is disabled
 
-  async function loadDataset() {
-    if (dataset) return dataset;
+  function settle(reject, err) {
+    const entry = inFlight;
+    inFlight = null;
+    if (entry) (reject ? entry.reject : entry.resolve)(err);
+  }
 
-    const diag = { endpoint: DATA_URL, method: 'GET' };
-    lastDiagnostics = diag;
+  function startWorker() {
+    const w = new Worker('search-worker.js' + ASSET_VERSION);
+    w.addEventListener('message', (event) => {
+      const msg = event.data || {};
+      lastDiagnostics = msg.diagnostics || lastDiagnostics;
+      if (msg.ok) settle(false, msg);
+      else settle(true, Object.assign(new Error(msg.error.message), { name: msg.error.name }));
+    });
+    // A worker that cannot start, or dies mid-search, must not take the search
+    // with it — fall back to running in the page. Slower, but it works, and the
+    // alternative is a page that does nothing and cannot say why.
+    w.addEventListener('error', () => {
+      worker = null;
+      useWorker = false;
+      settle(true, Object.assign(new Error('the background worker failed'), { retryInPage: true }));
+    });
+    return w;
+  }
 
-    let res;
+  function workerSearch(entries) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!worker) worker = startWorker();
+      } catch (err) {
+        useWorker = false;
+        reject(Object.assign(new Error('no background worker available'), { retryInPage: true }));
+        return;
+      }
+      inFlight = { resolve, reject };
+      worker.postMessage({ url: new URL(DATA_URL, location.href).href, entries });
+    });
+  }
+
+  async function inPageSearch(entries) {
     try {
-      res = await fetch(DATA_URL, { cache: 'default' });
-    } catch (networkErr) {
-      diag.error = networkErr.name + ': ' + networkErr.message;
-      diag.likelyCause = DATA_URL.startsWith('http')
-        ? 'Could not download the combo database. Check your connection, or whether the data branch has been published yet.'
-        : 'No local combos.json. Run: node tools/fetch-combos.js';
-      throw networkErr;
-    }
-
-    diag.status = res.status;
-    diag.statusText = res.statusText;
-    if (!res.ok) {
-      diag.likelyCause = res.status === 404
-        ? 'The combo database has not been published yet — run the "Update combo data" workflow.'
-        : 'The combo database could not be downloaded.';
-      throw Object.assign(new Error('Combo database returned HTTP ' + res.status), { status: res.status });
-    }
-
-    const raw = await res.text();
-    try {
-      dataset = JSON.parse(raw);
+      const out = await ComboSearch.run(new URL(DATA_URL, location.href).href, entries);
+      lastDiagnostics = out.diagnostics;
+      return out;
     } catch (err) {
-      diag.responseSnippet = raw.slice(0, 400);
-      diag.likelyCause = 'The combo database is not valid JSON.';
-      throw new Error('Could not read the combo database');
+      lastDiagnostics = ComboSearch.diagnostics();
+      throw err;
     }
-    if (!dataset.combos || !dataset.combos.length) {
-      diag.likelyCause = 'The combo database downloaded but contains no combos.';
-      throw new Error('Combo database is empty');
+  }
+
+  async function runSearch(entries) {
+    if (useWorker) {
+      try {
+        return await workerSearch(entries);
+      } catch (err) {
+        if (!err || !err.retryInPage) throw err;
+      }
     }
-    diag.loaded = `${dataset.combos.length} combos, updated ${dataset.updatedAt || 'unknown'}`;
-    return dataset;
+    return inPageSearch(entries);
   }
 
   async function fetchJson(url) {
@@ -574,16 +695,23 @@
     const lines = [
       failed ? 'MTG Combo Finder — error report' : 'MTG Combo Finder — skipped-line report',
       'when:     ' + new Date().toISOString(),
-      'endpoint: ' + d.method + ' ' + d.endpoint,
+      'endpoint: ' + (d.method || 'GET') + ' ' + (d.endpoint || '(not reached)'),
       'status:   ' + (d.status ? d.status + ' ' + (d.statusText || '') : '(no response received)'),
+      // Where the data came from matters when the data is the problem: a bad
+      // parse of a kept copy and a bad download need different answers.
+      'data:     ' + (d.source || '(not loaded)'),
     ];
     if (failed) {
       lines.push('error:    ' + (d.error || err.name + ': ' + err.message));
       lines.push('cause:    ' + (d.likelyCause || 'unknown'));
     }
-    lines.push('sent:     ' + (d.sent ? d.sent.main + ' main + ' + d.sent.commanders + ' commanders' : '(nothing)'));
-    if (d.firstCards && d.firstCards.length) {
-      lines.push('first cards sent:', ...d.firstCards.map((c) => '  ' + c));
+    // Recorded before the search rather than after it, so a failure reports what
+    // it was given as readily as a success does.
+    lines.push('sent:     ' + (lastSent.sent
+      ? lastSent.sent.main + ' main + ' + lastSent.sent.commanders + ' commanders'
+      : '(nothing)'));
+    if (lastSent.firstCards && lastSent.firstCards.length) {
+      lines.push('first cards sent:', ...lastSent.firstCards.map((c) => '  ' + c));
     }
     if (d.loaded) lines.push('database: ' + d.loaded);
     if (parsed && parsed.skipped && parsed.skipped.length) {
@@ -621,6 +749,7 @@
   async function onSubmit(event) {
     event.preventDefault();
     $('diagnostics').hidden = true;
+    lastSent = {}; // so a report about this search never quotes the last one
 
     const parsed = DeckParser.parseDecklist($('decklist').value);
     const commanderParsed = DeckParser.parseDecklist($('commanders').value);
@@ -651,24 +780,21 @@
     }
 
     $('results').hidden = true;
-    setStatus(dataset
+    setStatus(loadedOnce
       ? `Searching combos for ${main.length + commanders.length} cards…`
       : 'Downloading the combo database (once per visit)…');
     $('find-combos').disabled = true;
+    const allEntries = commanders.concat(main);
+    lastSent = {
+      sent: { main: main.length, commanders: commanders.length },
+      firstCards: allEntries.slice(0, 5).map((c) => `${c.quantity} ${c.card}`),
+    };
     try {
-      const data = await loadDataset();
-      const allEntries = commanders.concat(main);
-      const deckNames = DeckCombos.deckNameSet(allEntries);
-
       // allEntries is passed so a card credited with a template slot is named
       // the way the decklist spelled it, not as its lowercased lookup key.
-      const matched = DeckCombos.matchDeck(data, deckNames, allEntries);
-      const results = {
-        identity: matched.identity,
-        included: matched.included.map(DeckCombos.expand),
-        almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
-        almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
-      };
+      const results = await runSearch(allEntries);
+      loadedOnce = true;
+      const deckNames = DeckCombos.deckNameSet(allEntries);
       // A sideboard being left out is the parser doing its job, not a problem
       // report. Only lines we could not make sense of are worth interrupting
       // over — a 26-card maybeboard raising a warning trains people to ignore it.
@@ -679,9 +805,11 @@
       if (ignored.length) notes.push(`${ignored.length} sideboard line(s) left out`);
       if (unparsed.length) notes.push(`${unparsed.length} line(s) not understood`);
       notes.push(...trimmed);
-      notes.unshift(`${data.combos.length.toLocaleString()} known combos`);
+      notes.unshift(`${(results.meta.count || 0).toLocaleString()} known combos`);
       setStatus('Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
       renderResults(results, deckNames);
+      renderDataAge(results.meta);
+      saveDeck();
       if (unparsed.length) showDiagnostics(null, parsed, 'notice');
     } catch (err) {
       setStatus('Combo search failed: ' + err.message, true);
@@ -691,6 +819,148 @@
     }
   }
 
+  // ---- how old the data is -------------------------------------------------
+  //
+  // The database is a daily snapshot, and which snapshot you are looking at is
+  // not something to have to guess at — especially now that a copy is kept
+  // between visits. `data-source` says where this one came from, which is also
+  // how the layout test can tell that caching is still working.
+  function renderDataAge(meta) {
+    const line = $('data-age');
+    if (!line) return;
+    const when = meta && meta.updatedAt;
+    if (!when) {
+      line.hidden = true;
+      return;
+    }
+    const date = new Date(when);
+    const shown = Number.isNaN(date.getTime())
+      ? String(when)
+      : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    const stamp = el('time', null, shown);
+    stamp.setAttribute('datetime', String(when));
+    line.textContent = '';
+    line.appendChild(document.createTextNode('Combo data from '));
+    line.appendChild(stamp);
+    line.appendChild(document.createTextNode(
+      ` · ${(meta.count || 0).toLocaleString()} combos · refreshed daily`
+    ));
+    line.dataset.source = meta.source || 'network';
+    line.title = meta.source === 'cache'
+      ? 'Read from the copy your browser kept, and checked for a newer one in the background.'
+      : 'Downloaded just now and kept for next time.';
+    line.hidden = false;
+  }
+
+  // ---- keeping the decklist ------------------------------------------------
+  //
+  // A reload used to lose whatever was pasted in, which is a strange thing for a
+  // page whose entire input is a long paste. The list is kept locally — it never
+  // leaves the browser — and a link can carry it deliberately.
+  const DECK_KEY = 'mtg-combo-finder.deck';
+
+  function saveDeck() {
+    try {
+      localStorage.setItem(DECK_KEY, JSON.stringify({
+        decklist: $('decklist').value,
+        commanders: $('commanders').value,
+      }));
+    } catch (err) {
+      /* private mode, or over quota — not worth bothering the reader about */
+    }
+  }
+
+  // base64url, because a decklist is full of newlines and commas and the URL has
+  // to survive being pasted into a chat window.
+  function encodeDeck(text) {
+    const bytes = new TextEncoder().encode(text);
+    let binary = '';
+    for (const b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function decodeDeck(param) {
+    const padded = param.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(padded + '='.repeat((4 - (padded.length % 4)) % 4));
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+
+  function shareLink() {
+    const url = new URL(location.href);
+    url.search = '';
+    url.searchParams.set('deck', encodeDeck($('decklist').value));
+    const commanders = $('commanders').value.trim();
+    if (commanders) url.searchParams.set('cmd', encodeDeck(commanders));
+    return url.href;
+  }
+
+  // A link wins over the stored list: someone who opens a shared deck means to
+  // see that deck, not the one they were last working on.
+  function restoreDeck() {
+    const params = new URLSearchParams(location.search);
+    if (params.has('deck')) {
+      try {
+        $('decklist').value = decodeDeck(params.get('deck'));
+        $('commanders').value = params.has('cmd') ? decodeDeck(params.get('cmd')) : '';
+        setStatus('Deck loaded from the link. Press “Find combos”.');
+        return;
+      } catch (err) {
+        setStatus('That shared link’s decklist could not be read — paste the list below instead.', true);
+      }
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem(DECK_KEY)) || {};
+      if (saved.decklist) $('decklist').value = saved.decklist;
+      if (saved.commanders) $('commanders').value = saved.commanders;
+    } catch (err) {
+      /* nothing kept, or junk in there */
+    }
+  }
+
+  function clearDeck() {
+    $('decklist').value = '';
+    $('commanders').value = '';
+    $('deck-url').value = '';
+    try {
+      localStorage.removeItem(DECK_KEY);
+    } catch (err) {
+      /* nothing to remove */
+    }
+    // Leaving ?deck= in the address bar would resurrect the list on reload.
+    if (location.search) history.replaceState(null, '', location.pathname);
+    $('results').hidden = true;
+    $('diagnostics').hidden = true;
+    const age = $('data-age');
+    if (age) age.hidden = true;
+    setStatus('Cleared.');
+    $('decklist').focus();
+  }
+
+  let saveTimer = null;
+  function saveDeckSoon() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDeck, 400);
+  }
+
   $('deck-form').addEventListener('submit', onSubmit);
   $('load-deck').addEventListener('click', loadDeckUrl);
+  $('decklist').addEventListener('input', saveDeckSoon);
+  $('commanders').addEventListener('input', saveDeckSoon);
+  $('clear-deck').addEventListener('click', clearDeck);
+  $('copy-link').addEventListener('click', () => {
+    const button = $('copy-link');
+    if (!$('decklist').value.trim() && !$('commanders').value.trim()) {
+      setStatus('Nothing to share yet — paste a decklist first.', true);
+      return;
+    }
+    const href = shareLink();
+    history.replaceState(null, '', href);
+    navigator.clipboard.writeText(href).then(
+      () => { button.textContent = 'Link copied'; setTimeout(() => { button.textContent = 'Copy link'; }, 2000); },
+      () => { setStatus('Could not copy — the link is in the address bar, copy it from there.'); }
+    );
+  });
+
+  restoreDeck();
 })();

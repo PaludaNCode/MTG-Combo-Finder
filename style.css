@@ -91,6 +91,19 @@ button:disabled { opacity: .6; cursor: wait; }
 #load-moxfield { flex: 0 0 auto; }
 #find-combos { margin-top: .75rem; padding: .65rem; }
 
+/* Clear and Copy link sit under the primary action and must not compete with
+   it — same 44px target, none of the emphasis. */
+.form-actions { display: flex; gap: .5rem; margin: .5rem 0 .6rem; }
+.form-actions button {
+  flex: 1;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-weight: 600;
+  border: 1px solid #333a4d;
+  min-height: 44px;
+}
+.form-actions button:hover { color: var(--text); }
+
 #status { min-height: 1.5em; color: var(--muted); }
 #status.error { color: var(--error); }
 
@@ -337,6 +350,21 @@ button:disabled { opacity: .6; cursor: wait; }
 .fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }
 .fills .card-name { color: var(--text); font-weight: 600; }
 
+/* The slot a combo is short of. Dashed, because unlike the slots above it is
+   not filled — the row is a gap, not a find. */
+.slot-missing {
+  box-shadow: none;
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+  font-style: italic;
+}
+.slot-away { border-left: 2px solid #4a536b; }
+.gap { margin: .2rem 0 .1rem; font-size: .85rem; color: var(--muted); }
+.gap-label { color: var(--text); font-weight: 600; }
+.candidates { margin: .1rem 0 .35rem; font-size: .85rem; color: var(--muted); }
+.candidates .card-name { color: var(--text); }
+.candidates .card-links { margin-left: .3rem; }
+
 /* The alternatives under a suggestion. Same job, same combos — worth listing,
    not worth shouting. */
 .alternatives {
@@ -419,9 +447,11 @@ button.result.more {
 button.result.more:hover { color: var(--text); filter: none; }
 
 .result-none { font-size: .82rem; color: var(--muted); font-style: italic; }
-.description p { margin: .35rem 0; color: var(--muted); font-size: .9rem; }
 summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 .combo-link { margin: .5rem 0 0; font-size: .85rem; }
+
+.data-age { margin: .4rem 0 0; font-size: .8rem; }
+.data-age time { color: var(--text); }
 
 .build { margin: .4rem 0 0; font-size: .78rem; opacity: .75; }
 .build code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }

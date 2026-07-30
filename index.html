@@ -33,6 +33,14 @@
 …"></textarea>
 
       <button type="submit" id="find-combos">Find combos</button>
+      <!-- The list is kept in this browser between visits, so "start over" has
+           to be one button rather than two selections and a delete. -->
+      <div class="form-actions">
+        <button type="button" id="clear-deck">Clear</button>
+        <button type="button" id="copy-link">Copy link</button>
+      </div>
+      <p class="note">Your decklist stays in this browser. <strong>Copy link</strong> puts it
+        in the address bar so you can share or bookmark the deck.</p>
     </form>
 
     <div class="col-output">
@@ -42,6 +50,10 @@
       <section id="results" hidden>
         <div id="identity"></div>
         <div id="included"></div>
+        <!-- Combos you hold every named card for and cannot assemble because
+             nothing fills their slot. Kept apart from the combos above, which
+             the deck can actually pull off. -->
+        <div id="slots"></div>
         <div id="pieces"></div>
         <div id="suggestions"></div>
       </section>
@@ -53,6 +65,9 @@
       This site just asks it about <em>your</em> deck.</p>
     <p>Wondering why a result is green, yellow or grey?
       <a href="tiers.html">See how every result is classified</a>.</p>
+    <!-- Which daily snapshot you are looking at, filled in after a search. It
+         matters more now that a copy is kept between visits. -->
+    <p class="data-age" id="data-age" hidden></p>
     <!-- Replaced with the commit SHA at deploy, so "am I seeing the new
          version or a cached one?" is answerable without guessing. -->
     <p class="build">Build <code id="build">local</code></p>
@@ -62,6 +77,10 @@
   <!-- The tier inventory has to be in place before combos.js reads it. -->
   <script src="result-tiers.js"></script>
   <script src="combos.js"></script>
+  <!-- The searching itself happens in search-worker.js, which imports the three
+       files above plus search.js. This copy is the fallback for a browser with
+       no Worker — see runSearch() in app.js. -->
+  <script src="search.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

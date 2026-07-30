@@ -3,8 +3,16 @@
 // then assert the things that silently break — horizontal overflow, collapsed
 // sections that don't collapse, and the desktop two-column split.
 //
-// Zero dependencies, so it drives a headless browser through --dump-dom and has
-// the page report its own verdict, rather than pulling in Playwright.
+// Zero dependencies, so it drives a headless browser directly and has the page
+// report its own verdict, rather than pulling in Playwright.
+//
+// The verdict comes back as a POST to this process's own server, and the browser
+// runs on the real clock. It used to run under --virtual-time-budget --dump-dom,
+// which is neater — one command, DOM on stdout — and cannot work here: with a
+// virtual clock, `caches.open()` and a Worker's `fetch` both return promises
+// that never settle, so Chrome waits for a page that can never finish and
+// prints nothing at all. Both are now on the path a search takes, so the clock
+// has to be real. (Measured: the same page reports in ~450ms in real time.)
 'use strict';
 
 const http = require('node:http');
@@ -12,10 +20,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 // Async, not execFileSync: this process is also the web server the browser
 // talks to, and a synchronous child would block the event loop so those
-// requests were never answered.
+// requests were never answered — including the one carrying the verdict.
 const { execFile } = require('node:child_process');
-const { promisify } = require('node:util');
-const execFileAsync = promisify(execFile);
 
 const ROOT = path.join(__dirname, '..');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
@@ -27,6 +33,10 @@ const VIEWPORTS = [
   // Same deck with the commander marker taken off. Nothing about the output
   // should change: colours are read off the cards either way.
   { name: 'desktop (no marker)', width: 1440, height: 900, deck: 'plain' },
+  // And once with Worker taken away from the page, which is the fallback path in
+  // app.js — searching in the window instead of beside it. Same output, or the
+  // fallback is a branch nobody has ever run.
+  { name: 'desktop (no worker)', width: 1440, height: 900, deck: 'marked', noWorker: true },
 ];
 
 function findBrowser() {
@@ -50,14 +60,25 @@ const FIXTURE = {
     'Palinchron': 'U', 'Deadeye Navigator': 'U', 'Great Whale': 'U',
     'Walking Ballista': '', 'Heliod, Sun-Crowned': 'W', 'Island': 'U',
     'Sword of the Meek': '', 'Bloom Tender': 'G', 'Devoted Druid': 'G',
+    'Murderous Redcap': 'BR',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
   // A combo slot that names a property rather than a card, and the deck's
   // Walking Ballista filling it. The rendered row has to say so — a combo that
   // appears because of a slot but cannot show which card filled it reads as
   // invented, which is the whole risk this feature carries.
-  templates: { 42: 'Creature with a Free Sacrifice Ability' },
-  templateCards: { 'walking ballista': [42], 'devoted druid': [42] },
+  templates: { 42: 'Creature with a Free Sacrifice Ability', 55: 'Persist Creature' },
+  // 84 is a template Spellbook publishes no Scryfall query for, so it has a name
+  // and can never have a card list — the "one slot away, and nothing to offer
+  // for it" case.
+  unresolvable: { 84: 'Haste Enabler' },
+  templateCards: {
+    'walking ballista': [42], 'devoted druid': [42],
+    // Neither is in the deck, so both are candidates for the slot combo 13 is
+    // short of. Bloom Tender is green, which the deck is; Murderous Redcap is
+    // not, and must be counted but not named.
+    'bloom tender': [55], 'murderous redcap': [55],
+  },
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
       p: ['Infinite ETB', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite LTB',
@@ -78,8 +99,15 @@ const FIXTURE = {
     { id: '5', c: ['Walking Ballista', 'Heliod, Sun-Crowned'], p: ['Infinite damage'], i: 'W' },
     // Complete only because the deck fills the slot.
     { id: '11', c: ['Rings of Brighthearth'], t: [42], p: ['Infinite damage'], i: 'C', pop: 70 },
-    // Same slot, but nothing in the deck fills it, so this must not appear.
-    { id: '12', c: ['Rings of Brighthearth'], t: [777], p: ['Infinite damage'], i: 'C', pop: 71 },
+    // Every named card present, one slot short. Not a combo the deck can pull
+    // off, so it must not be listed with those — and not a combo to say nothing
+    // about either, so it belongs in "One slot away" with the slot named and
+    // the cards that fill it offered. Bloom Tender is one; Murderous Redcap
+    // fills it too but is off-colour, so it is counted and not named.
+    { id: '13', c: ['Basalt Monolith'], t: [55], p: ['Infinite damage'], i: 'G', pop: 60 },
+    // Short of a slot Spellbook publishes no query for: nameable, never
+    // fillable, so the row has to admit there is nothing to offer.
+    { id: '12', c: ['Rings of Brighthearth'], t: [84], p: ['Infinite damage'], i: 'C', pop: 71 },
   ],
 };
 
@@ -152,6 +180,21 @@ function measure(win, doc) {
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
     comboIds: [...doc.querySelectorAll('#included .combo-link a')].map((a) => a.getAttribute('href')),
   };
+  // The combos held up by a slot the deck cannot fill: reported, apart from the
+  // ones it can assemble, and never counted among them.
+  const stuck = {
+    rows: doc.querySelectorAll('#slots .combo').length,
+    missing: [...doc.querySelectorAll('#slots .slot-missing')].map((e) => e.textContent),
+    needs: [...doc.querySelectorAll('#slots .gap')].map((e) => e.textContent),
+    candidates: [...doc.querySelectorAll('#slots .candidates .card-name')].map((e) => e.textContent),
+    comboIds: [...doc.querySelectorAll('#slots .combo-link a')].map((a) => a.getAttribute('href')),
+  };
+  const ageEl = doc.getElementById('data-age');
+  const dataAge = {
+    hidden: ageEl ? ageEl.hidden : null,
+    text: ageEl ? ageEl.textContent : '',
+    source: ageEl ? ageEl.dataset.source : null,
+  };
 
   // The combo count must count combos, not rows. Collapsing interchangeable
   // versions into one row is a readability choice; it must not quietly shrink
@@ -191,6 +234,8 @@ function measure(win, doc) {
     header,
     grouped,
     slots,
+    stuck,
+    dataAge,
     included,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
@@ -214,6 +259,9 @@ function runOne(vp) {
         const win = frame.contentWindow;
         const doc = frame.contentDocument;
         win.localStorage.clear();
+        // app.js reads Worker lazily, at the first search, so taking it away
+        // after load is enough to send it down the in-page path.
+        if (vp.noWorker) delete win.Worker;
         doc.getElementById('commanders').value = '';
         doc.getElementById('decklist').value = DECKS[vp.deck];
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
@@ -248,7 +296,21 @@ function runOne(vp) {
           stored: win.localStorage.getItem('mtg-combo-finder.collapsed'),
         };
         first.querySelector('.panel-head').click();
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse, expandedChips }));
+
+        // The decklist is kept between visits, so a search has to have stored
+        // it — and Clear has to actually empty it, list and copy both.
+        const storedDeck = win.localStorage.getItem('mtg-combo-finder.deck');
+        doc.getElementById('clear-deck').click();
+        await new Promise((r) => setTimeout(r, 40));
+        const afterClear = {
+          decklist: doc.getElementById('decklist').value,
+          commanders: doc.getElementById('commanders').value,
+          stored: win.localStorage.getItem('mtg-combo-finder.deck'),
+          resultsHidden: doc.getElementById('results').hidden,
+        };
+
+        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before,
+          { afterCollapse, expandedChips, storedDeck, afterClear }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -259,7 +321,7 @@ function runOne(vp) {
 
 (async () => {
   for (const vp of WIDTHS) results.push(await runOne(vp));
-  document.getElementById('verdict').textContent = JSON.stringify(results);
+  report(results);
 })();
 </script>`;
 
@@ -310,13 +372,33 @@ function runOne(vp) {
 }
 (async () => {
   for (const vp of WIDTHS) results.push(await runOne(vp));
-  document.getElementById('verdict').textContent = JSON.stringify(results);
+  report(results);
 })();
 </script>`;
 
-function serve(dir, extra) {
+// Both harnesses report the same way: whatever they measured, posted back to the
+// process that launched the browser. Also written into the page, so opening the
+// harness URL by hand still shows the verdict.
+const REPORTER = `<script>
+function report(results) {
+  const body = JSON.stringify(results);
+  document.getElementById('verdict').textContent = body;
+  fetch('/_verdict', { method: 'POST', body: body });
+}
+</script>`;
+
+function serve(dir, extra, onVerdict) {
   return http.createServer((req, res) => {
     const url = req.url.split('?')[0];
+    if (req.method === 'POST' && url === '/_verdict') {
+      let body = '';
+      req.on('data', (chunk) => { body += chunk; });
+      req.on('end', () => {
+        res.end('ok');
+        onVerdict(body);
+      });
+      return undefined;
+    }
     if (extra[url]) {
       res.setHeader('Content-Type', extra[url].type);
       return res.end(extra[url].body);
@@ -344,30 +426,39 @@ function serve(dir, extra) {
   // against data containing a result the inventory has never seen, which would
   // be wrong for the deck page.
   async function collect(fixture, harness, label) {
+    let deliver;
+    const posted = new Promise((resolve) => { deliver = resolve; });
     const server = serve(ROOT, {
       '/combos.json': { type: 'application/json', body: JSON.stringify(fixture) },
-      '/_page.html': { type: 'text/html', body: harness },
-    });
+      '/_page.html': { type: 'text/html', body: harness + REPORTER },
+    }, deliver);
     await new Promise((r) => server.listen(0, '127.0.0.1', r));
     const port = server.address().port;
-    let dom;
-    try {
-      ({ stdout: dom } = await execFileAsync(browser, [
-        '--headless', '--disable-gpu', '--no-sandbox',
-        '--window-size=1600,1200',
-        '--virtual-time-budget=15000', '--dump-dom',
-        `http://127.0.0.1:${port}/_page.html`,
-      ], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 120000 }));
-    } finally {
+
+    // Nothing tells the browser to quit — it is a browser — so it is killed once
+    // the verdict is in, or once it is clear one is not coming.
+    const child = execFile(browser, [
+      '--headless', '--disable-gpu', '--no-sandbox',
+      '--no-first-run', '--no-default-browser-check', '--disable-dev-shm-usage',
+      '--window-size=1600,1200',
+      `http://127.0.0.1:${port}/_page.html`,
+    ], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }, () => {});
+
+    let timer;
+    const body = await Promise.race([
+      posted,
+      new Promise((resolve) => { timer = setTimeout(() => resolve(null), 120000); }),
+    ]).finally(() => {
+      clearTimeout(timer);
+      child.kill();
       server.close();
-    }
-    const match = dom.match(/<pre id="verdict">([\s\S]*?)<\/pre>/);
-    if (!match || !match[1].trim()) {
+    });
+
+    if (!body || !body.trim()) {
       console.error(`${label} produced no verdict — it probably threw before reporting.`);
       process.exit(1);
     }
-    return JSON.parse(match[1]
-      .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
+    return JSON.parse(body);
   }
 
   const verdicts = await collect(FIXTURE, HARNESS, 'The deck page');
@@ -383,7 +474,7 @@ function serve(dir, extra) {
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    if (v.panels.length < 3) problems.push(`expected 3 panels, got ${v.panels.length}`);
+    if (v.panels.length < 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
@@ -445,6 +536,45 @@ function serve(dir, extra) {
     if (s.comboIds.some((href) => /\/12\//.test(href))) problems.push('a combo whose template nothing fills was listed as complete');
     if (!s.comboIds.some((href) => /\/11\//.test(href))) problems.push('the combo whose template the deck fills went missing');
 
+    // A combo the deck holds every named card for and cannot assemble is worth
+    // saying out loud, in its own section, naming the slot and what fills it.
+    // Dropping these in silence was the old behaviour.
+    const stuck = v.stuck;
+    if (stuck.rows < 2) problems.push(`expected 2 one-slot-away rows, got ${stuck.rows}`);
+    if (!stuck.comboIds.some((href) => /\/13\//.test(href))) problems.push('the combo one slot away was not reported');
+    if (s.comboIds.some((href) => /\/13\//.test(href))) problems.push('a combo one slot away was listed among the combos in the deck');
+    if (!stuck.missing.some((t) => /Persist Creature/.test(t))) problems.push(`the missing slot reads "${stuck.missing[0]}"`);
+    if (!stuck.needs.some((t) => /2 cards fill it, 1 in your colours/.test(t))) {
+      problems.push(`no row counted the cards that fill its slot: ${JSON.stringify(stuck.needs)}`);
+    }
+    if (!stuck.candidates.includes('Bloom Tender')) problems.push('the cards that fill the slot were not named');
+    if (stuck.candidates.includes('Murderous Redcap')) problems.push('an off-colour card was offered for a slot');
+    // Haste Enabler has no Scryfall query, so it can be named and never filled.
+    if (!stuck.needs.some((t) => /Haste Enabler/.test(t))) problems.push('a slot with no card list was not named');
+    if (!stuck.needs.some((t) => /no card list published/.test(t))) problems.push('a slot with no card list did not say so');
+
+    // Which daily snapshot is on screen, and whether the kept copy is being
+    // used. Caching that silently stops working costs 2.9 MB a visit and looks
+    // like nothing at all, so the source is asserted rather than trusted.
+    const age = v.dataAge;
+    if (age.hidden !== false) problems.push('the data date is not shown after a search');
+    if (!/Combo data from/.test(age.text)) problems.push(`the data date reads "${age.text}"`);
+    if (!new RegExp(`${FIXTURE.combos.length} combos`).test(age.text)) {
+      problems.push(`the data line does not count the combos: "${age.text}"`);
+    }
+    const expectSource = v === verdicts[0] ? 'network' : 'cache';
+    if (age.source !== expectSource) {
+      problems.push(`data came from "${age.source}", expected "${expectSource}" on run ${verdicts.indexOf(v) + 1}`);
+    }
+
+    // The decklist is the whole input; losing it on reload is the one thing a
+    // page like this must not do. And Clear has to actually clear.
+    if (!v.storedDeck || !/Basalt Monolith/.test(v.storedDeck)) problems.push('the decklist was not kept for the next visit');
+    const cleared = v.afterClear;
+    if (cleared.decklist || cleared.commanders) problems.push('Clear left the decklist behind');
+    if (cleared.stored) problems.push('Clear left the stored decklist behind');
+    if (!cleared.resultsHidden) problems.push('Clear left the results on screen');
+
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
     // Empty chips must fail: otherwise every assertion below passes vacuously.
@@ -489,7 +619,8 @@ function serve(dir, extra) {
     } else {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${chipNote}`);
+      const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 
