@@ -6,8 +6,13 @@
 
   // Card-name comparison key: lowercase, front face only (decklists usually
   // write "Valki, God of Lies" while Spellbook uses "Valki, God of Lies // Tibalt...").
+  //
+  // One slash or two: Spellbook and Scryfall write "//", but Moxfield exports a
+  // modal double-faced card as "Sorin of House Markov / Sorin, Ravenous Neonate",
+  // and that spelling matched nothing at all. No card name contains a slash, so
+  // splitting on a single one is safe.
   function nameKey(name) {
-    return String(name || '').split('//')[0].trim().toLowerCase();
+    return String(name || '').split('/')[0].trim().toLowerCase();
   }
 
   function deckNameSet(entries) {
@@ -61,9 +66,20 @@
   // Only if neither is recognizable does this return null, meaning "no idea,
   // don't filter".
   // name -> colour-identity string, keyed the way decklists spell cards.
+  //
+  // A colourless entry must never displace a coloured one. Scryfall's bulk file
+  // carries tokens named "Pippin, Warden of Isengard // Pippin, Warden of
+  // Isengard" with no colour identity, and reducing that to a front face lands
+  // it on the real card's key — which zeroed the identity of 1,901 real cards,
+  // Sam, Loyal Attendant among them. The fetcher drops tokens now, but this also
+  // repairs data published before it did.
   function identityIndex(cardIdentity) {
     const byKey = Object.create(null);
-    for (const name of Object.keys(cardIdentity || {})) byKey[nameKey(name)] = cardIdentity[name];
+    for (const name of Object.keys(cardIdentity || {})) {
+      const key = nameKey(name);
+      if (byKey[key] && !cardIdentity[name]) continue;
+      byKey[key] = cardIdentity[name];
+    }
     return byKey;
   }
 
@@ -102,9 +118,10 @@
   // the decklist already did: in a Commander deck the commander is one of the
   // pasted cards. This finds it.
   //
-  // It is a guess, so it only commits to an answer when the deck's own colours
-  // single one out, and otherwise hands back the shortlist for the page to show
-  // as "possible commanders" rather than picking arbitrarily.
+  // It is a guess, so it only commits to an answer when the export's ordering or
+  // the deck's own colours single one out, and otherwise hands back the
+  // shortlist for the page to show as "possible commanders" rather than picking
+  // arbitrarily.
   //
   // Deliberate property, asserted in the tests: a commander returned here can
   // never *narrow* the deck's colour identity, because every rule requires the
@@ -119,6 +136,50 @@
 
   const sameColours = (a, b) => a.size === b.size && [...a].every((c) => b.has(c));
   const covers = (a, b) => [...b].every((c) => a.has(c)); // a ⊇ b
+
+  // Sort key for spotting a machine-sorted list. Punctuation is dropped because
+  // deck sites disagree about whether "Sam, Loyal Attendant" sorts as "sam
+  // loyal" or "samloyal", and that disagreement is not worth being wrong over.
+  function sortKey(name) {
+    return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  }
+
+  // How many entries at the top sit in front of an alphabetically sorted list.
+  //
+  // Deck sites export the commander first and then the deck in name order, so a
+  // card in front of an otherwise perfectly sorted list is there for a reason.
+  // This is the only signal that separates a real partner pair from the several
+  // other pairs whose colours would add up the same way.
+  const MIN_SORTED_TAIL = 20; // short lists sort by accident; 99-card decks don't
+
+  function commandersByPosition(entries, legal, byKey) {
+    const names = [];
+    for (const entry of entries || []) {
+      const name = entry && (entry.card || entry.name || entry);
+      if (typeof name === 'string') names.push(name);
+    }
+
+    const sortedFrom = (start) => {
+      for (let i = start + 1; i < names.length; i += 1) {
+        if (sortKey(names[i - 1]) > sortKey(names[i])) return false;
+      }
+      return true;
+    };
+
+    // Already sorted top to bottom: no card is out in front, so no signal.
+    if (sortedFrom(0)) return null;
+
+    // Commander decks have one commander, or two partners. Three would be a
+    // sorting coincidence rather than a deck.
+    for (const k of [1, 2]) {
+      if (names.length - k < MIN_SORTED_TAIL) break;
+      if (!sortedFrom(k)) continue;
+      const front = names.slice(0, k);
+      if (!front.every((n) => legal.has(nameKey(n)))) return null;
+      return front.map((card) => ({ card, colours: colourSet(byKey[nameKey(card)]) }));
+    }
+    return null;
+  }
 
   function detectCommanders(entries, dataset) {
     // Absent on data published before commander names were included; detection
@@ -145,12 +206,33 @@
     if (!candidates.length) return null;
 
     const shortlist = candidates.map((c) => c.card);
-    const settle = (list) => ({ commanders: list.map((c) => ({ card: c.card })), confident: true, candidates: shortlist });
+    // Nothing may claim to be the commander unless it covers the colours the
+    // deck already plays. This is the one check every rule shares, and the
+    // reason a wrong guess can never hide combos.
+    const settle = (list) => {
+      const union = new Set();
+      for (const c of list) for (const colour of c.colours) union.add(colour);
+      if (!covers(union, deckColours)) return null;
+      return { commanders: list.map((c) => ({ card: c.card })), confident: true, candidates: shortlist };
+    };
+
+    // Strongest signal first: the export's ordering. Moxfield and Archidekt
+    // write the commander at the top and the rest of the deck alphabetically,
+    // so a card sitting in front of an otherwise perfectly sorted list is there
+    // because it is the commander. This is what identifies a partner pair whose
+    // colours several other pairs could also add up to.
+    const ordered = commandersByPosition(entries, legal, byKey);
+    if (ordered) {
+      const settled = settle(ordered);
+      if (settled) return settled;
+    }
 
     // The commander whose colours are exactly the deck's is the commander —
     // that is what building to a colour identity means.
+    const unsure = { commanders: [], confident: false, candidates: shortlist };
+
     const exact = candidates.filter((c) => sameColours(c.colours, deckColours));
-    if (exact.length === 1) return settle(exact);
+    if (exact.length === 1) return settle(exact) || unsure;
 
     // More than one card fits exactly: no way to tell them apart, so don't try.
     if (exact.length === 0) {
@@ -164,7 +246,7 @@
           if (sameColours(union, deckColours)) pairs.push([candidates[i], candidates[j]]);
         }
       }
-      if (pairs.length === 1) return settle(pairs[0]);
+      if (pairs.length === 1) return settle(pairs[0]) || unsure;
 
       // Nothing matches the deck's colours exactly, so the deck plays fewer
       // colours than its commander allows — a Mardu commander in a list that
@@ -174,11 +256,11 @@
       if (wider.length) {
         const narrowest = Math.min(...wider.map((c) => c.colours.size));
         const best = wider.filter((c) => c.colours.size === narrowest);
-        if (best.length === 1) return settle(best);
+        if (best.length === 1) return settle(best) || unsure;
       }
     }
 
-    return { commanders: [], confident: false, candidates: shortlist };
+    return unsure;
   }
 
   // Splits the dataset against a deck the same way find-my-combos does:

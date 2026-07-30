@@ -601,13 +601,20 @@
         almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
         almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
       };
+      // A sideboard being left out is the parser doing its job, not a problem
+      // report. Only lines we could not make sense of are worth interrupting
+      // over — a 26-card maybeboard raising a warning trains people to ignore it.
+      const ignored = parsed.skipped.filter((s) => /sideboard|ignored section/i.test(s.reason));
+      const unparsed = parsed.skipped.filter((s) => !ignored.includes(s));
+
       const notes = [];
-      if (parsed.skipped.length) notes.push(`${parsed.skipped.length} line(s) skipped`);
+      if (ignored.length) notes.push(`${ignored.length} sideboard line(s) left out`);
+      if (unparsed.length) notes.push(`${unparsed.length} line(s) not understood`);
       notes.push(...trimmed);
       notes.unshift(`${data.combos.length.toLocaleString()} known combos`);
       setStatus('Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
       renderResults(results, deckNames);
-      if (parsed.skipped.length) showDiagnostics(null, parsed, 'notice');
+      if (unparsed.length) showDiagnostics(null, parsed, 'notice');
     } catch (err) {
       setStatus('Combo search failed: ' + err.message, true);
       showDiagnostics(err, parsed);

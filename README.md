@@ -28,13 +28,19 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   tab rather than into the list. Colour identity is the commander's when there
   is one, and the colours the deck actually plays when there isn't.
 - **The commander works itself out** — the commander box is optional, because the
-  commander is normally already in the list you pasted. Moxfield and Archidekt
-  exports mark it (`*CMDR*`, `[Commander{top}]`) and that is read straight off
-  the line; a plain list is searched for the card that can legally be a commander
-  and whose colours match the deck's. The header then shows who is leading the
-  deck, its colour identity as mana symbols, and whether that was marked, worked
-  out, or typed. When several cards could be the commander it says so and lists
-  them rather than picking one.
+  commander is normally already in the list you pasted. Three signals, in order:
+  the export's own marker (`*CMDR*`, `[Commander{top}]`); the export's *ordering*,
+  since deck sites write the commander first and the deck alphabetically after
+  it; and failing both, the card that can legally be a commander and whose
+  colours match the deck's. The header then shows who is leading the deck, its
+  colour identity as mana symbols, and whether that was marked, worked out, or
+  typed. When nothing singles one out it says so and lists the candidates rather
+  than picking one.
+
+  Ordering earns its place: a real Abzan list with sixteen legendary creatures in
+  it has several pairs whose colours add up to the deck's — Frodo + Sam, but also
+  Chatterfang + Samwise, and Dina + Rosie. Only position says which pair is
+  actually the commander.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
@@ -205,6 +211,16 @@ The first published dataset had `cardIdentity: {}` because the fetcher looked fo
 a `card.identity` field that does not exist, and the guard around it turned that
 into an empty map rather than an error — colour filtering was simply inert. The
 fetcher now refuses to publish with fewer than 1,000 identities.
+
+**Tokens must not be published.** Scryfall's bulk file contains a token named
+`Pippin, Warden of Isengard // Pippin, Warden of Isengard` with no colour
+identity, and matching on the front face lands it on the real card's key. In the
+data published on 2026-07-30 that zeroed the identity of **1,901 real cards** —
+Sam, Loyal Attendant included — silently mis-sorting them into "Other colours".
+The fetcher now drops `token` / `double_faced_token` / `emblem` / `art_series` /
+`vanguard` layouts, and `identityIndex()` additionally refuses to let a
+colourless entry displace a coloured one, so already-published data is repaired
+in the page without waiting for a refresh.
 
 ### API contract notes
 

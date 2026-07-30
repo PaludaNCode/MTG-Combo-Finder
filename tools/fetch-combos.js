@@ -256,6 +256,17 @@ async function streamJsonLines(url, onObject) {
   flush(true);
 }
 
+// Tokens, emblems and art cards share names with the real cards they come from
+// — Scryfall lists a token called "Pippin, Warden of Isengard // Pippin, Warden
+// of Isengard" with no colour identity at all. Reducing that to its front face
+// lands it on the real card's key and zeroes it, so they are dropped here rather
+// than published and worked around later.
+const NON_CARD_LAYOUTS = new Set(['token', 'double_faced_token', 'emblem', 'art_series', 'vanguard']);
+
+function isRealCard(card) {
+  return Boolean(card) && typeof card.name === 'string' && !NON_CARD_LAYOUTS.has(card.layout);
+}
+
 // Whether a card is allowed to be somebody's commander. Needed because the
 // commander box is optional: with nothing typed in it, the only way to name a
 // deck's commander is to find it among the cards pasted in.
@@ -273,7 +284,7 @@ async function streamJsonLines(url, onObject) {
 // Westvale Abbey has "Land // Legendary Creature — Demon" as its combined type
 // line, and testing that string as a whole would call the land a commander.
 function canBeCommander(card) {
-  if (!card || typeof card.name !== 'string') return false;
+  if (!isRealCard(card)) return false;
   if (!card.legalities || card.legalities.commander !== 'legal') return false;
 
   const faces = Array.isArray(card.card_faces) ? card.card_faces : [];
@@ -300,8 +311,9 @@ async function fetchCardIdentities() {
   let cards = 0;
   const collect = (card) => {
     cards += 1;
+    if (!isRealCard(card)) return;
     // color_identity is an array like ["G","U"]; empty means colourless.
-    if (card && typeof card.name === 'string' && Array.isArray(card.color_identity)) {
+    if (Array.isArray(card.color_identity)) {
       identities[card.name] = card.color_identity.join('');
     }
     if (canBeCommander(card)) commanderNames.push(card.name);
@@ -363,7 +375,7 @@ async function main() {
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, ${commanderNames.length} commanders, ${mb} MB`);
 }
 
-module.exports = { createVariantScanner, compact, bodyChunks, canBeCommander };
+module.exports = { createVariantScanner, compact, bodyChunks, canBeCommander, isRealCard };
 
 if (require.main === module) {
   main().catch((err) => {
