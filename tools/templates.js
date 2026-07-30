@@ -21,6 +21,7 @@
 const DeckCombos = require('../combos.js');
 
 const TEMPLATES_URL = 'https://backend.commanderspellbook.com/templates/?limit=100';
+const COMBOS_URL = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
 const USER_AGENT = 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder)';
 
 // Scryfall asks for 50-100ms between requests.
@@ -118,14 +119,23 @@ async function resolveOne(getJson, template) {
 // satisfies a handful of templates, while one template matches thousands of
 // cards, so this direction is an order of magnitude smaller and is what the
 // page actually asks ("does this card of mine fill that slot?").
-async function resolveTemplates(log = console.log) {
+// `used`, when given, is the set of template ids some combo actually asks for.
+// Spellbook defines templates nothing uses — "Nonartifact creature with MV <= 5"
+// is 14,368 cards across 83 pages and no published combo wants it — so resolving
+// everything spends about a third of the run on lists that will never be read.
+async function resolveTemplates(log = console.log, used = null) {
   const { getJson, stats } = createFetcher();
+  const wanted = (t) => !used || used.has(String(t.id));
 
   log('Looking up Commander Spellbook templates…');
   const all = await allTemplates(getJson);
   const queryable = all.filter((t) => t.scryfallApi);
+  const toResolve = queryable.filter(wanted);
   log(`  ${all.length} templates, ${queryable.length} with a Scryfall query, `
     + `${all.length - queryable.length} without`);
+  if (used) {
+    log(`  ${toResolve.length} of those are asked for by a combo; skipping ${queryable.length - toResolve.length}`);
+  }
 
   const templates = Object.create(null);
   const byCard = new Map();
@@ -141,7 +151,16 @@ async function resolveTemplates(log = console.log) {
     if (!template.scryfallApi) unresolvable[template.id] = template.name;
   }
 
+  // Queryable, but nothing asked for it. Recorded separately from the
+  // unresolvable ones because the difference matters: these *could* be resolved,
+  // so if a combo ever starts using one, the refresh has to say "regenerate"
+  // rather than treat it as permanently out of reach.
+  const skipped = Object.create(null);
   for (const template of queryable) {
+    if (!wanted(template)) skipped[template.id] = template.name;
+  }
+
+  for (const template of toResolve) {
     let result;
     try {
       result = await resolveOne(getJson, template);
@@ -180,10 +199,32 @@ async function resolveTemplates(log = console.log) {
     for (const f of failed) log(`    ${f.name} — ${f.why}`);
   }
 
-  return { templates, unresolvable, templateCards, stats: { ...stats, resolved, failed } };
+  return { templates, unresolvable, skipped, templateCards, stats: { ...stats, resolved, failed } };
 }
 
-module.exports = { resolveTemplates, MAX_PAGES };
+// Which template ids any published combo actually asks for. Read from the
+// published combos.json rather than Spellbook's 578 MB export: the ids are
+// Spellbook's own, carried through untouched, so this is the same answer for a
+// fraction of the download. No circularity — the ids come from the combo data,
+// never from templates.json.
+async function usedTemplateIds(log = console.log) {
+  const { getJson } = createFetcher();
+  log('Reading which templates the published combos ask for…');
+  const data = await getJson(COMBOS_URL);
+  const combos = data.combos || [];
+  if (combos.length < 1000) {
+    throw new Error(`combos.json held ${combos.length} combos — refusing to decide what to skip from that`);
+  }
+
+  const used = new Set();
+  for (const combo of combos) {
+    for (const id of combo.t || []) if (id !== null) used.add(String(id));
+  }
+  log(`  ${used.size} distinct template(s) are asked for across ${combos.length.toLocaleString()} combos`);
+  return used;
+}
+
+module.exports = { resolveTemplates, usedTemplateIds, MAX_PAGES };
 
 // Regenerating is a manual job, not part of the daily refresh: templates change
 // when a set ships, a few times a year, and re-resolving all 149 every night to
@@ -191,10 +232,16 @@ module.exports = { resolveTemplates, MAX_PAGES };
 // daily run instead reports templates it has never seen, which is free — the
 // combo export already names the ones every combo needs.
 if (require.main === module) {
-  const out = process.argv[2] || require('node:path').join(__dirname, '..', 'templates.json');
+  const args = process.argv.slice(2);
+  // --all resolves every queryable template, including the ones no combo asks
+  // for. Only useful for measuring; the published file has no use for them.
+  const all = args.includes('--all');
+  const out = args.find((a) => !a.startsWith('--'))
+    || require('node:path').join(__dirname, '..', 'templates.json');
 
-  resolveTemplates()
-    .then(({ templates, unresolvable, templateCards, stats }) => {
+  (all ? Promise.resolve(null) : usedTemplateIds())
+    .then((used) => resolveTemplates(console.log, used))
+    .then(({ templates, unresolvable, skipped, templateCards, stats }) => {
       // A file written from a run that lost templates to a 503 would look
       // complete and quietly exclude their combos until someone regenerated it
       // again. Write all of it or none of it.
@@ -210,12 +257,14 @@ if (require.main === module) {
         source: TEMPLATES_URL,
         templates,
         unresolvable,
+        skipped,
         cards: templateCards,
       };
       require('node:fs').writeFileSync(out, JSON.stringify(payload, null, 0) + '\n');
       const mb = (require('node:fs').statSync(out).size / 1024 / 1024).toFixed(2);
       console.log(`\nWrote ${out}: ${Object.keys(templates).length} resolved, `
         + `${Object.keys(unresolvable).length} with no query, `
+        + `${Object.keys(skipped).length} unused and skipped, `
         + `${Object.keys(templateCards).length} cards, ${mb} MB`);
     })
     .catch((err) => {

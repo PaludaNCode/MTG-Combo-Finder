@@ -204,11 +204,47 @@ separately so they aren't reported as new every night; a warning that always
 fires is one nobody reads.
 
 When it fires, run the **Regenerate template card lists** workflow from a branch.
-It resolves everything, commits `templates.json`, and refuses to write at all if
-any template failed — a file half-written by a 503 would look complete and
-quietly exclude those combos until someone noticed. Between a set shipping and
-regenerating, its combos stay excluded: incomplete, never wrong, and the log
-says so.
+It commits `templates.json`, and refuses to write at all if any template failed —
+a file half-written by a 503 would look complete and quietly exclude those combos
+until someone noticed. Between a set shipping and regenerating, its combos stay
+excluded: incomplete, never wrong, and the log says so.
+
+**Only templates a combo actually asks for get resolved.** Spellbook defines 178
+templates; just 157 ids appear anywhere in the combo data. The unused ones are
+not small — `Nonartifact creature with MV <= 5` alone is 14,368 cards over 83
+pages, about a fifth of a full run, and nothing wants it. So the workflow reads
+the published `combos.json` first, collects the ids in use, and resolves those.
+(`--all` resolves everything; useful for measuring, useless for publishing.)
+
+Those get recorded in `skipped`, kept apart from `unresolvable` because the two
+mean different things. A query-less template is permanently out of reach; a
+skipped one could be resolved the moment something needs it. So if a combo starts
+asking for a skipped template, the daily check says "skipped as unused, now in
+use — regenerate" instead of treating it as a permanent gap.
+
+### What templates are actually used for
+
+Worth knowing before assuming a slot is too vague to be useful — measured with
+`tools/template-users.js`, which prints the combos requiring a given template:
+
+| combos | template | cards that fill it |
+|---:|---|---:|
+| 790 | Persist Creature | 24 |
+| 528 | Noncreature Artifact with MV≤1 | 394 |
+| 315 | Haste Enabler | *no query* |
+| 237 | Hero Creature | 351 |
+| 232 | Undying Creature | 22 |
+| 229 | Anthem Effects | *no query* |
+| 204 | Artifact Castable for {0} | 59 |
+
+The templates combos ask for are narrow. The enormous ones — the reason to fear
+that template combos would match every deck and read as noise — turn out to be
+used by nothing at all. Worth re-measuring rather than assuming if that concern
+comes up again.
+
+The two biggest unresolvable templates, Haste Enabler and Anthem Effects, account
+for **544 combos that can never be filled**. That is the concrete cost of the
+29-template gap.
 
 Four rules, all of them about not overclaiming:
 

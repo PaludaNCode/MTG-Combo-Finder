@@ -431,11 +431,18 @@ function reportNewTemplates(combos, templateData) {
     return;
   }
 
+  const skipped = templateData.skipped || {};
   const rows = [...unseen.entries()].sort((a, b) => b[1] - a[1]);
   const affected = rows.reduce((sum, [, n]) => sum + n, 0);
-  console.log(`\n${rows.length} template(s) are new since templates.json was generated `
-    + `(${affected} combos stay excluded until it is regenerated):`);
-  for (const [id, n] of rows.slice(0, 20)) console.log(`  ${String(n).padStart(6)}  template id ${id}`);
+  console.log(`\n${rows.length} template(s) have no card list `
+    + `(${affected} combos stay excluded until templates.json is regenerated):`);
+  for (const [id, n] of rows.slice(0, 20)) {
+    // A template we skipped for being unused is a different story from one that
+    // did not exist: the first means a combo started asking for something we
+    // chose not to resolve, and both are fixed by regenerating.
+    const why = skipped[id] ? `${skipped[id]} — skipped as unused, now in use` : 'new since the file was generated';
+    console.log(`  ${String(n).padStart(6)}  id ${id}: ${why}`);
+  }
   if (rows.length > 20) console.log(`  …and ${rows.length - 20} more`);
   console.log('Run the "Regenerate template card lists" workflow to pick them up.\n');
 }
