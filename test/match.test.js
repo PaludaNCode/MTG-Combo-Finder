@@ -112,7 +112,7 @@ test('summarizeResults: recognises the ways a combo can end a game', () => {
     'Win the game',
     'Each opponent loses the game',
     'Win the game at the beginning of your next upkeep',
-    'All opponents lose the game',
+    'Up to three target opponents lose the game',
   ];
   for (const w of wins) {
     assert.strictEqual(summarizeResults([w])[0].tier, 'win', w);
@@ -125,12 +125,11 @@ test('summarizeResults: game-deciding results are their own tier, not wins', () 
   // it wins would be wrong in exactly the games where it matters.
   for (const decisive of [
     'Infinite lifegain',
-    'Infinite life',
-    'Near-infinite damage',
-    'Infinite damage to each opponent',
-    'Infinite mill',
-    'Infinite turns',
-    'Infinite combats',
+    'Infinite lifegain triggers',
+    'Infinite self-mill',
+    'Infinite storm count',
+    'Infinite colored mana',
+    'Infinite Treasure tokens',
   ]) {
     const r = summarizeResults([decisive])[0];
     assert.strictEqual(r.tier, 'decisive', decisive);
@@ -148,8 +147,8 @@ test('summarizeResults: plumbing stays grey', () => {
     'Infinite death triggers',
     'Infinite sacrifice triggers',
     'Near-infinite ETB',
-    'Infinite landfall triggers',
-    'Infinite magecraft triggers',
+    'Infinite surveil',
+    'Infinite scry 1',
     'Infinite untap of creatures you control',
   ]) {
     assert.strictEqual(summarizeResults([plain])[0].tier, 'other', plain);
@@ -158,15 +157,13 @@ test('summarizeResults: plumbing stays grey', () => {
 
 test('summarizeResults: outcomes that need a payoff are yellow, by explicit request', () => {
   for (const decisive of [
-    'Infinite creature tokens',
-    'Infinite creature tokens with haste',
-    'Infinite tapped creature tokens',
-    'Infinite +1/+1 counters on a creature',
-    'Infinite +1/+1 counters on creatures you control',
-    'Infinite draw triggers',
-    'Infinite card draw',
+    'Infinite +1/+1 counters on a creature token',
+    'Infinite lifegain',
     'Infinite self-mill',
     'Infinite storm count',
+    'Infinite blinking',
+    'Infinite looting',
+    'Infinite rummaging',
     // Every flavour of mana: colourless, colour-specific and generated.
     'Infinite colorless mana',
     'Infinite colored mana',
@@ -174,11 +171,29 @@ test('summarizeResults: outcomes that need a payoff are yellow, by explicit requ
     'Infinite green mana',
     'Infinite mana creatures you control can produce',
     'Infinite mana lands you control can produce',
+    'Near-infinite colored mana',
+    'Infinite colorless mana that can only be spent to activate abilities',
+    // Resource tokens: stored mana, life and cards under another name.
+    'Infinite Treasure tokens',
+    'Infinite Food tokens',
+    'Infinite Clue tokens',
+    'Infinite Blood tokens',
+    'Near-infinite Treasure tokens',
+    'Infinite tapped Treasure tokens',
+    'Infinite tapped Forest tokens',
+    'Infinite Map tokens',
   ]) {
     const r = summarizeResults([decisive])[0];
     assert.strictEqual(r.tier, 'decisive', decisive);
     assert.ok(r.why.length > 0, decisive + ' should say what it still needs');
   }
+});
+
+test('summarizeResults: "nontoken" is not a token', () => {
+  // \btokens?\b must not fire on the middle of "nontoken", or loop plumbing
+  // would turn yellow along with the resource tokens.
+  assert.strictEqual(summarizeResults(['Infinite untap of nontoken creatures you control'])[0].tier, 'other');
+  assert.strictEqual(summarizeResults(['Infinite untap of nontoken artifacts you control'])[0].tier, 'other');
 });
 
 test('summarizeResults: a bounded amount is not decisive', () => {
@@ -208,13 +223,13 @@ test('summarizeResults: tiers sort win, then decisive, then the rest', () => {
     'Infinite lifegain',
     'Win the game',
     'Infinite colorless mana',
-    'Infinite mill',
+    'Infinite ETB',
   ]);
-  assert.deepStrictEqual(out.map((r) => r.tier), ['win', 'decisive', 'decisive', 'decisive', 'decisive']);
+  assert.deepStrictEqual(out.map((r) => r.tier), ['win', 'decisive', 'decisive', 'decisive', 'other']);
   assert.strictEqual(out[0].name, 'Win the game');
   // Within a tier, alphabetical keeps the output stable.
   assert.deepStrictEqual(out.slice(1).map((r) => r.name), [
-    'Infinite colorless mana', 'Infinite lifegain', 'Infinite mill', 'Infinite storm count',
+    'Infinite colorless mana', 'Infinite lifegain', 'Infinite storm count', 'Infinite ETB',
   ]);
 });
 
@@ -229,19 +244,19 @@ test('summarizeResults: duplicates collapse regardless of case or spacing', () =
 });
 
 test('summarizeResults: blanks and nullish entries are dropped', () => {
-  assert.deepStrictEqual(summarizeResults(['', '   ', null, undefined, 'Infinite mana']).map((r) => r.name), ['Infinite mana']);
+  assert.deepStrictEqual(summarizeResults(['', '   ', null, undefined, 'Infinite colored mana']).map((r) => r.name), ['Infinite colored mana']);
   assert.deepStrictEqual(summarizeResults([]), []);
   assert.deepStrictEqual(summarizeResults(null), []);
 });
 
 test('summarizeResults: ordering is stable regardless of input order', () => {
-  const names = ['Infinite damage', 'Infinite mill', 'Infinite untap', 'Infinite mana'];
+  const names = ['Infinite lifegain', 'Infinite storm count', 'Infinite untap', 'Infinite colored mana'];
   const first = summarizeResults(names).map((r) => r.name);
   const second = summarizeResults([...names].reverse()).map((r) => r.name);
   assert.deepStrictEqual(first, second);
   // Decisive results lead, each tier alphabetical within itself; "Infinite
   // untap of creatures" is plumbing, so it sorts last.
-  assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mana', 'Infinite mill', 'Infinite untap']);
+  assert.deepStrictEqual(first, ['Infinite colored mana', 'Infinite lifegain', 'Infinite storm count', 'Infinite untap']);
 });
 
 // ---- which cards carry the combos ------------------------------------------
@@ -295,9 +310,11 @@ test('comboPieces: no combos means nothing to carry', () => {
 
 test('summarizeResults: Lock is yellow, but lookalikes are not', () => {
   assert.strictEqual(summarizeResults(['Lock'])[0].tier, 'decisive');
-  assert.strictEqual(summarizeResults(['Locks out all of your opponents but one'])[0].tier, 'decisive');
-  // A lock is not unbounded in the "Infinite X" sense, so it sits outside the
-  // magnitude gate — which makes these word-boundary cases worth pinning.
+  assert.strictEqual(summarizeResults([
+    'Locks out all of your opponents but one, and allows you to choose which of your two neighboring opponents get to have turns',
+  ])[0].tier, 'decisive');
+  // Named outcomes that merely contain the letters "lock" are grey, and stay
+  // grey because nothing reads their wording any more.
   assert.strictEqual(summarizeResults(['Infinite unlocking of Rooms you control'])[0].tier, 'other');
   assert.strictEqual(summarizeResults(["Opponents can't block creatures you control"])[0].tier, 'other');
   assert.strictEqual(summarizeResults(["Creatures can't block"])[0].tier, 'other');

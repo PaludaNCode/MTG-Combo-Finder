@@ -380,6 +380,126 @@ summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 .build code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
 
 footer { margin-top: 2.5rem; color: var(--muted); font-size: .85rem; }
+footer code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+/* ---- the tier review page (tiers.html) ---- */
+.tiers-page .controls {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  padding: .9rem 0;
+  margin: 1.2rem 0 .5rem;
+  background: var(--bg);
+  border-bottom: 1px solid #2b3244;
+}
+.tiers-page #q { flex: 1 1 14rem; min-width: 0; font-size: .9rem; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem .8rem;
+  min-height: 44px;
+  border: 1px solid #333a4d;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip .dot { width: .6rem; height: .6rem; border-radius: 50%; background: currentColor; }
+.chip .n { font-variant-numeric: tabular-nums; opacity: .8; }
+.chip[aria-pressed="true"].t-win { color: var(--ok); border-color: var(--ok); }
+.chip[aria-pressed="true"].t-decisive { color: #cfc48a; border-color: #cfc48a; }
+.chip[aria-pressed="true"].t-other { color: var(--text); border-color: #4a536b; }
+.chip[aria-pressed="false"] { opacity: .5; }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.tier { margin-top: 2rem; }
+.tier-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.tier-head h2 { margin: 0; font-size: 1.05rem; }
+.tier-head .meta { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tier-note { margin: .15rem 0 .7rem; font-size: .88rem; color: var(--muted); max-width: 62ch; }
+.t-win .tier-head h2 { color: var(--ok); }
+.t-decisive .tier-head h2 { color: #cfc48a; }
+.t-other .tier-head h2 { color: var(--muted); }
+
+ol.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+ol.rows > li {
+  display: grid;
+  grid-template-columns: 3px 1fr 6.5rem;
+  align-items: center;
+  background: var(--panel);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.stripe { align-self: stretch; }
+.t-win .stripe { background: var(--ok); }
+.t-decisive .stripe { background: #cfc48a; }
+.t-other .stripe { background: #4a536b; }
+.unclassified .stripe { background: var(--error); }
+
+ol.rows .name { padding: .5rem .75rem; min-width: 0; }
+ol.rows .name b {
+  font: 500 .85rem/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  word-break: break-word;
+}
+ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(--muted); }
+
+/* Magnitude behind the number, square-rooted so the biggest rows don't flatten
+   everything else to a sliver. */
+.count {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: stretch;
+  padding: .5rem .75rem;
+}
+.count .bar { position: absolute; inset: 0 0 0 auto; background: var(--panel-2); }
+.count span {
+  position: relative;
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* The whole reason this page ships: a result the list has never seen. */
+.unclassified {
+  background: var(--panel);
+  border: 1px solid #5c3b45;
+  border-left: 3px solid var(--error);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.unclassified h2 { margin: 0 0 .3rem; font-size: 1.05rem; color: var(--error); }
+.unclassified p { margin: 0 0 .8rem; font-size: .9rem; color: var(--muted); max-width: 62ch; }
+.snippet-label { margin-top: .9rem !important; }
+.snippet {
+  margin: 0 0 .6rem;
+  padding: .6rem;
+  background: #14161d;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 18rem;
+  overflow: auto;
+  color: var(--text);
+}
+
+@media (max-width: 560px) {
+  ol.rows > li { grid-template-columns: 3px 1fr 5rem; }
+  ol.rows .name b { font-size: .8rem; }
+}
 
 @media (max-width: 480px) {
   body { padding: 1rem .6rem 2rem; }

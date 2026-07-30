@@ -65,38 +65,69 @@ snappier risks claiming the combo does something it doesn't.
 
 ### Three tiers, three colours
 
-| Colour | Tier | Meaning | Examples |
-|---|---|---|---|
-| 🟩 Green | `win` | The combo says it ends the game | *Win the game*, *Each opponent loses the game* |
-| 🟨 Greyish-yellow | `decisive` | Worth having, but needs something else to convert it | mana (every flavour), storm count, creature tokens, +1/+1 counters, card draw, lifegain, damage, mill, turns |
-| ⬜ Grey | `other` | The plumbing the loop runs on — relevant, but not a way to win | *Infinite ETB*, *Infinite LTB*, *Infinite death triggers*, *Infinite sacrifice triggers* |
+| Colour | Tier | Meaning |
+|---|---|---|
+| 🟩 Green | `win` | This ends the game |
+| 🟨 Greyish-yellow | `decisive` | Real value that something else still has to convert |
+| ⬜ Grey | `other` | The plumbing a loop runs on — relevant, but not a way to win |
 
-Grey is shown, not hidden. Up to eight results are listed before the rest fold
-behind "+N more" — enough for 93% of combos outright — and `splitResults()`
-guarantees a tier that exists never disappears entirely into the fold, so the
-plumbing stays visible even on a combo that produces a dozen things.
+**Which outcome sits in which tier is written down, not worked out.**
+`result-tiers.js` lists all 1,079 results Commander Spellbook publishes, by exact
+name, grouped under the reason each belongs where it does. Moving one outcome
+between tiers means moving one string between lists.
 
-A binary would be wrong in both directions. **Infinite lifegain beats almost
-every deck, but poison ignores life totals entirely, and mill or an alternate
-win condition goes straight over the top of it.** Calling it a win is false in
-exactly the games where the distinction matters; calling it plumbing undersells
-it everywhere else. So the middle tier carries *why* each result still needs
-something, shown on hover — infinite mana needs a payoff, infinite mill needs
-one too (and loses to Thassa's Oracle), infinite turns still has to close.
+That is a deliberate reversal. This used to be pattern matching — "anything
+mentioning damage is lethal", with exceptions bolted on — and the exceptions were
+the problem. `Infinite creature tokens` is a win; `Infinite creature tokens for
+target opponent` is not. `Infinite turns` is a win; `Infinite turns for each
+opponent` is the opposite of one. `Infinite +1/+1 counters on creatures you
+control` is a win; `on a creature` is one removal spell. Every rule needed a
+list of things it must not match, which is a list either way — so it may as well
+be the honest one, where you can read a decision instead of deducing it.
+
+Two consequences, both intended:
+
+- **An outcome nobody has classified is grey.** A result Spellbook adds with a
+  new set matches nothing and stays quiet rather than being guessed at.
+- **Nothing can be reclassified by accident.** A wording change on one result
+  cannot drag forty others with it, because no rule spans them.
+
+### Spotting a result from a new set
+
+The first consequence would be dangerous if it were silent, so it is reported in
+two places:
+
+- **[tiers.html](https://paludancode.github.io/MTG-Combo-Finder/tiers.html)** —
+  the review page. It loads the same published `combos.json` the deck page does,
+  counts every result, and lays the whole classification out searchable. Anything
+  the inventory does not list appears **at the top, in red**, with the exact lines
+  to paste into `result-tiers.js`. Because it reads live data rather than a
+  snapshot, a new set shows up the moment the data refresh runs — nobody has to
+  remember to check.
+- **The data workflow log** — `reportUnclassified()` in `tools/fetch-combos.js`
+  prints unclassified results and how many combos they affect on every refresh.
+
+`tools/verify-layout.js` renders `tiers.html` against a fixture containing a
+deliberately unknown result and fails if it is not flagged, so the warning cannot
+quietly stop working.
+
+The bar for green is *practical*, not certain. Explicit wins (*Win the game*,
+*Each opponent loses the game*) sit alongside results that end games in every
+normal case: unbounded damage or life loss, an unbounded board, a whole team made
+arbitrarily large, infinite turns, opponents drawing from an empty library. Green
+is not "you cannot lose from here" — it is "you have won unless something
+unusual is true".
+
+Yellow keeps a per-outcome reason, shown on hover, because the caveat is the
+point: infinite mana needs a payoff, infinite mill loses to Thassa's Oracle,
+infinite lifegain loses to poison, a pile of Treasure is only mana.
 
 Grey is deliberately the four biggest outcomes in the database — ETB (66k
 combos), LTB (57k), death triggers (45k), sacrifice triggers (43k). They explain
-*how* a loop works, which is not the same as why you'd run it, and leaving them
-quiet is what keeps the chips readable.
-
-Two traps worth knowing about, both pinned by tests:
-
-- A result must be **unbounded** to reach yellow. "Draw a card" is not "Infinite
-  card draw".
-- **"Lose the game" in a negation is not a win.** *You can't lose the game due
-  to having 0 or less life* says the words while meaning the opposite, and
-  *unless an opponent chooses to lose the game* hands them the choice. Matching
-  on the words alone coloured all of those green.
+*how* a loop works, which is not the same as why you'd run it. Grey is shown, not
+hidden: up to eight results are listed before the rest fold behind "+N more", and
+`splitResults()` guarantees a tier that exists never disappears entirely into the
+fold.
 
 ## Layout
 
@@ -120,6 +151,10 @@ Static site, zero dependencies, no build step:
   sections, per-line commander markers (`*CMDR*`, `[Commander{top}]`), MTGO `SB:`
   prefixes, comments, Moxfield + Archidekt API payloads, and deck URLs. Runs under
   Node so it's unit-testable.
+- `result-tiers.js` — the tier inventory: every combo result Spellbook publishes,
+  listed by name under green, yellow or grey. Hand-maintained data, no logic.
+- `tiers.html` / `tiers-page.js` — the review page for that inventory, counted
+  against live data and flagging anything unclassified.
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken alphabetically).

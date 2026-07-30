@@ -332,95 +332,23 @@
   }
 
   // ---- what a combo actually gives you ------------------------------------
-
-  // Three tiers, shown as three colours:
   //
-  //   win      (green)  — the combo says it ends the game.
-  //   decisive (yellow) — worth having, but needs something else to convert it.
-  //                       Infinite mana wins nothing without a payoff; infinite
-  //                       life beats most decks but not poison, mill or an
-  //                       alternate win condition.
-  //   other    (grey)   — the plumbing a combo runs on: ETB and LTB loops,
-  //                       death and sacrifice triggers.
-  const WIN_RE = /\b(?:wins?|loses?|lose) the game\b/i;
-
-  // "You can't lose the game due to having 0 or less life" says "lose the game"
-  // while meaning the opposite, and "unless an opponent chooses to lose the
-  // game" hands them the choice. Matching the words alone marked both as wins.
-  const WIN_NEGATED_RE = /\b(?:can'?t|cannot|can not|unable to|never|unless|prevent(?:s|ed)?|instead of)\b/i;
-
-  // A result only reaches the yellow tier if it is unbounded — "Infinite",
-  // "Near-infinite", "Infinitely large", "Arbitrarily large".
-  const UNBOUNDED_RE = /\b(?:infinite|infinitely|near-infinite|arbitrarily large)\b/i;
-
-  // Each rule carries why it needs something else, shown on hover, so the
-  // colour informs rather than just decorating.
-  const DECISIVE = [
-    {
-      re: /\blife\s?gain\b|\binfinite life\b/i,
-      why: 'Beats most decks — but poison ignores life totals, and mill or an alternate win condition goes over the top of it.',
-    },
-    {
-      re: /\b(?:damage|life\s?loss)\b/i,
-      why: 'Lethal in most games, unless damage is prevented or they out-gain it.',
-    },
-    {
-      re: /\bmill\b/i,
-      why: 'Self-mill needs a payoff; milling opponents loses to Thassa’s Oracle or a graveyard shuffle-back.',
-    },
-    {
-      re: /\b(?:turns?|combat phases?|combats?)\b/i,
-      why: 'Wins eventually, but still needs something that actually closes the game.',
-    },
-    {
-      re: /\b(?:poison|infect)\b/i,
-      why: 'Ten poison counters end it regardless of life total.',
-    },
-    {
-      re: /\bcreature tokens?\b/i,
-      why: 'Lethal on the next swing, given haste or a turn to untap.',
-    },
-    {
-      re: /\+1\/\+1 counters?\b/i,
-      why: 'An arbitrarily large creature still has to connect.',
-    },
-    {
-      re: /\bcard draw\b|\bdraw triggers?\b|\bdraws? your (?:whole )?(?:deck|library)\b/i,
-      why: 'Draws into the win, but you still need one — and an empty library kills you first.',
-    },
-    {
-      re: /\bmana\b/i,
-      why: 'Wins nothing on its own; you need a payoff to spend it on.',
-    },
-    {
-      re: /\bstorm count\b/i,
-      why: 'Needs a storm payoff to cash in.',
-    },
-  ];
-
-  // A lock isn't unbounded in the "Infinite X" sense, so it sits outside the
-  // magnitude gate. The word boundary matters: "unlocking of Rooms" and
-  // "can't block" must not be caught by it.
-  const LOCK_RE = /\block(?:s|ed)?\b/i;
-  const LOCK_WHY = 'Stops opponents playing, but something still has to close the game out.';
+  // Three tiers, shown as three colours. Which outcome sits in which tier is not
+  // worked out from its wording — it is written down, by name, in
+  // result-tiers.js. See that file for the reasoning and for how to move one.
+  //
+  //   win      (green)  — this ends the game.
+  //   decisive (yellow) — real value that something else still has to convert.
+  //   other    (grey)   — the plumbing a loop runs on.
+  //
+  // Resolved once here so the browser and Node reach the same list: the page
+  // loads result-tiers.js before this file, Node requires it.
+  const TIERS = (typeof module !== 'undefined' && module.exports)
+    ? require('./result-tiers.js')
+    : global.ResultTiers;
 
   function classify(name) {
-    if (WIN_RE.test(name)) {
-      if (!WIN_NEGATED_RE.test(name)) {
-        return { tier: 'win', why: 'This combo wins the game outright.' };
-      }
-      return {
-        tier: 'decisive',
-        why: 'Reads like a win but is conditional or purely protective — it does not end the game by itself.',
-      };
-    }
-    if (LOCK_RE.test(name)) return { tier: 'decisive', why: LOCK_WHY };
-    if (UNBOUNDED_RE.test(name)) {
-      for (const entry of DECISIVE) {
-        if (entry.re.test(name)) return { tier: 'decisive', why: entry.why };
-      }
-    }
-    return { tier: 'other', why: '' };
+    return TIERS.tierOf(name);
   }
 
   const TIER_RANK = { win: 0, decisive: 1, other: 2 };

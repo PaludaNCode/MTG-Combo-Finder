@@ -14,6 +14,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 const { Readable } = require('node:stream');
+const TIERS = require('../result-tiers.js');
 
 // The bulk export their own frontend reads (see commander-spellbook-site,
 // src/pages/combo-sitemap.xml.ts). One request for the whole database.
@@ -334,6 +335,31 @@ async function fetchCardIdentities() {
   return { identities, commanderNames };
 }
 
+// result-tiers.js is a written-down list, so a result Spellbook adds after it
+// was last edited falls to grey without anything going wrong. That is the right
+// default, but it should never be a surprise: every data refresh says which
+// results are unclassified and how many combos they affect.
+function reportUnclassified(combos) {
+  const unknown = new Map();
+  for (const combo of combos) {
+    for (const result of combo.p || []) {
+      if (TIERS.tierOf(result).tier === 'other' && !TIERS.OTHER.includes(result)) {
+        unknown.set(result, (unknown.get(result) || 0) + 1);
+      }
+    }
+  }
+  if (!unknown.size) {
+    console.log('All combo results are classified in result-tiers.js.');
+    return;
+  }
+  const rows = [...unknown.entries()].sort((a, b) => b[1] - a[1]);
+  const affected = rows.reduce((sum, [, n]) => sum + n, 0);
+  console.log(`\n${rows.length} result(s) are not in result-tiers.js and will show as grey (${affected} combos):`);
+  for (const [name, n] of rows.slice(0, 40)) console.log(`  ${String(n).padStart(6)}  ${name}`);
+  if (rows.length > 40) console.log(`  …and ${rows.length - 40} more`);
+  console.log('Add them to result-tiers.js to give them a colour.\n');
+}
+
 async function main() {
   console.log('Downloading the combo database from', BULK_URL);
 
@@ -361,6 +387,8 @@ async function main() {
   if (commanderNames.length < 500) {
     throw new Error(`Only ${commanderNames.length} possible commanders — refusing to publish, the type data must have moved`);
   }
+
+  reportUnclassified(combos);
 
   const payload = {
     updatedAt: new Date().toISOString(),
