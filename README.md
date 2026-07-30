@@ -147,6 +147,26 @@ It matters because the flat list actively misleads. Four different cards each
 claiming "+7 combos" at the top of the suggestions look like four options worth
 seven combos apiece; they are one option worth seven, described four times.
 
+**Identical results are required, and that is deliberate.** Two variants only
+collapse when they produce exactly the same list. This under-groups: each
+interchangeable card brings its own rider, so `Scurry Oak + Sadistic Glee` shows
+separately for Carrion Feeder, Viscera Seer and Umbral Collar Zealot — five
+identical core results each, plus *Infinite scry 1* from the Seer and *Infinite
+surveil* from the Zealot.
+
+The tempting repair is to compare results loosely: share a core, allow an extra
+or two each. **Don't.** It is a threshold with a story attached, and it merges
+combos whose payoffs genuinely differ the moment they overlap — Kiki-Jiki,
+Mirror Breaker pairs with a hundred partners producing everything from infinite
+turns to infinite combat damage, and any "close enough" rule eventually eats
+those. Splitting a family into three honest rows is a much smaller sin than
+telling someone two different combos are the same one.
+
+If this is ever worth fixing properly, the fix is exact rather than fuzzy:
+Spellbook *authors* a combo and *generates* variants from it, so the parent
+recipe — if the export names it — groups them with nothing inferred at all. That
+is the only version worth building. `compact()` currently keeps none of it.
+
 Two details worth keeping:
 
 - **Grouping must not reorder.** `groupVariants()` returns groups in the order
