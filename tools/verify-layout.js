@@ -21,10 +21,16 @@ const ROOT = path.join(__dirname, '..');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 
 const VIEWPORTS = [
-  { name: 'phone', width: 390, height: 844 },
-  { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1440, height: 900 },
+  { name: 'phone', width: 390, height: 844, deck: 'marked' },
+  { name: 'tablet', width: 768, height: 1024, deck: 'marked' },
+  { name: 'desktop', width: 1440, height: 900, deck: 'marked' },
+  // Same deck with the commander marker taken off: the commander now has to be
+  // worked out from the cards, which is the case a plain copy-paste produces.
+  { name: 'desktop (no marker)', width: 1440, height: 900, deck: 'plain' },
 ];
+
+// What the header should say about where the commander came from, per deck.
+const EXPECTED_BADGE = { marked: 'marked in your list', plain: 'found in your list' };
 
 function findBrowser() {
   const candidates = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
@@ -45,8 +51,9 @@ const FIXTURE = {
   cardIdentity: {
     'Kinnan, Bonder Prodigy': 'GU', 'Basalt Monolith': '', 'Rings of Brighthearth': '',
     'Palinchron': 'U', 'Deadeye Navigator': 'U', 'Great Whale': 'U',
-    'Walking Ballista': '', 'Heliod, Sun-Crowned': 'W',
+    'Walking Ballista': '', 'Heliod, Sun-Crowned': 'W', 'Island': 'U',
   },
+  commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
       p: ['Infinite ETB', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite LTB',
@@ -61,7 +68,16 @@ const FIXTURE = {
   ],
 };
 
-const DECK = ['1 Basalt Monolith', '1 Rings of Brighthearth', '1 Palinchron', '1 Great Whale', '1 Walking Ballista', '10 Island'];
+// Written the way Moxfield exports it, commander marked inline and nothing
+// typed into the commander box — the path most people actually take.
+const REST = [
+  '1 Basalt Monolith', '1 Rings of Brighthearth', '1 Palinchron',
+  '1 Great Whale', '1 Walking Ballista', '10 Island',
+];
+const DECKS = {
+  marked: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*'].concat(REST).join('\n'),
+  plain: ['1 Kinnan, Bonder Prodigy'].concat(REST).join('\n'),
+};
 
 // The page under test is loaded inside an iframe sized to each viewport.
 // Media queries evaluate against the iframe's own width, so the result no
@@ -71,7 +87,7 @@ const HARNESS = `<!DOCTYPE html><meta charset="utf-8"><body style="margin:0">
 <pre id="verdict"></pre>
 <script>
 const WIDTHS = ${JSON.stringify(VIEWPORTS)};
-const DECK = ${JSON.stringify(DECK.join('\n'))};
+const DECKS = ${JSON.stringify(DECKS)};
 const results = [];
 
 function measure(win, doc) {
@@ -101,9 +117,23 @@ function measure(win, doc) {
     grey: c.classList.contains('tier-other'), more: c.classList.contains('more'),
     title: c.title || '', colour: win.getComputedStyle(c).color,
   })) : [];
+  const cmdLine = doc.querySelector('.commander-line');
+  const header = {
+    pips: [...doc.querySelectorAll('.identity-line .pip')].map((p) => ({
+      letter: p.textContent,
+      label: p.getAttribute('aria-label'),
+      background: win.getComputedStyle(p).backgroundColor,
+      round: win.getComputedStyle(p).borderRadius,
+      size: Math.round(p.offsetWidth),
+    })),
+    commander: cmdLine ? (cmdLine.querySelector('.card-name') || {}).textContent || null : null,
+    badge: cmdLine ? (cmdLine.querySelector('.from-deck') || {}).textContent || null : null,
+  };
+
   const form = doc.querySelector('.col-input').getBoundingClientRect();
   const out = doc.querySelector('.col-output').getBoundingClientRect();
   return {
+    header,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
@@ -126,8 +156,8 @@ function runOne(vp) {
         const win = frame.contentWindow;
         const doc = frame.contentDocument;
         win.localStorage.clear();
-        doc.getElementById('commanders').value = 'Kinnan, Bonder Prodigy';
-        doc.getElementById('decklist').value = DECK;
+        doc.getElementById('commanders').value = '';
+        doc.getElementById('decklist').value = DECKS[vp.deck];
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
         await new Promise((r) => setTimeout(r, 500));
 
@@ -256,6 +286,22 @@ function serve(dir, extra) {
       if (v.tabs.some((t) => t.height < 44)) problems.push('a tab is under 44px tall');
       if (!/in your colours/i.test(v.tabs[0].label)) problems.push(`first tab reads "${v.tabs[0].label}"`);
     }
+    // The commander box was left empty on purpose: the header has to work it
+    // out from the pasted list, show it as inferred, and draw the colours as
+    // mana symbols rather than the letters "GU".
+    const h = v.header;
+    if (h.pips.length !== 2) {
+      problems.push(`expected 2 mana pips for a GU deck, got ${h.pips.length}`);
+    } else {
+      if (h.pips.map((p) => p.letter).join('') !== 'UG') problems.push(`pips read ${h.pips.map((p) => p.letter).join('')}, not WUBRG order (UG)`);
+      if (h.pips.some((p) => !/^(blue|green)$/.test(p.label))) problems.push('a pip has no colour name for screen readers');
+      if (new Set(h.pips.map((p) => p.background)).size !== 2) problems.push('both mana pips rendered the same colour');
+      if (h.pips.some((p) => !/50%|9999px|^\d+px$/.test(p.round) || p.size < 12)) problems.push('mana pips did not render as filled circles');
+    }
+    if (h.commander !== 'Kinnan, Bonder Prodigy') problems.push(`commander read "${h.commander}" — it should be found in the pasted list`);
+    const wantBadge = EXPECTED_BADGE[vp.deck];
+    if (h.badge !== wantBadge) problems.push(`commander badge read "${h.badge}", expected "${wantBadge}"`);
+
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
     // Empty chips must fail: otherwise every assertion below passes vacuously.
@@ -298,7 +344,8 @@ function serve(dir, extra) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${chipNote}`);
+      const headNote = `${v.header.commander || 'no commander'} (${v.header.badge || 'given'}) {${v.header.pips.map((p) => p.letter).join('}{')}}`;
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${chipNote}`);
     }
   }
 

@@ -27,6 +27,14 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
   tab rather than into the list. Colour identity is the commander's when there
   is one, and the colours the deck actually plays when there isn't.
+- **The commander works itself out** — the commander box is optional, because the
+  commander is normally already in the list you pasted. Moxfield and Archidekt
+  exports mark it (`*CMDR*`, `[Commander{top}]`) and that is read straight off
+  the line; a plain list is searched for the card that can legally be a commander
+  and whose colours match the deck's. The header then shows who is leading the
+  deck, its colour identity as mana symbols, and whether that was marked, worked
+  out, or typed. When several cards could be the commander it says so and lists
+  them rather than picking one.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
@@ -103,8 +111,9 @@ Static site, zero dependencies, no build step:
 - `index.html` / `style.css` — the page.
 - `parser.js` — decklist parsing (`DeckParser`). Understands plain names, `1x Card`,
   Moxfield/Arena exports (`1 Sol Ring (C21) 263 *F*`), `Commander:` / `Sideboard:`
-  sections, MTGO `SB:` prefixes, comments, Moxfield + Archidekt API payloads, and
-  deck URLs. Runs under Node so it's unit-testable.
+  sections, per-line commander markers (`*CMDR*`, `[Commander{top}]`), MTGO `SB:`
+  prefixes, comments, Moxfield + Archidekt API payloads, and deck URLs. Runs under
+  Node so it's unit-testable.
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken alphabetically).
@@ -149,6 +158,10 @@ Consequences worth knowing:
   suggestions, since no single named card completes them.
 - Deck colour identity is derived from the commander's entry in the dataset. An
   unrecognized commander disables colour filtering rather than hiding results.
+- A commander worked out from the decklist can never *narrow* the deck's colour
+  identity — every rule in `detectCommanders()` requires the candidate to cover
+  the colours the deck already plays, so a wrong guess can mislabel the header
+  but cannot make combos disappear. `test/commander.test.js` asserts it.
 
 ### Use the bulk export, never the paged API
 
@@ -178,6 +191,15 @@ Commander Spellbook's `CardSerializer` exposes name, images and type line but
 suggested card fits your commander's colours. `tools/fetch-combos.js` therefore
 also streams [Scryfall's oracle-cards bulk file](https://scryfall.com/docs/api/bulk-data)
 and publishes a name → identity map alongside the combos.
+
+The same pass publishes `commanderNames`, the names of every card that is allowed
+to *be* a commander — a legendary creature, a Background, or a card whose rules
+text grants it — filtered by `legalities.commander`, which is what keeps tokens
+and Un-cards out. Only the front face counts: Westvale Abbey's combined type line
+reads `Land // Legendary Creature — Demon`, and testing it whole would make the
+land a commander. The page uses that list to find the commander in a pasted deck.
+The fetcher refuses to publish with fewer than 500 names, for the same reason it
+refuses to publish without colour data.
 
 The first published dataset had `cardIdentity: {}` because the fetcher looked for
 a `card.identity` field that does not exist, and the guard around it turned that

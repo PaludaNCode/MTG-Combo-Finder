@@ -94,7 +94,63 @@ button:disabled { opacity: .6; cursor: wait; }
 #status { min-height: 1.5em; color: var(--muted); }
 #status.error { color: var(--error); }
 
-.identity-line { color: var(--muted); }
+/* ---- colour identity + commander header ---- */
+.identity-line, .commander-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 0 0 .4rem;
+  color: var(--text);
+}
+.commander-line { margin-bottom: 1rem; }
+.commander-line.muted { color: var(--muted); font-size: .9rem; }
+
+.identity-label, .commander-label {
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.commander-line .card-name { font-weight: 650; }
+.commander-line .plus { margin: 0 -.2rem; }
+
+/* Says the commander was worked out from the decklist rather than given, so an
+   inference is never mistaken for something the user typed. */
+.from-deck {
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+/* Mana symbols, drawn rather than fetched — a remote symbol font would be one
+   more thing to load, and one more thing to fail offline. */
+.mana { display: inline-flex; gap: .2rem; }
+.pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  border-radius: 50%;
+  /* Wizards' own colour swatches, so the pips read as Magic colours. Ink is
+     dark on every one of them, which is why they all carry the same text colour. */
+  color: #1b1b1b;
+  font-size: .85rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .45);
+}
+.pip-W { background: #fffbd5; }
+.pip-U { background: #aae0fa; }
+.pip-B { background: #cbc2bf; }
+.pip-R { background: #f9aa8f; }
+.pip-G { background: #9bd3ae; }
+.pip-C { background: #cac5c0; }
 
 .diag {
   background: var(--panel);

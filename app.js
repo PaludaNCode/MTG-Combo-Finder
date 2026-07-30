@@ -40,6 +40,28 @@
 
   // ---- Rendering -----------------------------------------------------------
 
+  // Colour identity, drawn the way Magic draws it. WUBRG is the printed order,
+  // so a Golgari deck always reads {B}{G} and never {G}{B}.
+  const WUBRG = ['W', 'U', 'B', 'R', 'G'];
+  const COLOUR_NAMES = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless' };
+
+  function manaPips(colours) {
+    const set = colours instanceof Set ? colours : new Set(String(colours || ''));
+    const wrap = el('span', 'mana');
+    const order = WUBRG.filter((c) => set.has(c));
+    // No colours at all is colourless, not "nothing" — {C} is a real identity.
+    for (const c of order.length ? order : ['C']) {
+      const pip = el('span', 'pip pip-' + c, c);
+      // The letter is decoration for anyone who can see the colour; a screen
+      // reader should hear "green", not "G".
+      pip.setAttribute('role', 'img');
+      pip.setAttribute('aria-label', COLOUR_NAMES[c]);
+      pip.title = COLOUR_NAMES[c];
+      wrap.appendChild(pip);
+    }
+    return wrap;
+  }
+
   // How many results to show before folding the rest away. Eight shows every
   // result on 93% of combos — the old cap of four folded something on 58% of
   // them, which is how the grey tier ended up invisible in practice.
@@ -200,7 +222,7 @@
     const card = el('article', 'combo suggestion');
 
     const head = el('div', 'sug-head');
-    head.appendChild(el('span', 'rank', rank + '.'));
+    head.appendChild(el('span', 'rank', rank + '. '));
     head.appendChild(el('span', 'card-name', piece.card));
     head.appendChild(el('span', 'badge', 'in ' + piece.count + ' combo' + (piece.count === 1 ? '' : 's')));
     card.appendChild(head);
@@ -302,15 +324,56 @@
     (onColour.length || !offColour.length ? built[0] : built[1]).select();
   }
 
+  // The header strip: the deck's colours as mana symbols, and who is leading it.
+  //
+  // The commander line is the interesting part. Nobody should have to type a
+  // card that is already in the list they pasted, so when the box is empty the
+  // commander is worked out from the deck — and labelled as worked out, because
+  // an inference presented as a fact is worse than no answer.
+  function renderIdentity(container, identity, commanderInfo) {
+    container.textContent = '';
+    // An empty set is colourless — a real identity, worth showing as {C}. Null
+    // means the data couldn't tell us, which is worth showing as nothing.
+    if (!identity) return;
+
+    const line = el('p', 'identity-line');
+    line.appendChild(el('span', 'identity-label', 'Colour identity'));
+    line.appendChild(manaPips(identity));
+    container.appendChild(line);
+
+    if (!commanderInfo) return;
+
+    const { commanders, source, candidates } = commanderInfo;
+    if (commanders.length) {
+      const p = el('p', 'commander-line');
+      p.appendChild(el('span', 'commander-label', commanders.length > 1 ? 'Commanders' : 'Commander'));
+      commanders.forEach((c, i) => {
+        if (i) p.appendChild(el('span', 'plus', ' + '));
+        p.appendChild(el('strong', 'card-name', c.card));
+      });
+      if (source === 'marked') p.appendChild(el('span', 'from-deck', 'marked in your list'));
+      if (source === 'inferred') p.appendChild(el('span', 'from-deck', 'found in your list'));
+      container.appendChild(p);
+      return;
+    }
+
+    // Couldn't tell — say so, and show what it was choosing between rather than
+    // picking one and being quietly wrong.
+    if (candidates && candidates.length) {
+      const p = el('p', 'commander-line muted');
+      const few = candidates.slice(0, 4);
+      p.appendChild(el('span', null,
+        'No commander given, and several cards could be one: ' + few.join(', ')
+        + (candidates.length > few.length ? `, and ${candidates.length - few.length} more` : '')
+        + '. Colours come from the deck itself.'));
+      container.appendChild(p);
+    }
+  }
+
   function renderResults(results, deckNames) {
     $('results').hidden = false;
 
-    const identity = $('identity');
-    identity.textContent = '';
-    if (results.identity && results.identity.size) {
-      identity.appendChild(el('p', 'identity-line',
-        'Deck color identity: ' + [...results.identity].join('').toUpperCase()));
-    }
+    renderIdentity($('identity'), results.identity, results.commanderInfo);
 
     const included = results.included;
     const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
@@ -478,10 +541,13 @@
 
     const parsed = DeckParser.parseDecklist($('decklist').value);
     const commanderParsed = DeckParser.parseDecklist($('commanders').value);
-    // Anything typed in the commander box counts as a commander, and
-    // "Commander:" sections inside the main paste do too.
-    let commanders = commanderParsed.main
-      .concat(commanderParsed.commanders, parsed.commanders);
+    // Anything typed in the commander box counts as a commander, and so does a
+    // "Commander:" heading or a "*CMDR*" marker inside the main paste.
+    const typed = commanderParsed.main.concat(commanderParsed.commanders);
+    let commanders = typed.concat(parsed.commanders);
+    // Where the answer came from decides how the header labels it: typed is a
+    // statement, anything else is us reading the deck.
+    let commanderSource = typed.length ? 'typed' : (parsed.commanders.length ? 'marked' : null);
     let main = parsed.main;
 
     if (!main.length && !commanders.length) {
@@ -509,10 +575,28 @@
     $('find-combos').disabled = true;
     try {
       const data = await loadDataset();
-      const deckNames = DeckCombos.deckNameSet(commanders.concat(main));
-      const matched = DeckCombos.matchDeck(data, deckNames, commanders);
+      const allEntries = commanders.concat(main);
+      const deckNames = DeckCombos.deckNameSet(allEntries);
+
+      // With the commander box empty, look for the commander among the cards
+      // themselves. A confident answer is used exactly as if it had been typed;
+      // an unsure one is shown as a shortlist and changes nothing, so colours
+      // still come from the deck's own cards.
+      const detected = commanders.length ? null : DeckCombos.detectCommanders(allEntries, data);
+      let effective = commanders;
+      if (detected && detected.confident) {
+        effective = detected.commanders;
+        commanderSource = 'inferred';
+      }
+
+      const matched = DeckCombos.matchDeck(data, deckNames, effective);
       const results = {
         identity: matched.identity,
+        commanderInfo: {
+          commanders: effective,
+          source: commanderSource,
+          candidates: (detected && detected.candidates) || [],
+        },
         included: matched.included.map(DeckCombos.expand),
         almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
         almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
@@ -520,7 +604,7 @@
       const notes = [];
       if (parsed.skipped.length) notes.push(`${parsed.skipped.length} line(s) skipped`);
       notes.push(...trimmed);
-      notes.unshift(`${data.combos.length.toLocaleString()} combos searched`);
+      notes.unshift(`${data.combos.length.toLocaleString()} known combos`);
       setStatus('Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
       renderResults(results, deckNames);
       if (parsed.skipped.length) showDiagnostics(null, parsed, 'notice');
