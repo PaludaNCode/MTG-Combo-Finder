@@ -541,16 +541,20 @@ Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk
 short-lived branches.
 
 1. Branch off `main`: `feat/<thing>` or `fix/<thing>`
-2. Push, open a PR — CI runs (`checks` job: JS syntax check + unit tests)
-3. Merge when green. Merging to `main` **is** the release: the deploy workflow fires
-   on push to `main` and publishes to GitHub Pages (once Pages is available — see
-   Deploying below).
+2. Push, open a PR — CI runs (`checks` job: JS syntax check + unit tests + layout
+   smoke test)
+3. Merge when green. "Allow auto-merge" is enabled on the repo, so the usual move is
+   to hit **Enable auto-merge** on the PR right after opening it — it then lands on
+   its own the moment CI passes. Merging to `main` **is** the release: the deploy
+   workflow fires on push to `main` and publishes to GitHub Pages (once Pages is
+   available — see Deploying below).
 
 `main` should be protected: PRs need the `checks` job green before merge; force-pushes
 and deletion blocked. **Not enabled yet** — flip it on under
 Settings → Branches → Add branch ruleset (require status checks: `checks`) when ready;
-until then the flow above is convention. Repo admins can push directly in a pinch
-(escape hatch — prefer PRs).
+until then the flow above is convention. Auto-merge only waits for whatever the ruleset
+requires, so it pulls its full weight once `checks` is a required status check. Repo
+admins can push directly in a pinch (escape hatch — prefer PRs).
 
 ## Deploying
 
