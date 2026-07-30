@@ -13,18 +13,17 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const API = 'https://backend.commanderspellbook.com/variants';
-const PAGE_SIZE = 100; // CustomPagination.max_limit
+// The bulk export their own frontend reads (see commander-spellbook-site,
+// src/pages/combo-sitemap.xml.ts). One request for the whole database.
+//
+// Paging /variants instead does not work: it needs ~300 requests and their
+// rate limit is a cumulative quota, not a per-second throttle. Walking it at
+// 4 req/s died after 120 pages; slowing to 1 req/s died *earlier*, at 78, and
+// two full minutes of backoff never cleared it. Don't reintroduce paging.
+const BULK_URL = 'https://json.commanderspellbook.com/variants.json';
 const OUT = process.argv[2] || path.join(__dirname, '..', 'combos.json');
-const MAX_PAGES = Number(process.env.MAX_PAGES || 0); // 0 = no cap; set for smoke tests
 
-// Commander Spellbook rate-limits, and rightly so — this walks their whole
-// database. Pace the requests deliberately rather than going as fast as the
-// runner allows, and back off for a long time when asked to.
-// The first run sped up to ~4 requests/second once their cache warmed and was
-// rate-limited at ~12,000 combos. Hold to roughly one request per second.
-const DELAY_MS = Number(process.env.DELAY_MS || 750);
-const MAX_ATTEMPTS = 8;
+const MAX_ATTEMPTS = 5;
 const MAX_BACKOFF_MS = 60_000;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -93,37 +92,26 @@ function compact(variant) {
 }
 
 async function main() {
+  console.log('Downloading the combo database from', BULK_URL);
+  const bulk = await getJson(BULK_URL);
+  const variants = bulk.variants || bulk.results || (Array.isArray(bulk) ? bulk : []);
+  if (!variants.length) throw new Error('Bulk export contained no variants');
+  console.log(`  got ${variants.length} variants`);
+
   const combos = [];
   const cardIdentity = Object.create(null);
-  let url = `${API}?limit=${PAGE_SIZE}&offset=0`;
-  let pages = 0;
-
-  console.log('Fetching combos from Commander Spellbook…');
-  while (url) {
-    const page = await getJson(url);
-    const results = page.results || [];
-    for (const variant of results) {
-      const row = compact(variant);
-      if (row) combos.push(row);
-      for (const u of pick(variant, 'uses') || []) {
-        const card = u.card;
-        if (card && card.name && card.identity !== undefined) {
-          cardIdentity[card.name] = card.identity || '';
-        }
+  for (const variant of variants) {
+    const row = compact(variant);
+    if (row) combos.push(row);
+    for (const u of pick(variant, 'uses') || []) {
+      const card = u.card;
+      if (card && card.name && card.identity !== undefined) {
+        cardIdentity[card.name] = card.identity || '';
       }
     }
-    pages += 1;
-    if (pages % 25 === 0) console.log(`  ${pages} pages, ${combos.length} combos…`);
-    if (MAX_PAGES && pages >= MAX_PAGES) {
-      console.log(`  stopping early at ${MAX_PAGES} pages (MAX_PAGES set)`);
-      break;
-    }
-    url = page.next || null;
-    if (!results.length) break;
-    if (url) await sleep(DELAY_MS);
   }
 
-  if (!combos.length) throw new Error('No combos fetched — refusing to write an empty file');
+  if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
 
   const payload = {
     updatedAt: new Date().toISOString(),
@@ -139,9 +127,8 @@ async function main() {
 
 main().catch((err) => {
   console.error('Fetch failed:', err.message);
-  if (err.status === 429) {
-    console.error('Rate limited by Commander Spellbook even after backing off.');
-    console.error('Re-run later, or slow the walk down further with DELAY_MS=1500.');
+  if (err.status === 404) {
+    console.error(`${BULK_URL} is gone — check what commander-spellbook-site fetches now.`);
   }
   process.exit(1);
 });
