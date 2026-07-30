@@ -30,14 +30,52 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // whole point of this run is to find out how many requests that adds up to.
 const GAP_MS = 120;
 let requests = 0;
+let retries = 0;
+
+// The first run lost four templates to single HTTP 503s — Scryfall shedding
+// load for a moment — and one of those was 34 pages in, so a whole template's
+// worth of work went with it. A transient status is worth waiting out rather
+// than reporting as a fact about the template.
+//
+// 429 is different in kind: it means we are asking too fast, and Scryfall says
+// how long to wait in Retry-After. Believe it when it does.
+const RETRIES = 4;
+const BACKOFF_MS = [1000, 2000, 4000, 8000];
+const TRANSIENT = new Set([429, 500, 502, 503, 504]);
 
 async function getJson(url) {
-  requests += 1;
-  const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': UA } });
-  await wait(GAP_MS);
-  if (res.status === 404) return { notFound: true };
-  if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
-  return res.json();
+  let failure;
+  let backoff = 0;
+
+  for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
+    if (attempt) {
+      retries += 1;
+      await wait(backoff);
+    }
+    requests += 1;
+
+    let res;
+    try {
+      res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': UA } });
+    } catch (err) {
+      // A dropped connection is as transient as a 503; treat it the same.
+      failure = err;
+      backoff = BACKOFF_MS[attempt];
+      continue;
+    }
+    await wait(GAP_MS);
+
+    if (res.status === 404) return { notFound: true };
+    if (res.ok) return res.json();
+
+    failure = Object.assign(new Error('HTTP ' + res.status), { status: res.status });
+    if (!TRANSIENT.has(res.status)) break;
+
+    const after = Number(res.headers.get('retry-after'));
+    backoff = Number.isFinite(after) && after > 0 ? after * 1000 : BACKOFF_MS[attempt];
+  }
+
+  throw failure;
 }
 
 async function allTemplates() {
@@ -53,7 +91,13 @@ async function allTemplates() {
 
 // One template -> every card that satisfies it. Scryfall pages at 175; follow
 // next_page until it stops, but refuse to walk forever on a pathological query.
-const MAX_PAGES = 40;
+//
+// The first run capped this at 40 and silently truncated the largest template
+// at 7,000 cards, so the measured card set was a floor rather than a count. The
+// guard needs to sit above any legitimate query instead: there are roughly
+// 35,000 distinct oracle cards, so no honest query can exceed ~200 pages, and a
+// run that reaches 200 has found a loop rather than a big result.
+const MAX_PAGES = 200;
 
 async function resolve(template) {
   const start = template.scryfallApi;
@@ -67,7 +111,8 @@ async function resolve(template) {
     try {
       page = await getJson(url);
     } catch (err) {
-      return { error: `HTTP ${err.status || '?'} after ${pages} page(s)` };
+      const gaveUp = TRANSIENT.has(err.status) ? `, ${RETRIES} retries exhausted` : '';
+      return { error: `HTTP ${err.status || '?'} after ${pages} page(s)${gaveUp}` };
     }
     if (page.notFound) return { names: [], pages: pages + 1, empty: true };
     pages += 1;
@@ -120,6 +165,7 @@ async function main() {
   say('## 1. Cost');
   say();
   say(`- **${requests} requests**, ${seconds}s wall time at ${GAP_MS}ms spacing`);
+  say(`- ${retries} retried after a transient failure`);
   say(`- ${failures} template(s) failed to resolve`);
   say(`- ${totalMatches.toLocaleString()} card-to-template matches in total`);
   say(`- **${byCard.size.toLocaleString()} distinct cards** satisfy at least one template`);

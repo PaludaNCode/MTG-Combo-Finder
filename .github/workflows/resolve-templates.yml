@@ -12,7 +12,9 @@ permissions:
 jobs:
   measure:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The 40-page run took 15 minutes; lifting the cap and waiting out 503s
+    # makes it longer, and a timeout mid-run costs the whole measurement.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
