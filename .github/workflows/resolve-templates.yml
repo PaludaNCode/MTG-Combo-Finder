@@ -1,0 +1,22 @@
+name: Measure template resolution
+
+# Manual. Answers whether turning Spellbook's 135 queryable templates into real
+# card lists is practical: how many requests it takes, how big the result is,
+# and whether the resolved sets look right. Reports only — publishes nothing.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve every template
+        run: node tools/research-resolve-templates.js
