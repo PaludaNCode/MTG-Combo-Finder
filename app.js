@@ -40,6 +40,38 @@
 
   // ---- Rendering -----------------------------------------------------------
 
+  // How many results to show before folding the rest away. Four covers most
+  // combos outright; the long tail is what makes a results list unreadable.
+  const RESULTS_SHOWN = 4;
+
+  // The results of a combo, as chips rather than a comma-run: a game-ending
+  // result should be findable at a glance instead of buried mid-sentence.
+  function resultChips(variant) {
+    const wrap = el('div', 'results');
+    const results = DeckCombos.summarizeResults(
+      (variant.produces || []).map((p) => (p.feature && p.feature.name) || p.name)
+    );
+    if (!results.length) {
+      wrap.appendChild(el('span', 'result-none', 'No result recorded'));
+      return wrap;
+    }
+
+    const shown = results.slice(0, RESULTS_SHOWN);
+    const hidden = results.slice(RESULTS_SHOWN);
+    shown.forEach((r) => wrap.appendChild(el('span', r.win ? 'result win' : 'result', r.name)));
+
+    if (hidden.length) {
+      const more = el('button', 'result more', '+' + hidden.length + ' more');
+      more.type = 'button';
+      more.addEventListener('click', () => {
+        hidden.forEach((r) => wrap.insertBefore(el('span', r.win ? 'result win' : 'result', r.name), more));
+        more.remove();
+      });
+      wrap.appendChild(more);
+    }
+    return wrap;
+  }
+
   function comboCard(variant, deckNames) {
     const card = el('article', 'combo');
 
@@ -51,12 +83,7 @@
     });
     card.appendChild(header);
 
-    const produces = (variant.produces || [])
-      .map((p) => (p.feature && p.feature.name) || p.name)
-      .filter(Boolean);
-    if (produces.length) {
-      card.appendChild(el('p', 'produces', 'Produces: ' + produces.join(', ')));
-    }
+    card.appendChild(resultChips(variant));
 
     if (variant.description) {
       const details = el('details');

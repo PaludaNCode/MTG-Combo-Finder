@@ -84,3 +84,58 @@ test('expand: compact rows become the shape the renderer expects', () => {
   assert.deepStrictEqual(v.produces, [{ feature: { name: 'Infinite mana' } }]);
   assert.strictEqual(v.id, '9');
 });
+
+// ---- what a combo produces -------------------------------------------------
+const { summarizeResults } = require('../combos.js');
+
+test('summarizeResults: game-ending results come first', () => {
+  const out = summarizeResults([
+    'Infinite storm count',
+    'Win the game',
+    'Infinite colorless mana',
+  ]);
+  assert.strictEqual(out[0].name, 'Win the game');
+  assert.strictEqual(out[0].win, true);
+  assert.deepStrictEqual(out.slice(1).map((r) => r.name), ['Infinite colorless mana', 'Infinite storm count']);
+  assert.ok(out.slice(1).every((r) => r.win === false));
+});
+
+test('summarizeResults: recognises the ways a combo can end a game', () => {
+  const wins = [
+    'Win the game',
+    'Each opponent loses the game',
+    'Win the game at the beginning of your next upkeep',
+    'All opponents lose the game',
+  ];
+  for (const w of wins) {
+    assert.strictEqual(summarizeResults([w])[0].win, true, w);
+  }
+  // "Infinite lifegain" is great but is not a win, and must not be marked as one.
+  for (const notWin of ['Infinite lifegain', 'Infinite ETB triggers', 'Near-infinite damage']) {
+    assert.strictEqual(summarizeResults([notWin])[0].win, false, notWin);
+  }
+});
+
+test('summarizeResults: duplicates collapse regardless of case or spacing', () => {
+  const out = summarizeResults([
+    'Infinite ETB triggers',
+    'infinite etb triggers',
+    'Infinite  ETB   triggers',
+    'Infinite LTB triggers',
+  ]);
+  assert.deepStrictEqual(out.map((r) => r.name), ['Infinite ETB triggers', 'Infinite LTB triggers']);
+});
+
+test('summarizeResults: blanks and nullish entries are dropped', () => {
+  assert.deepStrictEqual(summarizeResults(['', '   ', null, undefined, 'Infinite mana']).map((r) => r.name), ['Infinite mana']);
+  assert.deepStrictEqual(summarizeResults([]), []);
+  assert.deepStrictEqual(summarizeResults(null), []);
+});
+
+test('summarizeResults: ties are ordered alphabetically so output is stable', () => {
+  const names = ['Infinite damage', 'Infinite mill', 'Infinite untap', 'Infinite mana'];
+  const first = summarizeResults(names).map((r) => r.name);
+  const second = summarizeResults([...names].reverse()).map((r) => r.name);
+  assert.deepStrictEqual(first, second);
+  assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mana', 'Infinite mill', 'Infinite untap']);
+});

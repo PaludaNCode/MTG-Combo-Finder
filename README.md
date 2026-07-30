@@ -18,6 +18,25 @@ because it literally asks Commander Spellbook's public API about your deck.
   (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
+- **What a combo gives you**, as chips rather than a comma-run: game-ending
+  results sort first and are highlighted, duplicates collapse, and anything past
+  the fourth folds behind "+N more".
+
+### Cleaning up combo results
+
+Two steps, because the raw data is noisy in two different ways:
+
+1. **At fetch time**, results whose `Feature.status` is `HU`/`PU` are dropped.
+   Those are Commander Spellbook's *utilities* — internal scaffolding for
+   variant generation ("mana abilities can be activated"), not things a player
+   cares about. Their own `Feature.is_utility` draws the same line. If a variant
+   lists nothing but utilities, they're kept, since a combo with no stated
+   result is worse than a vague one.
+2. **At render time**, `summarizeResults()` dedupes case- and
+   whitespace-insensitively and sorts wins to the front.
+
+Their wording is left intact — rewriting "Infinite ETB triggers" into something
+snappier risks claiming the combo does something it doesn't.
 
 ## Layout
 

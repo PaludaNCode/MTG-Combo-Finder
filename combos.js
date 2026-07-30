@@ -122,6 +122,32 @@
     };
   }
 
+  // ---- what a combo actually gives you ------------------------------------
+
+  // A result that ends the game outranks any amount of infinite mana, so it
+  // gets sorted to the front and marked for the renderer to emphasise.
+  const WIN_RE = /\b(wins?|win|loses?|lose) the game\b/i;
+
+  // Commander Spellbook lists results as feature names. They arrive unordered,
+  // sometimes repeated with different casing, and a long combo can produce a
+  // dozen — so dedupe and rank rather than printing the raw list. Their wording
+  // is left alone: rewriting "Infinite ETB triggers" into something snappier
+  // risks saying something the combo does not actually do.
+  function summarizeResults(names) {
+    const seen = new Set();
+    const out = [];
+    for (const raw of names || []) {
+      const name = String(raw == null ? '' : raw).trim().replace(/\s+/g, ' ');
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ name, win: WIN_RE.test(name) });
+    }
+    out.sort((a, b) => (b.win === a.win ? a.name.localeCompare(b.name) : (b.win ? 1 : -1)));
+    return out;
+  }
+
   // EDHREC card page slug: "Kinnan, Bonder Prodigy" -> "kinnan-bonder-prodigy"
   function edhrecSlug(name) {
     return nameKey(name)
@@ -133,7 +159,7 @@
 
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
-    matchDeck, deckIdentity, withinIdentity, expand,
+    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
