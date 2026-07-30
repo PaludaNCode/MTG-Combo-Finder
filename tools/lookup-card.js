@@ -8,8 +8,10 @@
 //
 //   node tools/lookup-card.js "Carrion Feeder" "Viscera Seer"
 //
-// Also runs from Actions with a comma-separated `cards` input, so future
-// questions of this kind need no code change.
+// Also runs from Actions with a `cards` input, so future questions of this kind
+// need no code change. Names there are separated by a semicolon or a newline,
+// never a comma: half of Magic's legendary creatures have a comma in the name,
+// and "Camellia, the Seedmiser" split into two cards neither of which exists.
 'use strict';
 
 const UA = 'MTG-Combo-Finder/1.0 (+https://github.com/PaludaNCode/MTG-Combo-Finder; card text lookup)';
@@ -53,10 +55,10 @@ async function lookup(name) {
 }
 
 async function main() {
-  const fromEnv = (process.env.CARDS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const fromEnv = (process.env.CARDS || '').split(/[;\n]/).map((s) => s.trim()).filter(Boolean);
   const names = process.argv.slice(2).length ? process.argv.slice(2) : fromEnv;
   if (!names.length) {
-    console.error('Give one or more card names, or set CARDS="A,B".');
+    console.error('Give one or more card names, or set CARDS="A; B".');
     process.exit(2);
   }
 

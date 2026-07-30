@@ -8,9 +8,10 @@ on:
   workflow_dispatch:
     inputs:
       cards:
-        description: Card names, comma separated
+        # Semicolons, not commas: "Camellia, the Seedmiser" is one card.
+        description: 'Card names, separated by a semicolon'
         required: true
-        default: Carrion Feeder, Viscera Seer, Umbral Collar Zealot
+        default: 'Carrion Feeder; Viscera Seer; Umbral Collar Zealot'
 
 permissions:
   contents: read
