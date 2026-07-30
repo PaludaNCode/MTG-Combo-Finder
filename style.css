@@ -317,6 +317,50 @@ button:disabled { opacity: .6; cursor: wait; }
   vertical-align: middle;
 }
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
+
+/* ---- interchangeable cards ---- */
+
+/* "+ any of 3" in a combo header: a slot, not a card, so it must not read as
+   one — hence the outline rather than the plain card styling beside it. */
+.either {
+  padding: .05rem .45rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px #4a536b;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.choices { margin: .15rem 0 .1rem; font-size: .9rem; color: var(--muted); }
+.choices .card-name { color: var(--text); }
+
+/* The alternatives under a suggestion. Same job, same combos — worth listing,
+   not worth shouting. */
+.alternatives {
+  margin: .1rem 0 .5rem;
+  padding-left: .6rem;
+  border-left: 2px solid #333a4d;
+}
+.alt-label { display: block; font-size: .82rem; color: var(--muted); }
+.alt-list {
+  list-style: none;
+  margin: .25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+}
+.alt-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .5rem;
+  font-size: .9rem;
+}
+.alt-list .card-links { margin: 0; font-size: .78rem; }
+.alt-more { margin-top: .3rem; }
+.alt-more summary { font-size: .82rem; }
+.alt-more .alt-list { margin-top: .25rem; }
 .suggestion details .combo { background: var(--panel-2); margin-top: .5rem; }
 /* ---- what a combo produces ---- */
 .results {

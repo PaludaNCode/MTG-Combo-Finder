@@ -51,6 +51,108 @@
     );
   }
 
+  // ---- interchangeable cards -----------------------------------------------
+  //
+  // Spellbook stores one variant per concrete card list, so a combo its own site
+  // shows as "Spike Feeder + 1 of 8 cards" arrives here as eight rows. Left
+  // alone that turns one decision into eight recommendations — and it is why
+  // four different cards can sit at the top of the list each claiming to unlock
+  // seven combos. They are the same seven.
+  //
+  // Two cards are interchangeable *for your deck* when adding either completes
+  // exactly the same combos. That is a fact about the data: no wording is read
+  // and nothing is inferred from card names.
+
+  const sortedKeys = (names) => (names || []).map(nameKey).sort().join('~');
+
+  const producedNames = (variant) => ((variant && variant.produces) || [])
+    .map((p) => (p.feature && p.feature.name) || p.name)
+    .filter(Boolean);
+
+  // What a variant looks like to a deck already holding part of it: the cards
+  // you have, and what the whole thing makes. Same signature = the same combo
+  // with one slot filled differently.
+  function variantSignature(variant, deckNames) {
+    const held = variantCardNames(variant).filter((n) => deckNames.has(nameKey(n)));
+    return sortedKeys(held) + '||' + sortedKeys(producedNames(variant));
+  }
+
+  // suggestions: the output of computeSuggestions().
+  // Returns [{ cards: [name, ...], unlocks: [variant, ...] }] in the same order
+  // — most combos first — with perfect substitutes collapsed into one entry.
+  // `cards` always holds at least one name; the first is the representative.
+  function groupSuggestions(suggestions, deckNames) {
+    const groups = new Map();
+    for (const suggestion of suggestions || []) {
+      const signature = suggestion.unlocks
+        .map((v) => variantSignature(v, deckNames))
+        .sort()
+        .join('#');
+      let group = groups.get(signature);
+      if (!group) {
+        group = { cards: [], unlocks: suggestion.unlocks };
+        groups.set(signature, group);
+      }
+      group.cards.push(suggestion.card);
+    }
+    for (const group of groups.values()) group.cards.sort((a, b) => a.localeCompare(b));
+    return [...groups.values()].sort(
+      (a, b) => b.unlocks.length - a.unlocks.length || a.cards[0].localeCompare(b.cards[0])
+    );
+  }
+
+  // The same idea for combos you can already assemble: variants differing in
+  // exactly one card, producing the same results, are one combo with a choice of
+  // part. Returns [{ shared: [name], choices: [name], variants: [variant] }],
+  // and every variant lands in exactly one group so nothing is lost.
+  function groupVariants(variants) {
+    const list = variants || [];
+    const keyOf = (variant, omit) => sortedKeys(
+      variantCardNames(variant).filter((_, i) => i !== omit)
+    ) + '||' + sortedKeys(producedNames(variant));
+
+    // Every way each variant could be "all of these cards, but one".
+    const buckets = new Map();
+    list.forEach((variant, index) => {
+      variantCardNames(variant).forEach((_, omit) => {
+        const k = keyOf(variant, omit);
+        if (!buckets.has(k)) buckets.set(k, []);
+        buckets.get(k).push({ index, omit });
+      });
+    });
+
+    // Biggest groups claim their members first, so a variant that could join two
+    // families joins the more useful one. Ties break on the key, so the result
+    // never depends on iteration order.
+    const order = [...buckets.entries()].sort(
+      (a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1)
+    );
+
+    const taken = new Array(list.length).fill(false);
+    const groups = [];
+    for (const [, members] of order) {
+      const free = members.filter((m) => !taken[m.index]);
+      if (free.length < 2) continue;
+      free.forEach((m) => { taken[m.index] = true; });
+      const first = list[free[0].index];
+      groups.push({
+        at: Math.min(...free.map((m) => m.index)),
+        shared: variantCardNames(first).filter((_, i) => i !== free[0].omit),
+        choices: free.map((m) => variantCardNames(list[m.index])[m.omit]),
+        variants: free.map((m) => list[m.index]),
+      });
+    }
+    list.forEach((variant, index) => {
+      if (taken[index]) return;
+      groups.push({ at: index, shared: variantCardNames(variant), choices: [], variants: [variant] });
+    });
+
+    // Hand them back in the order they arrived — the caller sorted by popularity,
+    // and grouping must not quietly reshuffle the most-played combo down the page.
+    groups.sort((a, b) => a.at - b.at);
+    return groups.map(({ at, ...group }) => group);
+  }
+
   // ---- matching against the bundled combo dataset -------------------------
   // The page can't call Commander Spellbook's API (their CORS allowlist covers
   // only their own site and localhost), so a GitHub Action publishes the whole
@@ -415,7 +517,7 @@
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
-    detectCommanders,
+    detectCommanders, groupSuggestions, groupVariants, variantSignature,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

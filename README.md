@@ -15,6 +15,13 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 - **Suggested additions** — every combo you're *one card away* from, aggregated per missing
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
+- **Interchangeable cards are one decision, not many** — Spellbook stores one variant per
+  concrete card list, so a combo its own site shows as *"Spike Feeder + 1 of 8 cards"*
+  arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
+  collapsed into a single suggestion — "Cleric Class, or any one of these 3 instead" — and
+  combos you can already assemble show their swappable part as *"+ any of 3"*. On a real
+  99-card deck that took 141 suggestions down to 81 and 34 combos down to 23, without
+  dropping a single card or variant.
 - **Outside your color identity** — the same ranking for cards that would require changing
   your deck's colors, shown separately.
 - **Deck import** — paste an Archidekt deck URL, or paste any site's text export
@@ -129,6 +136,27 @@ hidden: up to eight results are listed before the rest fold behind "+N more", an
 `splitResults()` guarantees a tier that exists never disappears entirely into the
 fold.
 
+### Collapsing interchangeable cards
+
+Two cards are interchangeable **for your deck** when adding either one completes
+exactly the same set of combos. That is read off the data — the cards you already
+hold plus what the combo produces — so no wording is interpreted and nothing is
+inferred from card names.
+
+It matters because the flat list actively misleads. Four different cards each
+claiming "+7 combos" at the top of the suggestions look like four options worth
+seven combos apiece; they are one option worth seven, described four times.
+
+Two details worth keeping:
+
+- **Grouping must not reorder.** `groupVariants()` returns groups in the order
+  their first variant arrived, because the caller sorted by popularity and the
+  most-played combo should not drift down the page. The layout test caught this
+  when the first pass sorted by group size instead.
+- **Nothing is lost.** Every variant lands in exactly one group and every
+  suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
+  combo still lists all its versions, each linking to its own Spellbook page.
+
 ## Layout
 
 One column on phones and tablets; from 900px the decklist sits in a sticky left
@@ -157,7 +185,8 @@ Static site, zero dependencies, no build step:
   against live data and flagging anything unclassified.
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
-  double-faced cards, ties broken alphabetically).
+  double-faced cards, ties broken alphabetically), and collapses interchangeable
+  cards via `groupSuggestions()` / `groupVariants()`.
 - `app.js` — reads the form, downloads the combo database, renders the sections
   above. On failure it shows a copyable report (endpoint, HTTP status, what was
   sent, which lines were skipped) instead of a bare "it didn't work".
