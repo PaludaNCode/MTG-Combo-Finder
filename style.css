@@ -230,32 +230,35 @@ button:disabled { opacity: .6; cursor: wait; }
   line-height: 1.35;
   padding: .15rem .5rem;
   border-radius: 999px;
-  background: var(--panel-2);
-  color: var(--ok);
-  box-shadow: inset 0 0 0 1px rgba(123, 194, 117, .3);
 }
 
-/* A stated win is the one worth spotting first: filled, unmissable. */
+/* Green — the combo says it ends the game. Filled, so it reads at a glance
+   and nothing else competes with it. */
 .result.tier-win {
   background: var(--ok);
   color: #10240f;
   font-weight: 650;
-  box-shadow: none;
   cursor: help;
 }
 
-/* Ends most games without saying so — infinite life, damage, mill, turns.
-   Deliberately not styled as a win: infinite life loses to poison, mill and
-   alternate win conditions, so overstating it would be a lie in the cases
-   that actually matter. Hover gives the caveat. */
+/* Greyish-yellow — worth having, but needs something else to convert it:
+   mana, storm count, tokens, counters, draw, life, damage, mill, turns.
+   Muted rather than gold, so it sits between the green and the grey instead
+   of competing with the win. Hover says what it still needs. */
 .result.tier-decisive {
-  background: var(--brass-soft, rgba(212, 162, 78, .14));
-  color: var(--accent);
-  box-shadow: inset 0 0 0 1px rgba(212, 162, 78, .45);
+  background: rgba(203, 191, 138, .10);
+  color: #cfc48a;
+  box-shadow: inset 0 0 0 1px rgba(203, 191, 138, .30);
   cursor: help;
 }
 
-.result.tier-other { color: var(--ok); }
+/* Grey — the plumbing a combo runs on: ETB and LTB loops, death and
+   sacrifice triggers. Present because it explains how the loop works, quiet
+   because it is not why you are running the deck. */
+.result.tier-other {
+  background: var(--panel-2);
+  color: var(--muted);
+}
 
 button.result.more {
   background: none;

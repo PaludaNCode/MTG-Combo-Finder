@@ -1,9 +1,12 @@
 # MTG Combo Finder
 
+**▶ Live site: https://paludancode.github.io/MTG-Combo-Finder/**
+
 Paste a Magic: The Gathering decklist and find the combos hiding in it — plus
 **ranked suggestions for which single card to add to unlock the most new combos**.
 A bit like [Commander Spellbook](https://commanderspellbook.com/)'s "Find My Combos",
-because it literally asks Commander Spellbook's public API about your deck.
+but the matching happens in your browser against a published copy of their
+database — see [Why the data is published, not queried live](#why-the-data-is-published-not-queried-live).
 
 ## Features
 
@@ -42,21 +45,35 @@ Two steps, because the raw data is noisy in two different ways:
 Their wording is left intact — rewriting "Infinite ETB triggers" into something
 snappier risks claiming the combo does something it doesn't.
 
-### Three tiers, because "does this win?" has three answers
+### Three tiers, three colours
 
-| Tier | Meaning | Style |
-|---|---|---|
-| `win` | The combo says so: *Win the game*, *Each opponent loses the game* | Filled green |
-| `decisive` | Ends most games without saying so | Outlined, with the caveat on hover |
-| `other` | Enablers — mana, storm count, untaps | Plain |
+| Colour | Tier | Meaning | Examples |
+|---|---|---|---|
+| 🟩 Green | `win` | The combo says it ends the game | *Win the game*, *Each opponent loses the game* |
+| 🟨 Greyish-yellow | `decisive` | Worth having, but needs something else to convert it | mana (every flavour), storm count, creature tokens, +1/+1 counters, card draw, lifegain, damage, mill, turns |
+| ⬜ Grey | `other` | The plumbing the loop runs on | *Infinite ETB*, *Infinite LTB*, *Infinite death triggers*, *Infinite sacrifice triggers* |
 
-The middle tier exists because a binary is wrong. **Infinite lifegain beats
-almost every deck, but poison ignores life totals entirely, and mill or an
-alternate win condition goes straight over the top of it.** Marking it a win
-would be false in exactly the games where the distinction matters; marking it a
-plain result undersells it. So it gets its own tier and each entry carries *why*
-it falls short, shown on hover. Same for infinite mill (Thassa's Oracle, a
-shuffle-back) and infinite turns (still needs something that closes).
+A binary would be wrong in both directions. **Infinite lifegain beats almost
+every deck, but poison ignores life totals entirely, and mill or an alternate
+win condition goes straight over the top of it.** Calling it a win is false in
+exactly the games where the distinction matters; calling it plumbing undersells
+it everywhere else. So the middle tier carries *why* each result still needs
+something, shown on hover — infinite mana needs a payoff, infinite mill needs
+one too (and loses to Thassa's Oracle), infinite turns still has to close.
+
+Grey is deliberately the four biggest outcomes in the database — ETB (66k
+combos), LTB (57k), death triggers (45k), sacrifice triggers (43k). They explain
+*how* a loop works, which is not the same as why you'd run it, and leaving them
+quiet is what keeps the chips readable.
+
+Two traps worth knowing about, both pinned by tests:
+
+- A result must be **unbounded** to reach yellow. "Draw a card" is not "Infinite
+  card draw".
+- **"Lose the game" in a negation is not a win.** *You can't lose the game due
+  to having 0 or less life* says the words while meaning the opposite, and
+  *unless an opponent chooses to lose the game* hands them the choice. Matching
+  on the words alone coloured all of those green.
 
 ## Layout
 

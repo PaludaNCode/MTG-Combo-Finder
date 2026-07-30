@@ -49,7 +49,7 @@ const FIXTURE = {
   },
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
-      p: ['Infinite storm count', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite ETB triggers', 'Infinite LTB triggers', 'Infinite untap'],
+      p: ['Infinite ETB', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite LTB', 'Infinite death triggers', 'Infinite storm count'],
       i: 'GU', pop: 999 },
     { id: '2', c: ['Basalt Monolith', 'Rings of Brighthearth'], p: ['Infinite colorless mana'], i: 'C', pop: 90 },
     { id: '6', c: ['Basalt Monolith', 'Kinnan, Bonder Prodigy', 'Walking Ballista'], p: ['Infinite damage'], i: 'GU', pop: 10 },
@@ -87,8 +87,9 @@ function measure(win, doc) {
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
     text: c.textContent, win: c.classList.contains('tier-win'),
-    decisive: c.classList.contains('tier-decisive'), more: c.classList.contains('more'),
-    title: c.title || '',
+    decisive: c.classList.contains('tier-decisive'),
+    grey: c.classList.contains('tier-other'), more: c.classList.contains('more'),
+    title: c.title || '', colour: win.getComputedStyle(c).color,
   })) : [];
   const form = doc.querySelector('.col-input').getBoundingClientRect();
   const out = doc.querySelector('.col-output').getBoundingClientRect();
@@ -121,6 +122,23 @@ function runOne(vp) {
 
         const before = measure(win, doc);
 
+        // Tier ordering pushes the grey plumbing behind "+N more", so the fold
+        // has to be opened before all three colours are on screen at once.
+        // Scope to the same combo card throughout: the pieces panel re-renders
+        // these, so a document-wide query picks up other cards' unopened folds.
+        const combo0 = doc.querySelector('.combo');
+        const moreBtn = combo0.querySelector('.results .result.more');
+        if (moreBtn) moreBtn.click();
+        await new Promise((r) => setTimeout(r, 60));
+        const expandedChips = [...combo0.querySelectorAll('.results .result')].map((c) => ({
+          text: c.textContent,
+          win: c.classList.contains('tier-win'),
+          decisive: c.classList.contains('tier-decisive'),
+          grey: c.classList.contains('tier-other'),
+          more: c.classList.contains('more'),
+          colour: win.getComputedStyle(c).color,
+        }));
+
         // Collapse the first section and confirm the body actually goes away.
         const first = doc.querySelector('.panel');
         first.querySelector('.panel-head').click();
@@ -131,7 +149,7 @@ function runOne(vp) {
           stored: win.localStorage.getItem('mtg-combo-finder.collapsed'),
         };
         first.querySelector('.panel-head').click();
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse }));
+        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse, expandedChips }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -217,9 +235,16 @@ function serve(dir, extra) {
     // Empty chips must fail: otherwise every assertion below passes vacuously.
     if (!v.chips.length) problems.push('the first combo listed no results at all');
     if (v.chips.length && v.chips[0].win !== true) problems.push('a game-winning result was not listed first');
-    const decisive = v.chips.filter((c) => c.decisive);
-    if (!decisive.length) problems.push('the decisive tier rendered nothing');
-    if (decisive.some((c) => !c.title)) problems.push('a decisive result carries no explanation on hover');
+    if (v.chips.some((c) => c.decisive && !c.title)) problems.push('a yellow result carries no explanation on hover');
+    const ex = v.expandedChips;
+    if (ex.some((c) => c.more)) problems.push('the "+N more" fold did not open');
+    if (!ex.some((c) => c.win)) problems.push('the green tier rendered nothing');
+    if (!ex.some((c) => c.decisive)) problems.push('the yellow tier rendered nothing');
+    if (!ex.some((c) => c.grey)) problems.push('the grey tier rendered nothing');
+    // Three tiers must be three visibly different colours, or the tiering is
+    // lost on anyone actually looking at the page.
+    const colours = new Set(ex.map((c) => c.colour));
+    if (colours.size < 3) problems.push(`only ${colours.size} distinct chip colours: ${[...colours].join(' / ')}`);
     if (v.chips.length > 5) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
@@ -237,7 +262,7 @@ function serve(dir, extra) {
 
     const layout = wide ? `two columns (${v.formWidth}px + ${v.outWidth}px)` : `stacked (${v.outWidth}px)`;
     const pieceNote = v.topPiece ? `top piece ${v.topPiece.card} ${v.topPiece.badge}` : 'no pieces';
-    const chipNote = `${v.chips.length} chips [${v.chips.map((c) => (c.win ? '*' : c.decisive ? '~' : '') + c.text).join(', ')}]`;
+    const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);

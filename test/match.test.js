@@ -132,9 +132,66 @@ test('summarizeResults: game-deciding results are their own tier, not wins', () 
   }
 });
 
-test('summarizeResults: enablers stay plain results', () => {
-  for (const plain of ['Infinite colorless mana', 'Infinite ETB triggers', 'Infinite storm count', 'Infinite untap']) {
+test('summarizeResults: plumbing stays grey', () => {
+  // The four biggest outcomes in the whole database are loop mechanics, not
+  // reasons to run the deck. Keeping them quiet is what makes the chips readable.
+  for (const plain of [
+    'Infinite ETB',
+    'Infinite LTB',
+    'Infinite death triggers',
+    'Infinite sacrifice triggers',
+    'Near-infinite ETB',
+    'Infinite landfall triggers',
+    'Infinite magecraft triggers',
+    'Infinite untap of creatures you control',
+  ]) {
     assert.strictEqual(summarizeResults([plain])[0].tier, 'other', plain);
+  }
+});
+
+test('summarizeResults: outcomes that need a payoff are yellow, by explicit request', () => {
+  for (const decisive of [
+    'Infinite creature tokens',
+    'Infinite creature tokens with haste',
+    'Infinite tapped creature tokens',
+    'Infinite +1/+1 counters on a creature',
+    'Infinite +1/+1 counters on creatures you control',
+    'Infinite draw triggers',
+    'Infinite card draw',
+    'Infinite self-mill',
+    'Infinite storm count',
+    // Every flavour of mana: colourless, colour-specific and generated.
+    'Infinite colorless mana',
+    'Infinite colored mana',
+    'Infinite red mana',
+    'Infinite green mana',
+    'Infinite mana creatures you control can produce',
+    'Infinite mana lands you control can produce',
+  ]) {
+    const r = summarizeResults([decisive])[0];
+    assert.strictEqual(r.tier, 'decisive', decisive);
+    assert.ok(r.why.length > 0, decisive + ' should say what it still needs');
+  }
+});
+
+test('summarizeResults: a bounded amount is not decisive', () => {
+  // The tier is for unbounded results; "Draw a card" is just a thing that happens.
+  for (const plain of ['Draw a card', 'Add one mana of any color', 'Create a creature token']) {
+    assert.strictEqual(summarizeResults([plain])[0].tier, 'other', plain);
+  }
+});
+
+test('summarizeResults: "lose the game" in a negation is not a win', () => {
+  // These say "lose the game" while meaning the opposite, or hand the choice to
+  // an opponent. Matching the words alone coloured all three green.
+  for (const notAWin of [
+    "You can't lose the game due to having 0 or less life",
+    'You are unable to lose the game due to damage or lifeloss',
+    'On each of your turns, you take an extra turn unless an opponent chooses to lose the game',
+  ]) {
+    const r = summarizeResults([notAWin])[0];
+    assert.strictEqual(r.tier, 'decisive', notAWin);
+    assert.strictEqual(r.win, false, notAWin + ' must not be coloured as a win');
   }
 });
 
@@ -146,10 +203,12 @@ test('summarizeResults: tiers sort win, then decisive, then the rest', () => {
     'Infinite colorless mana',
     'Infinite mill',
   ]);
-  assert.deepStrictEqual(out.map((r) => r.tier), ['win', 'decisive', 'decisive', 'other', 'other']);
+  assert.deepStrictEqual(out.map((r) => r.tier), ['win', 'decisive', 'decisive', 'decisive', 'decisive']);
   assert.strictEqual(out[0].name, 'Win the game');
   // Within a tier, alphabetical keeps the output stable.
-  assert.deepStrictEqual(out.slice(1, 3).map((r) => r.name), ['Infinite lifegain', 'Infinite mill']);
+  assert.deepStrictEqual(out.slice(1).map((r) => r.name), [
+    'Infinite colorless mana', 'Infinite lifegain', 'Infinite mill', 'Infinite storm count',
+  ]);
 });
 
 test('summarizeResults: duplicates collapse regardless of case or spacing', () => {
@@ -173,8 +232,9 @@ test('summarizeResults: ordering is stable regardless of input order', () => {
   const first = summarizeResults(names).map((r) => r.name);
   const second = summarizeResults([...names].reverse()).map((r) => r.name);
   assert.deepStrictEqual(first, second);
-  // Decisive results lead, each tier alphabetical within itself.
-  assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mill', 'Infinite mana', 'Infinite untap']);
+  // Decisive results lead, each tier alphabetical within itself; "Infinite
+  // untap of creatures" is plumbing, so it sorts last.
+  assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mana', 'Infinite mill', 'Infinite untap']);
 });
 
 // ---- which cards carry the combos ------------------------------------------
