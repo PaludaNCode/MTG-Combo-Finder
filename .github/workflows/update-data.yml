@@ -1,0 +1,50 @@
+name: Update combo data
+
+on:
+  schedule:
+    - cron: '17 4 * * *' # daily; GitHub's scheduler is best-effort
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fetch-combos.js'
+      - '.github/workflows/update-data.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: combo-data
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch the combo database
+        run: node tools/fetch-combos.js "$RUNNER_TEMP/combos.json"
+
+      # Published as a single orphan commit so the data never accumulates
+      # history and the repo stays small — same approach as MTG-Pricerunner.
+      - name: Publish to the data branch
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/data-branch"
+          mkdir -p "$work"
+          cp "$RUNNER_TEMP/combos.json" "$work/combos.json"
+          cd "$work"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q --orphan data
+          git add combos.json
+          git commit -q -m "Combo data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -q --force \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            data
+          echo "Published $(du -h combos.json | cut -f1) to the data branch"
