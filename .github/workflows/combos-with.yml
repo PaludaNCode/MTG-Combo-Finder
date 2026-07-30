@@ -1,0 +1,39 @@
+name: Why isn't this a combo
+
+# Manual. Given card names, prints which published combos involve them and what
+# stands between the test deck and each one.
+#
+# Exists to answer "shouldn't X combo with Y?" — the question that finds real
+# gaps. It has two answers and they need telling apart: Spellbook does not list
+# the combo (their gap, worth submitting), or Spellbook lists it and we are not
+# showing it (ours). Reports only; publishes nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      cards:
+        # Semicolons, not commas: "Camellia, the Seedmiser" is one card.
+        description: 'Card names, separated by a semicolon'
+        required: true
+        default: 'Heroic Feast; Kitchen Finks'
+      deck:
+        description: 'Decklist to compare against (blank uses test/fixtures/deck.txt)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Find the combos
+        env:
+          CARDS: ${{ inputs.cards }}
+          DECK_FILE: ${{ inputs.deck }}
+        run: node tools/combos-with.js
