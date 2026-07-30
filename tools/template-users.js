@@ -54,12 +54,46 @@ function bestResult(produces) {
 
 async function main() {
   const wanted = process.argv.slice(2).join(' ').trim() || process.env.TEMPLATE || '';
-  if (!wanted) {
-    console.error('Give a template name, or set TEMPLATE="…".');
-    process.exit(2);
-  }
-
   const templates = await allTemplates();
+
+  // With no name, rank every template by how many combos ask for it. This is
+  // also the check that the ids in combos.json and the ids from the templates
+  // API are the same numbers: if they were not, no slot would ever be filled
+  // and nothing would say so — the combos would just quietly stay missing.
+  if (!wanted || wanted === '*') {
+    const data = await getJson(COMBOS_URL);
+    const byId = new Map();
+    let withTemplates = 0;
+    for (const combo of data.combos || []) {
+      if (!(combo.t || []).length) continue;
+      withTemplates += 1;
+      for (const id of combo.t) byId.set(String(id), (byId.get(String(id)) || 0) + 1);
+    }
+    const names = new Map(templates.map((t) => [String(t.id), t.name]));
+    const rows = [...byId.entries()].sort((a, b) => b[1] - a[1]);
+    const unknown = rows.filter(([id]) => id !== 'null' && !names.has(id));
+    const total = (data.combos || []).length;
+
+    say('# Templates by how many combos need them');
+    say();
+    say(`${withTemplates.toLocaleString()} of ${total.toLocaleString()} combos need at least one template.`);
+    say(`${rows.length} distinct ids in the data, ${names.size} templates in the API, `
+      + `**${rows.filter(([id]) => names.has(id)).length} line up**.`);
+    if (unknown.length) {
+      say();
+      say(`⚠️ ${unknown.length} id(s) in the data match no template in the API: `
+        + unknown.slice(0, 15).map(([id, n]) => `\`${id}\` (${n} combos)`).join(', '));
+    }
+    say();
+    say('| combos | id | template |');
+    say('|---:|---:|---|');
+    for (const [id, n] of rows.slice(0, 40)) {
+      say(`| ${n} | ${id} | ${names.get(id) || (id === 'null' ? '_(no id in the export)_' : '**unknown**')} |`);
+    }
+    const summary = process.env.GITHUB_STEP_SUMMARY;
+    if (summary) require('node:fs').appendFileSync(summary, out.join('\n') + '\n');
+    return;
+  }
   const match = templates.find((t) => norm(t.name) === norm(wanted))
     || templates.find((t) => norm(t.name).includes(norm(wanted)));
   if (!match) {
