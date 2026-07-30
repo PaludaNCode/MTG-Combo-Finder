@@ -49,7 +49,9 @@ const FIXTURE = {
   },
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
-      p: ['Infinite ETB', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite LTB', 'Infinite death triggers', 'Infinite storm count'],
+      p: ['Infinite ETB', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite LTB',
+          'Infinite death triggers', 'Infinite storm count', 'Infinite sacrifice triggers',
+          'Infinite creature tokens', 'Lock'],
       i: 'GU', pop: 999 },
     { id: '2', c: ['Basalt Monolith', 'Rings of Brighthearth'], p: ['Infinite colorless mana'], i: 'C', pop: 90 },
     { id: '6', c: ['Basalt Monolith', 'Kinnan, Bonder Prodigy', 'Walking Ballista'], p: ['Infinite damage'], i: 'GU', pop: 10 },
@@ -236,6 +238,9 @@ function serve(dir, extra) {
     if (!v.chips.length) problems.push('the first combo listed no results at all');
     if (v.chips.length && v.chips[0].win !== true) problems.push('a game-winning result was not listed first');
     if (v.chips.some((c) => c.decisive && !c.title)) problems.push('a yellow result carries no explanation on hover');
+    if (!v.chips.some((c) => c.more)) problems.push('the fixture no longer folds anything, so the fold is untested');
+    // Grey must be on screen without expanding: it is quieter, not hidden.
+    if (!v.chips.some((c) => c.grey)) problems.push('grey is not visible until the fold is opened');
     const ex = v.expandedChips;
     if (ex.some((c) => c.more)) problems.push('the "+N more" fold did not open');
     if (!ex.some((c) => c.win)) problems.push('the green tier rendered nothing');
@@ -245,7 +250,8 @@ function serve(dir, extra) {
     // lost on anyone actually looking at the page.
     const colours = new Set(ex.map((c) => c.colour));
     if (colours.size < 3) problems.push(`only ${colours.size} distinct chip colours: ${[...colours].join(' / ')}`);
-    if (v.chips.length > 5) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
+    // Eight results plus the "+N more" control.
+    if (v.chips.length > 9) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
     if (!v.afterCollapse.stored) problems.push('collapse state was not persisted');

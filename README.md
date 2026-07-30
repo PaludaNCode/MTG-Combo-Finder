@@ -51,7 +51,12 @@ snappier risks claiming the combo does something it doesn't.
 |---|---|---|---|
 | 🟩 Green | `win` | The combo says it ends the game | *Win the game*, *Each opponent loses the game* |
 | 🟨 Greyish-yellow | `decisive` | Worth having, but needs something else to convert it | mana (every flavour), storm count, creature tokens, +1/+1 counters, card draw, lifegain, damage, mill, turns |
-| ⬜ Grey | `other` | The plumbing the loop runs on | *Infinite ETB*, *Infinite LTB*, *Infinite death triggers*, *Infinite sacrifice triggers* |
+| ⬜ Grey | `other` | The plumbing the loop runs on — relevant, but not a way to win | *Infinite ETB*, *Infinite LTB*, *Infinite death triggers*, *Infinite sacrifice triggers* |
+
+Grey is shown, not hidden. Up to eight results are listed before the rest fold
+behind "+N more" — enough for 93% of combos outright — and `splitResults()`
+guarantees a tier that exists never disappears entirely into the fold, so the
+plumbing stays visible even on a combo that produces a dozen things.
 
 A binary would be wrong in both directions. **Infinite lifegain beats almost
 every deck, but poison ignores life totals entirely, and mill or an alternate

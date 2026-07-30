@@ -40,9 +40,10 @@
 
   // ---- Rendering -----------------------------------------------------------
 
-  // How many results to show before folding the rest away. Four covers most
-  // combos outright; the long tail is what makes a results list unreadable.
-  const RESULTS_SHOWN = 4;
+  // How many results to show before folding the rest away. Eight shows every
+  // result on 93% of combos — the old cap of four folded something on 58% of
+  // them, which is how the grey tier ended up invisible in practice.
+  const RESULTS_SHOWN = 8;
 
   // The results of a combo, as chips rather than a comma-run: a game-ending
   // result should be findable at a glance instead of buried mid-sentence.
@@ -56,8 +57,7 @@
       return wrap;
     }
 
-    const shown = results.slice(0, RESULTS_SHOWN);
-    const hidden = results.slice(RESULTS_SHOWN);
+    const { shown, hidden } = DeckCombos.splitResults(results, RESULTS_SHOWN);
     const chip = (r) => {
       const node = el('span', 'result tier-' + r.tier, r.name);
       if (r.why) node.title = r.why; // the caveat, on hover
