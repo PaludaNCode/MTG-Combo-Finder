@@ -20,8 +20,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
   collapsed into a single suggestion — "Cleric Class, or any one of these 3 instead" — and
   combos you can already assemble show their swappable part as *"+ any of 3"*. On a real
-  99-card deck that took 141 suggestions down to 81 and 34 combos down to 23, without
-  dropping a single card or variant.
+  99-card deck that took 141 suggestions down to 81 and 34 combos down to 23 rows, without
+  dropping a single card or variant. **The count still says 34** — collapsing is a
+  readability choice about rows, and it must not quietly shrink the number of combos the
+  deck is credited with.
 - **Outside your color identity** — the same ranking for cards that would require changing
   your deck's colors, shown separately.
 - **Deck import** — paste an Archidekt deck URL, or paste any site's text export
