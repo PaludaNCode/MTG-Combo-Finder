@@ -30,7 +30,7 @@ const VIEWPORTS = [
 ];
 
 // What the header should say about where the commander came from, per deck.
-const EXPECTED_BADGE = { marked: 'marked in your list', plain: 'found in your list' };
+const EXPECTED_BADGE = { marked: 'marked in your list', plain: 'found in your list, and filled in above' };
 
 function findBrowser() {
   const candidates = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
@@ -228,6 +228,28 @@ function runOne(vp) {
           colour: win.getComputedStyle(c).color,
         }));
 
+        // The bug this guards: detection reads the export's ordering, so adding
+        // a card by hand puts the list out of order and a second search used to
+        // lose the commander it had just found. A confident answer now goes into
+        // the box, which is what makes it survive the edit.
+        const commanderBox = doc.getElementById('commanders');
+        const afterEdit = { boxAfterSearch: commanderBox.value.trim(), commander: null };
+        if (afterEdit.boxAfterSearch) {
+          // Insert a card in the middle, exactly as somebody tinkering would,
+          // and break the alphabetical run that detection depends on.
+          const lines = doc.getElementById('decklist').value.split('\\n');
+          lines.splice(Math.floor(lines.length / 2), 0, '1 Aetherflux Reservoir');
+          doc.getElementById('decklist').value = lines.join('\\n');
+          doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+          await new Promise((r) => setTimeout(r, 500));
+          const line = doc.querySelector('.commander-line');
+          afterEdit.commander = line ? (line.querySelector('.card-name') || {}).textContent || null : null;
+          // Put it back so the collapse checks below see the same page as before.
+          doc.getElementById('decklist').value = DECKS[vp.deck];
+          doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+          await new Promise((r) => setTimeout(r, 500));
+        }
+
         // Collapse the first section and confirm the body actually goes away.
         const first = doc.querySelector('.panel');
         first.querySelector('.panel-head').click();
@@ -238,7 +260,7 @@ function runOne(vp) {
           stored: win.localStorage.getItem('mtg-combo-finder.collapsed'),
         };
         first.querySelector('.panel-head').click();
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse, expandedChips }));
+        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse, expandedChips, afterEdit }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -450,6 +472,16 @@ function serve(dir, extra) {
     // Eight results plus the "+N more" control.
     if (v.chips.length > 9) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
+    // Detection reads the export's ordering, so a hand-inserted card used to
+    // lose the commander on the next search. It survives now because a confident
+    // answer is written into the box; both halves are asserted.
+    const ae = v.afterEdit;
+    if (vp.deck === 'plain') {
+      if (ae.boxAfterSearch !== 'Kinnan, Bonder Prodigy') problems.push(`the detected commander was not filled into the box (box read "${ae.boxAfterSearch}")`);
+      if (ae.commander !== 'Kinnan, Bonder Prodigy') problems.push(`editing the decklist lost the commander (it read "${ae.commander}")`);
+    } else if (ae.boxAfterSearch) {
+      problems.push('a commander marked in the list should not be written into the box');
+    }
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
     if (!v.afterCollapse.stored) problems.push('collapse state was not persisted');
 
