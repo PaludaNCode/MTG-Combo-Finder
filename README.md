@@ -34,22 +34,9 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   you want to know before trimming a deck.
 - **Suggestions split by colour** — two tabs, *In your colours* and *Other
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
-  tab rather than into the list. Colour identity is the commander's when there
-  is one, and the colours the deck actually plays when there isn't.
-- **The commander works itself out** — the commander box is optional, because the
-  commander is normally already in the list you pasted. Three signals, in order:
-  the export's own marker (`*CMDR*`, `[Commander{top}]`); the export's *ordering*,
-  since deck sites write the commander first and the deck alphabetically after
-  it; and failing both, the card that can legally be a commander and whose
-  colours match the deck's. The header then shows who is leading the deck, its
-  colour identity as mana symbols, and whether that was marked, worked out, or
-  typed. When nothing singles one out it says so and lists the candidates rather
-  than picking one.
-
-  Ordering earns its place: a real Abzan list with sixteen legendary creatures in
-  it has several pairs whose colours add up to the deck's — Frodo + Sam, but also
-  Chatterfang + Samwise, and Dina + Rosie. Only position says which pair is
-  actually the commander.
+  tab rather than into the list. **Colours are read off the cards** — every card
+  in the list is a card the deck plays, so the list answers the question and
+  cannot be wrong about it.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
@@ -362,42 +349,44 @@ Consequences worth knowing:
 
 - Combo data is as fresh as the last workflow run (daily cron + manual dispatch),
   not live.
-- Combos requiring a *template* ("any sacrifice outlet") are excluded from
-  suggestions, since no single named card completes them.
-- Deck colour identity is derived from the commander's entry in the dataset. An
-  unrecognized commander disables colour filtering rather than hiding results.
-- A commander worked out from the decklist can never *narrow* the deck's colour
-  identity — every rule in `detectCommanders()` requires the candidate to cover
-  the colours the deck already plays, so a wrong guess can mislabel the header
-  but cannot make combos disappear. `test/commander.test.js` asserts it.
+- Combos requiring a *template* ("a Persist Creature") are excluded from
+  suggestions, since no single named card completes them — but not from results:
+  see "Template slots" above.
+- Deck colour identity is the union of the colours of the cards pasted in. If
+  none of them is recognised, colour filtering is switched off rather than
+  guessed at.
 
-### A found commander goes into the box
+### Colours come from the cards, not from a commander
 
-The strongest detection signal is how deck sites export — commander first, the
-rest in name order — so `commandersByPosition()` looks for a card sitting in
-front of an otherwise sorted list. That is what tells a real partner pair apart
-from the several other pairs whose colours would add up the same way.
+The commander used to decide the deck's colours, which meant the commander had
+to be known, which meant finding one when the box was left empty. That took
+three signals — an export marker, the export's ordering, and failing both, the
+legal commander whose colours matched the deck — and where several legendary
+creatures fitted it offered a shortlist to choose from.
 
-It also means **adding one card by hand destroys the signal**. Reported as a bug,
-and it was one: search, get the right commander, add a card, search again, and it
-was gone.
+All of it is gone. A decklist with a dozen legends in it got a guess plus a
+question in place of an answer it already contained: **every card in the list is
+a card the deck plays**, so the union of their colour identities is the deck's,
+and no card can be wrong about its own colours.
 
-The repair is not to loosen the sortedness test. That test is the whole
-discrimination between "a card is deliberately out in front" and "this list isn't
-sorted"; make it tolerant and *both* readings start passing, so partner pairs get
-lost rather than saved. Instead, a confident answer is written into the commander
-box. It stops being something re-derived on every search and becomes ordinary
-typed input — visible, editable, and independent of whether the list still looks
-exported. What the user typed is never overwritten.
+What went with it: `detectCommanders()`, `commandersByPosition()` and the
+sorted-export heuristic, the candidate shortlist and its buttons, the
+`commanderNames` list in the published data (3,321 names), and `canBeCommander()`
+in the fetcher. About 250 lines and a test file.
 
-For the case where detection genuinely cannot decide, the shortlist renders as
-buttons rather than text: that moment is exactly when someone would otherwise be
-retyping a name with two commas in it on a phone.
+The commander box stays, because a commander is a card in the deck and its
+combos count — it simply no longer decides anything the cards can decide.
 
-The layout test covers both halves — that the box gets filled, that a commander
-marked in the list is *not* written into it, and that editing the decklist no
-longer loses the commander. Disabling the fix makes it fail with
-`editing the decklist lost the commander`.
+**One consequence, accepted.** A deck whose commander permits a colour it plays
+none of — a Mardu commander over a list with no red card in it — reads as the
+colours actually present. Suggestions in that unplayed colour land under "other
+colours" instead of "in your colours". That is a fair description of the list as
+pasted, and it hides nothing: the split is between two visible tabs, not between
+shown and dropped.
+
+The layout test asserts the negative — that no commander line and no picker is
+rendered — and runs the same deck with and without a `*CMDR*` marker to confirm
+the output is identical either way.
 
 ### Use the bulk export, never the paged API
 

@@ -290,37 +290,6 @@ function isRealCard(card) {
   return Boolean(card) && typeof card.name === 'string' && !NON_CARD_LAYOUTS.has(card.layout);
 }
 
-// Whether a card is allowed to be somebody's commander. Needed because the
-// commander box is optional: with nothing typed in it, the only way to name a
-// deck's commander is to find it among the cards pasted in.
-//
-// The legality check does most of the work — it rules out tokens, Un-cards and
-// anything else in the bulk file that is not a real Commander-legal card — and
-// leaves three ways in:
-//   * a legendary creature (the ordinary case),
-//   * a card whose rules text grants it ("<X> can be your commander"), which is
-//     how the Commander-set planeswalkers qualify,
-//   * a Background, which is a commander only alongside a "Choose a Background"
-//     partner but is one nonetheless.
-//
-// Only the front face counts for the legendary-creature test. A card like
-// Westvale Abbey has "Land // Legendary Creature — Demon" as its combined type
-// line, and testing that string as a whole would call the land a commander.
-function canBeCommander(card) {
-  if (!isRealCard(card)) return false;
-  if (!card.legalities || card.legalities.commander !== 'legal') return false;
-
-  const faces = Array.isArray(card.card_faces) ? card.card_faces : [];
-  const front = (faces.length ? faces[0].type_line : card.type_line) || '';
-  if (/\bLegendary\b/.test(front) && /\bCreature\b/.test(front)) return true;
-
-  const typeLines = [card.type_line].concat(faces.map((f) => f && f.type_line));
-  if (typeLines.some((t) => typeof t === 'string' && /\bBackground\b/.test(t))) return true;
-
-  const texts = [card.oracle_text].concat(faces.map((f) => f && f.oracle_text));
-  return texts.some((t) => typeof t === 'string' && /can be your commander/i.test(t));
-}
-
 async function fetchCardIdentities() {
   console.log('Looking up the Scryfall oracle-cards bulk file…');
   const res = await fetch(SCRYFALL_BULK_INDEX, {
@@ -330,7 +299,6 @@ async function fetchCardIdentities() {
   const meta = await res.json();
 
   const identities = Object.create(null);
-  const commanderNames = [];
   let cards = 0;
   const collect = (card) => {
     cards += 1;
@@ -339,7 +307,6 @@ async function fetchCardIdentities() {
     if (Array.isArray(card.color_identity)) {
       identities[card.name] = card.color_identity.join('');
     }
-    if (canBeCommander(card)) commanderNames.push(card.name);
   };
 
   if (meta.jsonl_download_uri) {
@@ -352,9 +319,8 @@ async function fetchCardIdentities() {
     throw new Error('Scryfall index had no download URL; keys were: ' + Object.keys(meta).join(', '));
   }
 
-  commanderNames.sort();
-  console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity, ${commanderNames.length} that can be a commander`);
-  return { identities, commanderNames };
+  console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity`);
+  return { identities };
 }
 
 // result-tiers.js is a written-down list, so a result Spellbook adds after it
@@ -463,16 +429,11 @@ async function main() {
 
   if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
 
-  const { identities: cardIdentity, commanderNames } = await fetchCardIdentities();
+  const { identities: cardIdentity } = await fetchCardIdentities();
   // An empty map silently disables colour filtering in the page, which is how
   // this went unnoticed the first time. Fail loudly instead.
   if (Object.keys(cardIdentity).length < 1000) {
     throw new Error(`Only ${Object.keys(cardIdentity).length} card identities — refusing to publish without colour data`);
-  }
-  // Same reasoning: too few names would quietly turn commander detection off
-  // rather than break, and there are thousands of legal commanders.
-  if (commanderNames.length < 500) {
-    throw new Error(`Only ${commanderNames.length} possible commanders — refusing to publish, the type data must have moved`);
   }
 
   reportUnclassified(combos);
@@ -489,7 +450,6 @@ async function main() {
     source: 'https://commanderspellbook.com/',
     count: combos.length,
     cardIdentity,
-    commanderNames,
     templates,
     templateCards,
     combos,
@@ -497,12 +457,11 @@ async function main() {
   fs.writeFileSync(OUT, JSON.stringify(payload));
   const mb = (fs.statSync(OUT).size / 1024 / 1024).toFixed(2);
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, `
-    + `${commanderNames.length} commanders, ${resolvedCount} templates over `
-    + `${Object.keys(templateCards).length} cards, ${mb} MB`);
+    + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, ${mb} MB`);
 }
 
 module.exports = {
-  createVariantScanner, compact, bodyChunks, canBeCommander, isRealCard,
+  createVariantScanner, compact, bodyChunks, isRealCard,
   reportNewTemplates,
 };
 

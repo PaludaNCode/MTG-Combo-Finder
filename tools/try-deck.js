@@ -4,9 +4,8 @@
 //
 // The layout test proves the page renders; the unit tests prove each function
 // behaves. Neither answers "is the output any good?" — whether the combos found
-// are worth knowing, whether a template slot reads as sensible or invented,
-// whether the commander is worked out. That needs a real deck and real data,
-// which is what this is for.
+// are worth knowing, whether a template slot reads as sensible or invented.
+// That needs a real deck and real data, which is what this is for.
 //
 //   node tools/try-deck.js                    # the checked-in deck
 //   node tools/try-deck.js path/to/deck.txt
@@ -64,7 +63,7 @@ async function main() {
   say();
   say(`${main_.length} cards parsed`
     + (parsed.skipped && parsed.skipped.length ? `, ${parsed.skipped.length} line(s) not understood` : '')
-    + (typedCommanders.length ? `, ${typedCommanders.length} marked as commander` : ', no commander marked'));
+    + (typedCommanders.length ? `, ${typedCommanders.length} marked as commander` : ''));
   if (parsed.skipped && parsed.skipped.length) {
     say();
     for (const line of parsed.skipped.slice(0, 10)) say(`  ! ${line}`);
@@ -82,27 +81,8 @@ async function main() {
   const allEntries = typedCommanders.concat(main_);
   const deckNames = DeckCombos.deckNameSet(allEntries);
 
-  // ---- commander -----------------------------------------------------------
-  say('## Commander');
-  say();
-  const detected = typedCommanders.length ? null : DeckCombos.detectCommanders(allEntries, data);
-  const effective = detected && detected.confident ? detected.commanders : typedCommanders;
-  if (typedCommanders.length) {
-    say(`Marked in the list: **${typedCommanders.map((c) => c.card).join(' + ')}**`);
-  } else if (detected && detected.confident) {
-    say(`Worked out from the list: **${detected.commanders.map((c) => c.card).join(' + ')}**`);
-  } else {
-    const candidates = (detected && detected.candidates) || [];
-    say(`**Not settled.** ${candidates.length} card(s) here could legally be one, and nothing `
-      + 'singles one out, so the page shows them as buttons to pick from and takes colours '
-      + 'from the deck itself:');
-    say();
-    say('  ' + candidates.slice(0, 20).join(' · ') + (candidates.length > 20 ? ` … +${candidates.length - 20}` : ''));
-  }
-  say();
-
   // ---- combos --------------------------------------------------------------
-  const matched = DeckCombos.matchDeck(data, deckNames, effective, allEntries);
+  const matched = DeckCombos.matchDeck(data, deckNames, allEntries);
   const included = matched.included.map(DeckCombos.expand);
   const groups = DeckCombos.groupVariants(included);
   const counts = tierCounts(included);

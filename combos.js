@@ -159,14 +159,6 @@
   // database and we do the matching here. This mirrors what their
   // find-my-combos endpoint does server-side.
 
-  // What the deck supports colour-wise.
-  //
-  // The commander decides it when there is one — that is the Commander rule,
-  // and a Golgari commander does not let you cast the white half of a card.
-  // Without a commander (a 60-card list, or the box left empty) fall back to
-  // the colours the deck itself actually plays, so filtering still happens.
-  // Only if neither is recognizable does this return null, meaning "no idea,
-  // don't filter".
   // name -> colour-identity string, keyed the way decklists spell cards.
   //
   // A colourless entry must never displace a coloured one. Scryfall's bulk file
@@ -185,184 +177,41 @@
     return byKey;
   }
 
-  function deckIdentity(commanders, cardIdentity, deckNames) {
+  // The deck's colours, read off the deck.
+  //
+  // This used to come from the commander, falling back to the cards — and when
+  // no commander was given it tried to work one out, which meant guessing, which
+  // put a shortlist of maybes on screen for any list with a few legendary
+  // creatures in it. The cards answer the question directly and cannot be wrong
+  // about it: every card in the list is a card the deck plays.
+  //
+  // One consequence, accepted: a deck whose commander permits a colour it plays
+  // none of — a Mardu commander over a list with no red card in it — reads as
+  // the colours actually present, so suggestions in that unplayed colour land
+  // under "other colours" instead of "in your colours". That is a fair
+  // description of the list as pasted, and it hides nothing: the split is
+  // between two visible tabs, not between shown and dropped.
+  function deckIdentity(cardIdentity, deckNames) {
     if (!cardIdentity) return null;
     const byKey = identityIndex(cardIdentity);
 
-    const collect = (keys) => {
-      let known = false;
-      const colors = new Set();
-      for (const key of keys) {
-        const identity = byKey[key];
-        if (identity === undefined) continue;
-        known = true;
-        for (const c of String(identity)) if (c !== 'C') colors.add(c);
-      }
-      return known ? colors : null;
-    };
-
-    const fromCommanders = collect((commanders || []).map((e) => nameKey(e.card || e)));
-    if (fromCommanders) return fromCommanders;
-    return deckNames ? collect([...deckNames]) : null;
+    let known = false;
+    const colours = new Set();
+    for (const key of deckNames || []) {
+      const identity = byKey[key];
+      if (identity === undefined) continue;
+      known = true;
+      for (const c of String(identity)) if (c !== 'C') colours.add(c);
+    }
+    return known ? colours : null;
   }
 
   function withinIdentity(combo, identity) {
-    if (!identity) return true; // unknown commander -> don't split by colour
+    if (!identity) return true; // no colour data -> don't split by colour
     for (const c of String(combo.i || '')) {
       if (c !== 'C' && !identity.has(c)) return false;
     }
     return true;
-  }
-
-  // ---- working out the commander when nobody typed one --------------------
-  //
-  // Expecting people to fill in the commander box is expecting them to do work
-  // the decklist already did: in a Commander deck the commander is one of the
-  // pasted cards. This finds it.
-  //
-  // It is a guess, so it only commits to an answer when the export's ordering or
-  // the deck's own colours single one out, and otherwise hands back the
-  // shortlist for the page to show as "possible commanders" rather than picking
-  // arbitrarily.
-  //
-  // Deliberate property, asserted in the tests: a commander returned here can
-  // never *narrow* the deck's colour identity, because every rule requires the
-  // candidate to cover the colours the deck already plays. A wrong guess can
-  // mislabel the header; it cannot make combos disappear.
-
-  function colourSet(identity) {
-    const set = new Set();
-    for (const c of String(identity || '')) if (c !== 'C') set.add(c);
-    return set;
-  }
-
-  const sameColours = (a, b) => a.size === b.size && [...a].every((c) => b.has(c));
-  const covers = (a, b) => [...b].every((c) => a.has(c)); // a ⊇ b
-
-  // Sort key for spotting a machine-sorted list. Punctuation is dropped because
-  // deck sites disagree about whether "Sam, Loyal Attendant" sorts as "sam
-  // loyal" or "samloyal", and that disagreement is not worth being wrong over.
-  function sortKey(name) {
-    return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-  }
-
-  // How many entries at the top sit in front of an alphabetically sorted list.
-  //
-  // Deck sites export the commander first and then the deck in name order, so a
-  // card in front of an otherwise perfectly sorted list is there for a reason.
-  // This is the only signal that separates a real partner pair from the several
-  // other pairs whose colours would add up the same way.
-  const MIN_SORTED_TAIL = 20; // short lists sort by accident; 99-card decks don't
-
-  function commandersByPosition(entries, legal, byKey) {
-    const names = [];
-    for (const entry of entries || []) {
-      const name = entry && (entry.card || entry.name || entry);
-      if (typeof name === 'string') names.push(name);
-    }
-
-    const sortedFrom = (start) => {
-      for (let i = start + 1; i < names.length; i += 1) {
-        if (sortKey(names[i - 1]) > sortKey(names[i])) return false;
-      }
-      return true;
-    };
-
-    // Already sorted top to bottom: no card is out in front, so no signal.
-    if (sortedFrom(0)) return null;
-
-    // Commander decks have one commander, or two partners. Three would be a
-    // sorting coincidence rather than a deck.
-    for (const k of [1, 2]) {
-      if (names.length - k < MIN_SORTED_TAIL) break;
-      if (!sortedFrom(k)) continue;
-      const front = names.slice(0, k);
-      if (!front.every((n) => legal.has(nameKey(n)))) return null;
-      return front.map((card) => ({ card, colours: colourSet(byKey[nameKey(card)]) }));
-    }
-    return null;
-  }
-
-  function detectCommanders(entries, dataset) {
-    // Absent on data published before commander names were included; detection
-    // is simply off until the next data refresh rather than wrong.
-    const legalNames = dataset && dataset.commanderNames;
-    if (!Array.isArray(legalNames) || !legalNames.length) return null;
-
-    const byKey = identityIndex(dataset.cardIdentity);
-    const legal = new Set(legalNames.map(nameKey));
-
-    const deckColours = new Set();
-    const candidates = [];
-    const seen = new Set();
-    for (const entry of entries || []) {
-      const name = entry && (entry.card || entry.name || entry);
-      if (typeof name !== 'string') continue;
-      const key = nameKey(name);
-      const colours = colourSet(byKey[key]);
-      for (const c of colours) deckColours.add(c);
-      if (!legal.has(key) || seen.has(key)) continue;
-      seen.add(key);
-      candidates.push({ card: name, colours });
-    }
-    if (!candidates.length) return null;
-
-    const shortlist = candidates.map((c) => c.card);
-    // Nothing may claim to be the commander unless it covers the colours the
-    // deck already plays. This is the one check every rule shares, and the
-    // reason a wrong guess can never hide combos.
-    const settle = (list) => {
-      const union = new Set();
-      for (const c of list) for (const colour of c.colours) union.add(colour);
-      if (!covers(union, deckColours)) return null;
-      return { commanders: list.map((c) => ({ card: c.card })), confident: true, candidates: shortlist };
-    };
-
-    // Strongest signal first: the export's ordering. Moxfield and Archidekt
-    // write the commander at the top and the rest of the deck alphabetically,
-    // so a card sitting in front of an otherwise perfectly sorted list is there
-    // because it is the commander. This is what identifies a partner pair whose
-    // colours several other pairs could also add up to.
-    const ordered = commandersByPosition(entries, legal, byKey);
-    if (ordered) {
-      const settled = settle(ordered);
-      if (settled) return settled;
-    }
-
-    // The commander whose colours are exactly the deck's is the commander —
-    // that is what building to a colour identity means.
-    const unsure = { commanders: [], confident: false, candidates: shortlist };
-
-    const exact = candidates.filter((c) => sameColours(c.colours, deckColours));
-    if (exact.length === 1) return settle(exact) || unsure;
-
-    // More than one card fits exactly: no way to tell them apart, so don't try.
-    if (exact.length === 0) {
-      // Two partners splitting the deck's colours between them — Thrasios (GU)
-      // plus Tymna (WB) in a four-colour deck. Only when exactly one pair adds
-      // up, otherwise it is a coin flip.
-      const pairs = [];
-      for (let i = 0; i < candidates.length; i += 1) {
-        for (let j = i + 1; j < candidates.length; j += 1) {
-          const union = new Set([...candidates[i].colours, ...candidates[j].colours]);
-          if (sameColours(union, deckColours)) pairs.push([candidates[i], candidates[j]]);
-        }
-      }
-      if (pairs.length === 1) return settle(pairs[0]) || unsure;
-
-      // Nothing matches the deck's colours exactly, so the deck plays fewer
-      // colours than its commander allows — a Mardu commander in a list that
-      // happens to run no red cards. The narrowest candidate that still covers
-      // everything is the answer, and only if it is the only one.
-      const wider = candidates.filter((c) => covers(c.colours, deckColours));
-      if (wider.length) {
-        const narrowest = Math.min(...wider.map((c) => c.colours.size));
-        const best = wider.filter((c) => c.colours.size === narrowest);
-        if (best.length === 1) return settle(best) || unsure;
-      }
-    }
-
-    return unsure;
   }
 
   // ---- template slots -------------------------------------------------------
@@ -466,9 +315,9 @@
   //
   // deckEntries is optional and only supplies the original spelling of the
   // cards credited with filling a template slot.
-  function matchDeck(dataset, deckNames, commanders, deckEntries) {
+  function matchDeck(dataset, deckNames, deckEntries) {
     const combos = (dataset && dataset.combos) || [];
-    const identity = deckIdentity(commanders, dataset && dataset.cardIdentity, deckNames);
+    const identity = deckIdentity(dataset && dataset.cardIdentity, deckNames);
     const templateNames = (dataset && dataset.templates) || {};
     const byTemplate = deckTemplateIndex(dataset, deckNames, deckEntries);
     const included = [];
@@ -633,7 +482,7 @@
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
-    detectCommanders, groupSuggestions, groupVariants, variantSignature,
+    groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates,
   };
 

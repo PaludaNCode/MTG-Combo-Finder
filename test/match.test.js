@@ -34,7 +34,7 @@ const DECK = [
 const COMMANDERS = [{ card: 'Kinnan, Bonder Prodigy' }];
 
 function run() {
-  return matchDeck(DATASET, deckNameSet(COMMANDERS.concat(DECK)), COMMANDERS);
+  return matchDeck(DATASET, deckNameSet(COMMANDERS.concat(DECK)));
 }
 
 test('matchDeck: finds combos whose every card is present', () => {
@@ -42,8 +42,8 @@ test('matchDeck: finds combos whose every card is present', () => {
   assert.deepStrictEqual(ids, ['1']);
 });
 
-test('matchDeck: deck identity comes from the commander', () => {
-  const identity = deckIdentity(COMMANDERS, DATASET.cardIdentity);
+test('matchDeck: deck identity is the union of the cards played', () => {
+  const identity = deckIdentity(DATASET.cardIdentity, deckNameSet(COMMANDERS.concat(DECK)));
   assert.deepStrictEqual([...identity].sort(), ['G', 'U']);
 });
 
@@ -76,7 +76,7 @@ test('matchDeck: an unknown commander falls back to the colours the deck plays',
   // gave up and filtered nothing, which put red cards in front of mono-blue
   // decks as though they were castable.
   const commanders = [{ card: 'Some Unreleased Commander' }];
-  const result = matchDeck(DATASET, deckNameSet(commanders.concat(DECK)), commanders);
+  const result = matchDeck(DATASET, deckNameSet(commanders.concat(DECK)));
   assert.deepStrictEqual([...result.identity].sort(), ['U']);
   assert.ok(result.almostIncludedByAddingColors.length > 0, 'off-colour combos are still separated');
   assert.ok(
@@ -364,31 +364,39 @@ test('splitResults: handles junk input', () => {
   assert.deepStrictEqual(splitResults([], 4), { shown: [], hidden: [] });
 });
 
-test('deckIdentity: the commander decides the deck colours', () => {
-  const identities = { 'Karador, Ghost Chieftain': 'BGW', 'Lightning Bolt': 'R', 'Island': 'U' };
-  const id = deckIdentity([{ card: 'Karador, Ghost Chieftain' }], identities, new Set(['island']));
-  assert.deepStrictEqual([...id].sort(), ['B', 'G', 'W'], 'the commander wins, not the deck contents');
-});
-
-test('deckIdentity: without a commander, fall back to what the deck plays', () => {
-  // A 60-card list, or the commander box simply left empty. Previously this
-  // returned null and switched colour filtering off entirely, so off-colour
-  // cards were suggested as if the deck could cast them.
+// Colours come from the cards, full stop. There is no commander in this any
+// more: the deck's own list answers the question and cannot be wrong about it.
+test('deckIdentity: the colours are the ones the deck plays', () => {
   const identities = { 'Swords to Plowshares': 'W', 'Vindicate': 'BW', 'Sol Ring': '' };
   const deck = new Set(['swords to plowshares', 'vindicate', 'sol ring']);
-  const id = deckIdentity([], identities, deck);
-  assert.deepStrictEqual([...id].sort(), ['B', 'W']);
+  assert.deepStrictEqual([...deckIdentity(identities, deck)].sort(), ['B', 'W']);
 });
 
-test('deckIdentity: an unrecognised commander still falls back to the deck', () => {
-  const identities = { 'Vindicate': 'BW' };
-  const id = deckIdentity([{ card: 'Some Unreleased Commander' }], identities, new Set(['vindicate']));
-  assert.deepStrictEqual([...id].sort(), ['B', 'W']);
+// A commander is a card in the deck like any other, so its colours are counted
+// with the rest — no special case, and no way for it to be missed.
+test('deckIdentity: a commander counts because it is one of the cards', () => {
+  const identities = { 'Karador, Ghost Chieftain': 'BGW', 'Island': 'U' };
+  const withKarador = deckIdentity(identities, new Set(['karador, ghost chieftain', 'island']));
+  assert.deepStrictEqual([...withKarador].sort(), ['B', 'G', 'U', 'W']);
+});
+
+// The colour a commander permits but the deck never plays is simply not there.
+// Accepted: it describes the list as pasted, and the suggestion still shows —
+// under "other colours" rather than "in your colours".
+test('deckIdentity: a colour the deck plays none of is not in its identity', () => {
+  const identities = { 'Karador, Ghost Chieftain': 'BGW', 'Swamp': 'B' };
+  const id = deckIdentity(identities, new Set(['swamp']));
+  assert.deepStrictEqual([...id].sort(), ['B']);
+});
+
+test('deckIdentity: colourless cards do not add a colour', () => {
+  const id = deckIdentity({ 'Sol Ring': '', 'Swamp': 'B' }, new Set(['sol ring', 'swamp']));
+  assert.deepStrictEqual([...id].sort(), ['B']);
 });
 
 test('deckIdentity: nothing recognisable means do not filter', () => {
-  assert.strictEqual(deckIdentity([], { 'Vindicate': 'BW' }, new Set(['nothing we know'])), null);
-  assert.strictEqual(deckIdentity([], null, new Set(['vindicate'])), null);
+  assert.strictEqual(deckIdentity({ 'Vindicate': 'BW' }, new Set(['nothing we know'])), null);
+  assert.strictEqual(deckIdentity(null, new Set(['vindicate'])), null);
 });
 
 test('withinIdentity: a three-colour deck accepts any pair inside it', () => {
