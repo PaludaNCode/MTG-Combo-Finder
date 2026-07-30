@@ -20,3 +20,11 @@ jobs:
           for f in $(git ls-files '*.js'); do node --check "$f"; done
       - name: Unit tests
         run: npm test
+
+      # Renders the real page at phone/tablet/desktop widths and fails on
+      # horizontal overflow, a collapse control that doesn't collapse, or the
+      # desktop columns not splitting.
+      - name: Layout smoke test
+        run: npm run verify
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

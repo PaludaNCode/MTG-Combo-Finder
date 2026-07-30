@@ -16,6 +16,39 @@ because it literally asks Commander Spellbook's public API about your deck.
   your deck's colors, shown separately.
 - **Deck import** — paste an Archidekt deck URL, or paste any site's text export
   (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
+- **Collapsible results** — every section header is a collapse control, and what
+  you close stays closed (kept in `localStorage`) across searches and visits.
+- **What a combo gives you**, as chips rather than a comma-run: game-ending
+  results sort first and are highlighted, duplicates collapse, and anything past
+  the fourth folds behind "+N more".
+
+### Cleaning up combo results
+
+Two steps, because the raw data is noisy in two different ways:
+
+1. **At fetch time**, results whose `Feature.status` is `HU`/`PU` are dropped.
+   Those are Commander Spellbook's *utilities* — internal scaffolding for
+   variant generation ("mana abilities can be activated"), not things a player
+   cares about. Their own `Feature.is_utility` draws the same line. If a variant
+   lists nothing but utilities, they're kept, since a combo with no stated
+   result is worse than a vague one.
+2. **At render time**, `summarizeResults()` dedupes case- and
+   whitespace-insensitively and sorts wins to the front.
+
+Their wording is left intact — rewriting "Infinite ETB triggers" into something
+snappier risks claiming the combo does something it doesn't.
+
+## Layout
+
+One column on phones and tablets; from 900px the decklist sits in a sticky left
+column beside the results, so you can edit the list while reading suggestions.
+Section headers are 48px tall for thumbs, and `tools/verify-layout.js` asserts
+all of it — see Commands.
+
+The layout test loads the page in a **sized iframe** rather than resizing the
+browser window: media queries follow the iframe's width, and the full Chrome
+build silently clamps `--window-size` to 500px, which quietly turned a "390px"
+run into a 500px one that proved nothing.
 
 ## How it works
 
@@ -152,6 +185,11 @@ node tools/fetch-combos.js
 
 # Unit tests (node:test, zero deps)
 npm test
+
+# Layout smoke test — REQUIRED after any UI change. Renders the real page at
+# 390/768/1440 px and fails on horizontal overflow, a collapse control that
+# doesn't collapse, or the desktop columns not splitting.
+npm run verify
 
 # Syntax-check everything (same as CI)
 for f in $(git ls-files '*.js'); do node --check "$f"; done

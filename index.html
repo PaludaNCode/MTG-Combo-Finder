@@ -13,8 +13,8 @@
       <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook</a> database.</p>
   </header>
 
-  <main>
-    <form id="deck-form">
+  <main class="layout">
+    <form id="deck-form" class="col-input">
       <label for="deck-url">Archidekt deck URL <span class="hint">(fills the boxes below)</span></label>
       <div class="url-row">
         <input type="url" id="deck-url" placeholder="https://archidekt.com/decks/…" autocomplete="off">
@@ -35,15 +35,17 @@
       <button type="submit" id="find-combos">Find combos</button>
     </form>
 
-    <p id="status" role="status"></p>
-    <div id="diagnostics" hidden></div>
+    <div class="col-output">
+      <p id="status" role="status"></p>
+      <div id="diagnostics" hidden></div>
 
-    <section id="results" hidden>
-      <div id="identity"></div>
-      <div id="included"></div>
-      <div id="suggestions"></div>
-      <div id="offcolor"></div>
-    </section>
+      <section id="results" hidden>
+        <div id="identity"></div>
+        <div id="included"></div>
+        <div id="suggestions"></div>
+        <div id="offcolor"></div>
+      </section>
+    </div>
   </main>
 
   <footer>

@@ -141,3 +141,36 @@ test('bodyChunks: gzipped bodies are decompressed, plain bodies pass through', a
     assert.strictEqual(await collect(fakeRes(Buffer.from(text), size)), text, `plain chunk ${size}`);
   }
 });
+
+test('compact: utility features are dropped from a combo\'s results', () => {
+  const row = compact({
+    id: '1',
+    uses: [{ card: { name: 'Basalt Monolith' } }],
+    produces: [
+      { feature: { name: 'Mana abilities can be activated', status: 'HU' } }, // hidden utility
+      { feature: { name: 'A creature you control', status: 'PU' } },          // public utility
+      { feature: { name: 'Infinite colorless mana', status: 'S' } },          // standalone
+      { feature: { name: 'Infinite storm count', status: 'C' } },             // contextual
+      { feature: { name: 'A sacrifice outlet', status: 'H' } },               // helper
+    ],
+  });
+  assert.deepStrictEqual(row.p, ['Infinite colorless mana', 'Infinite storm count', 'A sacrifice outlet']);
+});
+
+test('compact: a variant with only utility results still states something', () => {
+  const row = compact({
+    id: '2',
+    uses: [{ card: { name: 'Sol Ring' } }],
+    produces: [{ feature: { name: 'Mana available', status: 'HU' } }],
+  });
+  assert.deepStrictEqual(row.p, ['Mana available'], 'better than showing no result at all');
+});
+
+test('compact: results with no status are kept', () => {
+  const row = compact({
+    id: '3',
+    uses: [{ card: { name: 'Sol Ring' } }],
+    produces: [{ feature: { name: 'Infinite mana' } }, { name: 'Win the game' }],
+  });
+  assert.deepStrictEqual(row.p, ['Infinite mana', 'Win the game']);
+});

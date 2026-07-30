@@ -26,6 +26,10 @@ const BULK_URL = 'https://json.commanderspellbook.com/variants.json';
 const OUT = process.argv[2] || path.join(__dirname, '..', 'combos.json');
 
 const USER_AGENT = 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder)';
+
+// Feature.Status values that mean "internal to variant generation", from
+// spellbook/models/feature.py. Everything else is a result worth showing.
+const UTILITY_STATUSES = new Set(['HU', 'PU']);
 const MAX_ATTEMPTS = 5;
 const MAX_BACKOFF_MS = 60_000;
 
@@ -88,9 +92,20 @@ function compact(variant) {
   // the client leave those out of suggestions.
   const templates = (pick(variant, 'requires') || []).length;
 
-  const produces = (pick(variant, 'produces') || [])
-    .map((p) => (p.feature && p.feature.name) || p.name)
-    .filter(Boolean);
+  // Feature.status marks whether a result is player-facing or internal
+  // plumbing for variant generation: HU/HIDDEN_UTILITY and PU/PUBLIC_UTILITY
+  // are utilities (Feature.is_utility in their models), and listing them turns
+  // "Infinite colorless mana" into a wall of scaffolding. Keep everything else.
+  const produced = (pick(variant, 'produces') || [])
+    .map((p) => ({
+      name: (p.feature && p.feature.name) || p.name,
+      status: String((p.feature && p.feature.status) || ''),
+    }))
+    .filter((p) => p.name);
+  const meaningful = produced.filter((p) => !UTILITY_STATUSES.has(p.status));
+  // If a variant somehow lists nothing but utilities, showing them beats
+  // showing a combo with no stated result at all.
+  const produces = (meaningful.length ? meaningful : produced).map((p) => p.name);
 
   return {
     id: String(pick(variant, 'id') || ''),
