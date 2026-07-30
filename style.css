@@ -334,6 +334,24 @@ button:disabled { opacity: .6; cursor: wait; }
 .choices { margin: .15rem 0 .1rem; font-size: .9rem; color: var(--muted); }
 .choices .card-name { color: var(--text); }
 
+/* ---- template slots ---- */
+
+/* "a Persist Creature" in a combo header. Same reasoning as .either: it names a
+   property, not a card, and must not be mistaken for one. */
+.slot {
+  padding: .05rem .45rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px #4a536b;
+  color: var(--muted);
+  font-size: .82rem;
+  font-style: italic;
+  white-space: nowrap;
+}
+/* Which card of yours the slot was credited to. A combo that shows up because
+   of a slot has to say why, or it looks invented. */
+.fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }
+.fills .card-name { color: var(--text); font-weight: 600; }
+
 /* The alternatives under a suggestion. Same job, same combos — worth listing,
    not worth shouting. */
 .alternatives {

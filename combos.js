@@ -365,12 +365,112 @@
     return unsure;
   }
 
+  // ---- template slots -------------------------------------------------------
+  //
+  // Some combos have a slot naming a property instead of a card — "a Persist
+  // Creature". tools/templates.js resolves each into Spellbook's own list of the
+  // cards that fill it, published as card -> template ids, so the only question
+  // here is whether the deck holds one of them. Nothing is read from wording and
+  // nothing is inferred: a slot is filled or it is not.
+
+  // Which of the deck's cards can fill which template. Built once per search,
+  // not once per combo — the deck is a hundred cards and the database is a
+  // hundred thousand combos.
+  function deckTemplateIndex(dataset, deckNames, deckEntries) {
+    const lookup = (dataset && dataset.templateCards) || {};
+
+    // Deck names arrive as comparison keys, which are lowercased. Keep the
+    // spelling the user typed so the page can name the card it credited.
+    const spelling = new Map();
+    for (const entry of deckEntries || []) {
+      const name = entry && (entry.card || entry.name || entry);
+      if (typeof name !== 'string') continue;
+      const key = nameKey(name);
+      if (!spelling.has(key)) spelling.set(key, name.split('//')[0].trim());
+    }
+
+    const byTemplate = new Map();
+    for (const key of deckNames || []) {
+      for (const id of lookup[key] || []) {
+        if (!byTemplate.has(id)) byTemplate.set(id, []);
+        byTemplate.get(id).push({ key, name: spelling.get(key) || key });
+      }
+    }
+    return byTemplate;
+  }
+
+  // Give every slot its own card. Taking the first candidate for each slot in
+  // turn can strand a later slot whose only option is already spoken for, so
+  // this is a real matching (Kuhn's algorithm) rather than a greedy pass. Slots
+  // are few and candidates never leave the deck, so it costs nothing.
+  function assignSlots(slots) {
+    const takenBy = new Map(); // card key -> index of the slot holding it
+    const filled = new Array(slots.length).fill(null);
+
+    function assign(slot, tried) {
+      for (const candidate of slots[slot]) {
+        if (tried.has(candidate.key)) continue;
+        tried.add(candidate.key);
+        const holder = takenBy.get(candidate.key);
+        if (holder === undefined || assign(holder, tried)) {
+          takenBy.set(candidate.key, slot);
+          filled[slot] = candidate;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    for (let i = 0; i < slots.length; i += 1) {
+      if (!assign(i, new Set())) return null;
+    }
+    return filled;
+  }
+
+  // How the deck fills a combo's template slots, or null when it cannot.
+  //
+  // Cards the combo already names are not eligible: a slot is an extra card the
+  // combo needs, not a second job for one that is already in it. Where that is
+  // stricter than Spellbook intends we lose a combo rather than claim one that
+  // does not work, which is the error worth making.
+  function fillTemplates(combo, byTemplate, templateNames) {
+    const ids = combo.t;
+    if (!ids) return [];
+    // Data published before templates were resolved records only how many slots
+    // a combo has, not which. There is nothing to check against, so those stay
+    // excluded exactly as they were — the page and the data branch update
+    // independently, and a stale combos.json must not start claiming combos.
+    if (!Array.isArray(ids)) return null;
+    if (!ids.length) return [];
+
+    const named = new Set((combo.c || []).map(nameKey));
+    const slots = [];
+    for (const id of ids) {
+      const candidates = (byTemplate.get(id) || []).filter((c) => !named.has(c.key));
+      if (!candidates.length) return null;
+      slots.push(candidates);
+    }
+
+    const filled = assignSlots(slots);
+    if (!filled) return null;
+    return filled.map((candidate, i) => ({
+      id: ids[i],
+      slot: (templateNames && templateNames[ids[i]]) || 'a card',
+      card: candidate.name,
+    }));
+  }
+
   // Splits the dataset against a deck the same way find-my-combos does:
   // complete combos, those one card short, and those one card short but
   // outside the deck's colours.
-  function matchDeck(dataset, deckNames, commanders) {
+  //
+  // deckEntries is optional and only supplies the original spelling of the
+  // cards credited with filling a template slot.
+  function matchDeck(dataset, deckNames, commanders, deckEntries) {
     const combos = (dataset && dataset.combos) || [];
     const identity = deckIdentity(commanders, dataset && dataset.cardIdentity, deckNames);
+    const templateNames = (dataset && dataset.templates) || {};
+    const byTemplate = deckTemplateIndex(dataset, deckNames, deckEntries);
     const included = [];
     const almost = [];
     const almostByAddingColors = [];
@@ -384,12 +484,20 @@
           if (missing > 1) break;
         }
       }
+      if (missing > 1) continue;
+
+      // A template slot has no one card to suggest — thousands of cards fill
+      // "a Creature with Haste" — so a combo counts only once the deck already
+      // fills every slot it has. Unresolvable templates have no card list at
+      // all, which lands here as "cannot fill" and keeps them excluded.
+      const fills = combo.t ? fillTemplates(combo, byTemplate, templateNames) : [];
+      if (!fills) continue;
+      const row = fills.length ? Object.assign({}, combo, { fills }) : combo;
+
       if (missing === 0) {
-        // A combo needing a template ("a sacrifice outlet") isn't proven
-        // complete by card names alone, so it never counts as included.
-        if (!combo.t) included.push(combo);
-      } else if (missing === 1 && !combo.t) {
-        (withinIdentity(combo, identity) ? almost : almostByAddingColors).push(combo);
+        included.push(row);
+      } else {
+        (withinIdentity(combo, identity) ? almost : almostByAddingColors).push(row);
       }
     }
 
@@ -406,6 +514,9 @@
       uses: (combo.c || []).map((name) => ({ card: { name } })),
       produces: (combo.p || []).map((name) => ({ feature: { name } })),
       identity: combo.i,
+      // Which of the deck's cards was credited with each template slot, so the
+      // page can show it rather than asking anyone to take the match on trust.
+      fills: combo.fills || undefined,
     };
   }
 
@@ -419,6 +530,11 @@
       // A card listed twice in one combo is still one combo for that card.
       const unique = new Map();
       for (const name of variantCardNames(variant)) unique.set(nameKey(name), name);
+      // A card filling a template slot holds the combo up just as much as one
+      // the combo names, and cutting it costs the combo all the same.
+      for (const fill of variant.fills || []) {
+        if (fill && fill.card) unique.set(nameKey(fill.card), fill.card);
+      }
       for (const [key, name] of unique) {
         let entry = byCard.get(key);
         if (!entry) {
@@ -518,6 +634,7 @@
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     detectCommanders, groupSuggestions, groupVariants, variantSignature,
+    deckTemplateIndex, fillTemplates,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

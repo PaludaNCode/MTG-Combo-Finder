@@ -15,6 +15,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 const { Readable } = require('node:stream');
 const TIERS = require('../result-tiers.js');
+const { resolveTemplates } = require('./templates.js');
 
 // The bulk export their own frontend reads (see commander-spellbook-site,
 // src/pages/combo-sitemap.xml.ts). One request for the whole database.
@@ -88,10 +89,26 @@ function compact(variant) {
   const cards = uses.map((u) => u.card && u.card.name).filter(Boolean);
   if (!cards.length) return null;
 
-  // Templates ("any sacrifice outlet") aren't concrete cards; a combo needing
-  // one can't be completed by naming a single card, so record the count and let
-  // the client leave those out of suggestions.
-  const templates = (pick(variant, 'requires') || []).length;
+  // Templates ("a Persist Creature") name a property rather than a card. Record
+  // *which* templates, not just how many, so the client can ask whether the deck
+  // already holds something that fills the slot — see tools/templates.js.
+  //
+  // A template needed twice means two different cards have to fill it, so the id
+  // is repeated: counting occurrences is then all the matching has to do.
+  // A requirement with no id is recorded as null rather than skipped. Dropping
+  // it would leave the combo looking like it had no slot at all, and the page
+  // would show it as complete on the strength of its named cards — the one
+  // failure mode worth engineering against here. null matches no template, so
+  // the combo stays excluded, which is what an unreadable requirement deserves.
+  const templates = [];
+  for (const req of pick(variant, 'requires') || []) {
+    const template = (req && req.template) || req;
+    const id = template && template.id;
+    const quantity = Math.max(1, Number(pick(req, 'quantity') || 1));
+    for (let i = 0; i < quantity; i += 1) {
+      templates.push(id === undefined || id === null ? null : id);
+    }
+  }
 
   // Feature.status marks whether a result is player-facing or internal
   // plumbing for variant generation: HU/HIDDEN_UTILITY and PU/PUBLIC_UTILITY
@@ -113,7 +130,7 @@ function compact(variant) {
     c: cards,
     p: produces,
     i: pick(variant, 'identity') || '',
-    t: templates || undefined,
+    t: templates.length ? templates : undefined,
     pop: pick(variant, 'popularity') || undefined,
   };
 }
@@ -390,17 +407,31 @@ async function main() {
 
   reportUnclassified(combos);
 
+  const { templates, templateCards } = await resolveTemplates();
+  // Templates come from a separate API, so a change on their side would show up
+  // as "no templates" rather than an error — and the only symptom would be
+  // combos quietly vanishing again. There are 149 queryable templates; a run
+  // that resolves a handful has found a moved endpoint, not a small database.
+  const resolvedCount = Object.keys(templates).length;
+  if (resolvedCount < 100) {
+    throw new Error(`Only ${resolvedCount} templates resolved — refusing to publish, the templates API must have moved`);
+  }
+
   const payload = {
     updatedAt: new Date().toISOString(),
     source: 'https://commanderspellbook.com/',
     count: combos.length,
     cardIdentity,
     commanderNames,
+    templates,
+    templateCards,
     combos,
   };
   fs.writeFileSync(OUT, JSON.stringify(payload));
   const mb = (fs.statSync(OUT).size / 1024 / 1024).toFixed(2);
-  console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, ${commanderNames.length} commanders, ${mb} MB`);
+  console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, `
+    + `${commanderNames.length} commanders, ${resolvedCount} templates over `
+    + `${Object.keys(templateCards).length} cards, ${mb} MB`);
 }
 
 module.exports = { createVariantScanner, compact, bodyChunks, canBeCommander, isRealCard };
