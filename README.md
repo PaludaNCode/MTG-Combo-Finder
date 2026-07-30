@@ -424,16 +424,17 @@ database.
 
 Commander Spellbook's `CardSerializer` exposes name, images and type line but
 **not** colour identity, so the combo export alone cannot tell you whether a
-suggested card fits your commander's colours. `tools/fetch-combos.js` therefore
-also streams [Scryfall's oracle-cards bulk file](https://scryfall.com/docs/api/bulk-data)
+suggested card fits the deck's colours. `tools/fetch-combos.js` therefore also
+streams [Scryfall's oracle-cards bulk file](https://scryfall.com/docs/api/bulk-data)
 and publishes a name → identity map alongside the combos.
 
-The same pass publishes `commanderNames`, the names of every card that is allowed
-to *be* a commander — a legendary creature, a Background, or a card whose rules
-text grants it — filtered by `legalities.commander`, which is what keeps tokens
-and Un-cards out. Only the front face counts: Westvale Abbey's combined type line
-reads `Land // Legendary Creature — Demon`, and testing it whole would make the
-land a commander. The page uses that list to find the commander in a pasted deck.
+**That map is the only thing colour filtering rests on**, now that colours are read
+off the cards rather than off a commander — see "Colours come from the cards" above.
+It is also the most load-bearing external data in the project: one bulk download per
+refresh, consulted on every search.
+
+The same pass used to publish `commanderNames` too — every card allowed to *be* a
+commander, for working one out of a pasted deck. That went when detection did.
 The fetcher refuses to publish with fewer than 500 names, for the same reason it
 refuses to publish without colour data.
 
@@ -497,8 +498,9 @@ User-Agent — a real option, but it ends the zero-backend design.
 # Build the combo database locally (one large download; reads templates.json)
 node tools/fetch-combos.js
 
-# Regenerate templates.json — 465 Scryfall requests, ~23 minutes. Only needed
-# when the data refresh reports templates it has not seen, i.e. after a new set.
+# Regenerate templates.json — ~13 minutes, only the templates a combo asks for
+# (--all resolves every queryable one, ~16 minutes, useful only for measuring).
+# Needed when the data refresh reports templates it has not seen, i.e. a new set.
 # Normally run from the "Regenerate template card lists" workflow, on a branch.
 node tools/templates.js templates.json
 
@@ -516,6 +518,33 @@ for f in $(git ls-files '*.js'); do node --check "$f"; done
 # Run locally: it's a static page, any file server works
 npx serve .   # or python3 -m http.server
 ```
+
+### Answering questions from the data
+
+Four read-only tools, each also a manual workflow, for the questions that keep
+coming up. They exist because guessing at these has been wrong more than once.
+
+```bash
+# What would the page show for a deck? Combos, tiers, which card filled which
+# template slot, suggestions. Defaults to test/fixtures/deck.txt.
+node tools/try-deck.js [deck.txt]
+
+# "Shouldn't X combo with Y?" — the published combos naming them, and what
+# stands between a deck and each one, missing cards and slots reported apart.
+node tools/combos-with.js "Heroic Feast" "Kitchen Finks"
+
+# Which cards demand a given template, or (no argument) every template ranked
+# by how many combos need it — which also checks the ids still line up.
+node tools/template-users.js ["Persist Creature"]
+
+# What does this card actually say? Straight from Scryfall.
+node tools/lookup-card.js "Camellia, the Seedmiser"
+```
+
+`tools/research-sources.js` and `tools/research-coverage.js` are kept for the
+questions that can change: has a second combo database appeared, and do
+Spellbook's templates still carry Scryfall queries. Their conclusions are in
+"Data-source research" above.
 
 ## Branching strategy
 
