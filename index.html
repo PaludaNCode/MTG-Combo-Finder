@@ -51,12 +51,16 @@
   <footer>
     <p>Combo data &amp; search by the <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook</a> project.
       This site just asks it about <em>your</em> deck.</p>
+    <p>Wondering why a result is green, yellow or grey?
+      <a href="tiers.html">See how every result is classified</a>.</p>
     <!-- Replaced with the commit SHA at deploy, so "am I seeing the new
          version or a cached one?" is answerable without guessing. -->
     <p class="build">Build <code id="build">local</code></p>
   </footer>
 
   <script src="parser.js"></script>
+  <!-- The tier inventory has to be in place before combos.js reads it. -->
+  <script src="result-tiers.js"></script>
   <script src="combos.js"></script>
   <script src="app.js"></script>
 </body>

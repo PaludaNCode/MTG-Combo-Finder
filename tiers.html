@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Combo result tiers — MTG Combo Finder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="tiers-page">
+  <header>
+    <h1>Combo result tiers</h1>
+    <p class="tagline">Every result Commander Spellbook publishes, and the colour it gets on
+      <a href="index.html">the deck page</a>. Counted against the live data, so this is what the site
+      is doing right now — not what it did when the list was written.</p>
+  </header>
+
+  <main>
+    <p id="status" role="status">Loading the combo database…</p>
+
+    <!-- Only rendered when something is unclassified. It is the reason this page
+         is in the repository rather than a screenshot. -->
+    <section id="unclassified" hidden></section>
+
+    <div class="controls" id="controls" hidden>
+      <input id="q" type="search" placeholder="Search results — try: mana, token, turns" aria-label="Search results">
+      <button class="chip t-win" data-tier="win" aria-pressed="true"><span class="dot"></span>Green <span class="n" data-count="win"></span></button>
+      <button class="chip t-decisive" data-tier="decisive" aria-pressed="true"><span class="dot"></span>Yellow <span class="n" data-count="decisive"></span></button>
+      <button class="chip t-other" data-tier="other" aria-pressed="true"><span class="dot"></span>Grey <span class="n" data-count="other"></span></button>
+    </div>
+
+    <div id="tiers"></div>
+  </main>
+
+  <footer>
+    <p>The classification itself lives in <code>result-tiers.js</code> — a written-down list, not a
+      set of patterns. To move a result between tiers, move its name between lists.</p>
+    <p class="build">Build <code id="build">local</code></p>
+  </footer>
+
+  <script src="result-tiers.js"></script>
+  <script src="tiers-page.js"></script>
+</body>
+</html>

@@ -30,15 +30,22 @@ jobs:
       # only guarantees the HTML and its assets always match.
       - name: Cache-bust asset URLs with the commit SHA
         run: |
-          sed -i "s/\(href=\"style\.css\|src=\"parser\.js\|src=\"combos\.js\|src=\"app\.js\)\"/\1?v=${GITHUB_SHA}\"/g" index.html
-          # Fail the deploy rather than publish a page that silently kept the
-          # old URLs — a rename here would otherwise go unnoticed.
-          test "$(grep -c "?v=${GITHUB_SHA}" index.html)" = "4"
+          assets='href="style\.css\|src="parser\.js\|src="result-tiers\.js\|src="combos\.js\|src="app\.js\|src="tiers-page\.js'
+          # index.html loads five of them, tiers.html three. Both counts are
+          # asserted: a rename should fail the deploy, not quietly publish the
+          # old URLs.
+          for page in "index.html 5" "tiers.html 3"; do
+            set -- $page
+            sed -i "s/\($assets\)\"/\1?v=${GITHUB_SHA}\"/g" "$1"
+            test "$(grep -c "?v=${GITHUB_SHA}" "$1")" = "$2"
+          done
 
-      - name: Stamp the build id so the page says what it is running
+      - name: Stamp the build id so the pages say what they are running
         run: |
-          sed -i "s|<code id=\"build\">[^<]*</code>|<code id=\"build\">${GITHUB_SHA:0:7}</code>|" index.html
-          grep -q "<code id=\"build\">${GITHUB_SHA:0:7}</code>" index.html
+          for page in index.html tiers.html; do
+            sed -i "s|<code id=\"build\">[^<]*</code>|<code id=\"build\">${GITHUB_SHA:0:7}</code>|" "$page"
+            grep -q "<code id=\"build\">${GITHUB_SHA:0:7}</code>" "$page"
+          done
 
       - uses: actions/configure-pages@v5
         with:

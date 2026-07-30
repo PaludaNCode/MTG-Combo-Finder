@@ -74,6 +74,20 @@ const REST = [
   '1 Basalt Monolith', '1 Rings of Brighthearth', '1 Palinchron',
   '1 Great Whale', '1 Walking Ballista', '10 Island',
 ];
+// tiers.html is checked against data carrying a result result-tiers.js does not
+// list — the "Spellbook shipped a new set" case. Catching that is the entire
+// reason the page is in the repository, so it is worth a test rather than trust.
+const UNKNOWN_RESULT = 'Infinite eldrazi spawn from the Blind Eternities';
+const TIERS_FIXTURE = {
+  updatedAt: '2026-01-01T00:00:00Z',
+  count: 3,
+  combos: [
+    { id: 't1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'], p: ['Win the game', 'Infinite colorless mana', 'Infinite ETB'], i: 'GU' },
+    { id: 't2', c: ['A', 'B'], p: ['Infinite lifegain', 'Infinite LTB'], i: 'C' },
+    { id: 't3', c: ['A', 'C'], p: [UNKNOWN_RESULT], i: 'C' },
+  ],
+};
+
 const DECKS = {
   marked: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*'].concat(REST).join('\n'),
   plain: ['1 Kinnan, Bonder Prodigy'].concat(REST).join('\n'),
@@ -205,6 +219,57 @@ function runOne(vp) {
 })();
 </script>`;
 
+// tiers.html loads combos.json from the same origin, so it is served the
+// fixture above under a path of its own and pointed at it by the harness.
+const TIERS_HARNESS = `<!DOCTYPE html><meta charset="utf-8"><body style="margin:0">
+<pre id="verdict"></pre>
+<script>
+const WIDTHS = ${JSON.stringify([{ name: 'tiers phone', width: 390 }, { name: 'tiers desktop', width: 1440 }])};
+const results = [];
+function runOne(vp) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:1200px';
+    frame.src = '/tiers.html';
+    frame.onload = () => setTimeout(() => {
+      try {
+        const win = frame.contentWindow, doc = frame.contentDocument;
+        const box = doc.getElementById('unclassified');
+        const out = {
+          ok: true, name: vp.name, requested: vp.width, width: win.innerWidth,
+          overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
+          sections: [...doc.querySelectorAll('.tier h2')].map((h) => h.textContent),
+          chipCounts: [...doc.querySelectorAll('.chip .n')].map((n) => n.textContent),
+          chipHeight: (doc.querySelector('.chip') || {}).offsetHeight,
+          rows: doc.querySelectorAll('.tier ol.rows > li').length,
+          flagged: !box.hidden,
+          flagText: box.hidden ? '' : box.querySelector('h2').textContent,
+          snippet: box.hidden ? '' : (box.querySelector('.snippet') || {}).textContent,
+          stripeColour: box.hidden ? '' : win.getComputedStyle(box.querySelector('.stripe')).backgroundColor,
+        };
+        doc.getElementById('q').value = 'lifegain';
+        doc.getElementById('q').dispatchEvent(new win.Event('input'));
+        setTimeout(() => {
+          out.searchRows = doc.querySelectorAll('.tier ol.rows > li').length;
+          doc.querySelector('.chip').click();
+          setTimeout(() => {
+            out.sectionsAfterToggle = doc.querySelectorAll('.tier').length;
+            resolve(out);
+          }, 60);
+        }, 80);
+      } catch (err) {
+        resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
+      }
+    }, 700);
+    document.body.appendChild(frame);
+  });
+}
+(async () => {
+  for (const vp of WIDTHS) results.push(await runOne(vp));
+  document.getElementById('verdict').textContent = JSON.stringify(results);
+})();
+</script>`;
+
 function serve(dir, extra) {
   return http.createServer((req, res) => {
     const url = req.url.split('?')[0];
@@ -231,31 +296,37 @@ function serve(dir, extra) {
     process.exit(2); // distinct from a real failure
   }
 
-  const extra = {
-    '/combos.json': { type: 'application/json', body: JSON.stringify(FIXTURE) },
-    '/_verify.html': { type: 'text/html', body: HARNESS },
-  };
-  const server = serve(ROOT, extra);
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  const port = server.address().port;
-
-  const { stdout: dom } = await execFileAsync(browser, [
-    '--headless', '--disable-gpu', '--no-sandbox',
-    '--window-size=1600,1200',
-    '--virtual-time-budget=15000', '--dump-dom',
-    `http://127.0.0.1:${port}/_verify.html`,
-  ], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 120000 });
-
-  server.close();
-
-  const match = dom.match(/<pre id="verdict">([\s\S]*?)<\/pre>/);
-  if (!match || !match[1].trim()) {
-    console.error('The page produced no verdict — it probably threw before reporting.');
-    process.exit(1);
+  // Each page gets its own server and its own fixture: tiers.html is checked
+  // against data containing a result the inventory has never seen, which would
+  // be wrong for the deck page.
+  async function collect(fixture, harness, label) {
+    const server = serve(ROOT, {
+      '/combos.json': { type: 'application/json', body: JSON.stringify(fixture) },
+      '/_page.html': { type: 'text/html', body: harness },
+    });
+    await new Promise((r) => server.listen(0, '127.0.0.1', r));
+    const port = server.address().port;
+    let dom;
+    try {
+      ({ stdout: dom } = await execFileAsync(browser, [
+        '--headless', '--disable-gpu', '--no-sandbox',
+        '--window-size=1600,1200',
+        '--virtual-time-budget=15000', '--dump-dom',
+        `http://127.0.0.1:${port}/_page.html`,
+      ], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 120000 }));
+    } finally {
+      server.close();
+    }
+    const match = dom.match(/<pre id="verdict">([\s\S]*?)<\/pre>/);
+    if (!match || !match[1].trim()) {
+      console.error(`${label} produced no verdict — it probably threw before reporting.`);
+      process.exit(1);
+    }
+    return JSON.parse(match[1]
+      .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
   }
-  const decoded = match[1]
-    .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-  const verdicts = JSON.parse(decoded);
+
+  const verdicts = await collect(FIXTURE, HARNESS, 'The deck page');
 
   let failed = false;
   for (const v of verdicts) {
@@ -346,6 +417,35 @@ function serve(dir, extra) {
     } else {
       const headNote = `${v.header.commander || 'no commander'} (${v.header.badge || 'given'}) {${v.header.pips.map((p) => p.letter).join('}{')}}`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${chipNote}`);
+    }
+  }
+
+  // ---- the tier review page ----
+  for (const t of await collect(TIERS_FIXTURE, TIERS_HARNESS, 'The tier page')) {
+    if (!t.ok) {
+      console.error(`FAIL ${t.name} — ${t.error}`);
+      failed = true;
+      continue;
+    }
+    const problems = [];
+    if (Math.abs(t.width - t.requested) > 20) problems.push(`rendered at ${t.width}px, not ${t.requested}px`);
+    if (t.overflow > 0) problems.push(`horizontal overflow of ${t.overflow}px`);
+    if (t.sections.length !== 3) problems.push(`expected 3 tier sections, got ${t.sections.length}`);
+    if (t.chipHeight < 44) problems.push('a filter chip is under 44px tall');
+    if (t.rows < 3) problems.push(`only ${t.rows} result rows rendered`);
+    // The point of the page: an unlisted result is called out, loudly, with the
+    // lines to paste into result-tiers.js.
+    if (!t.flagged) problems.push('an unclassified result was not flagged');
+    if (!/1 result not classified/.test(t.flagText)) problems.push(`the warning reads "${t.flagText}"`);
+    if (!t.snippet.includes(UNKNOWN_RESULT)) problems.push('the paste-ready snippet is missing the unknown result');
+    if (t.searchRows >= t.rows) problems.push('searching did not narrow the list');
+    if (t.sectionsAfterToggle !== 2) problems.push(`toggling a tier chip left ${t.sectionsAfterToggle} sections, expected 2`);
+
+    if (problems.length) {
+      failed = true;
+      console.error(`FAIL ${t.name} @${t.width}px — ${problems.join('; ')}`);
+    } else {
+      console.log(`ok   ${t.name} @${t.width}px — ${t.rows} results, chips ${t.chipCounts.join('/')}, flagged: ${t.flagText}`);
     }
   }
 
