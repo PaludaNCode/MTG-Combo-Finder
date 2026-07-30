@@ -5,7 +5,8 @@ const {
 } = require('../parser.js');
 
 test('parseLine: plain name', () => {
-  assert.deepStrictEqual(parseLine('Sol Ring'), { name: 'Sol Ring', quantity: 1, sideboardPrefix: false });
+  assert.deepStrictEqual(parseLine('Sol Ring'),
+    { name: 'Sol Ring', quantity: 1, sideboardPrefix: false, commander: false });
 });
 
 test('parseLine: quantity variants', () => {
@@ -19,6 +20,36 @@ test('parseLine: Moxfield/Arena export annotations are stripped', () => {
   assert.strictEqual(parseLine('1 Sol Ring (C21) 263 *F*').name, 'Sol Ring');
   assert.strictEqual(parseLine('1 Fabled Passage [ELD]').name, 'Fabled Passage');
   assert.strictEqual(parseLine('1 Arcane Signet (CMM) 951 #!Commander').name, 'Arcane Signet');
+});
+
+test('parseLine: the commander marker is read, then stripped from the name', () => {
+  const mox = parseLine('1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*');
+  assert.strictEqual(mox.name, 'Kinnan, Bonder Prodigy');
+  assert.strictEqual(mox.commander, true);
+
+  const archidekt = parseLine('1x Kinnan, Bonder Prodigy (c21) 3 [Commander{top}]');
+  assert.strictEqual(archidekt.name, 'Kinnan, Bonder Prodigy');
+  assert.strictEqual(archidekt.commander, true);
+});
+
+test('parseLine: Archidekt category tags are not commander markers', () => {
+  const ramp = parseLine('1x Sol Ring (c21) 263 [Ramp,Artifact]');
+  assert.strictEqual(ramp.name, 'Sol Ring');
+  assert.strictEqual(ramp.commander, false);
+  // A Moxfield tag that merely says "Commander" is not the commander marker.
+  assert.strictEqual(parseLine('1 Arcane Signet (CMM) 951 #!Commander').commander, false);
+});
+
+test('parseDecklist: a marked card is the commander wherever it sits', () => {
+  // Exactly what Moxfield's export gives you: no headings, commander inline.
+  const deck = parseDecklist([
+    '1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*',
+    '1 Basalt Monolith (C21) 210',
+    '1 Sol Ring (C21) 263 *F*',
+  ].join('\n'));
+  assert.deepStrictEqual(deck.commanders.map((c) => c.card), ['Kinnan, Bonder Prodigy']);
+  assert.deepStrictEqual(deck.main.map((c) => c.card), ['Basalt Monolith', 'Sol Ring']);
+  assert.deepStrictEqual(deck.skipped, []);
 });
 
 test('parseLine: names containing numbers and commas survive', () => {

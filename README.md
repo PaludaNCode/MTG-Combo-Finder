@@ -27,6 +27,20 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
   tab rather than into the list. Colour identity is the commander's when there
   is one, and the colours the deck actually plays when there isn't.
+- **The commander works itself out** — the commander box is optional, because the
+  commander is normally already in the list you pasted. Three signals, in order:
+  the export's own marker (`*CMDR*`, `[Commander{top}]`); the export's *ordering*,
+  since deck sites write the commander first and the deck alphabetically after
+  it; and failing both, the card that can legally be a commander and whose
+  colours match the deck's. The header then shows who is leading the deck, its
+  colour identity as mana symbols, and whether that was marked, worked out, or
+  typed. When nothing singles one out it says so and lists the candidates rather
+  than picking one.
+
+  Ordering earns its place: a real Abzan list with sixteen legendary creatures in
+  it has several pairs whose colours add up to the deck's — Frodo + Sam, but also
+  Chatterfang + Samwise, and Dina + Rosie. Only position says which pair is
+  actually the commander.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
@@ -103,8 +117,9 @@ Static site, zero dependencies, no build step:
 - `index.html` / `style.css` — the page.
 - `parser.js` — decklist parsing (`DeckParser`). Understands plain names, `1x Card`,
   Moxfield/Arena exports (`1 Sol Ring (C21) 263 *F*`), `Commander:` / `Sideboard:`
-  sections, MTGO `SB:` prefixes, comments, Moxfield + Archidekt API payloads, and
-  deck URLs. Runs under Node so it's unit-testable.
+  sections, per-line commander markers (`*CMDR*`, `[Commander{top}]`), MTGO `SB:`
+  prefixes, comments, Moxfield + Archidekt API payloads, and deck URLs. Runs under
+  Node so it's unit-testable.
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken alphabetically).
@@ -149,6 +164,10 @@ Consequences worth knowing:
   suggestions, since no single named card completes them.
 - Deck colour identity is derived from the commander's entry in the dataset. An
   unrecognized commander disables colour filtering rather than hiding results.
+- A commander worked out from the decklist can never *narrow* the deck's colour
+  identity — every rule in `detectCommanders()` requires the candidate to cover
+  the colours the deck already plays, so a wrong guess can mislabel the header
+  but cannot make combos disappear. `test/commander.test.js` asserts it.
 
 ### Use the bulk export, never the paged API
 
@@ -179,10 +198,29 @@ suggested card fits your commander's colours. `tools/fetch-combos.js` therefore
 also streams [Scryfall's oracle-cards bulk file](https://scryfall.com/docs/api/bulk-data)
 and publishes a name → identity map alongside the combos.
 
+The same pass publishes `commanderNames`, the names of every card that is allowed
+to *be* a commander — a legendary creature, a Background, or a card whose rules
+text grants it — filtered by `legalities.commander`, which is what keeps tokens
+and Un-cards out. Only the front face counts: Westvale Abbey's combined type line
+reads `Land // Legendary Creature — Demon`, and testing it whole would make the
+land a commander. The page uses that list to find the commander in a pasted deck.
+The fetcher refuses to publish with fewer than 500 names, for the same reason it
+refuses to publish without colour data.
+
 The first published dataset had `cardIdentity: {}` because the fetcher looked for
 a `card.identity` field that does not exist, and the guard around it turned that
 into an empty map rather than an error — colour filtering was simply inert. The
 fetcher now refuses to publish with fewer than 1,000 identities.
+
+**Tokens must not be published.** Scryfall's bulk file contains a token named
+`Pippin, Warden of Isengard // Pippin, Warden of Isengard` with no colour
+identity, and matching on the front face lands it on the real card's key. In the
+data published on 2026-07-30 that zeroed the identity of **1,901 real cards** —
+Sam, Loyal Attendant included — silently mis-sorting them into "Other colours".
+The fetcher now drops `token` / `double_faced_token` / `emblem` / `art_series` /
+`vanguard` layouts, and `identityIndex()` additionally refuses to let a
+colourless entry displace a coloured one, so already-published data is repaired
+in the page without waiting for a refresh.
 
 ### API contract notes
 

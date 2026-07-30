@@ -53,6 +53,18 @@
     return /^[^\d].*[([]\s*\d+\s*[)\]]\s*:?$/.test(String(line).trim());
   }
 
+  // How the export formats mark "this one is the commander" on the card line
+  // itself, rather than under a heading:
+  //   "*CMDR*"           Moxfield / Arena text export
+  //   "[Commander{top}]" Archidekt text export (the category, with its layout hint)
+  // Worth recognizing on its own: it means a plain paste of a Moxfield export
+  // identifies its own commander, with nothing typed into the commander box.
+  //
+  // "#!Commander" is deliberately not here. It looks like the same thing but is
+  // a free-form Moxfield tag, and it lands on cards like Arcane Signet that no
+  // rule would let you command with.
+  const COMMANDER_MARK = /\*CMDR\*|\[commander\b[^\]]*\]/i;
+
   // One card line. Handles:
   //   "Sol Ring"
   //   "1 Sol Ring"
@@ -60,6 +72,7 @@
   //   "1 Sol Ring (C21) 263"            (Moxfield / MTGA export)
   //   "1 Sol Ring (C21) 263 *F*"        (foil marker)
   //   "1 Sol Ring [C21]"                 (Archidekt-ish)
+  //   "1 Sol Ring (c21) 3 [Ramp,Artifact]" (Archidekt text export categories)
   //   "SB: 1 Swords to Plowshares"      (MTGO sideboard prefix -> ignored)
   function parseLine(rawLine) {
     let line = rawLine.trim();
@@ -80,19 +93,29 @@
       line = qtyMatch[2];
     }
 
+    // Read the commander marker before the annotations carrying it are stripped.
+    const commander = COMMANDER_MARK.test(line);
+
     // Strip trailing set/collector-number/foil annotations:
-    //   "(C21) 263", "(C21)", "[C21]", "*F*", "<c21>", "#!Commander" tags
+    //   "(C21) 263", "(C21)", "[C21]", "[Commander{top}]", "*F*", "*CMDR*",
+    //   "<c21>", "#!Commander" tags
+    //
+    // Brackets are cleared whatever is inside them: Archidekt writes arbitrary
+    // category names there ("[Ramp]", "[Commander{top}]"), and no card name
+    // contains a bracket, so there is nothing to lose by being permissive.
+    // Asterisk markers likewise take any run of letters — matching only a
+    // single one left "*CMDR*" sitting in the card name.
     let name = line
       .replace(/\s*\((?:[A-Za-z0-9]{2,6})\)(?:\s+[\w★†-]+)?\s*/g, ' ')
-      .replace(/\s*\[[A-Za-z0-9]{2,6}\]\s*/g, ' ')
+      .replace(/\s*\[[^\]]*\]\s*/g, ' ')
       .replace(/\s*<[^>]*>\s*/g, ' ')
-      .replace(/\s*\*[A-Za-z]\*\s*/g, ' ')
+      .replace(/\s*\*[A-Za-z]+\*\s*/g, ' ')
       .replace(/\s*#[!\w-]+\s*/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
     if (!name) return null;
-    return { name, quantity, sideboardPrefix };
+    return { name, quantity, sideboardPrefix, commander };
   }
 
   // Parses a full decklist text blob into { commanders, main, skipped } where
@@ -147,14 +170,17 @@
         continue;
       }
 
-      const bucket = byName[target];
+      // A per-line marker beats the section it sits in: a Moxfield export lists
+      // the commander in the main board with "*CMDR*" on it and no heading.
+      const board = parsed.commander ? 'commanders' : target;
+      const bucket = byName[board];
       const existing = bucket.get(parsed.name.toLowerCase());
       if (existing) {
         existing.quantity += parsed.quantity;
       } else {
         const entry = { card: parsed.name, quantity: parsed.quantity };
         bucket.set(parsed.name.toLowerCase(), entry);
-        (target === 'commanders' ? commanders : main).push(entry);
+        (board === 'commanders' ? commanders : main).push(entry);
       }
     }
 
