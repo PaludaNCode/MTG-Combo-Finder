@@ -369,6 +369,34 @@ Consequences worth knowing:
   the colours the deck already plays, so a wrong guess can mislabel the header
   but cannot make combos disappear. `test/commander.test.js` asserts it.
 
+### A found commander goes into the box
+
+The strongest detection signal is how deck sites export — commander first, the
+rest in name order — so `commandersByPosition()` looks for a card sitting in
+front of an otherwise sorted list. That is what tells a real partner pair apart
+from the several other pairs whose colours would add up the same way.
+
+It also means **adding one card by hand destroys the signal**. Reported as a bug,
+and it was one: search, get the right commander, add a card, search again, and it
+was gone.
+
+The repair is not to loosen the sortedness test. That test is the whole
+discrimination between "a card is deliberately out in front" and "this list isn't
+sorted"; make it tolerant and *both* readings start passing, so partner pairs get
+lost rather than saved. Instead, a confident answer is written into the commander
+box. It stops being something re-derived on every search and becomes ordinary
+typed input — visible, editable, and independent of whether the list still looks
+exported. What the user typed is never overwritten.
+
+For the case where detection genuinely cannot decide, the shortlist renders as
+buttons rather than text: that moment is exactly when someone would otherwise be
+retyping a name with two commas in it on a phone.
+
+The layout test covers both halves — that the box gets filled, that a commander
+marked in the list is *not* written into it, and that editing the decklist no
+longer loses the commander. Disabling the fix makes it fail with
+`editing the decklist lost the commander`.
+
 ### Use the bulk export, never the paged API
 
 The fetcher reads **`https://json.commanderspellbook.com/variants.json`** — the same

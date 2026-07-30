@@ -127,6 +127,25 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: .75rem;
 }
 
+/* Picking a commander from the shortlist. A tap target, not a run of text:
+   this shows up exactly when detection could not decide, which is when someone
+   would otherwise be retyping "Camellia, the Seedmiser" by hand on a phone. */
+.pick-commander {
+  margin: .15rem .1rem;
+  padding: .3rem .6rem;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px #4a536b;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
+.pick-commander:hover { box-shadow: inset 0 0 0 1px var(--accent); }
+.pick-commander:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* Mana symbols, drawn rather than fetched — a remote symbol font would be one
    more thing to load, and one more thing to fail offline. */
 .mana { display: inline-flex; gap: .2rem; }
