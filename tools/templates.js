@@ -132,6 +132,15 @@ async function resolveTemplates(log = console.log) {
   const failed = [];
   let resolved = 0;
 
+  // Templates Spellbook gives no query for. Recorded rather than ignored: the
+  // daily refresh compares the templates combos ask for against what is known,
+  // and without this list all 29 of these would be reported as new every single
+  // day. A warning that always fires is one nobody reads.
+  const unresolvable = Object.create(null);
+  for (const template of all) {
+    if (!template.scryfallApi) unresolvable[template.id] = template.name;
+  }
+
   for (const template of queryable) {
     let result;
     try {
@@ -171,15 +180,43 @@ async function resolveTemplates(log = console.log) {
     for (const f of failed) log(`    ${f.name} — ${f.why}`);
   }
 
-  return { templates, templateCards, stats: { ...stats, resolved, failed } };
+  return { templates, unresolvable, templateCards, stats: { ...stats, resolved, failed } };
 }
 
 module.exports = { resolveTemplates, MAX_PAGES };
 
+// Regenerating is a manual job, not part of the daily refresh: templates change
+// when a set ships, a few times a year, and re-resolving all 149 every night to
+// learn that nothing moved costs 23 minutes and 465 requests for no answer. The
+// daily run instead reports templates it has never seen, which is free — the
+// combo export already names the ones every combo needs.
 if (require.main === module) {
+  const out = process.argv[2] || require('node:path').join(__dirname, '..', 'templates.json');
+
   resolveTemplates()
-    .then(({ templates, templateCards }) => {
-      console.log(JSON.stringify({ templates, templateCards }).length, 'bytes');
+    .then(({ templates, unresolvable, templateCards, stats }) => {
+      // A file written from a run that lost templates to a 503 would look
+      // complete and quietly exclude their combos until someone regenerated it
+      // again. Write all of it or none of it.
+      if (stats.failed.length) {
+        console.error(`\n${stats.failed.length} template(s) failed to resolve, so nothing was written:`);
+        for (const f of stats.failed) console.error(`  ${f.name} — ${f.why}`);
+        console.error('\nRe-run the workflow; these are usually transient.');
+        process.exit(1);
+      }
+
+      const payload = {
+        generatedAt: new Date().toISOString(),
+        source: TEMPLATES_URL,
+        templates,
+        unresolvable,
+        cards: templateCards,
+      };
+      require('node:fs').writeFileSync(out, JSON.stringify(payload, null, 0) + '\n');
+      const mb = (require('node:fs').statSync(out).size / 1024 / 1024).toFixed(2);
+      console.log(`\nWrote ${out}: ${Object.keys(templates).length} resolved, `
+        + `${Object.keys(unresolvable).length} with no query, `
+        + `${Object.keys(templateCards).length} cards, ${mb} MB`);
     })
     .catch((err) => {
       console.error('Template resolution failed:', err.message);
