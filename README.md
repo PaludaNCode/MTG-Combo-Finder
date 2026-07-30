@@ -92,6 +92,19 @@ at 78, with two full minutes of backoff never clearing it. Fewer, larger request
 is both the only thing that works and the neighbourly way to consume someone else's
 database.
 
+### Colour identity comes from Scryfall
+
+Commander Spellbook's `CardSerializer` exposes name, images and type line but
+**not** colour identity, so the combo export alone cannot tell you whether a
+suggested card fits your commander's colours. `tools/fetch-combos.js` therefore
+also streams [Scryfall's oracle-cards bulk file](https://scryfall.com/docs/api/bulk-data)
+and publishes a name → identity map alongside the combos.
+
+The first published dataset had `cardIdentity: {}` because the fetcher looked for
+a `card.identity` field that does not exist, and the guard around it turned that
+into an empty map rather than an error — colour filtering was simply inert. The
+fetcher now refuses to publish with fewer than 1,000 identities.
+
 ### API contract notes
 
 Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend):
