@@ -78,6 +78,13 @@ bulk file Commander Spellbook's own frontend uses (see `combo-sitemap.xml.ts` in
 [commander-spellbook-site](https://github.com/SpaceCowMedia/commander-spellbook-site)).
 One request for the whole database.
 
+That file is **over 512 MB**, which is past the longest string V8 will build, so
+`res.json()` dies with `Cannot create a string longer than 0x1fffffe8 characters`.
+`tools/fetch-combos.js` therefore streams the response and pulls out one variant
+object at a time with a small hand-written scanner (no dependencies), keeping only
+the object currently being read in memory. `test/scanner.test.js` feeds it chunk
+sizes down to a single byte, including braces and escaped quotes inside strings.
+
 Do not "improve" this by paging `/variants` instead. That needs ~300 requests and
 their rate limit is a **cumulative quota, not a per-second throttle**: walking it at
 4 req/s was cut off after 120 pages, and slowing to 1 req/s was cut off *earlier*,
