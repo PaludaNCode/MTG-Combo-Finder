@@ -122,6 +122,30 @@
     };
   }
 
+  // Which of your cards are load-bearing: how many of the combos you can
+  // already assemble each one takes part in. A list of combos doesn't make this
+  // obvious — cutting a card that turns up in four of them costs four combos,
+  // and that is exactly the thing you want to know before trimming a deck.
+  function comboPieces(variants) {
+    const byCard = new Map();
+    for (const variant of variants || []) {
+      // A card listed twice in one combo is still one combo for that card.
+      const unique = new Map();
+      for (const name of variantCardNames(variant)) unique.set(nameKey(name), name);
+      for (const [key, name] of unique) {
+        let entry = byCard.get(key);
+        if (!entry) {
+          entry = { card: name.split('//')[0].trim(), combos: [] };
+          byCard.set(key, entry);
+        }
+        entry.combos.push(variant);
+      }
+    }
+    return [...byCard.values()]
+      .map((e) => ({ card: e.card, count: e.combos.length, combos: e.combos }))
+      .sort((a, b) => b.count - a.count || a.card.localeCompare(b.card));
+  }
+
   // ---- what a combo actually gives you ------------------------------------
 
   // "Does this win?" has three honest answers, not two.
@@ -202,7 +226,7 @@
 
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
-    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults,
+    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

@@ -176,3 +176,52 @@ test('summarizeResults: ordering is stable regardless of input order', () => {
   // Decisive results lead, each tier alphabetical within itself.
   assert.deepStrictEqual(first, ['Infinite damage', 'Infinite mill', 'Infinite mana', 'Infinite untap']);
 });
+
+// ---- which cards carry the combos ------------------------------------------
+const { comboPieces } = require('../combos.js');
+
+function v(id, ...cards) {
+  return { id, uses: cards.map((name) => ({ card: { name } })) };
+}
+
+test('comboPieces: ranks cards by how many combos they hold together', () => {
+  const pieces = comboPieces([
+    v('1', 'Basalt Monolith', 'Rings of Brighthearth'),
+    v('2', 'Basalt Monolith', 'Kinnan, Bonder Prodigy'),
+    v('3', 'Basalt Monolith', 'Power Artifact'),
+    v('4', 'Palinchron', 'Deadeye Navigator'),
+  ]);
+  assert.strictEqual(pieces[0].card, 'Basalt Monolith');
+  assert.strictEqual(pieces[0].count, 3);
+  assert.deepStrictEqual(pieces[0].combos.map((c) => c.id), ['1', '2', '3']);
+  assert.ok(pieces.slice(1).every((p) => p.count === 1));
+});
+
+test('comboPieces: ties are alphabetical so the order is stable', () => {
+  const combos = [v('1', 'Zealous Conscripts', 'Aetherflux Reservoir')];
+  const first = comboPieces(combos).map((p) => p.card);
+  const second = comboPieces([...combos].reverse()).map((p) => p.card);
+  assert.deepStrictEqual(first, ['Aetherflux Reservoir', 'Zealous Conscripts']);
+  assert.deepStrictEqual(first, second);
+});
+
+test('comboPieces: a card repeated inside one combo counts that combo once', () => {
+  const pieces = comboPieces([v('1', 'Dockside Extortionist', 'Dockside Extortionist', 'Temur Sabertooth')]);
+  const dockside = pieces.find((p) => p.card === 'Dockside Extortionist');
+  assert.strictEqual(dockside.count, 1);
+  assert.strictEqual(pieces.length, 2);
+});
+
+test('comboPieces: double-faced cards are counted under their front face', () => {
+  const pieces = comboPieces([
+    v('1', 'Valki, God of Lies // Tibalt, Cosmic Impostor', 'Sol Ring'),
+    v('2', 'Valki, God of Lies', 'Maskwood Nexus'),
+  ]);
+  const valki = pieces.find((p) => p.card === 'Valki, God of Lies');
+  assert.strictEqual(valki.count, 2, 'both spellings are the same card');
+});
+
+test('comboPieces: no combos means nothing to carry', () => {
+  assert.deepStrictEqual(comboPieces([]), []);
+  assert.deepStrictEqual(comboPieces(null), []);
+});

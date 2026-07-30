@@ -16,6 +16,10 @@ because it literally asks Commander Spellbook's public API about your deck.
   your deck's colors, shown separately.
 - **Deck import** — paste an Archidekt deck URL, or paste any site's text export
   (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
+- **Cards carrying your combos** — every card that takes part in a combo you can
+  already assemble, ranked by how many. A list of combos hides this: cutting a
+  card that turns up in four of them costs four combos, which is exactly what
+  you want to know before trimming a deck.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **What a combo gives you**, as chips rather than a comma-run: game-ending

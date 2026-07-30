@@ -195,6 +195,44 @@
     return body;
   }
 
+  // One of your cards, with the combos it holds together.
+  function pieceCard(piece, rank) {
+    const card = el('article', 'combo suggestion');
+
+    const head = el('div', 'sug-head');
+    head.appendChild(el('span', 'rank', rank + '.'));
+    head.appendChild(el('span', 'card-name', piece.card));
+    head.appendChild(el('span', 'badge', 'in ' + piece.count + ' combo' + (piece.count === 1 ? '' : 's')));
+    card.appendChild(head);
+
+    const links = el('p', 'card-links');
+    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(piece.card), 'EDHREC'));
+    links.appendChild(document.createTextNode(' · '));
+    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + piece.card + '"'), 'Scryfall'));
+    card.appendChild(links);
+
+    const details = el('details');
+    details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
+    piece.combos.forEach((v) => details.appendChild(comboCard(v, null)));
+    card.appendChild(details);
+
+    return card;
+  }
+
+  function renderPieces(container, included) {
+    if (!included.length) {
+      container.textContent = '';
+      return;
+    }
+    const pieces = DeckCombos.comboPieces(included);
+    const body = panel(container, 'pieces', 'Cards carrying your combos', pieces.length);
+    const top = pieces[0];
+    body.appendChild(el('p', 'section-note', top.count > 1
+      ? `${top.card} appears in ${top.count} of them — cutting it costs you all ${top.count}.`
+      : 'Each of these appears in one combo.'));
+    pieces.forEach((p, i) => body.appendChild(pieceCard(p, i + 1)));
+  }
+
   function renderSuggestions(container, key, title, suggestions, deckNames, emptyText) {
     if (!suggestions.length && !emptyText) {
       container.textContent = '';
@@ -225,6 +263,8 @@
     } else {
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
+
+    renderPieces($('pieces'), included);
 
     renderSuggestions(
       $('suggestions'),
