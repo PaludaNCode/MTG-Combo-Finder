@@ -132,24 +132,102 @@
     return card;
   }
 
-  function suggestionCard(suggestion, rank, deckNames) {
+  // A combo you can already assemble, with the parts that are interchangeable
+  // shown as a choice rather than as separate combos. The variants are real and
+  // still reachable — each keeps its own link to Spellbook.
+  function comboGroupCard(group) {
+    if (group.choices.length < 2) return comboCard(group.variants[0], null);
+
+    const card = el('article', 'combo');
+
+    const header = el('h3');
+    group.shared.forEach((name, i) => {
+      if (i > 0) header.appendChild(el('span', 'plus', ' + '));
+      header.appendChild(el('span', 'card-name', name));
+    });
+    header.appendChild(el('span', 'plus', ' + '));
+    header.appendChild(el('span', 'either', 'any of ' + group.choices.length));
+    card.appendChild(header);
+
+    const choices = el('p', 'choices');
+    group.choices.forEach((name, i) => {
+      if (i > 0) choices.appendChild(document.createTextNode(' · '));
+      choices.appendChild(el('span', 'card-name', name));
+    });
+    card.appendChild(choices);
+
+    card.appendChild(resultChips(group.variants[0]));
+
+    const details = el('details');
+    details.appendChild(el('summary', null, `All ${group.variants.length} versions`));
+    group.variants.forEach((v) => details.appendChild(comboCard(v, null)));
+    card.appendChild(details);
+
+    return card;
+  }
+
+  function cardLinks(name) {
+    const links = el('span', 'card-links');
+    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(name), 'EDHREC'));
+    links.appendChild(document.createTextNode(' · '));
+    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + name + '"'), 'Scryfall'));
+    return links;
+  }
+
+  // How many alternatives to spell out before folding the rest away. A group of
+  // 17 is real — the whole list is a wall, and the first few make the point.
+  const ALTERNATIVES_SHOWN = 5;
+
+  // One suggestion, which may be a choice between cards that do the same job.
+  // Grouping them matters: four cards each claiming "+7 combos" is four ways of
+  // describing one decision, and reads as four decisions.
+  function suggestionCard(group, rank, deckNames) {
     const card = el('article', 'combo suggestion');
+    const [first, ...rest] = group.cards;
 
     const header = el('h3');
     header.appendChild(el('span', 'rank', rank + '. '));
-    header.appendChild(el('span', 'card-name', suggestion.card));
-    header.appendChild(el('span', 'badge', '+' + suggestion.unlocks.length + ' combo' + (suggestion.unlocks.length === 1 ? '' : 's')));
+    header.appendChild(el('span', 'card-name', first));
+    header.appendChild(el('span', 'badge', '+' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's')));
     card.appendChild(header);
 
     const links = el('p', 'card-links');
-    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(suggestion.card), 'EDHREC'));
-    links.appendChild(document.createTextNode(' · '));
-    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + suggestion.card + '"'), 'Scryfall'));
+    links.appendChild(cardLinks(first));
     card.appendChild(links);
+
+    if (rest.length) {
+      const alt = el('div', 'alternatives');
+      alt.appendChild(el('span', 'alt-label',
+        `or any one of these ${rest.length} instead — same ${group.unlocks.length === 1 ? 'combo' : 'combos'}:`));
+      const shown = rest.slice(0, ALTERNATIVES_SHOWN);
+      const list = el('ul', 'alt-list');
+      shown.forEach((name) => {
+        const li = el('li');
+        li.appendChild(el('span', 'card-name', name));
+        li.appendChild(cardLinks(name));
+        list.appendChild(li);
+      });
+      alt.appendChild(list);
+
+      if (rest.length > shown.length) {
+        const more = el('details', 'alt-more');
+        more.appendChild(el('summary', null, `${rest.length - shown.length} more`));
+        const tail = el('ul', 'alt-list');
+        rest.slice(ALTERNATIVES_SHOWN).forEach((name) => {
+          const li = el('li');
+          li.appendChild(el('span', 'card-name', name));
+          li.appendChild(cardLinks(name));
+          tail.appendChild(li);
+        });
+        more.appendChild(tail);
+        alt.appendChild(more);
+      }
+      card.appendChild(alt);
+    }
 
     const details = el('details');
     details.appendChild(el('summary', null, 'Combos this unlocks'));
-    suggestion.unlocks.forEach((v) => details.appendChild(comboCard(v, deckNames)));
+    group.unlocks.forEach((v) => details.appendChild(comboCard(v, deckNames)));
     card.appendChild(details);
 
     return card;
@@ -376,9 +454,12 @@
     renderIdentity($('identity'), results.identity, results.commanderInfo);
 
     const included = results.included;
-    const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
-    if (included.length) {
-      included.forEach((v) => includedBody.appendChild(comboCard(v, null)));
+    // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
+    // combo with Essence Warden in that slot are one row rather than three.
+    const groups = DeckCombos.groupVariants(included);
+    const includedBody = panel($('included'), 'included', 'Combos in your deck', groups.length || null);
+    if (groups.length) {
+      groups.forEach((g) => includedBody.appendChild(comboGroupCard(g)));
     } else {
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
@@ -387,8 +468,8 @@
 
     renderSuggestions(
       $('suggestions'),
-      DeckCombos.computeSuggestions(results.almostIncluded, deckNames),
-      DeckCombos.computeSuggestions(results.almostIncludedByAddingColors, deckNames),
+      DeckCombos.groupSuggestions(DeckCombos.computeSuggestions(results.almostIncluded, deckNames), deckNames),
+      DeckCombos.groupSuggestions(DeckCombos.computeSuggestions(results.almostIncludedByAddingColors, deckNames), deckNames),
       deckNames,
       results.identity
     );

@@ -52,6 +52,7 @@ const FIXTURE = {
     'Kinnan, Bonder Prodigy': 'GU', 'Basalt Monolith': '', 'Rings of Brighthearth': '',
     'Palinchron': 'U', 'Deadeye Navigator': 'U', 'Great Whale': 'U',
     'Walking Ballista': '', 'Heliod, Sun-Crowned': 'W', 'Island': 'U',
+    'Sword of the Meek': '', 'Bloom Tender': 'G', 'Devoted Druid': 'G',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
   combos: [
@@ -64,6 +65,13 @@ const FIXTURE = {
     { id: '6', c: ['Basalt Monolith', 'Kinnan, Bonder Prodigy', 'Walking Ballista'], p: ['Infinite damage'], i: 'GU', pop: 10 },
     { id: '3', c: ['Palinchron', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
     { id: '4', c: ['Great Whale', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
+    // Interchangeable with combo 2: same partner, same result, one card swapped.
+    // Both are already in the deck, so they must collapse into one row.
+    { id: '8', c: ['Basalt Monolith', 'Sword of the Meek'], p: ['Infinite colorless mana'], i: 'C', pop: 80 },
+    // And two more that only differ in the card you'd have to add, so the
+    // suggestion for them has to read as one choice, not two recommendations.
+    { id: '9', c: ['Walking Ballista', 'Bloom Tender'], p: ['Infinite damage'], i: 'G' },
+    { id: '10', c: ['Walking Ballista', 'Devoted Druid'], p: ['Infinite damage'], i: 'G' },
     { id: '5', c: ['Walking Ballista', 'Heliod, Sun-Crowned'], p: ['Infinite damage'], i: 'W' },
   ],
 };
@@ -72,7 +80,7 @@ const FIXTURE = {
 // typed into the commander box — the path most people actually take.
 const REST = [
   '1 Basalt Monolith', '1 Rings of Brighthearth', '1 Palinchron',
-  '1 Great Whale', '1 Walking Ballista', '10 Island',
+  '1 Great Whale', '1 Walking Ballista', '1 Sword of the Meek', '10 Island',
 ];
 // tiers.html is checked against data carrying a result result-tiers.js does not
 // list — the "Spellbook shipped a new set" case. Catching that is the entire
@@ -124,6 +132,15 @@ function measure(win, doc) {
     paneVisible: !doc.getElementById(t.getAttribute('aria-controls')).hidden,
     height: t.offsetHeight,
   }));
+  const grouped = {
+    // A combo row offering a choice of part, and a suggestion offering a choice
+    // of card. Both exist in the fixture, so both must render.
+    eitherRows: [...doc.querySelectorAll('#included .either')].map((e) => e.textContent),
+    choiceRows: doc.querySelectorAll('#included .choices').length,
+    altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
+    altNames: doc.querySelectorAll('.alternatives .alt-list .card-name').length,
+  };
+
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
     text: c.textContent, win: c.classList.contains('tier-win'),
@@ -148,6 +165,7 @@ function measure(win, doc) {
   const out = doc.querySelector('.col-output').getBoundingClientRect();
   return {
     header,
+    grouped,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
@@ -373,6 +391,16 @@ function serve(dir, extra) {
     const wantBadge = EXPECTED_BADGE[vp.deck];
     if (h.badge !== wantBadge) problems.push(`commander badge read "${h.badge}", expected "${wantBadge}"`);
 
+    // Interchangeable cards must collapse. Without this the fixture's two
+    // identical-payoff combos read as two finds and two recommendations.
+    const g = v.grouped;
+    if (!g.eitherRows.length) problems.push('no combo row collapsed its interchangeable part');
+    if (g.eitherRows.some((t) => !/any of \d+/.test(t))) problems.push(`a collapsed row reads "${g.eitherRows[0]}"`);
+    if (g.choiceRows !== g.eitherRows.length) problems.push('a collapsed row did not list its choices');
+    if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
+    if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
+    if (g.altNames < 1) problems.push('the alternatives list named no cards');
+
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
     // Empty chips must fail: otherwise every assertion below passes vacuously.
@@ -416,7 +444,8 @@ function serve(dir, extra) {
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
       const headNote = `${v.header.commander || 'no commander'} (${v.header.badge || 'given'}) {${v.header.pips.map((p) => p.letter).join('}{')}}`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${chipNote}`);
+      const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${chipNote}`);
     }
   }
 
