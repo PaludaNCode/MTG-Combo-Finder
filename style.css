@@ -81,6 +81,38 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .identity-line { color: var(--muted); }
 
+.diag {
+  background: var(--panel);
+  border: 1px solid #4a3540;
+  border-radius: var(--radius);
+  padding: .7rem .9rem;
+  margin-bottom: 1rem;
+}
+.diag summary { color: var(--error); font-weight: 600; }
+.diag.notice { border-color: #333a4d; }
+.diag.notice summary { color: var(--muted); font-weight: 500; }
+.diag-body {
+  margin: .6rem 0 .5rem;
+  padding: .6rem;
+  background: #14161d;
+  border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 22rem;
+  overflow: auto;
+  color: var(--text);
+}
+.copy-btn {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid #333a4d;
+  font-size: .82rem;
+  padding: .3rem .7rem;
+}
+
 #results h2 { margin: 1.5rem 0 .75rem; font-size: 1.2rem; }
 .empty { color: var(--muted); }
 

@@ -48,6 +48,69 @@ test('parseDecklist: commander section is separated from the main deck', () => {
   ]);
 });
 
+test('parseDecklist: decorated section headings still switch board', () => {
+  const deck = parseDecklist([
+    'Commander (1)',
+    '1 Kinnan, Bonder Prodigy',
+    'Deck (99):',
+    '1 Sol Ring',
+    'Sideboard (15)',
+    '1 Pithing Needle',
+  ].join('\n'));
+  assert.deepStrictEqual(deck.commanders, [{ card: 'Kinnan, Bonder Prodigy', quantity: 1 }]);
+  assert.deepStrictEqual(deck.main, [{ card: 'Sol Ring', quantity: 1 }]);
+});
+
+test('parseDecklist: category headings are skipped, not treated as cards', () => {
+  const deck = parseDecklist([
+    'Creatures (24)',
+    '1 Birds of Paradise',
+    'Lands [37]',
+    '12 Forest',
+  ].join('\n'));
+  assert.deepStrictEqual(deck.main, [
+    { card: 'Birds of Paradise', quantity: 1 },
+    { card: 'Forest', quantity: 12 },
+  ]);
+  assert.deepStrictEqual(deck.skipped.map((s) => s.line), ['Creatures (24)', 'Lands [37]']);
+});
+
+test('parseDecklist: a set code is not mistaken for a category count', () => {
+  const deck = parseDecklist('1 Sol Ring (C21) 263\nSol Ring (C21)');
+  assert.deepStrictEqual(deck.main, [{ card: 'Sol Ring', quantity: 2 }]);
+  assert.deepStrictEqual(deck.skipped, []);
+});
+
+test('parseDecklist: any sideboard mention stops collection', () => {
+  const deck = parseDecklist([
+    '1 Sol Ring',
+    'Sideboard cards',
+    '1 Pithing Needle',
+  ].join('\n'));
+  assert.deepStrictEqual(deck.main, [{ card: 'Sol Ring', quantity: 1 }]);
+});
+
+test('parseDecklist: blank lines are skipped silently, junk is reported', () => {
+  const deck = parseDecklist('\n\n1 Sol Ring\n\n   \n');
+  assert.deepStrictEqual(deck.main, [{ card: 'Sol Ring', quantity: 1 }]);
+  assert.deepStrictEqual(deck.skipped, []);
+});
+
+test('parseDecklist: quantities and digits in names both survive', () => {
+  const deck = parseDecklist([
+    '10 Island',
+    '1 Borrowing 100,000 Arrows',
+    '4x Ancestral Vision',
+    '2 Fire // Ice',
+  ].join('\n'));
+  assert.deepStrictEqual(deck.main, [
+    { card: 'Island', quantity: 10 },
+    { card: 'Borrowing 100,000 Arrows', quantity: 1 },
+    { card: 'Ancestral Vision', quantity: 4 },
+    { card: 'Fire // Ice', quantity: 2 },
+  ]);
+});
+
 test('parseDecklist: sideboard and maybeboard are ignored', () => {
   const deck = parseDecklist([
     '1 Sol Ring',
@@ -70,8 +133,8 @@ test('parseDecklist: duplicate lines merge quantities', () => {
 });
 
 test('parseDecklist: empty input', () => {
-  assert.deepStrictEqual(parseDecklist(''), { commanders: [], main: [] });
-  assert.deepStrictEqual(parseDecklist(null), { commanders: [], main: [] });
+  assert.deepStrictEqual(parseDecklist(''), { commanders: [], main: [], skipped: [] });
+  assert.deepStrictEqual(parseDecklist(null), { commanders: [], main: [], skipped: [] });
 });
 
 test('fromMoxfield: v3 board shape', () => {

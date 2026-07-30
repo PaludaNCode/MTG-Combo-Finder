@@ -31,6 +31,22 @@ Static site, zero dependencies, no build step:
   double-faced cards, ties broken alphabetically).
 - `app.js` — reads the form, POSTs `{ commanders, main }` to
   `backend.commanderspellbook.com/find-my-combos`, renders the sections above.
+  On failure it shows a copyable report (endpoint, HTTP status, response body,
+  what was sent, which lines were skipped) instead of a bare "it didn't work".
+
+### API contract notes
+
+Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend),
+because guessing here cost a silent bug:
+
+- The response is **paginated** — the payload is under `results`.
+- Its keys are **snake_case**: `included`, `almost_included`,
+  `almost_included_by_adding_colors`. Reading `almostIncluded` returns
+  `undefined`, which renders as "no suggestions" rather than an error, so this
+  failed silently for a while. `pick()` reads snake_case with a camelCase fallback.
+- A variant's cards are `uses[].card.name`; its results are `produces[].feature.name`.
+- Request limits (`common/serializers.py`): 600 main entries, 12 commanders,
+  256-char names, and **quantity must be ≥ 1** — violations are a 400.
 
 ## Data-source research (why Commander Spellbook only)
 

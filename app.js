@@ -113,7 +113,7 @@
       identity.appendChild(el('p', 'identity-line', 'Deck color identity: ' + String(results.identity).toUpperCase()));
     }
 
-    const included = results.included || [];
+    const included = pick(results, 'included', 'included');
     const includedEl = $('included');
     includedEl.textContent = '';
     includedEl.appendChild(el('h2', null, 'Combos in your deck' + (included.length ? ` (${included.length})` : '')));
@@ -126,7 +126,7 @@
     renderSuggestions(
       $('suggestions'),
       'Suggested additions — ranked by combos unlocked',
-      DeckCombos.computeSuggestions(results.almostIncluded || [], deckNames),
+      DeckCombos.computeSuggestions(pick(results, 'almost_included', 'almostIncluded'), deckNames),
       deckNames,
       'No single-card additions would complete a combo (within your color identity).'
     );
@@ -134,7 +134,10 @@
     renderSuggestions(
       $('offcolor'),
       'Outside your color identity',
-      DeckCombos.computeSuggestions(results.almostIncludedByAddingColors || [], deckNames),
+      DeckCombos.computeSuggestions(
+        pick(results, 'almost_included_by_adding_colors', 'almostIncludedByAddingColors'),
+        deckNames
+      ),
       deckNames,
       '' // hide section entirely when empty
     );
@@ -142,15 +145,71 @@
 
   // ---- API calls -----------------------------------------------------------
 
+  // Everything we learn about a request, kept so a failure can be shown in full
+  // rather than reduced to "it didn't work".
+  let lastDiagnostics = null;
+
   async function findCombos(commanders, main) {
-    const res = await fetch(SPELLBOOK_API, {
+    const payload = { commanders, main };
+    const diag = {
+      endpoint: SPELLBOOK_API,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ commanders, main }),
-    });
-    if (!res.ok) throw new Error('Commander Spellbook API returned HTTP ' + res.status);
-    const data = await res.json();
-    return data.results || data;
+      sent: { commanders: commanders.length, main: main.length },
+      firstCards: main.slice(0, 5).map((c) => `${c.quantity} ${c.card}`),
+    };
+    lastDiagnostics = diag;
+
+    let res;
+    try {
+      res = await fetch(SPELLBOOK_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (networkErr) {
+      // No response at all: CORS, offline, DNS, TLS.
+      diag.error = networkErr.name + ': ' + networkErr.message;
+      diag.likelyCause = 'The browser blocked or could not send the request (CORS, offline, or the API is unreachable).';
+      throw networkErr;
+    }
+
+    diag.status = res.status;
+    diag.statusText = res.statusText;
+
+    const raw = await res.text();
+    diag.responseSnippet = raw.slice(0, 800);
+
+    if (!res.ok) {
+      // Django REST Framework puts field-level validation errors in the body,
+      // which is where a rejected decklist actually explains itself.
+      diag.likelyCause = res.status === 400
+        ? 'The API rejected the decklist — see the response below for the offending field.'
+        : 'The API responded with an error status.';
+      const err = new Error('Commander Spellbook API returned HTTP ' + res.status);
+      err.status = res.status;
+      throw err;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (parseErr) {
+      diag.likelyCause = 'The API returned a body that is not JSON.';
+      throw new Error('Could not read the API response as JSON');
+    }
+
+    // The endpoint paginates, so the payload we want sits under `results`.
+    const results = data.results || data;
+    diag.responseKeys = Object.keys(results).join(', ');
+    return results;
+  }
+
+  // The API returns snake_case keys (included, almost_included,
+  // almost_included_by_adding_colors). Accept camelCase too so an older or
+  // proxied response shape still renders instead of silently showing nothing.
+  function pick(results, snake, camel) {
+    const value = results[snake] !== undefined ? results[snake] : results[camel];
+    return Array.isArray(value) ? value : [];
   }
 
   async function fetchJson(url) {
@@ -193,20 +252,86 @@
     }
   }
 
+  // Renders a copyable report of what we sent and what came back. Without this
+  // a failure is just "it didn't work", which is not something anyone can act on.
+  function showDiagnostics(err, parsed, kind) {
+    const failed = kind !== 'notice';
+    const d = lastDiagnostics || {};
+    const lines = [
+      failed ? 'MTG Combo Finder — error report' : 'MTG Combo Finder — skipped-line report',
+      'when:     ' + new Date().toISOString(),
+      'endpoint: ' + d.method + ' ' + d.endpoint,
+      'status:   ' + (d.status ? d.status + ' ' + (d.statusText || '') : '(no response received)'),
+    ];
+    if (failed) {
+      lines.push('error:    ' + (d.error || err.name + ': ' + err.message));
+      lines.push('cause:    ' + (d.likelyCause || 'unknown'));
+    }
+    lines.push('sent:     ' + (d.sent ? d.sent.main + ' main + ' + d.sent.commanders + ' commanders' : '(nothing)'));
+    if (d.firstCards && d.firstCards.length) {
+      lines.push('first cards sent:', ...d.firstCards.map((c) => '  ' + c));
+    }
+    if (d.responseKeys) lines.push('response keys: ' + d.responseKeys);
+    if (parsed && parsed.skipped && parsed.skipped.length) {
+      lines.push('skipped lines (' + parsed.skipped.length + '):');
+      parsed.skipped.slice(0, 20).forEach((s) => lines.push('  [' + s.reason + '] ' + s.line));
+      if (parsed.skipped.length > 20) lines.push('  …and ' + (parsed.skipped.length - 20) + ' more');
+    }
+    if (d.responseSnippet) lines.push('response body:', d.responseSnippet);
+    const report = lines.join('\n');
+
+    const box = $('diagnostics');
+    box.textContent = '';
+    box.hidden = false;
+
+    const details = el('details', failed ? 'diag' : 'diag notice');
+    details.open = failed;
+    details.appendChild(el('summary', null, failed
+      ? 'Error details — copy this'
+      : `${parsed && parsed.skipped ? parsed.skipped.length : 0} line(s) skipped — see which`));
+    const pre = el('pre', 'diag-body', report);
+    details.appendChild(pre);
+
+    const copy = el('button', 'copy-btn', 'Copy report');
+    copy.type = 'button';
+    copy.addEventListener('click', () => {
+      navigator.clipboard.writeText(report).then(
+        () => { copy.textContent = 'Copied'; },
+        () => { copy.textContent = 'Press Ctrl+C to copy'; }
+      );
+    });
+    details.appendChild(copy);
+    box.appendChild(details);
+  }
+
   async function onSubmit(event) {
     event.preventDefault();
+    $('diagnostics').hidden = true;
 
     const parsed = DeckParser.parseDecklist($('decklist').value);
     const commanderParsed = DeckParser.parseDecklist($('commanders').value);
     // Anything typed in the commander box counts as a commander, and
     // "Commander:" sections inside the main paste do too.
-    const commanders = commanderParsed.main
+    let commanders = commanderParsed.main
       .concat(commanderParsed.commanders, parsed.commanders);
-    const main = parsed.main;
+    let main = parsed.main;
 
     if (!main.length && !commanders.length) {
-      setStatus('Paste a decklist first.', true);
+      setStatus('No card names found in that decklist. Paste one card per line, e.g. "1 Sol Ring".', true);
+      showDiagnostics(new Error('nothing parsed from the decklist'), parsed);
       return;
+    }
+
+    // Staying inside the endpoint's limits turns a confusing 400 into a notice.
+    const limits = DeckParser.API_LIMITS;
+    const trimmed = [];
+    if (main.length > limits.maxMain) {
+      trimmed.push(`only the first ${limits.maxMain} deck cards were sent`);
+      main = main.slice(0, limits.maxMain);
+    }
+    if (commanders.length > limits.maxCommanders) {
+      trimmed.push(`only the first ${limits.maxCommanders} commanders were sent`);
+      commanders = commanders.slice(0, limits.maxCommanders);
     }
 
     $('results').hidden = true;
@@ -214,10 +339,15 @@
     $('find-combos').disabled = true;
     try {
       const results = await findCombos(commanders, main);
-      setStatus('');
+      const notes = [];
+      if (parsed.skipped.length) notes.push(`${parsed.skipped.length} line(s) skipped`);
+      notes.push(...trimmed);
+      setStatus(notes.length ? 'Searched ' + (main.length + commanders.length) + ' cards — ' + notes.join('; ') + '.' : '');
       renderResults(results, DeckCombos.deckNameSet(commanders.concat(main)));
+      if (parsed.skipped.length) showDiagnostics(null, parsed, 'notice');
     } catch (err) {
       setStatus('Combo search failed: ' + err.message, true);
+      showDiagnostics(err, parsed);
     } finally {
       $('find-combos').disabled = false;
     }
