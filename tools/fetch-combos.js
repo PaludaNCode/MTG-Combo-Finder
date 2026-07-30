@@ -68,7 +68,10 @@ function compact(variant) {
 // Written by hand because this project has no dependencies. It tracks string
 // state and escapes, so braces inside card names and rules text don't
 // desynchronize the object boundaries.
-function createVariantScanner(onVariant) {
+// `key` names the property holding the array (Commander Spellbook nests the
+// variants under "variants"); pass null when the document is a bare array, as
+// Scryfall's bulk card file is.
+function createVariantScanner(onVariant, key = 'variants') {
   let buf = '';
   let pos = 0; // how far into buf the state machine has already run
   let started = false;
@@ -83,15 +86,19 @@ function createVariantScanner(onVariant) {
     buf += chunk;
 
     if (!started) {
-      // Enter the array that holds the variants.
-      const key = buf.indexOf('"variants"');
-      const bracket = key === -1 ? -1 : buf.indexOf('[', key);
-      if (bracket === -1) {
-        // Keep a tail in case the key straddles a chunk boundary, but never
-        // discard a key we have already found.
-        if (key === -1 && buf.length > 4096) buf = buf.slice(-1024);
-        return;
+      // Enter the array that holds the objects.
+      let from = 0;
+      if (key !== null) {
+        const at = buf.indexOf(`"${key}"`);
+        if (at === -1) {
+          // Keep a tail in case the key straddles a chunk boundary.
+          if (buf.length > 4096) buf = buf.slice(-1024);
+          return;
+        }
+        from = at;
       }
+      const bracket = buf.indexOf('[', from);
+      if (bracket === -1) return;
       started = true;
       buf = buf.slice(bracket + 1);
       pos = 0;
@@ -134,7 +141,7 @@ function createVariantScanner(onVariant) {
   };
 }
 
-async function streamVariants(url, onVariant, attempt = 1) {
+async function streamVariants(url, onVariant, attempt = 1, key = 'variants') {
   const res = await fetch(url, {
     headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
   });
@@ -146,10 +153,10 @@ async function streamVariants(url, onVariant, attempt = 1) {
     const wait = Math.min(MAX_BACKOFF_MS, 2 ** attempt * 1000);
     console.warn(`  HTTP ${res.status} — waiting ${wait / 1000}s (attempt ${attempt}/${MAX_ATTEMPTS})`);
     await sleep(wait);
-    return streamVariants(url, onVariant, attempt + 1);
+    return streamVariants(url, onVariant, attempt + 1, key);
   }
 
-  const push = createVariantScanner(onVariant);
+  const push = createVariantScanner(onVariant, key);
   const decoder = new TextDecoder('utf-8');
   let bytes = 0;
   for await (const chunk of res.body) {
@@ -160,28 +167,60 @@ async function streamVariants(url, onVariant, attempt = 1) {
   return bytes;
 }
 
+// Colour identity has to come from Scryfall: Commander Spellbook's CardSerializer
+// exposes name/images/type_line but not identity, so the combo export alone can't
+// tell us whether a suggested card fits the deck's colours. Scryfall's oracle-cards
+// bulk file is the canonical source, and is what Commander Spellbook itself uses
+// for card data.
+const SCRYFALL_BULK_INDEX = 'https://api.scryfall.com/bulk-data/oracle-cards';
+
+async function fetchCardIdentities() {
+  console.log('Looking up the Scryfall oracle-cards bulk file…');
+  const res = await fetch(SCRYFALL_BULK_INDEX, {
+    headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+  });
+  if (!res.ok) throw Object.assign(new Error('Scryfall index HTTP ' + res.status), { status: res.status });
+  const meta = await res.json();
+  const url = meta.download_uri;
+  if (!url) throw new Error('Scryfall index had no download_uri');
+
+  console.log('Streaming card identities from', url);
+  const identities = Object.create(null);
+  let cards = 0;
+  await streamVariants(url, (card) => {
+    cards += 1;
+    if (!card || typeof card.name !== 'string') return;
+    // color_identity is an array like ["G","U"]; "" means colorless.
+    if (Array.isArray(card.color_identity)) {
+      identities[card.name] = card.color_identity.join('');
+    }
+  }, 1, null); // bare array, no wrapping key
+  console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity`);
+  return identities;
+}
+
 async function main() {
   console.log('Downloading the combo database from', BULK_URL);
 
   const combos = [];
-  const cardIdentity = Object.create(null);
   let seen = 0;
 
   const bytes = await streamVariants(BULK_URL, (variant) => {
     seen += 1;
     const row = compact(variant);
     if (row) combos.push(row);
-    for (const u of pick(variant, 'uses') || []) {
-      const card = u.card;
-      if (card && card.name && card.identity !== undefined) {
-        cardIdentity[card.name] = card.identity || '';
-      }
-    }
-    if (seen % 5000 === 0) console.log(`  ${seen} variants read…`);
+    if (seen % 25000 === 0) console.log(`  ${seen} variants read…`);
   });
   console.log(`  read ${seen} variants from ${(bytes / 1024 / 1024).toFixed(0)} MB`);
 
   if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
+
+  const cardIdentity = await fetchCardIdentities();
+  // An empty map silently disables colour filtering in the page, which is how
+  // this went unnoticed the first time. Fail loudly instead.
+  if (Object.keys(cardIdentity).length < 1000) {
+    throw new Error(`Only ${Object.keys(cardIdentity).length} card identities — refusing to publish without colour data`);
+  }
 
   const payload = {
     updatedAt: new Date().toISOString(),

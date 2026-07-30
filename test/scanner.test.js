@@ -92,3 +92,28 @@ test('compact: records template count and drops cardless variants', () => {
   assert.strictEqual(withTemplate.t, 1);
   assert.strictEqual(compact({ id: '2', uses: [] }), null);
 });
+
+test('scanner: bare-array documents (Scryfall bulk) are supported', () => {
+  const doc = JSON.stringify([
+    { name: 'Sol Ring', color_identity: [] },
+    { name: 'Kinnan, Bonder Prodigy', color_identity: ['G', 'U'] },
+    { name: 'Valki, God of Lies // Tibalt, Cosmic Impostor', color_identity: ['B', 'R'] },
+  ]);
+  for (const size of [1, 9, 512]) {
+    const out = [];
+    const push = createVariantScanner((c) => out.push(c), null);
+    for (let i = 0; i < doc.length; i += size) push(doc.slice(i, i + size));
+    assert.deepStrictEqual(out.map((c) => c.name), [
+      'Sol Ring', 'Kinnan, Bonder Prodigy', 'Valki, God of Lies // Tibalt, Cosmic Impostor',
+    ], `chunk size ${size}`);
+    assert.deepStrictEqual(out[1].color_identity, ['G', 'U']);
+  }
+});
+
+test('scanner: a keyed document still ignores earlier arrays', () => {
+  const doc = '{"other":[{"id":"skip"}],"variants":[{"id":"keep"}]}';
+  const out = [];
+  const push = createVariantScanner((v) => out.push(v));
+  for (let i = 0; i < doc.length; i += 5) push(doc.slice(i, i + 5));
+  assert.deepStrictEqual(out.map((v) => v.id), ['keep']);
+});
