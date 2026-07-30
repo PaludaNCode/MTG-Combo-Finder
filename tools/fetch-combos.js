@@ -172,7 +172,32 @@ async function streamVariants(url, onVariant, attempt = 1, key = 'variants') {
 // tell us whether a suggested card fits the deck's colours. Scryfall's oracle-cards
 // bulk file is the canonical source, and is what Commander Spellbook itself uses
 // for card data.
-const SCRYFALL_BULK_INDEX = 'https://api.scryfall.com/bulk-data/oracle-cards';
+// ?format=json is required: without it the endpoint redirects to the data file
+// itself, so there is no metadata object to read a download URL out of.
+const SCRYFALL_BULK_INDEX = 'https://api.scryfall.com/bulk-data/oracle-cards?format=json';
+
+// JSONL is one card per line, so it needs no brace matching at all.
+async function streamJsonLines(url, onObject) {
+  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+  if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
+
+  const decoder = new TextDecoder('utf-8');
+  let buf = '';
+  const flush = (final) => {
+    const lines = buf.split('\n');
+    buf = final ? '' : lines.pop(); // keep the partial last line
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed) onObject(JSON.parse(trimmed));
+    }
+  };
+  for await (const chunk of res.body) {
+    buf += decoder.decode(chunk, { stream: true });
+    flush(false);
+  }
+  buf += decoder.decode();
+  flush(true);
+}
 
 async function fetchCardIdentities() {
   console.log('Looking up the Scryfall oracle-cards bulk file…');
@@ -181,20 +206,27 @@ async function fetchCardIdentities() {
   });
   if (!res.ok) throw Object.assign(new Error('Scryfall index HTTP ' + res.status), { status: res.status });
   const meta = await res.json();
-  const url = meta.download_uri;
-  if (!url) throw new Error('Scryfall index had no download_uri');
 
-  console.log('Streaming card identities from', url);
   const identities = Object.create(null);
   let cards = 0;
-  await streamVariants(url, (card) => {
+  const collect = (card) => {
     cards += 1;
-    if (!card || typeof card.name !== 'string') return;
-    // color_identity is an array like ["G","U"]; "" means colorless.
-    if (Array.isArray(card.color_identity)) {
+    // color_identity is an array like ["G","U"]; empty means colourless.
+    if (card && typeof card.name === 'string' && Array.isArray(card.color_identity)) {
       identities[card.name] = card.color_identity.join('');
     }
-  }, 1, null); // bare array, no wrapping key
+  };
+
+  if (meta.jsonl_download_uri) {
+    console.log('Streaming card identities (jsonl) from', meta.jsonl_download_uri);
+    await streamJsonLines(meta.jsonl_download_uri, collect);
+  } else if (meta.download_uri) {
+    console.log('Streaming card identities (json array) from', meta.download_uri);
+    await streamVariants(meta.download_uri, collect, 1, null); // bare array
+  } else {
+    throw new Error('Scryfall index had no download URL; keys were: ' + Object.keys(meta).join(', '));
+  }
+
   console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity`);
   return identities;
 }
