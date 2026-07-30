@@ -1,0 +1,33 @@
+name: Try a deck
+
+# Manual. Runs a decklist through the real matching code against the real
+# published data, and prints what the page would show.
+#
+# The layout test proves the page renders and the unit tests prove each function
+# behaves, but neither answers "is the output any good?" — whether the combos
+# found are worth knowing, whether a filled template slot reads as sensible or
+# invented. That needs a real deck and real data. Reports only; publishes nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      deck:
+        description: 'Path to a decklist in the repo (blank uses test/fixtures/deck.txt)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run the deck
+        env:
+          DECK_FILE: ${{ inputs.deck }}
+        run: node tools/try-deck.js
