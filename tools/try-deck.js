@@ -4,9 +4,8 @@
 //
 // The layout test proves the page renders; the unit tests prove each function
 // behaves. Neither answers "is the output any good?" — whether the combos found
-// are worth knowing, whether a template slot reads as sensible or invented,
-// whether the commander is worked out. That needs a real deck and real data,
-// which is what this is for.
+// are worth knowing, whether a template slot reads as sensible or invented.
+// That needs a real deck and real data, which is what this is for.
 //
 //   node tools/try-deck.js                    # the checked-in deck
 //   node tools/try-deck.js path/to/deck.txt
@@ -64,7 +63,7 @@ async function main() {
   say();
   say(`${main_.length} cards parsed`
     + (parsed.skipped && parsed.skipped.length ? `, ${parsed.skipped.length} line(s) not understood` : '')
-    + (typedCommanders.length ? `, ${typedCommanders.length} marked as commander` : ', no commander marked'));
+    + (typedCommanders.length ? `, ${typedCommanders.length} marked as commander` : ''));
   if (parsed.skipped && parsed.skipped.length) {
     say();
     for (const line of parsed.skipped.slice(0, 10)) say(`  ! ${line}`);
@@ -82,32 +81,14 @@ async function main() {
   const allEntries = typedCommanders.concat(main_);
   const deckNames = DeckCombos.deckNameSet(allEntries);
 
-  // ---- commander -----------------------------------------------------------
-  say('## Commander');
-  say();
-  const detected = typedCommanders.length ? null : DeckCombos.detectCommanders(allEntries, data);
-  const effective = detected && detected.confident ? detected.commanders : typedCommanders;
-  if (typedCommanders.length) {
-    say(`Marked in the list: **${typedCommanders.map((c) => c.card).join(' + ')}**`);
-  } else if (detected && detected.confident) {
-    say(`Worked out from the list: **${detected.commanders.map((c) => c.card).join(' + ')}**`);
-  } else {
-    const candidates = (detected && detected.candidates) || [];
-    say(`**Not settled.** ${candidates.length} card(s) here could legally be one, and nothing `
-      + 'singles one out, so the page shows them as buttons to pick from and takes colours '
-      + 'from the deck itself:');
-    say();
-    say('  ' + candidates.slice(0, 20).join(' · ') + (candidates.length > 20 ? ` … +${candidates.length - 20}` : ''));
-  }
-  say();
-
   // ---- combos --------------------------------------------------------------
-  const matched = DeckCombos.matchDeck(data, deckNames, effective, allEntries);
+  const matched = DeckCombos.matchDeck(data, deckNames, allEntries);
   const included = matched.included.map(DeckCombos.expand);
   const groups = DeckCombos.groupVariants(included);
   const counts = tierCounts(included);
 
-  say(`Colour identity: \`${matched.identity || '(none)'}\``);
+  const identity = matched.identity ? [...matched.identity].join('') : '';
+  say(`Colour identity: \`${identity || '(none)'}\``);
   say();
   say('## Combos in the deck');
   say();
@@ -117,6 +98,50 @@ async function main() {
 
   const withSlots = included.filter((c) => (c.fills || []).length);
   say(`${withSlots.length} of them are found only because the deck fills a template slot.`);
+  say();
+
+  // Zero of those is a perfectly possible answer — a deck simply may not play
+  // the combos that need a slot — but it is indistinguishable from the feature
+  // being broken unless the reason is shown. So show the reason: what the deck
+  // can fill, and which combos came close and why they did not land.
+  say('### Template slots, in detail');
+  say();
+  const byTemplate = DeckCombos.deckTemplateIndex(data, deckNames, allEntries);
+  const fillable = [...byTemplate.entries()]
+    .map(([id, cards]) => ({ name: (data.templates || {})[id] || `id ${id}`, cards: cards.map((c) => c.name) }))
+    .sort((a, b) => b.cards.length - a.cards.length);
+  say(`The deck can fill **${fillable.length}** of the ${Object.keys(data.templates || {}).length} known templates:`);
+  say();
+  for (const t of fillable.slice(0, 15)) say(`- **${t.name}** → ${t.cards.join(', ')}`);
+  if (fillable.length > 15) say(`- …and ${fillable.length - 15} more`);
+  say();
+
+  // Combos holding every named card they ask for, and failing only on a slot.
+  // These are the ones the whole feature exists to rescue, so if the count is
+  // high and the rescued count is zero, something is wrong rather than absent.
+  const blocked = new Map();
+  for (const combo of data.combos) {
+    if (!Array.isArray(combo.t) || !combo.t.length) continue;
+    if ((combo.c || []).some((n) => !deckNames.has(DeckCombos.nameKey(n)))) continue;
+    if (DeckCombos.fillTemplates(combo, byTemplate, data.templates || {})) continue;
+    for (const id of combo.t) {
+      const key = String(id);
+      if (!blocked.has(key)) blocked.set(key, 0);
+      blocked.set(key, blocked.get(key) + 1);
+    }
+  }
+  if (!blocked.size) {
+    say('No combo has all its named cards here and fails only on a slot, so nothing is being missed.');
+  } else {
+    const rows = [...blocked.entries()].sort((a, b) => b[1] - a[1]);
+    say(`${rows.length} template(s) block a combo whose named cards are all present:`);
+    say();
+    for (const [id, n] of rows.slice(0, 15)) {
+      const name = (data.templates || {})[id] || (data.unresolvable || {})[id] || `id ${id}`;
+      const why = (data.templates || {})[id] ? 'nothing in the deck fills it' : 'no Scryfall query, so it can never be filled';
+      say(`- **${name}** — ${n} combo(s), ${why}`);
+    }
+  }
   say();
 
   say('| # | combo | slot filled by | best result |');

@@ -34,7 +34,7 @@ const DATASET = {
 };
 
 const idsOf = (list) => list.map((c) => c.id).sort();
-const match = (cards) => matchDeck(DATASET, deckNameSet(cards.map((card) => ({ card }))), [], cards.map((card) => ({ card })));
+const match = (cards) => matchDeck(DATASET, deckNameSet(cards.map((card) => ({ card }))), cards.map((card) => ({ card })));
 
 test('a slot the deck fills makes the combo count', () => {
   const { included } = match(['Scurry Oak', 'Carrion Feeder']);

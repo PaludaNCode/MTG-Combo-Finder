@@ -94,57 +94,23 @@ button:disabled { opacity: .6; cursor: wait; }
 #status { min-height: 1.5em; color: var(--muted); }
 #status.error { color: var(--error); }
 
-/* ---- colour identity + commander header ---- */
-.identity-line, .commander-line {
+/* ---- colour identity header ---- */
+.identity-line {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: .5rem;
-  margin: 0 0 .4rem;
+  margin: 0 0 1rem;
   color: var(--text);
 }
-.commander-line { margin-bottom: 1rem; }
-.commander-line.muted { color: var(--muted); font-size: .9rem; }
 
-.identity-label, .commander-label {
+.identity-label {
   color: var(--muted);
   font-size: .8rem;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
-
-.commander-line .card-name { font-weight: 650; }
-.commander-line .plus { margin: 0 -.2rem; }
-
-/* Says the commander was worked out from the decklist rather than given, so an
-   inference is never mistaken for something the user typed. */
-.from-deck {
-  padding: .1rem .45rem;
-  border-radius: 999px;
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: .75rem;
-}
-
-/* Picking a commander from the shortlist. A tap target, not a run of text:
-   this shows up exactly when detection could not decide, which is when someone
-   would otherwise be retyping "Camellia, the Seedmiser" by hand on a phone. */
-.pick-commander {
-  margin: .15rem .1rem;
-  padding: .3rem .6rem;
-  min-height: 34px;
-  border: 0;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px #4a536b;
-  background: var(--panel-2);
-  color: var(--text);
-  font: inherit;
-  font-size: .85rem;
-  cursor: pointer;
-}
-.pick-commander:hover { box-shadow: inset 0 0 0 1px var(--accent); }
-.pick-commander:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Mana symbols, drawn rather than fetched — a remote symbol font would be one
    more thing to load, and one more thing to fail offline. */

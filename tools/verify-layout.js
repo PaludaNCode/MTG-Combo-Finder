@@ -24,13 +24,10 @@ const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844, deck: 'marked' },
   { name: 'tablet', width: 768, height: 1024, deck: 'marked' },
   { name: 'desktop', width: 1440, height: 900, deck: 'marked' },
-  // Same deck with the commander marker taken off: the commander now has to be
-  // worked out from the cards, which is the case a plain copy-paste produces.
+  // Same deck with the commander marker taken off. Nothing about the output
+  // should change: colours are read off the cards either way.
   { name: 'desktop (no marker)', width: 1440, height: 900, deck: 'plain' },
 ];
-
-// What the header should say about where the commander came from, per deck.
-const EXPECTED_BADGE = { marked: 'marked in your list', plain: 'found in your list, and filled in above' };
 
 function findBrowser() {
   const candidates = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
@@ -174,7 +171,6 @@ function measure(win, doc) {
     grey: c.classList.contains('tier-other'), more: c.classList.contains('more'),
     title: c.title || '', colour: win.getComputedStyle(c).color,
   })) : [];
-  const cmdLine = doc.querySelector('.commander-line');
   const header = {
     pips: [...doc.querySelectorAll('.identity-line .pip')].map((p) => ({
       letter: p.textContent,
@@ -183,8 +179,10 @@ function measure(win, doc) {
       round: win.getComputedStyle(p).borderRadius,
       size: Math.round(p.offsetWidth),
     })),
-    commander: cmdLine ? (cmdLine.querySelector('.card-name') || {}).textContent || null : null,
-    badge: cmdLine ? (cmdLine.querySelector('.from-deck') || {}).textContent || null : null,
+    // Colours come from the cards now, so nothing about a commander should be
+    // rendered at all — no line, no shortlist of maybes to pick from.
+    commanderLines: doc.querySelectorAll('.commander-line').length,
+    pickers: doc.querySelectorAll('.pick-commander').length,
   };
 
   const form = doc.querySelector('.col-input').getBoundingClientRect();
@@ -240,28 +238,6 @@ function runOne(vp) {
           colour: win.getComputedStyle(c).color,
         }));
 
-        // The bug this guards: detection reads the export's ordering, so adding
-        // a card by hand puts the list out of order and a second search used to
-        // lose the commander it had just found. A confident answer now goes into
-        // the box, which is what makes it survive the edit.
-        const commanderBox = doc.getElementById('commanders');
-        const afterEdit = { boxAfterSearch: commanderBox.value.trim(), commander: null };
-        if (afterEdit.boxAfterSearch) {
-          // Insert a card in the middle, exactly as somebody tinkering would,
-          // and break the alphabetical run that detection depends on.
-          const lines = doc.getElementById('decklist').value.split('\\n');
-          lines.splice(Math.floor(lines.length / 2), 0, '1 Aetherflux Reservoir');
-          doc.getElementById('decklist').value = lines.join('\\n');
-          doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
-          await new Promise((r) => setTimeout(r, 500));
-          const line = doc.querySelector('.commander-line');
-          afterEdit.commander = line ? (line.querySelector('.card-name') || {}).textContent || null : null;
-          // Put it back so the collapse checks below see the same page as before.
-          doc.getElementById('decklist').value = DECKS[vp.deck];
-          doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
-          await new Promise((r) => setTimeout(r, 500));
-        }
-
         // Collapse the first section and confirm the body actually goes away.
         const first = doc.querySelector('.panel');
         first.querySelector('.panel-head').click();
@@ -272,7 +248,7 @@ function runOne(vp) {
           stored: win.localStorage.getItem('mtg-combo-finder.collapsed'),
         };
         first.querySelector('.panel-head').click();
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse, expandedChips, afterEdit }));
+        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before, { afterCollapse, expandedChips }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -425,9 +401,9 @@ function serve(dir, extra) {
       if (v.tabs.some((t) => t.height < 44)) problems.push('a tab is under 44px tall');
       if (!/in your colours/i.test(v.tabs[0].label)) problems.push(`first tab reads "${v.tabs[0].label}"`);
     }
-    // The commander box was left empty on purpose: the header has to work it
-    // out from the pasted list, show it as inferred, and draw the colours as
-    // mana symbols rather than the letters "GU".
+    // The header draws the deck's colours as mana symbols rather than the
+    // letters "GU", and says nothing about a commander — colours are read off
+    // the cards, so there is no commander to report.
     const h = v.header;
     if (h.pips.length !== 2) {
       problems.push(`expected 2 mana pips for a GU deck, got ${h.pips.length}`);
@@ -437,9 +413,8 @@ function serve(dir, extra) {
       if (new Set(h.pips.map((p) => p.background)).size !== 2) problems.push('both mana pips rendered the same colour');
       if (h.pips.some((p) => !/50%|9999px|^\d+px$/.test(p.round) || p.size < 12)) problems.push('mana pips did not render as filled circles');
     }
-    if (h.commander !== 'Kinnan, Bonder Prodigy') problems.push(`commander read "${h.commander}" — it should be found in the pasted list`);
-    const wantBadge = EXPECTED_BADGE[vp.deck];
-    if (h.badge !== wantBadge) problems.push(`commander badge read "${h.badge}", expected "${wantBadge}"`);
+    if (h.commanderLines) problems.push(`${h.commanderLines} commander line(s) rendered; colours come from the cards now`);
+    if (h.pickers) problems.push(`${h.pickers} commander picker(s) rendered; the shortlist was removed`);
 
     // Interchangeable cards must collapse. Without this the fixture's two
     // identical-payoff combos read as two finds and two recommendations.
@@ -491,16 +466,6 @@ function serve(dir, extra) {
     // Eight results plus the "+N more" control.
     if (v.chips.length > 9) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
-    // Detection reads the export's ordering, so a hand-inserted card used to
-    // lose the commander on the next search. It survives now because a confident
-    // answer is written into the box; both halves are asserted.
-    const ae = v.afterEdit;
-    if (vp.deck === 'plain') {
-      if (ae.boxAfterSearch !== 'Kinnan, Bonder Prodigy') problems.push(`the detected commander was not filled into the box (box read "${ae.boxAfterSearch}")`);
-      if (ae.commander !== 'Kinnan, Bonder Prodigy') problems.push(`editing the decklist lost the commander (it read "${ae.commander}")`);
-    } else if (ae.boxAfterSearch) {
-      problems.push('a commander marked in the list should not be written into the box');
-    }
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
     if (!v.afterCollapse.stored) problems.push('collapse state was not persisted');
 
@@ -522,7 +487,7 @@ function serve(dir, extra) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
-      const headNote = `${v.header.commander || 'no commander'} (${v.header.badge || 'given'}) {${v.header.pips.map((p) => p.letter).join('}{')}}`;
+      const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${chipNote}`);
     }

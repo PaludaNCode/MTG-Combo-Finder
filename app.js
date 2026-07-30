@@ -424,22 +424,17 @@
     (onColour.length || !offColour.length ? built[0] : built[1]).select();
   }
 
-  // The header strip: the deck's colours as mana symbols, and who is leading it.
+  // The header strip: the deck's colours as mana symbols.
   //
-  // The commander line is the interesting part. Nobody should have to type a
-  // card that is already in the list they pasted, so when the box is empty the
-  // commander is worked out from the deck — and labelled as worked out, because
-  // an inference presented as a fact is worse than no answer.
-  // Put names in the commander box, but never over something already typed:
-  // what the user wrote is the answer, whatever detection thinks.
-  function rememberCommanders(names) {
-    const box = $('commanders');
-    if (!box || box.value.trim()) return false;
-    box.value = names.join('\n');
-    return true;
-  }
-
-  function renderIdentity(container, identity, commanderInfo) {
+  // Colours are read off the cards, not off a commander. The deck used to be
+  // searched for a commander whenever the box was empty, and where several
+  // legendary creatures could fit it offered a shortlist to choose from — a
+  // guess, plus a question, in place of an answer the decklist already gives.
+  // Every card in the list is a card the deck plays, so the cards settle it.
+  //
+  // A commander that *was* given still matters: it is part of the deck, so its
+  // colours are in here along with everything else's.
+  function renderIdentity(container, identity) {
     container.textContent = '';
     // An empty set is colourless — a real identity, worth showing as {C}. Null
     // means the data couldn't tell us, which is worth showing as nothing.
@@ -449,59 +444,12 @@
     line.appendChild(el('span', 'identity-label', 'Colour identity'));
     line.appendChild(manaPips(identity));
     container.appendChild(line);
-
-    if (!commanderInfo) return;
-
-    const { commanders, source, candidates } = commanderInfo;
-    if (commanders.length) {
-      const p = el('p', 'commander-line');
-      p.appendChild(el('span', 'commander-label', commanders.length > 1 ? 'Commanders' : 'Commander'));
-      commanders.forEach((c, i) => {
-        if (i) p.appendChild(el('span', 'plus', ' + '));
-        p.appendChild(el('strong', 'card-name', c.card));
-      });
-      if (source === 'marked') p.appendChild(el('span', 'from-deck', 'marked in your list'));
-      if (source === 'inferred') p.appendChild(el('span', 'from-deck', 'found in your list, and filled in above'));
-      container.appendChild(p);
-      return;
-    }
-
-    // Couldn't tell — say so, and show what it was choosing between rather than
-    // picking one and being quietly wrong.
-    //
-    // The names are buttons, not text. Detection fails on a hand-edited list
-    // precisely because the export ordering is gone, and that is the moment
-    // somebody most needs to say "it's this one" without retyping a name with
-    // two commas in it.
-    if (candidates && candidates.length) {
-      const p = el('p', 'commander-line muted');
-      p.appendChild(el('span', null, 'No commander given, and several cards could be one — pick yours: '));
-      const few = candidates.slice(0, 6);
-      few.forEach((name, i) => {
-        if (i) p.appendChild(document.createTextNode(' '));
-        const pick = el('button', 'pick-commander', name);
-        pick.type = 'button';
-        pick.title = 'Use ' + name + ' as the commander and search again';
-        pick.addEventListener('click', () => {
-          const box = $('commanders');
-          if (box) box.value = name;
-          const go = $('find-combos');
-          if (go && !go.disabled) go.click();
-        });
-        p.appendChild(pick);
-      });
-      if (candidates.length > few.length) {
-        p.appendChild(document.createTextNode(` and ${candidates.length - few.length} more.`));
-      }
-      p.appendChild(el('span', null, ' Until then, colours come from the deck itself.'));
-      container.appendChild(p);
-    }
   }
 
   function renderResults(results, deckNames) {
     $('results').hidden = false;
 
-    renderIdentity($('identity'), results.identity, results.commanderInfo);
+    renderIdentity($('identity'), results.identity);
 
     const included = results.included;
     // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
@@ -679,10 +627,9 @@
     // Anything typed in the commander box counts as a commander, and so does a
     // "Commander:" heading or a "*CMDR*" marker inside the main paste.
     const typed = commanderParsed.main.concat(commanderParsed.commanders);
+    // Commanders are still read, because they are cards in the deck and combos
+    // use them. They no longer decide the deck's colours — the cards do.
     let commanders = typed.concat(parsed.commanders);
-    // Where the answer came from decides how the header labels it: typed is a
-    // statement, anything else is us reading the deck.
-    let commanderSource = typed.length ? 'typed' : (parsed.commanders.length ? 'marked' : null);
     let main = parsed.main;
 
     if (!main.length && !commanders.length) {
@@ -713,42 +660,11 @@
       const allEntries = commanders.concat(main);
       const deckNames = DeckCombos.deckNameSet(allEntries);
 
-      // With the commander box empty, look for the commander among the cards
-      // themselves. A confident answer is used exactly as if it had been typed;
-      // an unsure one is shown as a shortlist and changes nothing, so colours
-      // still come from the deck's own cards.
-      const detected = commanders.length ? null : DeckCombos.detectCommanders(allEntries, data);
-      let effective = commanders;
-      if (detected && detected.confident) {
-        effective = detected.commanders;
-        commanderSource = 'inferred';
-        // Write it into the box, so the answer survives the next edit.
-        //
-        // Detection leans on how deck sites export: commander first, the rest in
-        // name order. Adding one card by hand puts the list out of order and the
-        // signal is gone — search again and the commander that was found a moment
-        // ago is not found any more. Reported as a bug, and it is one.
-        //
-        // Loosening the sortedness test is the wrong repair. The test is what
-        // separates "a card is deliberately out in front" from "this list is not
-        // sorted"; make it tolerant and both readings start passing, which loses
-        // partner pairs rather than saving them.
-        //
-        // So stop re-deriving it. Once found, it becomes ordinary typed input:
-        // visible, editable, and not dependent on the list still looking exported.
-        rememberCommanders(effective.map((c) => c.card));
-      }
-
       // allEntries is passed so a card credited with a template slot is named
       // the way the decklist spelled it, not as its lowercased lookup key.
-      const matched = DeckCombos.matchDeck(data, deckNames, effective, allEntries);
+      const matched = DeckCombos.matchDeck(data, deckNames, allEntries);
       const results = {
         identity: matched.identity,
-        commanderInfo: {
-          commanders: effective,
-          source: commanderSource,
-          candidates: (detected && detected.candidates) || [],
-        },
         included: matched.included.map(DeckCombos.expand),
         almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
         almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
