@@ -122,17 +122,83 @@
     };
   }
 
+  // Which of your cards are load-bearing: how many of the combos you can
+  // already assemble each one takes part in. A list of combos doesn't make this
+  // obvious — cutting a card that turns up in four of them costs four combos,
+  // and that is exactly the thing you want to know before trimming a deck.
+  function comboPieces(variants) {
+    const byCard = new Map();
+    for (const variant of variants || []) {
+      // A card listed twice in one combo is still one combo for that card.
+      const unique = new Map();
+      for (const name of variantCardNames(variant)) unique.set(nameKey(name), name);
+      for (const [key, name] of unique) {
+        let entry = byCard.get(key);
+        if (!entry) {
+          entry = { card: name.split('//')[0].trim(), combos: [] };
+          byCard.set(key, entry);
+        }
+        entry.combos.push(variant);
+      }
+    }
+    return [...byCard.values()]
+      .map((e) => ({ card: e.card, count: e.combos.length, combos: e.combos }))
+      .sort((a, b) => b.count - a.count || a.card.localeCompare(b.card));
+  }
+
   // ---- what a combo actually gives you ------------------------------------
 
-  // A result that ends the game outranks any amount of infinite mana, so it
-  // gets sorted to the front and marked for the renderer to emphasise.
-  const WIN_RE = /\b(wins?|win|loses?|lose) the game\b/i;
+  // "Does this win?" has three honest answers, not two.
+  //
+  //   win      — the combo says so outright.
+  //   decisive — ends most games without saying so, and the exceptions are real
+  //              enough to be worth naming rather than either ignoring or
+  //              overstating. Infinite life is the clearest case: it beats
+  //              almost everything, but poison ignores life totals entirely,
+  //              and mill or an alternate win condition goes over the top of it.
+  //   other    — enablers. Infinite mana wins nothing by itself.
+  const WIN_RE = /\b(?:wins?|loses?|lose) the game\b/i;
+
+  // Each entry carries why it falls short of a stated win, shown on hover, so
+  // the tier informs rather than just colouring things in.
+  const DECISIVE = [
+    {
+      re: /\b(?:infinite|near-infinite|arbitrarily large)\b[^,;]*\blife\s?gain\b|\binfinite life\b/i,
+      why: 'Beats most decks — but poison ignores life totals, and mill or an alternate win condition goes over the top of it.',
+    },
+    {
+      re: /\b(?:infinite|near-infinite|arbitrarily large)\b[^,;]*\b(?:damage|life\s?loss)\b/i,
+      why: 'Lethal in most games, unless damage is prevented or they out-gain it.',
+    },
+    {
+      re: /\b(?:infinite|near-infinite|arbitrarily large)\b[^,;]*\bmill\b/i,
+      why: 'Decks most opponents out, but loses to Thassa’s Oracle or a graveyard shuffle-back.',
+    },
+    {
+      re: /\b(?:infinite|near-infinite)\b[^,;]*\b(?:turns?|combats?)\b/i,
+      why: 'Wins eventually, but still needs something that actually closes the game.',
+    },
+    {
+      re: /\b(?:infinite|near-infinite)\b[^,;]*\b(?:poison|infect)\b/i,
+      why: 'Ten poison counters end it regardless of life total.',
+    },
+  ];
+
+  function classify(name) {
+    if (WIN_RE.test(name)) return { tier: 'win', why: 'This combo wins the game outright.' };
+    for (const entry of DECISIVE) {
+      if (entry.re.test(name)) return { tier: 'decisive', why: entry.why };
+    }
+    return { tier: 'other', why: '' };
+  }
 
   // Commander Spellbook lists results as feature names. They arrive unordered,
   // sometimes repeated with different casing, and a long combo can produce a
   // dozen — so dedupe and rank rather than printing the raw list. Their wording
   // is left alone: rewriting "Infinite ETB triggers" into something snappier
   // risks saying something the combo does not actually do.
+  const TIER_ORDER = { win: 0, decisive: 1, other: 2 };
+
   function summarizeResults(names) {
     const seen = new Set();
     const out = [];
@@ -142,9 +208,10 @@
       const key = name.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      out.push({ name, win: WIN_RE.test(name) });
+      const { tier, why } = classify(name);
+      out.push({ name, tier, why, win: tier === 'win' });
     }
-    out.sort((a, b) => (b.win === a.win ? a.name.localeCompare(b.name) : (b.win ? 1 : -1)));
+    out.sort((a, b) => (TIER_ORDER[a.tier] - TIER_ORDER[b.tier]) || a.name.localeCompare(b.name));
     return out;
   }
 
@@ -159,7 +226,7 @@
 
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
-    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults,
+    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

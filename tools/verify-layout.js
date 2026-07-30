@@ -49,16 +49,17 @@ const FIXTURE = {
   },
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
-      p: ['Infinite storm count', 'Win the game', 'Infinite colorless mana', 'Infinite ETB triggers', 'Infinite LTB triggers', 'Infinite untap'],
-      i: 'GU', pop: 50 },
+      p: ['Infinite storm count', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite ETB triggers', 'Infinite LTB triggers', 'Infinite untap'],
+      i: 'GU', pop: 999 },
     { id: '2', c: ['Basalt Monolith', 'Rings of Brighthearth'], p: ['Infinite colorless mana'], i: 'C', pop: 90 },
+    { id: '6', c: ['Basalt Monolith', 'Kinnan, Bonder Prodigy', 'Walking Ballista'], p: ['Infinite damage'], i: 'GU', pop: 10 },
     { id: '3', c: ['Palinchron', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
     { id: '4', c: ['Great Whale', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
     { id: '5', c: ['Walking Ballista', 'Heliod, Sun-Crowned'], p: ['Infinite damage'], i: 'W' },
   ],
 };
 
-const DECK = ['1 Basalt Monolith', '1 Palinchron', '1 Great Whale', '1 Walking Ballista', '10 Island'];
+const DECK = ['1 Basalt Monolith', '1 Rings of Brighthearth', '1 Palinchron', '1 Great Whale', '1 Walking Ballista', '10 Island'];
 
 // The page under test is loaded inside an iframe sized to each viewport.
 // Media queries evaluate against the iframe's own width, so the result no
@@ -78,9 +79,16 @@ function measure(win, doc) {
     bodyVisible: p.querySelector('.panel-body').offsetHeight > 0,
     headHeight: p.querySelector('.panel-head').offsetHeight,
   }));
+  const piecesPanel = [...doc.querySelectorAll('.panel')].find((x) => /carrying/i.test(x.querySelector('.panel-title').textContent));
+  const topPiece = piecesPanel ? {
+    card: piecesPanel.querySelector('.card-name').textContent,
+    badge: piecesPanel.querySelector('.badge').textContent,
+  } : null;
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
-    text: c.textContent, win: c.classList.contains('win'), more: c.classList.contains('more'),
+    text: c.textContent, win: c.classList.contains('tier-win'),
+    decisive: c.classList.contains('tier-decisive'), more: c.classList.contains('more'),
+    title: c.title || '',
   })) : [];
   const form = doc.querySelector('.col-input').getBoundingClientRect();
   const out = doc.querySelector('.col-output').getBoundingClientRect();
@@ -88,6 +96,7 @@ function measure(win, doc) {
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
+    topPiece,
     sideBySide: out.left >= form.right - 1,
     formWidth: Math.round(form.width),
     outWidth: Math.round(out.width),
@@ -200,12 +209,17 @@ function serve(dir, extra) {
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    if (v.panels.length < 3) problems.push(`expected 3 panels, got ${v.panels.length}`);
+    if (v.panels.length < 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
+    if (!v.topPiece) problems.push('the combo-pieces overview did not render');
+    else if (!/in \d+ combos/.test(v.topPiece.badge)) problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
     // Empty chips must fail: otherwise every assertion below passes vacuously.
     if (!v.chips.length) problems.push('the first combo listed no results at all');
     if (v.chips.length && v.chips[0].win !== true) problems.push('a game-winning result was not listed first');
+    const decisive = v.chips.filter((c) => c.decisive);
+    if (!decisive.length) problems.push('the decisive tier rendered nothing');
+    if (decisive.some((c) => !c.title)) problems.push('a decisive result carries no explanation on hover');
     if (v.chips.length > 5) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
@@ -222,12 +236,13 @@ function serve(dir, extra) {
     if (!wide && v.sideBySide) problems.push('narrow viewport did not stack to one column');
 
     const layout = wide ? `two columns (${v.formWidth}px + ${v.outWidth}px)` : `stacked (${v.outWidth}px)`;
-    const chipNote = `${v.chips.length} result chips [${v.chips.map((c) => (c.win ? '*' : '') + c.text).join(', ')}]`;
+    const pieceNote = v.topPiece ? `top piece ${v.topPiece.card} ${v.topPiece.badge}` : 'no pieces';
+    const chipNote = `${v.chips.length} chips [${v.chips.map((c) => (c.win ? '*' : c.decisive ? '~' : '') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${v.panels.length} panels, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${v.panels.length} panels, ${pieceNote}, ${chipNote}`);
     }
   }
 
