@@ -148,46 +148,85 @@
 
   // ---- what a combo actually gives you ------------------------------------
 
-  // "Does this win?" has three honest answers, not two.
+  // Three tiers, shown as three colours:
   //
-  //   win      — the combo says so outright.
-  //   decisive — ends most games without saying so, and the exceptions are real
-  //              enough to be worth naming rather than either ignoring or
-  //              overstating. Infinite life is the clearest case: it beats
-  //              almost everything, but poison ignores life totals entirely,
-  //              and mill or an alternate win condition goes over the top of it.
-  //   other    — enablers. Infinite mana wins nothing by itself.
+  //   win      (green)  — the combo says it ends the game.
+  //   decisive (yellow) — worth having, but needs something else to convert it.
+  //                       Infinite mana wins nothing without a payoff; infinite
+  //                       life beats most decks but not poison, mill or an
+  //                       alternate win condition.
+  //   other    (grey)   — the plumbing a combo runs on: ETB and LTB loops,
+  //                       death and sacrifice triggers.
   const WIN_RE = /\b(?:wins?|loses?|lose) the game\b/i;
 
-  // Each entry carries why it falls short of a stated win, shown on hover, so
-  // the tier informs rather than just colouring things in.
+  // "You can't lose the game due to having 0 or less life" says "lose the game"
+  // while meaning the opposite, and "unless an opponent chooses to lose the
+  // game" hands them the choice. Matching the words alone marked both as wins.
+  const WIN_NEGATED_RE = /\b(?:can'?t|cannot|can not|unable to|never|unless|prevent(?:s|ed)?|instead of)\b/i;
+
+  // A result only reaches the yellow tier if it is unbounded — "Infinite",
+  // "Near-infinite", "Infinitely large", "Arbitrarily large".
+  const UNBOUNDED_RE = /\b(?:infinite|infinitely|near-infinite|arbitrarily large)\b/i;
+
+  // Each rule carries why it needs something else, shown on hover, so the
+  // colour informs rather than just decorating.
   const DECISIVE = [
     {
-      re: /\b(?:infinite|near-infinite|arbitrarily large)\b[^,;]*\blife\s?gain\b|\binfinite life\b/i,
+      re: /\blife\s?gain\b|\binfinite life\b/i,
       why: 'Beats most decks — but poison ignores life totals, and mill or an alternate win condition goes over the top of it.',
     },
     {
-      re: /\b(?:infinite|near-infinite|arbitrarily large)\b[^,;]*\b(?:damage|life\s?loss)\b/i,
+      re: /\b(?:damage|life\s?loss)\b/i,
       why: 'Lethal in most games, unless damage is prevented or they out-gain it.',
     },
     {
-      re: /\b(?:infinite|near-infinite|arbitrarily large)\b[^,;]*\bmill\b/i,
-      why: 'Decks most opponents out, but loses to Thassa’s Oracle or a graveyard shuffle-back.',
+      re: /\bmill\b/i,
+      why: 'Self-mill needs a payoff; milling opponents loses to Thassa’s Oracle or a graveyard shuffle-back.',
     },
     {
-      re: /\b(?:infinite|near-infinite)\b[^,;]*\b(?:turns?|combats?)\b/i,
+      re: /\b(?:turns?|combat phases?|combats?)\b/i,
       why: 'Wins eventually, but still needs something that actually closes the game.',
     },
     {
-      re: /\b(?:infinite|near-infinite)\b[^,;]*\b(?:poison|infect)\b/i,
+      re: /\b(?:poison|infect)\b/i,
       why: 'Ten poison counters end it regardless of life total.',
+    },
+    {
+      re: /\bcreature tokens?\b/i,
+      why: 'Lethal on the next swing, given haste or a turn to untap.',
+    },
+    {
+      re: /\+1\/\+1 counters?\b/i,
+      why: 'An arbitrarily large creature still has to connect.',
+    },
+    {
+      re: /\bcard draw\b|\bdraw triggers?\b|\bdraws? your (?:whole )?(?:deck|library)\b/i,
+      why: 'Draws into the win, but you still need one — and an empty library kills you first.',
+    },
+    {
+      re: /\bmana\b/i,
+      why: 'Wins nothing on its own; you need a payoff to spend it on.',
+    },
+    {
+      re: /\bstorm count\b/i,
+      why: 'Needs a storm payoff to cash in.',
     },
   ];
 
   function classify(name) {
-    if (WIN_RE.test(name)) return { tier: 'win', why: 'This combo wins the game outright.' };
-    for (const entry of DECISIVE) {
-      if (entry.re.test(name)) return { tier: 'decisive', why: entry.why };
+    if (WIN_RE.test(name)) {
+      if (!WIN_NEGATED_RE.test(name)) {
+        return { tier: 'win', why: 'This combo wins the game outright.' };
+      }
+      return {
+        tier: 'decisive',
+        why: 'Reads like a win but is conditional or purely protective — it does not end the game by itself.',
+      };
+    }
+    if (UNBOUNDED_RE.test(name)) {
+      for (const entry of DECISIVE) {
+        if (entry.re.test(name)) return { tier: 'decisive', why: entry.why };
+      }
     }
     return { tier: 'other', why: '' };
   }
