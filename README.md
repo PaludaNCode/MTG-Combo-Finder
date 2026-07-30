@@ -32,8 +32,8 @@ Static site, zero dependencies, no build step:
 - `app.js` — reads the form, downloads the combo database, renders the sections
   above. On failure it shows a copyable report (endpoint, HTTP status, what was
   sent, which lines were skipped) instead of a bare "it didn't work".
-- `tools/fetch-combos.js` — pages through Commander Spellbook's `/variants`
-  endpoint and writes a compact `combos.json`. Run by CI, not by the page.
+- `tools/fetch-combos.js` — downloads Commander Spellbook's bulk export and
+  writes a compact `combos.json`. Run by CI, not by the page.
 
 ## Why the data is published, not queried live
 
@@ -71,15 +71,27 @@ Consequences worth knowing:
 - Deck colour identity is derived from the commander's entry in the dataset. An
   unrecognized commander disables colour filtering rather than hiding results.
 
+### Use the bulk export, never the paged API
+
+The fetcher reads **`https://json.commanderspellbook.com/variants.json`** — the same
+bulk file Commander Spellbook's own frontend uses (see `combo-sitemap.xml.ts` in
+[commander-spellbook-site](https://github.com/SpaceCowMedia/commander-spellbook-site)).
+One request for the whole database.
+
+Do not "improve" this by paging `/variants` instead. That needs ~300 requests and
+their rate limit is a **cumulative quota, not a per-second throttle**: walking it at
+4 req/s was cut off after 120 pages, and slowing to 1 req/s was cut off *earlier*,
+at 78, with two full minutes of backoff never clearing it. Fewer, larger requests
+is both the only thing that works and the neighbourly way to consume someone else's
+database.
+
 ### API contract notes
 
 Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend):
 
-- Responses are **paginated** (`results`, `next`) and `CustomPagination.max_limit`
-  is 100, so the fetcher pages through in hundreds.
 - The wire format is **camelCase**, even though the Python dicts are snake_case —
-  `CamelCaseJSONRenderer` is the default renderer. Reading the Python source alone
-  is misleading here. The fetcher accepts either spelling.
+  `CamelCaseJSONRenderer` is the default renderer, and the bulk export camelizes too.
+  Reading the Python source alone is misleading here. The fetcher accepts either spelling.
 - A variant's cards are `uses[].card.name`; results are `produces[].feature.name`.
 
 ## Data-source research (why Commander Spellbook only)
@@ -115,9 +127,8 @@ User-Agent — a real option, but it ends the zero-backend design.
 ## Commands
 
 ```bash
-# Build the combo database locally (needs network; a few minutes)
+# Build the combo database locally (one large download)
 node tools/fetch-combos.js
-MAX_PAGES=3 node tools/fetch-combos.js   # quick smoke-test build
 
 # Unit tests (node:test, zero deps)
 npm test
