@@ -169,6 +169,14 @@ function measure(win, doc) {
     card: piecesPanel.querySelector('.card-name').textContent,
     badge: piecesPanel.querySelector('.badge').textContent,
   } : null;
+  // Every "+4 combos" / "in 4 combos" pill sits directly after a card name in
+  // the same line, so the space before it has to survive every breakpoint — it
+  // was being dropped at narrow widths, exactly where the two are tightest.
+  const badges = [...doc.querySelectorAll('.badge')].map((b) => ({
+    text: b.textContent,
+    gap: parseFloat(win.getComputedStyle(b).marginLeft) || 0,
+    wraps: win.getComputedStyle(b).whiteSpace,
+  }));
   const tabs = [...doc.querySelectorAll('.tabs .tab')].map((t) => ({
     label: t.querySelector('.tab-label').textContent,
     count: t.querySelector('.tab-count').textContent,
@@ -250,6 +258,7 @@ function measure(win, doc) {
     slots,
     stuck,
     dataAge,
+    badges,
     included,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
@@ -679,6 +688,14 @@ function serve(dir, extra, onVerdict) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
       problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
+    }
+    if (!v.badges.length) {
+      problems.push('no "+N combos" badges rendered at all, so their spacing is untested');
+    } else {
+      const flush = v.badges.filter((b) => b.gap < 4);
+      if (flush.length) problems.push(`${flush.length} badge(s) sit flush against the card name, e.g. "${flush[0].text}" (${flush[0].gap}px)`);
+      const breakable = v.badges.filter((b) => b.wraps !== 'nowrap');
+      if (breakable.length) problems.push(`a badge can break across lines: "${breakable[0].text}"`);
     }
 
     if (v.tabs.length !== 2) {

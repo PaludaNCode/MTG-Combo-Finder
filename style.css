@@ -304,6 +304,11 @@ button:disabled { opacity: .6; cursor: wait; }
 .plus { color: var(--accent); font-weight: 700; }
 
 .suggestion .rank { color: var(--muted); }
+/* "+4 combos", "in 4 combos". The gap before it is not decoration: the badge
+   follows a card name in the same line of text, and without it the two run
+   together as "Rings of Brighthearth+4 combos". It used to be dropped at narrow
+   widths, which is where the pill and the name are closest to colliding.
+   nowrap keeps the pill from breaking across two lines mid-phrase. */
 .badge {
   margin-left: .6rem;
   padding: .1rem .5rem;
@@ -313,6 +318,7 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: .8rem;
   font-weight: 700;
   vertical-align: middle;
+  white-space: nowrap;
 }
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
 
@@ -590,7 +596,6 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   .why { margin-left: 0; }
   ul.why { padding-left: .9rem; }
   .sug-head { row-gap: .2rem; }
-  .badge { margin-left: 0; }
   h1 { font-size: 1.45rem; }
   #find-combos { padding: .8rem; } /* easier to hit with a thumb */
 }
