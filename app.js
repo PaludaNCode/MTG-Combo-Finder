@@ -636,15 +636,25 @@
     }
   }
 
+  // Which of the two paths served the last search. Worth reporting rather than
+  // inferring: the fallback and the worker produce the same output by design, so
+  // "did the worker actually run" is otherwise unanswerable — from a failure
+  // report, or from a test asserting that the fallback is reachable at all.
+  let lastVia = null;
+
   async function runSearch(entries) {
     if (useWorker) {
       try {
-        return await workerSearch(entries);
+        const out = await workerSearch(entries);
+        lastVia = 'worker';
+        return out;
       } catch (err) {
         if (!err || !err.retryInPage) throw err;
       }
     }
-    return inPageSearch(entries);
+    const out = await inPageSearch(entries);
+    lastVia = 'page';
+    return out;
   }
 
   async function fetchJson(url) {
@@ -700,6 +710,7 @@
       // Where the data came from matters when the data is the problem: a bad
       // parse of a kept copy and a bad download need different answers.
       'data:     ' + (d.source || '(not loaded)'),
+      'searched: ' + (lastVia ? 'in a ' + lastVia : '(did not get that far)'),
     ];
     if (failed) {
       lines.push('error:    ' + (d.error || err.name + ': ' + err.message));
@@ -846,6 +857,7 @@
       ` · ${(meta.count || 0).toLocaleString()} combos · refreshed daily`
     ));
     line.dataset.source = meta.source || 'network';
+    line.dataset.via = lastVia || 'unknown';
     line.title = meta.source === 'cache'
       ? 'Read from the copy your browser kept, and checked for a newer one in the background.'
       : 'Downloaded just now and kept for next time.';

@@ -37,6 +37,16 @@ const VIEWPORTS = [
   // app.js — searching in the window instead of beside it. Same output, or the
   // fallback is a branch nobody has ever run.
   { name: 'desktop (no worker)', width: 1440, height: 900, deck: 'marked', noWorker: true },
+  // Not a layout check: the share link's own round trip. Its encoding is ours,
+  // so nothing about it can be taken on trust.
+  { name: 'share link', width: 1440, height: 900, kind: 'share' },
+  // Nor is this one. The deploy stamps ?v=<sha> onto every asset URL in the
+  // HTML; the worker and the three files it imports are loaded from JS, where
+  // that rewrite cannot reach, so they take the stamp from their own URLs. If
+  // that ever breaks, the worker dies on a 404, the page quietly falls back, and
+  // production looks fine while running half-stale JS. Hence asserting that the
+  // search still went through the *worker* on a stamped page.
+  { name: 'desktop (asset-stamped)', width: 1440, height: 900, deck: 'marked', kind: 'stamped' },
 ];
 
 function findBrowser() {
@@ -194,6 +204,10 @@ function measure(win, doc) {
     hidden: ageEl ? ageEl.hidden : null,
     text: ageEl ? ageEl.textContent : '',
     source: ageEl ? ageEl.dataset.source : null,
+    // Which path served the search. The worker and the in-page fallback produce
+    // the same output on purpose, so without this the fallback run proves only
+    // that *something* answered — not that the fallback was the thing that did.
+    via: ageEl ? ageEl.dataset.via : null,
   };
 
   // The combo count must count combos, not rows. Collapsing interchangeable
@@ -249,7 +263,93 @@ function measure(win, doc) {
   };
 }
 
+// Load the page and hand back its window, so a check can drive it.
+function load(src, width) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.style.cssText = 'border:0;display:block;width:' + (width || 1440) + 'px;height:900px';
+    frame.src = src;
+    frame.onload = () => resolve({ win: frame.contentWindow, doc: frame.contentDocument });
+    document.body.appendChild(frame);
+  });
+}
+
+// The share link, end to end: a deck typed in, kept without a search, put into
+// the URL by Copy link, and read back out of that URL by a page that has never
+// seen it. Every step of that is our own encoding, so none of it is safe to
+// assume — a link that silently loses the deck is worse than no link at all.
+async function runShare(vp) {
+  const out = { ok: true, name: vp.name, requested: vp.width, share: {} };
+  try {
+    const first = await load('/index.html', vp.width);
+    first.win.localStorage.clear();
+    const typed = DECKS.plain;
+    first.doc.getElementById('decklist').value = typed;
+    first.doc.getElementById('decklist').dispatchEvent(new first.win.Event('input'));
+    // Typing is kept on a debounce, so this also asserts that a deck survives a
+    // reload without ever pressing Find combos.
+    await new Promise((r) => setTimeout(r, 600));
+    out.share.storedWithoutSearching = first.win.localStorage.getItem('mtg-combo-finder.deck');
+
+    first.doc.getElementById('copy-link').click();
+    await new Promise((r) => setTimeout(r, 60));
+    // The clipboard is not available to a headless browser and must not be what
+    // this depends on: Copy link puts the URL in the address bar either way.
+    out.share.search = first.win.location.search;
+    out.share.buttonText = first.doc.getElementById('copy-link').textContent;
+
+    // Put a *different* deck in storage before opening the link. Otherwise both
+    // sources hold the same text and the check cannot tell which one was read —
+    // and a link is documented to beat the stored list, because someone opening
+    // a shared deck means to see theirs, not the one they were last working on.
+    first.win.localStorage.setItem('mtg-combo-finder.deck', JSON.stringify({
+      decklist: '1 Island', commanders: '',
+    }));
+    const shared = await load('/index.html' + out.share.search, vp.width);
+    out.share.restored = shared.doc.getElementById('decklist').value;
+    out.share.typed = typed;
+    out.share.status = shared.doc.getElementById('status').textContent;
+
+    // A truncated or mangled link has to say so rather than silently open empty.
+    const broken = await load('/index.html?deck=%%%not-base64%%%', vp.width);
+    out.share.brokenStatus = broken.doc.getElementById('status').textContent;
+    out.share.brokenIsError = broken.doc.getElementById('status').classList.contains('error');
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+  return out;
+}
+
+// A search on a page whose asset URLs all carry ?v=, the way the deploy serves
+// them. All that matters is that it still ran in the worker: importScripts on a
+// stamped URL either resolves or 404s, and a 404 shows up as the fallback.
+async function runStamped(vp) {
+  try {
+    const { win, doc } = await load('/stamped/index.html', vp.width);
+    win.localStorage.clear();
+    doc.getElementById('decklist').value = DECKS[vp.deck];
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await new Promise((r) => setTimeout(r, 700));
+    const age = doc.getElementById('data-age');
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      stamped: {
+        via: age ? age.dataset.via : null,
+        panels: doc.querySelectorAll('.panel').length,
+        stuckRows: doc.querySelectorAll('#slots .combo').length,
+        scripts: [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')),
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
 function runOne(vp) {
+  if (vp.kind === 'share') return runShare(vp);
+  if (vp.kind === 'stamped') return runStamped(vp);
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:' + vp.height + 'px';
@@ -387,9 +487,50 @@ function report(results) {
 }
 </script>`;
 
+// index.html with ?v= on every asset URL, the same rewrite .github/workflows/
+// deploy.yml performs. Asserting the count here too, so this cannot silently
+// stamp nothing and pass.
+const STAMP = '?v=layout-test';
+
+// Served under /stamped/, where the server refuses any .js or .css without the
+// stamp. That is what makes the check real: unstamped URLs resolve fine on a
+// normal static host, so a lost stamp is invisible — the file still loads, it
+// just comes from whatever the CDN cached. Refusing them turns "the stamp was
+// dropped" into "the worker 404s and the page falls back", which the `via`
+// assertion already catches.
+function stampedIndex() {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const stamped = html.replace(/(src|href)="([\w-]+\.(?:js|css))"/g, `$1="/stamped/$2${STAMP}"`);
+  const n = stamped.split(STAMP).length - 1;
+  if (n < 6) {
+    console.error(`stampedIndex() stamped ${n} asset URLs, expected at least 6 — the fixture is not testing what it claims.`);
+    process.exit(1);
+  }
+  return stamped;
+}
+
+// Every URL the browser asked for, query string included. The server strips the
+// query to find the file — as any static host does — so this is the only place
+// that can see whether the stamp was actually carried, rather than whether the
+// file happened to load. A missing stamp is invisible otherwise: unstamped URLs
+// resolve perfectly well, they just serve whatever the CDN cached last.
+const REQUESTS = [];
+
 function serve(dir, extra, onVerdict) {
   return http.createServer((req, res) => {
-    const url = req.url.split('?')[0];
+    REQUESTS.push(req.url);
+    let url = req.url.split('?')[0];
+
+    // The stamped-assets sandbox. Code must arrive with the stamp on it; data
+    // (combos.json) is fetched from a URL the deploy never rewrites, so it is
+    // exempt — as it is in production, where it comes off another host entirely.
+    if (url.startsWith('/stamped/') && url !== '/stamped/index.html') {
+      if (/\.(?:js|css)$/.test(url) && !req.url.includes(STAMP)) {
+        res.statusCode = 404;
+        return res.end('unstamped asset refused');
+      }
+      url = url.slice('/stamped'.length);
+    }
     if (req.method === 'POST' && url === '/_verdict') {
       let body = '';
       req.on('data', (chunk) => { body += chunk; });
@@ -431,6 +572,10 @@ function serve(dir, extra, onVerdict) {
     const server = serve(ROOT, {
       '/combos.json': { type: 'application/json', body: JSON.stringify(fixture) },
       '/_page.html': { type: 'text/html', body: harness + REPORTER },
+      // index.html as the deploy publishes it: every asset URL stamped. The
+      // query is stripped when the file is served, so this only exercises the
+      // URLs the page and the worker build, which is the point.
+      '/stamped/index.html': { type: 'text/html', body: stampedIndex() },
     }, deliver);
     await new Promise((r) => server.listen(0, '127.0.0.1', r));
     const port = server.address().port;
@@ -469,6 +614,61 @@ function serve(dir, extra, onVerdict) {
     if (!v.ok) {
       console.error(`FAIL ${v.name} — ${v.error}`);
       failed = true;
+      continue;
+    }
+
+    // The stamped run is about asset URLs, not layout: what matters is that the
+    // worker still loaded when every URL carried a query string.
+    if (v.stamped) {
+      const s = v.stamped;
+      const wrong = [];
+      if (!s.scripts.every((src) => src.includes(STAMP))) {
+        wrong.push(`an unstamped script survived: ${s.scripts.filter((x) => !x.includes(STAMP)).join(', ')}`);
+      }
+      if (s.via !== 'worker') {
+        wrong.push(`the search ran in the ${s.via} — a stamped worker or one of its imports did not load`);
+      }
+      // The stamp has to travel two hops that no sed can reach: app.js building
+      // the worker's URL, and the worker building its importScripts URLs. The
+      // sandbox already fails the run if either is dropped — this only says
+      // which one, since "the search ran in the page" is a symptom, not a cause.
+      for (const file of ['search-worker.js', 'result-tiers.js', 'combos.js', 'search.js']) {
+        if (!REQUESTS.some((u) => u === `/stamped/${file}${STAMP}`)) {
+          wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
+        }
+      }
+      if (s.panels < 4) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
+      if (s.stuckRows < 2) wrong.push(`the one-slot-away rows did not render from a stamped page`);
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — ${s.scripts.length} stamped scripts, searched in the worker, ${s.panels} panels`);
+      }
+      continue;
+    }
+
+    // The share-link run measures a round trip rather than a layout, so it is
+    // judged on its own terms.
+    if (v.share) {
+      const s = v.share;
+      const wrong = [];
+      if (!s.storedWithoutSearching || !/Kinnan/.test(s.storedWithoutSearching)) {
+        wrong.push('a typed deck was not kept without pressing Find combos');
+      }
+      if (!/[?&]deck=/.test(s.search || '')) wrong.push(`Copy link put "${s.search}" in the address bar`);
+      if (s.restored !== s.typed) {
+        wrong.push(`the shared link restored ${JSON.stringify(String(s.restored).slice(0, 40))}, not the deck that was shared`);
+      }
+      if (!/link/i.test(s.status || '')) wrong.push(`a shared deck loaded without saying so: "${s.status}"`);
+      if (!s.brokenIsError) wrong.push('a corrupt link did not report an error');
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        const lines = s.typed.split('\n').length;
+        console.log(`ok   ${v.name} — ${lines} lines survived typing → localStorage → URL (${s.search.length} chars) → a fresh page; a corrupt link errors`);
+      }
       continue;
     }
 
@@ -566,6 +766,10 @@ function serve(dir, extra, onVerdict) {
     if (age.source !== expectSource) {
       problems.push(`data came from "${age.source}", expected "${expectSource}" on run ${verdicts.indexOf(v) + 1}`);
     }
+    // And that the run under test took the path it was set up to take. Without
+    // this the no-worker run passes whether or not the fallback was ever used.
+    const expectVia = vp.noWorker ? 'page' : 'worker';
+    if (age.via !== expectVia) problems.push(`the search ran in the ${age.via}, expected the ${expectVia}`);
 
     // The decklist is the whole input; losing it on reload is the one thing a
     // page like this must not do. And Clear has to actually clear.

@@ -380,6 +380,36 @@ page reports in ~450ms.
 That discovery is also why `search.js` never *waits* on the cache: see
 [Downloading the database once](#downloading-the-database-once-not-once-a-visit).
 
+### What the layout test proves
+
+Nine runs. Four are layout at 390/768/1440px, two are the tier page, and three
+exist because the thing they check fails *silently*:
+
+- **`desktop (no worker)`** deletes `Worker` from the page and expects identical
+  output from the in-page fallback. On its own that proves only that *something*
+  answered — the two paths agree by design — so the page reports which one ran
+  (`data-via` on the footer line, and a `searched:` row in the failure report)
+  and the run asserts it was the fallback. Before that it would have passed
+  whether or not the fallback was ever reached.
+- **`share link`** types a deck, waits out the save debounce, presses Copy link,
+  opens the resulting URL in a fresh page **with a different deck in
+  `localStorage`**, and expects the *link's* deck — the encoding is ours, and a
+  link that quietly loses the deck is worse than no link. A corrupt `?deck=` must
+  report an error rather than open empty.
+- **`desktop (asset-stamped)`** serves the page the way the deploy does, every
+  asset URL carrying `?v=`, from a path where **the server refuses unstamped
+  `.js`**. That refusal is the whole trick: on a real static host an unstamped URL
+  loads perfectly well — it just serves whatever the CDN cached — so nothing about
+  a dropped stamp is observable. Refusing them turns it into a 404, a dead worker
+  and a fallback, which the `via` assertion catches. Both hands-off hops are
+  covered: app.js building the worker's URL, and the worker building its
+  `importScripts` URLs.
+
+All three were checked by breaking the code and confirming they fail — the
+stamped one caught a hole in its own first version, which passed while
+`importScripts` had lost the stamp, because the page's own `<script>` tags were
+requesting the same files with it.
+
 ## How it works
 
 Static site, zero dependencies, no build step:
@@ -631,7 +661,9 @@ npm test
 # doesn't collapse, or the desktop columns not splitting. Also asserts the
 # behaviour that is invisible when it breaks: the kept copy of the database
 # being used on the second load, the decklist surviving a search, Clear
-# actually clearing, and the same output with Worker taken away.
+# actually clearing, the share link's whole round trip, the same output with
+# Worker taken away — and that the search really did run where it was supposed
+# to. See "What the layout test proves" below.
 npm run verify
 
 # Syntax-check everything (same as CI)
