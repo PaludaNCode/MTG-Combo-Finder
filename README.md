@@ -212,9 +212,24 @@ excluded: incomplete, never wrong, and the log says so.
 **Only templates a combo actually asks for get resolved.** Spellbook defines 178
 templates; just 157 ids appear anywhere in the combo data. The unused ones are
 not small — `Nonartifact creature with MV <= 5` alone is 14,368 cards over 83
-pages, about a fifth of a full run, and nothing wants it. So the workflow reads
-the published `combos.json` first, collects the ids in use, and resolves those.
-(`--all` resolves everything; useful for measuring, useless for publishing.)
+pages and nothing wants it. So the workflow reads the published `combos.json`
+first, collects the ids in use, and resolves those. (`--all` resolves everything;
+useful for measuring, useless for publishing.)
+
+Measured, resolving everything versus only what is used:
+
+| | all | used only |
+|---|---:|---:|
+| Templates resolved | 148 | **134** (14 skipped) |
+| Cards in the file | 21,769 | **12,472** |
+| File size | 0.62 MB | **0.35 MB** |
+| Wall time | 16.2 min | **12.9 min** |
+
+The payload shrinks 44%, the run only 20% — most of the skipped templates are
+small, and two large ones do not dominate a 440-request job as much as their page
+counts suggest. Worth having, but it is a trim rather than a transformation. The
+dropped cards cost nothing: they were cards that satisfied *only* templates no
+combo asks for.
 
 Those get recorded in `skipped`, kept apart from `unresolvable` because the two
 mean different things. A query-less template is permanently out of reach; a
