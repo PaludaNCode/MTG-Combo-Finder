@@ -55,6 +55,12 @@ const FIXTURE = {
     'Sword of the Meek': '', 'Bloom Tender': 'G', 'Devoted Druid': 'G',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
+  // A combo slot that names a property rather than a card, and the deck's
+  // Walking Ballista filling it. The rendered row has to say so — a combo that
+  // appears because of a slot but cannot show which card filled it reads as
+  // invented, which is the whole risk this feature carries.
+  templates: { 42: 'Creature with a Free Sacrifice Ability' },
+  templateCards: { 'walking ballista': [42], 'devoted druid': [42] },
   combos: [
     { id: '1', c: ['Kinnan, Bonder Prodigy', 'Basalt Monolith'],
       p: ['Infinite ETB', 'Win the game', 'Infinite lifegain', 'Infinite colorless mana', 'Infinite LTB',
@@ -73,6 +79,10 @@ const FIXTURE = {
     { id: '9', c: ['Walking Ballista', 'Bloom Tender'], p: ['Infinite damage'], i: 'G' },
     { id: '10', c: ['Walking Ballista', 'Devoted Druid'], p: ['Infinite damage'], i: 'G' },
     { id: '5', c: ['Walking Ballista', 'Heliod, Sun-Crowned'], p: ['Infinite damage'], i: 'W' },
+    // Complete only because the deck fills the slot.
+    { id: '11', c: ['Rings of Brighthearth'], t: [42], p: ['Infinite damage'], i: 'C', pop: 70 },
+    // Same slot, but nothing in the deck fills it, so this must not appear.
+    { id: '12', c: ['Rings of Brighthearth'], t: [777], p: ['Infinite damage'], i: 'C', pop: 71 },
   ],
 };
 
@@ -140,6 +150,11 @@ function measure(win, doc) {
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
     altNames: doc.querySelectorAll('.alternatives .alt-list .card-name').length,
   };
+  const slots = {
+    labels: [...doc.querySelectorAll('#included .slot')].map((e) => e.textContent),
+    credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
+    comboIds: [...doc.querySelectorAll('#included .combo-link a')].map((a) => a.getAttribute('href')),
+  };
 
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
@@ -166,6 +181,7 @@ function measure(win, doc) {
   return {
     header,
     grouped,
+    slots,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
@@ -400,6 +416,18 @@ function serve(dir, extra) {
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
     if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
+
+    // A combo that appears only because the deck fills a template slot has to
+    // show the slot and name the card credited with it. Without that it reads
+    // as the page inventing a combo out of one card.
+    const s = v.slots;
+    if (!s.labels.length) problems.push('the combo filling a template slot did not render the slot');
+    if (!s.labels.some((t) => /Free Sacrifice Ability/.test(t))) problems.push(`a slot reads "${s.labels[0]}" instead of the template's name`);
+    if (!s.credited.some((t) => /Walking Ballista/.test(t))) problems.push('the slot did not name the card of yours that fills it');
+    // The twin combo needs a template nothing in the deck matches; showing it
+    // would mean a slot was treated as filled without evidence.
+    if (s.comboIds.some((href) => /\/12\//.test(href))) problems.push('a combo whose template nothing fills was listed as complete');
+    if (!s.comboIds.some((href) => /\/11\//.test(href))) problems.push('the combo whose template the deck fills went missing');
 
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');

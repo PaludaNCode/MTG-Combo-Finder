@@ -83,14 +83,39 @@ test('compact: keeps only what the page needs', () => {
   });
 });
 
-test('compact: records template count and drops cardless variants', () => {
+test('compact: records which templates a variant needs, and drops cardless variants', () => {
   const withTemplate = compact({
     id: '1',
     uses: [{ card: { name: 'Basalt Monolith' } }],
+    requires: [{ template: { id: 9, name: 'Free Sacrifice Outlet' } }],
+  });
+  assert.deepStrictEqual(withTemplate.t, [9]);
+  assert.strictEqual(compact({ id: '2', uses: [] }), null);
+});
+
+test('compact: a template needed twice needs two cards, so its id repeats', () => {
+  const row = compact({
+    id: '3',
+    uses: [{ card: { name: 'Scurry Oak' } }],
+    requires: [{ template: { id: 7, name: 'Persist Creature' }, quantity: 2 }],
+  });
+  assert.deepStrictEqual(row.t, [7, 7]);
+});
+
+// An unreadable requirement must not read as "no requirement": that would show
+// the combo as complete on its named cards alone.
+test('compact: a requirement with no id becomes null, not nothing', () => {
+  const row = compact({
+    id: '4',
+    uses: [{ card: { name: 'Scurry Oak' } }],
     requires: [{ template: { name: 'a sacrifice outlet' } }],
   });
-  assert.strictEqual(withTemplate.t, 1);
-  assert.strictEqual(compact({ id: '2', uses: [] }), null);
+  assert.deepStrictEqual(row.t, [null]);
+});
+
+test('compact: a variant with no requirements has no template field', () => {
+  const row = compact({ id: '5', uses: [{ card: { name: 'Sol Ring' } }] });
+  assert.strictEqual(row.t, undefined);
 });
 
 test('scanner: bare-array documents (Scryfall bulk) are supported', () => {

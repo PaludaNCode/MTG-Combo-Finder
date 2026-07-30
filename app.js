@@ -108,7 +108,29 @@
       const inDeck = !deckNames || deckNames.has(DeckCombos.nameKey(name));
       header.appendChild(el('span', inDeck ? 'card-name' : 'card-name missing', name));
     });
+    // A combo can ask for "a Persist Creature" rather than a named card. Show
+    // the slot as Spellbook words it, and next to it the card of yours that
+    // fills it — a combo that appears because of a slot has to be able to say
+    // why, or it reads as the page making things up.
+    (variant.fills || []).forEach((fill) => {
+      header.appendChild(el('span', 'plus', ' + '));
+      const slot = el('span', 'slot', fill.slot);
+      slot.title = 'A slot, not a specific card — filled here by ' + fill.card;
+      header.appendChild(slot);
+    });
+
     card.appendChild(header);
+
+    if ((variant.fills || []).length) {
+      const filled = el('p', 'fills');
+      filled.appendChild(el('span', 'fills-label', 'From your deck: '));
+      variant.fills.forEach((fill, i) => {
+        if (i > 0) filled.appendChild(document.createTextNode(' · '));
+        filled.appendChild(el('span', 'card-name', fill.card));
+        filled.appendChild(document.createTextNode(' as ' + fill.slot));
+      });
+      card.appendChild(filled);
+    }
 
     card.appendChild(resultChips(variant));
 
@@ -670,7 +692,9 @@
         commanderSource = 'inferred';
       }
 
-      const matched = DeckCombos.matchDeck(data, deckNames, effective);
+      // allEntries is passed so a card credited with a template slot is named
+      // the way the decklist spelled it, not as its lowercased lookup key.
+      const matched = DeckCombos.matchDeck(data, deckNames, effective, allEntries);
       const results = {
         identity: matched.identity,
         commanderInfo: {

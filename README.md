@@ -177,6 +177,52 @@ Two details worth keeping:
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
 
+### Template slots ("a Persist Creature")
+
+Some combos have a slot naming a property rather than a card. Because matching
+works on card names, every one of them used to be dropped — your deck contains
+Kitchen Finks, it does not contain "a Persist Creature". That was **3,860
+combos**, 64% of which would show green.
+
+Spellbook attaches a Scryfall query to most templates, so `tools/templates.js`
+turns each slot into the actual list of cards that fill it. Nothing interprets
+wording: Spellbook authors the query, Scryfall evaluates it, we record the
+answer. Published as `card -> template ids` (0.62 MB) rather than the reverse —
+one card satisfies a handful of templates, one template matches thousands of
+cards.
+
+Four rules, all of them about not overclaiming:
+
+- **A slot is filled or the combo does not appear.** There is no one card to
+  suggest for "a Creature with Haste" — 612 cards fill it — so a template combo
+  only counts once the deck already fills every slot it has. Templates with no
+  query (29 of 178) can never be filled and stay excluded, exactly as before.
+- **Every slot gets its own card.** A card cannot hold two slots, and a card the
+  combo already names cannot also fill one. Assignment is a real matching
+  (Kuhn's algorithm), not a greedy pass: taking the first candidate for each slot
+  in turn can strand a later slot whose only option is already spoken for.
+- **The page says which card filled which slot.** Some templates are enormous —
+  `Nonartifact creature with MV <= 5` is 14,368 cards, roughly 40% of Magic — so
+  these combos match nearly any deck. A combo that appears because of a slot and
+  cannot show why reads as invented. Asserted in the layout test.
+- **Unreadable data excludes rather than includes.** A requirement with no id is
+  recorded as `null`, which matches no template. Data published before this
+  existed records only a slot *count*, which is treated the same way — the page
+  and the data branch update independently, and a stale `combos.json` must never
+  start claiming combos.
+
+**Resolving against the Scryfall bulk file was considered and rejected.** We
+already download it for colour identity, so it looks free. It isn't: the bulk
+file is card data, not a search engine, and evaluating `t:creature -t:artifact
+mv<=3` locally means reimplementing Scryfall's query language — `is:permanent`,
+`is:tdfc`, `keyword:devoid`, `mana:{X}{X}{X}`, `o:"…"`, negation, `or`,
+parentheses, and that is from a 12-query sample of 149. `is:permanent` and
+`is:tdfc` are Scryfall's own derived definitions rather than fields in the file,
+so a local version would be a reconstruction — and a wrong reconstruction does
+not error, it silently yields a card list that is slightly wrong. Cost was never
+the objection: 465 requests and ~23 minutes, on a job that already streams a
+578 MB export.
+
 ## Layout
 
 One column on phones and tablets; from 900px the decklist sits in a sticky left
