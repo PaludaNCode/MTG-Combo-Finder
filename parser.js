@@ -3,16 +3,16 @@
 (function (global) {
   'use strict';
 
-  // Section headers that switch which board subsequent lines belong to.
-  // Matches e.g. "Commander:", "COMMANDERS", "Sideboard:", "Maybeboard",
-  // "Deck", "Mainboard:", "Companion:", "Tokens" (Moxfield / MTGA / Archidekt
-  // text exports all use some variation of these).
-  const SECTION_RE = /^(commanders?|deck|main\s*board|main\s*deck|side\s*board|maybe\s*board|companion|tokens?|considering|about|wishlist)\s*:?\s*$/i;
-
+  // Which board a section header switches to. Keys are the normalized form
+  // produced by normalizeHeading(), so "Sideboard:", "SIDEBOARD (15)" and
+  // "// Sideboard" all arrive here as "sideboard".
   const SECTION_TARGET = {
     commander: 'commanders',
     commanders: 'commanders',
+    commandzone: 'commanders',
+    command: 'commanders',
     deck: 'main',
+    main: 'main',
     mainboard: 'main',
     maindeck: 'main',
     sideboard: 'ignore',
@@ -23,7 +23,35 @@
     considering: 'ignore',
     about: 'ignore',
     wishlist: 'ignore',
+    outside: 'ignore',
   };
+
+  // Strips the decoration deck sites hang off section headings so they can be
+  // compared against SECTION_TARGET: a leading comment marker, a trailing card
+  // count, a trailing colon, then case and inner spaces.
+  //   "// Sideboard"     -> "sideboard"
+  //   "Commander (1):"   -> "commander"
+  //   "Main Deck (99)"   -> "maindeck"
+  function normalizeHeading(line) {
+    return String(line)
+      .replace(/^\s*(?:\/\/+|#+)\s*/, '')
+      .replace(/[\s:]*[([]\s*\d+\s*[)\]]\s*:?\s*$/, '')
+      .replace(/\s*:\s*$/, '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '');
+  }
+
+  // A category heading like "Creatures (24)" or "Lands [37]" — a label followed
+  // by a count, with no quantity in front. Deckstats, Archidekt and MTGGoldfish
+  // exports are full of them and they are not cards.
+  //
+  // A real card line is never mistaken for one: "1 Sol Ring (C21) 263" leads
+  // with a quantity, and a set code like "(C21)" or "(MB1)" always contains a
+  // letter, so only an all-digit count matches here.
+  function isCategoryHeading(line) {
+    return /^[^\d].*[([]\s*\d+\s*[)\]]\s*:?$/.test(String(line).trim());
+  }
 
   // One card line. Handles:
   //   "Sol Ring"
@@ -67,29 +95,57 @@
     return { name, quantity, sideboardPrefix };
   }
 
-  // Parses a full decklist text blob into { commanders: [...], main: [...] }
-  // where each entry is { card, quantity } (the shape Commander Spellbook's
-  // find-my-combos endpoint expects).
+  // Parses a full decklist text blob into { commanders, main, skipped } where
+  // each card entry is { card, quantity } (the shape Commander Spellbook's
+  // find-my-combos endpoint expects) and `skipped` lists what was dropped and
+  // why, so the page can show it rather than silently losing lines.
   function parseDecklist(text) {
     const commanders = [];
     const main = [];
+    const skipped = [];
     const byName = { commanders: new Map(), main: new Map() };
     let target = 'main';
 
     for (const rawLine of String(text || '').split(/\r?\n/)) {
       const trimmed = rawLine.trim();
-      if (!trimmed) continue;
+      if (!trimmed) continue; // blank lines are not worth reporting
 
-      const sectionMatch = trimmed.match(SECTION_RE);
-      if (sectionMatch) {
-        const key = sectionMatch[1].toLowerCase().replace(/\s+/g, '');
-        target = SECTION_TARGET[key] || 'main';
+      // A section heading anywhere switches the board, decorated or not.
+      const heading = normalizeHeading(trimmed);
+      if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
+        target = SECTION_TARGET[heading];
         continue;
       }
-      if (target === 'ignore') continue;
+      // Anything else that mentions a board we ignore — "Sideboard cards",
+      // "// sideboard" with trailing text — switches too rather than becoming a card.
+      if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) {
+        target = 'ignore';
+        continue;
+      }
+      if (target === 'ignore') {
+        skipped.push({ line: trimmed, reason: 'sideboard / ignored section' });
+        continue;
+      }
+      if (isCategoryHeading(trimmed)) {
+        skipped.push({ line: trimmed, reason: 'category heading' });
+        continue;
+      }
+      if (trimmed.startsWith('//') || trimmed.startsWith('#')) continue;
 
       const parsed = parseLine(rawLine);
-      if (!parsed || parsed.sideboardPrefix) continue;
+      if (!parsed) {
+        skipped.push({ line: trimmed, reason: 'no card name found' });
+        continue;
+      }
+      if (parsed.sideboardPrefix) {
+        skipped.push({ line: trimmed, reason: 'sideboard (SB:) line' });
+        continue;
+      }
+      // The API rejects a blank name or a quantity below 1.
+      if (!parsed.name || parsed.quantity < 1) {
+        skipped.push({ line: trimmed, reason: 'empty name or zero quantity' });
+        continue;
+      }
 
       const bucket = byName[target];
       const existing = bucket.get(parsed.name.toLowerCase());
@@ -102,7 +158,7 @@
       }
     }
 
-    return { commanders, main };
+    return { commanders, main, skipped };
   }
 
   // Extracts { commanders, main } from a Moxfield API deck payload.
@@ -208,9 +264,14 @@
     return `Your browser blocked the request to ${label} — it doesn’t allow other websites to read decks. ${hint}`;
   }
 
+  // Limits enforced by the find-my-combos endpoint (common/serializers.py).
+  // Exceeding them is a 400, so the page trims and says so instead.
+  const API_LIMITS = { maxMain: 600, maxCommanders: 12, maxNameLength: 256 };
+
   const api = {
     parseDecklist, parseLine, fromMoxfield, fromArchidekt,
     parseDeckUrl, describeLoadFailure, SITES,
+    normalizeHeading, isCategoryHeading, API_LIMITS,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
