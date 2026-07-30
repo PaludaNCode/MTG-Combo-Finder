@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       template:
-        description: 'Template name (a substring is enough)'
-        required: true
-        default: 'Nonartifact creature with MV <= 5'
+        description: 'Template name (substring). Blank ranks every template by usage.'
+        required: false
+        default: ''
 
 permissions:
   contents: read

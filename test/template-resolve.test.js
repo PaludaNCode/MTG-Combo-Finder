@@ -152,3 +152,59 @@ test('a query matching nothing is not an error, but yields no template', async (
     }
   );
 });
+
+// Spellbook defines templates nothing uses — "Nonartifact creature with MV <= 5"
+// is 83 pages and no published combo wants it. Resolving only what is asked for
+// is the difference between a 16-minute regeneration and a 5-minute one.
+test('only the templates a combo asks for are resolved', async () => {
+  await withStub(
+    [template(7, 'Persist Creature'), template(9, 'Nonartifact creature with MV <= 5')],
+    { 'https://api/7': () => page(['Kitchen Finks']) },   // api/9 is never stubbed
+    async (calls) => {
+      const { templates, skipped } = await resolveTemplates(quiet, new Set(['7']));
+      assert.deepStrictEqual({ ...templates }, { 7: 'Persist Creature' });
+      assert.deepStrictEqual({ ...skipped }, { 9: 'Nonartifact creature with MV <= 5' });
+      assert.equal(calls.filter((c) => String(c) === 'https://api/9').length, 0);
+    }
+  );
+});
+
+test('ids compare as strings, so a numeric used-set still matches', async () => {
+  await withStub(
+    [template(7, 'Persist Creature')],
+    { 'https://api/7': () => page(['Kitchen Finks']) },
+    async () => {
+      const { templates } = await resolveTemplates(quiet, new Set(['7']));
+      assert.deepStrictEqual({ ...templates }, { 7: 'Persist Creature' });
+    }
+  );
+});
+
+test('with no used-set, everything queryable is still resolved', async () => {
+  await withStub(
+    [template(7, 'Persist Creature'), template(9, 'Big')],
+    {
+      'https://api/7': () => page(['Kitchen Finks']),
+      'https://api/9': () => page(['Grizzly Bears']),
+    },
+    async () => {
+      const { templates, skipped } = await resolveTemplates(quiet, null);
+      assert.equal(Object.keys(templates).length, 2);
+      assert.deepStrictEqual({ ...skipped }, {});
+    }
+  );
+});
+
+// A template with no query is out of reach whether or not anything uses it, and
+// must stay in `unresolvable` rather than being mislabelled as merely skipped.
+test('query-less templates stay unresolvable, not skipped', async () => {
+  await withStub(
+    [{ id: 3, name: 'Haste Enabler', scryfallQuery: null, scryfallApi: null }],
+    {},
+    async () => {
+      const { unresolvable, skipped } = await resolveTemplates(quiet, new Set(['7']));
+      assert.deepStrictEqual({ ...unresolvable }, { 3: 'Haste Enabler' });
+      assert.deepStrictEqual({ ...skipped }, {});
+    }
+  );
+});
