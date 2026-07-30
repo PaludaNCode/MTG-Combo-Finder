@@ -46,6 +46,82 @@
     );
   }
 
+  // ---- matching against the bundled combo dataset -------------------------
+  // The page can't call Commander Spellbook's API (their CORS allowlist covers
+  // only their own site and localhost), so a GitHub Action publishes the whole
+  // database and we do the matching here. This mirrors what their
+  // find-my-combos endpoint does server-side.
+
+  // Colour identity of the deck, from its commanders where we know them.
+  // Returns null when no commander is recognized, which means "don't filter".
+  function deckIdentity(commanders, cardIdentity) {
+    if (!cardIdentity) return null;
+    const byKey = Object.create(null);
+    for (const name of Object.keys(cardIdentity)) byKey[nameKey(name)] = cardIdentity[name];
+
+    let known = false;
+    const colors = new Set();
+    for (const entry of commanders || []) {
+      const identity = byKey[nameKey(entry.card || entry)];
+      if (identity === undefined) continue;
+      known = true;
+      for (const c of String(identity)) if (c !== 'C') colors.add(c);
+    }
+    return known ? colors : null;
+  }
+
+  function withinIdentity(combo, identity) {
+    if (!identity) return true; // unknown commander -> don't split by colour
+    for (const c of String(combo.i || '')) {
+      if (c !== 'C' && !identity.has(c)) return false;
+    }
+    return true;
+  }
+
+  // Splits the dataset against a deck the same way find-my-combos does:
+  // complete combos, those one card short, and those one card short but
+  // outside the deck's colours.
+  function matchDeck(dataset, deckNames, commanders) {
+    const combos = (dataset && dataset.combos) || [];
+    const identity = deckIdentity(commanders, dataset && dataset.cardIdentity);
+    const included = [];
+    const almost = [];
+    const almostByAddingColors = [];
+
+    for (const combo of combos) {
+      const cards = combo.c || [];
+      let missing = 0;
+      for (const name of cards) {
+        if (!deckNames.has(nameKey(name))) {
+          missing += 1;
+          if (missing > 1) break;
+        }
+      }
+      if (missing === 0) {
+        // A combo needing a template ("a sacrifice outlet") isn't proven
+        // complete by card names alone, so it never counts as included.
+        if (!combo.t) included.push(combo);
+      } else if (missing === 1 && !combo.t) {
+        (withinIdentity(combo, identity) ? almost : almostByAddingColors).push(combo);
+      }
+    }
+
+    const byPopularity = (a, b) => (b.pop || 0) - (a.pop || 0);
+    included.sort(byPopularity);
+    return { identity, included, almostIncluded: almost, almostIncludedByAddingColors: almostByAddingColors };
+  }
+
+  // Normalizes a dataset combo into the shape the renderer expects, so the
+  // rendering code doesn't need to know about the compact field names.
+  function expand(combo) {
+    return {
+      id: combo.id,
+      uses: (combo.c || []).map((name) => ({ card: { name } })),
+      produces: (combo.p || []).map((name) => ({ feature: { name } })),
+      identity: combo.i,
+    };
+  }
+
   // EDHREC card page slug: "Kinnan, Bonder Prodigy" -> "kinnan-bonder-prodigy"
   function edhrecSlug(name) {
     return nameKey(name)
@@ -55,7 +131,10 @@
       .replace(/^-+|-+$/g, '');
   }
 
-  const api = { computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames };
+  const api = {
+    computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
+    matchDeck, deckIdentity, withinIdentity, expand,
+  };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

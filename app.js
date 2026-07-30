@@ -1,11 +1,19 @@
-// Page logic: reads the form, asks Commander Spellbook's find-my-combos
-// endpoint about the deck, renders combos found + ranked card suggestions.
+// Page logic: reads the form, matches the deck against the combo database,
+// renders combos found + ranked card suggestions.
+//
+// The matching happens here rather than through Commander Spellbook's
+// find-my-combos endpoint because that endpoint only accepts browser requests
+// from their own site and localhost. A GitHub Action publishes the database to
+// the `data` branch and we fetch it from there — the same split MTG-Pricerunner
+// uses for prices.
 (function () {
   'use strict';
 
-  const SPELLBOOK_API = 'https://backend.commanderspellbook.com/find-my-combos';
   const SPELLBOOK_COMBO_URL = 'https://commanderspellbook.com/combo/';
   const ARCHIDEKT_API = 'https://archidekt.com/api/decks/';
+  const DATA_URL = /github\.io$/.test(location.hostname)
+    ? 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json'
+    : 'combos.json'; // local checkout / any other host
 
   const $ = (id) => document.getElementById(id);
 
@@ -109,11 +117,12 @@
 
     const identity = $('identity');
     identity.textContent = '';
-    if (results.identity) {
-      identity.appendChild(el('p', 'identity-line', 'Deck color identity: ' + String(results.identity).toUpperCase()));
+    if (results.identity && results.identity.size) {
+      identity.appendChild(el('p', 'identity-line',
+        'Deck color identity: ' + [...results.identity].join('').toUpperCase()));
     }
 
-    const included = pick(results, 'included', 'included');
+    const included = results.included;
     const includedEl = $('included');
     includedEl.textContent = '';
     includedEl.appendChild(el('h2', null, 'Combos in your deck' + (included.length ? ` (${included.length})` : '')));
@@ -126,7 +135,7 @@
     renderSuggestions(
       $('suggestions'),
       'Suggested additions — ranked by combos unlocked',
-      DeckCombos.computeSuggestions(pick(results, 'almost_included', 'almostIncluded'), deckNames),
+      DeckCombos.computeSuggestions(results.almostIncluded, deckNames),
       deckNames,
       'No single-card additions would complete a combo (within your color identity).'
     );
@@ -134,82 +143,59 @@
     renderSuggestions(
       $('offcolor'),
       'Outside your color identity',
-      DeckCombos.computeSuggestions(
-        pick(results, 'almost_included_by_adding_colors', 'almostIncludedByAddingColors'),
-        deckNames
-      ),
+      DeckCombos.computeSuggestions(results.almostIncludedByAddingColors, deckNames),
       deckNames,
       '' // hide section entirely when empty
     );
   }
 
-  // ---- API calls -----------------------------------------------------------
+  // ---- combo database ------------------------------------------------------
 
-  // Everything we learn about a request, kept so a failure can be shown in full
+  // Everything we learn about a load, kept so a failure can be shown in full
   // rather than reduced to "it didn't work".
   let lastDiagnostics = null;
+  let dataset = null; // cached for the session — it's a few MB
 
-  async function findCombos(commanders, main) {
-    const payload = { commanders, main };
-    const diag = {
-      endpoint: SPELLBOOK_API,
-      method: 'POST',
-      sent: { commanders: commanders.length, main: main.length },
-      firstCards: main.slice(0, 5).map((c) => `${c.quantity} ${c.card}`),
-    };
+  async function loadDataset() {
+    if (dataset) return dataset;
+
+    const diag = { endpoint: DATA_URL, method: 'GET' };
     lastDiagnostics = diag;
 
     let res;
     try {
-      res = await fetch(SPELLBOOK_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      res = await fetch(DATA_URL, { cache: 'default' });
     } catch (networkErr) {
-      // No response at all: CORS, offline, DNS, TLS.
       diag.error = networkErr.name + ': ' + networkErr.message;
-      diag.likelyCause = 'The browser blocked or could not send the request (CORS, offline, or the API is unreachable).';
+      diag.likelyCause = DATA_URL.startsWith('http')
+        ? 'Could not download the combo database. Check your connection, or whether the data branch has been published yet.'
+        : 'No local combos.json. Run: node tools/fetch-combos.js';
       throw networkErr;
     }
 
     diag.status = res.status;
     diag.statusText = res.statusText;
+    if (!res.ok) {
+      diag.likelyCause = res.status === 404
+        ? 'The combo database has not been published yet — run the "Update combo data" workflow.'
+        : 'The combo database could not be downloaded.';
+      throw Object.assign(new Error('Combo database returned HTTP ' + res.status), { status: res.status });
+    }
 
     const raw = await res.text();
-    diag.responseSnippet = raw.slice(0, 800);
-
-    if (!res.ok) {
-      // Django REST Framework puts field-level validation errors in the body,
-      // which is where a rejected decklist actually explains itself.
-      diag.likelyCause = res.status === 400
-        ? 'The API rejected the decklist — see the response below for the offending field.'
-        : 'The API responded with an error status.';
-      const err = new Error('Commander Spellbook API returned HTTP ' + res.status);
-      err.status = res.status;
-      throw err;
-    }
-
-    let data;
     try {
-      data = JSON.parse(raw);
-    } catch (parseErr) {
-      diag.likelyCause = 'The API returned a body that is not JSON.';
-      throw new Error('Could not read the API response as JSON');
+      dataset = JSON.parse(raw);
+    } catch (err) {
+      diag.responseSnippet = raw.slice(0, 400);
+      diag.likelyCause = 'The combo database is not valid JSON.';
+      throw new Error('Could not read the combo database');
     }
-
-    // The endpoint paginates, so the payload we want sits under `results`.
-    const results = data.results || data;
-    diag.responseKeys = Object.keys(results).join(', ');
-    return results;
-  }
-
-  // The API returns snake_case keys (included, almost_included,
-  // almost_included_by_adding_colors). Accept camelCase too so an older or
-  // proxied response shape still renders instead of silently showing nothing.
-  function pick(results, snake, camel) {
-    const value = results[snake] !== undefined ? results[snake] : results[camel];
-    return Array.isArray(value) ? value : [];
+    if (!dataset.combos || !dataset.combos.length) {
+      diag.likelyCause = 'The combo database downloaded but contains no combos.';
+      throw new Error('Combo database is empty');
+    }
+    diag.loaded = `${dataset.combos.length} combos, updated ${dataset.updatedAt || 'unknown'}`;
+    return dataset;
   }
 
   async function fetchJson(url) {
@@ -271,7 +257,7 @@
     if (d.firstCards && d.firstCards.length) {
       lines.push('first cards sent:', ...d.firstCards.map((c) => '  ' + c));
     }
-    if (d.responseKeys) lines.push('response keys: ' + d.responseKeys);
+    if (d.loaded) lines.push('database: ' + d.loaded);
     if (parsed && parsed.skipped && parsed.skipped.length) {
       lines.push('skipped lines (' + parsed.skipped.length + '):');
       parsed.skipped.slice(0, 20).forEach((s) => lines.push('  [' + s.reason + '] ' + s.line));
@@ -335,15 +321,26 @@
     }
 
     $('results').hidden = true;
-    setStatus(`Searching combos for ${main.length + commanders.length} cards…`);
+    setStatus(dataset
+      ? `Searching combos for ${main.length + commanders.length} cards…`
+      : 'Downloading the combo database (once per visit)…');
     $('find-combos').disabled = true;
     try {
-      const results = await findCombos(commanders, main);
+      const data = await loadDataset();
+      const deckNames = DeckCombos.deckNameSet(commanders.concat(main));
+      const matched = DeckCombos.matchDeck(data, deckNames, commanders);
+      const results = {
+        identity: matched.identity,
+        included: matched.included.map(DeckCombos.expand),
+        almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
+        almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
+      };
       const notes = [];
       if (parsed.skipped.length) notes.push(`${parsed.skipped.length} line(s) skipped`);
       notes.push(...trimmed);
-      setStatus(notes.length ? 'Searched ' + (main.length + commanders.length) + ' cards — ' + notes.join('; ') + '.' : '');
-      renderResults(results, DeckCombos.deckNameSet(commanders.concat(main)));
+      notes.unshift(`${data.combos.length.toLocaleString()} combos searched`);
+      setStatus('Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
+      renderResults(results, deckNames);
       if (parsed.skipped.length) showDiagnostics(null, parsed, 'notice');
     } catch (err) {
       setStatus('Combo search failed: ' + err.message, true);

@@ -29,24 +29,58 @@ Static site, zero dependencies, no build step:
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken alphabetically).
-- `app.js` — reads the form, POSTs `{ commanders, main }` to
-  `backend.commanderspellbook.com/find-my-combos`, renders the sections above.
-  On failure it shows a copyable report (endpoint, HTTP status, response body,
-  what was sent, which lines were skipped) instead of a bare "it didn't work".
+- `app.js` — reads the form, downloads the combo database, renders the sections
+  above. On failure it shows a copyable report (endpoint, HTTP status, what was
+  sent, which lines were skipped) instead of a bare "it didn't work".
+- `tools/fetch-combos.js` — pages through Commander Spellbook's `/variants`
+  endpoint and writes a compact `combos.json`. Run by CI, not by the page.
+
+## Why the data is published, not queried live
+
+Commander Spellbook's API only accepts **browser** requests from their own site
+and localhost:
+
+```python
+# backend/backend/production_settings.py
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://(\w+\.)?commanderspellbook\.com$',
+    r'https?://localhost:\d+',
+]
+```
+
+A page served from `paludancode.github.io` is not on that list, so the browser
+refuses to send the request and the fetch fails with no status at all — Safari
+words it "Load failed". Nothing client-side can change that; it is their server's
+allowlist.
+
+CORS applies to browsers, not to servers, so `.github/workflows/update-data.yml`
+fetches the database in CI instead and force-pushes `combos.json` as a single
+orphan commit to the **`data` branch**. The page reads it from
+`raw.githubusercontent.com` and does the deck matching itself in `combos.js`
+(complete combos / one card short / one card short but off-colour), which is
+what the `find-my-combos` endpoint would have done server-side. This is the same
+split [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner) uses for
+prices. The `data` branch is a build artifact — never branch from it or PR into it.
+
+Consequences worth knowing:
+
+- Combo data is as fresh as the last workflow run (daily cron + manual dispatch),
+  not live.
+- Combos requiring a *template* ("any sacrifice outlet") are excluded from
+  suggestions, since no single named card completes them.
+- Deck colour identity is derived from the commander's entry in the dataset. An
+  unrecognized commander disables colour filtering rather than hiding results.
 
 ### API contract notes
 
-Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend),
-because guessing here cost a silent bug:
+Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend):
 
-- The response is **paginated** — the payload is under `results`.
-- Its keys are **snake_case**: `included`, `almost_included`,
-  `almost_included_by_adding_colors`. Reading `almostIncluded` returns
-  `undefined`, which renders as "no suggestions" rather than an error, so this
-  failed silently for a while. `pick()` reads snake_case with a camelCase fallback.
-- A variant's cards are `uses[].card.name`; its results are `produces[].feature.name`.
-- Request limits (`common/serializers.py`): 600 main entries, 12 commanders,
-  256-char names, and **quantity must be ≥ 1** — violations are a 400.
+- Responses are **paginated** (`results`, `next`) and `CustomPagination.max_limit`
+  is 100, so the fetcher pages through in hundreds.
+- The wire format is **camelCase**, even though the Python dicts are snake_case —
+  `CamelCaseJSONRenderer` is the default renderer. Reading the Python source alone
+  is misleading here. The fetcher accepts either spelling.
+- A variant's cards are `uses[].card.name`; results are `produces[].feature.name`.
 
 ## Data-source research (why Commander Spellbook only)
 
@@ -81,6 +115,10 @@ User-Agent — a real option, but it ends the zero-backend design.
 ## Commands
 
 ```bash
+# Build the combo database locally (needs network; a few minutes)
+node tools/fetch-combos.js
+MAX_PAGES=3 node tools/fetch-combos.js   # quick smoke-test build
+
 # Unit tests (node:test, zero deps)
 npm test
 
