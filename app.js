@@ -507,7 +507,11 @@
     // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
     // combo with Essence Warden in that slot are one row rather than three.
     const groups = DeckCombos.groupVariants(included);
-    const includedBody = panel($('included'), 'included', 'Combos in your deck', groups.length || null);
+    // The count is every combo, not every row. Collapsing "Scurry Oak + Sadistic
+    // Glee + Carrion Feeder" and its Viscera Seer version into one row makes the
+    // list readable, but they are still two combos, and a deck with 34 of them
+    // should not be told it has 23. Each row says how many versions it holds.
+    const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
     if (groups.length) {
       groups.forEach((g) => includedBody.appendChild(comboGroupCard(g)));
     } else {

@@ -156,6 +156,17 @@ function measure(win, doc) {
     comboIds: [...doc.querySelectorAll('#included .combo-link a')].map((a) => a.getAttribute('href')),
   };
 
+  // The combo count must count combos, not rows. Collapsing interchangeable
+  // versions into one row is a readability choice; it must not quietly shrink
+  // the number the panel reports.
+  const includedPanel = panels.find((p) => /Combos in your deck/.test(p.title));
+  const included = {
+    badge: includedPanel ? includedPanel.count : null,
+    rows: doc.querySelectorAll('#included .panel-body > .combo').length,
+    versions: [...doc.querySelectorAll('#included .panel-body > .combo')]
+      .reduce((n, row) => n + Math.max(1, row.querySelectorAll('details .combo').length), 0),
+  };
+
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
     text: c.textContent, win: c.classList.contains('tier-win'),
@@ -182,6 +193,7 @@ function measure(win, doc) {
     header,
     grouped,
     slots,
+    included,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
@@ -438,6 +450,13 @@ function serve(dir, extra) {
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
     if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
+
+    // Counting rows instead of combos under-reports a deck with interchangeable
+    // versions in it — 34 combos shown as 23. The fixture collapses two combos
+    // into one row on purpose, so the badge and the row count must disagree.
+    const inc = v.included;
+    if (inc.rows >= Number(inc.badge)) problems.push(`the combo count (${inc.badge}) does not exceed the ${inc.rows} rows, so versions are not being counted`);
+    if (Number(inc.badge) !== inc.versions) problems.push(`the combo count reads ${inc.badge} but the rows hold ${inc.versions} version(s)`);
 
     // A combo that appears only because the deck fills a template slot has to
     // show the slot and name the card credited with it. Without that it reads
