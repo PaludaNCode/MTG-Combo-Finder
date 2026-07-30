@@ -185,6 +185,51 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 .panel-body { padding: 0 1rem 1rem; }
+
+/* ---- suggestion tabs ---- */
+.tabs {
+  display: flex;
+  gap: .25rem;
+  border-bottom: 1px solid var(--line, #2b3244);
+  margin-bottom: .9rem;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem .8rem;
+  min-height: 44px;
+  background: none;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab:hover { color: var(--text); background: var(--panel-2); filter: none; }
+.tab.is-active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.tab-count {
+  padding: .05rem .45rem;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+}
+.tab.is-active .tab-count { background: var(--accent); color: var(--brass-ink, #17130a); }
+
+@media (max-width: 480px) {
+  .tab { padding: .55rem .5rem; font-size: .84rem; }
+  .tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 .panel-body > .combo:last-child { margin-bottom: 0; }
 
 @media (prefers-reduced-motion: reduce) {

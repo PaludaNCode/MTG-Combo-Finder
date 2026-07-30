@@ -23,6 +23,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   already assemble, ranked by how many. A list of combos hides this: cutting a
   card that turns up in four of them costs four combos, which is exactly what
   you want to know before trimming a deck.
+- **Suggestions split by colour** — two tabs, *In your colours* and *Other
+  colours*. A red card is noise for a deck that isn't red, so it goes behind a
+  tab rather than into the list. Colour identity is the commander's when there
+  is one, and the colours the deck actually plays when there isn't.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **What a combo gives you**, as chips rather than a comma-run: game-ending

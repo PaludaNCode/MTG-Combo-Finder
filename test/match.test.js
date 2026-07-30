@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { matchDeck, deckIdentity, expand, deckNameSet, computeSuggestions } = require('../combos.js');
+const { matchDeck, deckIdentity, withinIdentity, expand, deckNameSet, computeSuggestions } = require('../combos.js');
 
 // A miniature stand-in for the published combos.json.
 const DATASET = {
@@ -70,12 +70,19 @@ test('matchDeck: suggestions rank the card that unlocks the most combos first', 
   assert.strictEqual(suggestions[1].card, 'Rings of Brighthearth');
 });
 
-test('matchDeck: an unknown commander disables color filtering rather than hiding everything', () => {
+test('matchDeck: an unknown commander falls back to the colours the deck plays', () => {
+  // The deck here is blue and colourless, so white and black suggestions are
+  // still off-colour even with no commander to read it from. Previously this
+  // gave up and filtered nothing, which put red cards in front of mono-blue
+  // decks as though they were castable.
   const commanders = [{ card: 'Some Unreleased Commander' }];
   const result = matchDeck(DATASET, deckNameSet(commanders.concat(DECK)), commanders);
-  assert.strictEqual(result.identity, null);
-  assert.strictEqual(result.almostIncludedByAddingColors.length, 0);
-  assert.ok(result.almostIncluded.length >= 4, 'everything one card away stays visible');
+  assert.deepStrictEqual([...result.identity].sort(), ['U']);
+  assert.ok(result.almostIncludedByAddingColors.length > 0, 'off-colour combos are still separated');
+  assert.ok(
+    result.almostIncluded.every((c) => !/[WBRG]/.test(String(c.i).replace(/C/g, ''))),
+    'nothing outside the deck colours is offered as in-colour'
+  );
 });
 
 test('expand: compact rows become the shape the renderer expects', () => {
@@ -338,4 +345,41 @@ test('splitResults: what is shown stays in tier order', () => {
 test('splitResults: handles junk input', () => {
   assert.deepStrictEqual(splitResults(null, 4), { shown: [], hidden: [] });
   assert.deepStrictEqual(splitResults([], 4), { shown: [], hidden: [] });
+});
+
+test('deckIdentity: the commander decides the deck colours', () => {
+  const identities = { 'Karador, Ghost Chieftain': 'BGW', 'Lightning Bolt': 'R', 'Island': 'U' };
+  const id = deckIdentity([{ card: 'Karador, Ghost Chieftain' }], identities, new Set(['island']));
+  assert.deepStrictEqual([...id].sort(), ['B', 'G', 'W'], 'the commander wins, not the deck contents');
+});
+
+test('deckIdentity: without a commander, fall back to what the deck plays', () => {
+  // A 60-card list, or the commander box simply left empty. Previously this
+  // returned null and switched colour filtering off entirely, so off-colour
+  // cards were suggested as if the deck could cast them.
+  const identities = { 'Swords to Plowshares': 'W', 'Vindicate': 'BW', 'Sol Ring': '' };
+  const deck = new Set(['swords to plowshares', 'vindicate', 'sol ring']);
+  const id = deckIdentity([], identities, deck);
+  assert.deepStrictEqual([...id].sort(), ['B', 'W']);
+});
+
+test('deckIdentity: an unrecognised commander still falls back to the deck', () => {
+  const identities = { 'Vindicate': 'BW' };
+  const id = deckIdentity([{ card: 'Some Unreleased Commander' }], identities, new Set(['vindicate']));
+  assert.deepStrictEqual([...id].sort(), ['B', 'W']);
+});
+
+test('deckIdentity: nothing recognisable means do not filter', () => {
+  assert.strictEqual(deckIdentity([], { 'Vindicate': 'BW' }, new Set(['nothing we know'])), null);
+  assert.strictEqual(deckIdentity([], null, new Set(['vindicate'])), null);
+});
+
+test('withinIdentity: a three-colour deck accepts any pair inside it', () => {
+  const abzan = new Set(['B', 'G', 'W']);
+  for (const ci of ['', 'C', 'W', 'B', 'G', 'BW', 'GW', 'BG', 'BGW']) {
+    assert.strictEqual(withinIdentity({ i: ci }, abzan), true, ci || 'colourless');
+  }
+  for (const ci of ['R', 'U', 'BR', 'GU', 'WUBRG']) {
+    assert.strictEqual(withinIdentity({ i: ci }, abzan), false, ci);
+  }
 });
