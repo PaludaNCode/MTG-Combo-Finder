@@ -1,0 +1,30 @@
+name: Look up card text
+
+# Manual, and deliberately tiny: given card names, print their oracle text from
+# Scryfall into the run summary. It exists so that "what does this card actually
+# say?" is answered by reading the card rather than by inferring it from the
+# shape of the combo data.
+on:
+  workflow_dispatch:
+    inputs:
+      cards:
+        description: Card names, comma separated
+        required: true
+        default: Carrion Feeder, Viscera Seer, Umbral Collar Zealot
+
+permissions:
+  contents: read
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read the cards
+        env:
+          CARDS: ${{ inputs.cards }}
+        run: node tools/lookup-card.js
