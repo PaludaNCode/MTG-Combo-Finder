@@ -86,6 +86,14 @@ function measure(win, doc) {
     card: piecesPanel.querySelector('.card-name').textContent,
     badge: piecesPanel.querySelector('.badge').textContent,
   } : null;
+  const tabs = [...doc.querySelectorAll('.tabs .tab')].map((t) => ({
+    label: t.querySelector('.tab-label').textContent,
+    count: t.querySelector('.tab-count').textContent,
+    active: t.classList.contains('is-active'),
+    selected: t.getAttribute('aria-selected'),
+    paneVisible: !doc.getElementById(t.getAttribute('aria-controls')).hidden,
+    height: t.offsetHeight,
+  }));
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
     text: c.textContent, win: c.classList.contains('tier-win'),
@@ -100,6 +108,7 @@ function measure(win, doc) {
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
     topPiece,
+    tabs,
     sideBySide: out.left >= form.right - 1,
     formWidth: Math.round(form.width),
     outWidth: Math.round(out.width),
@@ -229,9 +238,24 @@ function serve(dir, extra) {
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    if (v.panels.length < 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
-    if (!v.topPiece) problems.push('the combo-pieces overview did not render');
-    else if (!/in \d+ combos/.test(v.topPiece.badge)) problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
+    if (v.panels.length < 3) problems.push(`expected 3 panels, got ${v.panels.length}`);
+    if (!v.topPiece) {
+      problems.push('the combo-pieces overview did not render');
+    } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
+      problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
+    }
+
+    if (v.tabs.length !== 2) {
+      problems.push(`expected 2 suggestion tabs, got ${v.tabs.length}`);
+    } else {
+      const active = v.tabs.filter((t) => t.active);
+      if (active.length !== 1) problems.push(`${active.length} tabs active; exactly one should be`);
+      const visible = v.tabs.filter((t) => t.paneVisible);
+      if (visible.length !== 1) problems.push(`${visible.length} tab panes visible; exactly one should be`);
+      if (v.tabs.some((t) => t.selected !== String(t.active))) problems.push('aria-selected does not match the active tab');
+      if (v.tabs.some((t) => t.height < 44)) problems.push('a tab is under 44px tall');
+      if (!/in your colours/i.test(v.tabs[0].label)) problems.push(`first tab reads "${v.tabs[0].label}"`);
+    }
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
     // Empty chips must fail: otherwise every assertion below passes vacuously.
@@ -268,12 +292,13 @@ function serve(dir, extra) {
 
     const layout = wide ? `two columns (${v.formWidth}px + ${v.outWidth}px)` : `stacked (${v.outWidth}px)`;
     const pieceNote = v.topPiece ? `top piece ${v.topPiece.card} ${v.topPiece.badge}` : 'no pieces';
+    const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
     const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${v.panels.length} panels, ${pieceNote}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${chipNote}`);
     }
   }
 

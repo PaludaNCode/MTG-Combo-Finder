@@ -52,22 +52,34 @@
   // database and we do the matching here. This mirrors what their
   // find-my-combos endpoint does server-side.
 
-  // Colour identity of the deck, from its commanders where we know them.
-  // Returns null when no commander is recognized, which means "don't filter".
-  function deckIdentity(commanders, cardIdentity) {
+  // What the deck supports colour-wise.
+  //
+  // The commander decides it when there is one — that is the Commander rule,
+  // and a Golgari commander does not let you cast the white half of a card.
+  // Without a commander (a 60-card list, or the box left empty) fall back to
+  // the colours the deck itself actually plays, so filtering still happens.
+  // Only if neither is recognizable does this return null, meaning "no idea,
+  // don't filter".
+  function deckIdentity(commanders, cardIdentity, deckNames) {
     if (!cardIdentity) return null;
     const byKey = Object.create(null);
     for (const name of Object.keys(cardIdentity)) byKey[nameKey(name)] = cardIdentity[name];
 
-    let known = false;
-    const colors = new Set();
-    for (const entry of commanders || []) {
-      const identity = byKey[nameKey(entry.card || entry)];
-      if (identity === undefined) continue;
-      known = true;
-      for (const c of String(identity)) if (c !== 'C') colors.add(c);
-    }
-    return known ? colors : null;
+    const collect = (keys) => {
+      let known = false;
+      const colors = new Set();
+      for (const key of keys) {
+        const identity = byKey[key];
+        if (identity === undefined) continue;
+        known = true;
+        for (const c of String(identity)) if (c !== 'C') colors.add(c);
+      }
+      return known ? colors : null;
+    };
+
+    const fromCommanders = collect((commanders || []).map((e) => nameKey(e.card || e)));
+    if (fromCommanders) return fromCommanders;
+    return deckNames ? collect([...deckNames]) : null;
   }
 
   function withinIdentity(combo, identity) {
@@ -83,7 +95,7 @@
   // outside the deck's colours.
   function matchDeck(dataset, deckNames, commanders) {
     const combos = (dataset && dataset.combos) || [];
-    const identity = deckIdentity(commanders, dataset && dataset.cardIdentity);
+    const identity = deckIdentity(commanders, dataset && dataset.cardIdentity, deckNames);
     const included = [];
     const almost = [];
     const almostByAddingColors = [];

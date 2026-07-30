@@ -226,24 +226,80 @@
     }
     const pieces = DeckCombos.comboPieces(included);
     const body = panel(container, 'pieces', 'Cards carrying your combos', pieces.length);
-    const top = pieces[0];
-    body.appendChild(el('p', 'section-note', top.count > 1
-      ? `${top.card} appears in ${top.count} of them — cutting it costs you all ${top.count}.`
-      : 'Each of these appears in one combo.'));
+    // The per-card count says this already; a sentence restating it for the
+    // top card is just noise above the list.
     pieces.forEach((p, i) => body.appendChild(pieceCard(p, i + 1)));
   }
 
-  function renderSuggestions(container, key, title, suggestions, deckNames, emptyText) {
-    if (!suggestions.length && !emptyText) {
-      container.textContent = '';
-      return;
-    }
-    const body = panel(container, key, title, suggestions.length || null);
-    if (!suggestions.length) {
-      body.appendChild(el('p', 'empty', emptyText));
-      return;
-    }
-    suggestions.forEach((s, i) => body.appendChild(suggestionCard(s, i + 1, deckNames)));
+  // Suggestions in two tabs. An off-colour card is still worth knowing about —
+  // decks get rebuilt — but if your deck isn't red, a red card is noise while
+  // you're reading the list, so it goes behind a tab instead of sitting in the
+  // flow underneath.
+  function renderSuggestions(container, onColour, offColour, deckNames, identity) {
+    const total = onColour.length + offColour.length;
+    const colours = identity && identity.size ? [...identity].join('').toUpperCase() : null;
+    const body = panel(container, 'suggestions', 'Suggested additions', total || null);
+
+    const tabs = [
+      {
+        id: 'in-colour',
+        label: colours ? 'In your colours · ' + colours : 'In your colours',
+        items: onColour,
+        empty: 'No single-card addition would complete a combo in your colours.',
+      },
+      {
+        id: 'off-colour',
+        label: 'Other colours',
+        items: offColour,
+        empty: 'Nothing outside your colours would complete a combo either.',
+      },
+    ];
+
+    const strip = el('div', 'tabs');
+    strip.setAttribute('role', 'tablist');
+    const built = [];
+
+    tabs.forEach((tab, index) => {
+      const button = el('button', 'tab');
+      button.type = 'button';
+      button.setAttribute('role', 'tab');
+      button.id = 'tab-' + tab.id;
+      button.setAttribute('aria-controls', 'pane-' + tab.id);
+      button.appendChild(el('span', 'tab-label', tab.label));
+      button.appendChild(el('span', 'tab-count', String(tab.items.length)));
+
+      const pane = el('div', 'tab-pane');
+      pane.id = 'pane-' + tab.id;
+      pane.setAttribute('role', 'tabpanel');
+      pane.setAttribute('aria-labelledby', button.id);
+      if (tab.items.length) {
+        tab.items.forEach((s, i) => pane.appendChild(suggestionCard(s, i + 1, deckNames)));
+      } else {
+        pane.appendChild(el('p', 'empty', tab.empty));
+      }
+
+      const select = () => {
+        built.forEach((b, i) => {
+          const active = i === index;
+          b.button.classList.toggle('is-active', active);
+          b.button.setAttribute('aria-selected', String(active));
+          b.button.tabIndex = active ? 0 : -1;
+          b.pane.hidden = !active;
+        });
+      };
+      button.addEventListener('click', select);
+
+      built.push({ button, pane, select });
+      strip.appendChild(button);
+    });
+
+    body.appendChild(strip);
+    built.forEach((b) => body.appendChild(b.pane));
+
+    // Open on whichever tab has something in it: landing on an empty "In your
+    // colours" while suggestions sit unseen behind the other tab would read as
+    // "there are no suggestions".
+    (onColour.length || !offColour.length ? built[0] : built[1]).select();
   }
 
   function renderResults(results, deckNames) {
@@ -268,20 +324,10 @@
 
     renderSuggestions(
       $('suggestions'),
-      'suggestions',
-      'Suggested additions',
       DeckCombos.computeSuggestions(results.almostIncluded, deckNames),
-      deckNames,
-      'No single-card additions would complete a combo (within your color identity).'
-    );
-
-    renderSuggestions(
-      $('offcolor'),
-      'offcolor',
-      'Outside your color identity',
       DeckCombos.computeSuggestions(results.almostIncludedByAddingColors, deckNames),
       deckNames,
-      '' // hide section entirely when empty
+      results.identity
     );
   }
 
