@@ -116,13 +116,25 @@
   // them in different orders — and with no description shown, that order carries
   // nothing. Alphabetical makes a row scannable and two rows comparable.
   const alphabetical = (names) => names.slice().sort((a, b) => a.localeCompare(b));
-  const comboCardNames = (variant) => alphabetical(DeckCombos.variantCardNames(variant));
 
-  function comboCard(variant, deckNames) {
+  // `lead` names the card the reader is already looking at — the card a
+  // suggestion is about, or the one whose combos are being listed. Where there is
+  // one, it goes first and the rest follow alphabetically: a list of combos under
+  // "Scurry Oak" that buries Scurry Oak in the middle of each line makes the
+  // reader find it again on every row. With no lead, plain alphabetical.
+  function comboCardNames(variant, lead) {
+    const names = DeckCombos.variantCardNames(variant);
+    if (!lead) return alphabetical(names);
+    const key = DeckCombos.nameKey(lead);
+    const first = names.filter((n) => DeckCombos.nameKey(n) === key);
+    return first.concat(alphabetical(names.filter((n) => DeckCombos.nameKey(n) !== key)));
+  }
+
+  function comboCard(variant, deckNames, lead) {
     const card = el('article', 'combo');
 
     const header = el('h3');
-    comboCardNames(variant).forEach((name, i) => {
+    comboCardNames(variant, lead).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
       const inDeck = !deckNames || deckNames.has(DeckCombos.nameKey(name));
       header.appendChild(el('span', inDeck ? 'card-name' : 'card-name missing', name));
@@ -312,7 +324,14 @@
 
     const details = el('details');
     details.appendChild(el('summary', null, 'Combos this unlocks'));
-    group.unlocks.forEach((v) => details.appendChild(comboCard(v, deckNames)));
+    group.unlocks.forEach((v) => {
+      // The card being suggested is the one this deck does not hold. Read per
+      // variant rather than taken from the group: a group of interchangeable
+      // cards has a different one of them in each of its combos.
+      const missing = DeckCombos.variantCardNames(v)
+        .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
+      details.appendChild(comboCard(v, deckNames, missing));
+    });
     card.appendChild(details);
 
     return card;
@@ -398,7 +417,7 @@
 
     const details = el('details');
     details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
-    piece.combos.forEach((v) => details.appendChild(comboCard(v, null)));
+    piece.combos.forEach((v) => details.appendChild(comboCard(v, null, piece.card)));
     card.appendChild(details);
 
     return card;

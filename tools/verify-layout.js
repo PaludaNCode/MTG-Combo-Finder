@@ -241,6 +241,20 @@ function measure(win, doc) {
     candidates: [...doc.querySelectorAll('#slots .candidates .card-name')].map((e) => e.textContent),
     comboIds: [...doc.querySelectorAll('#slots .combo-link a')].map((a) => a.getAttribute('href')),
   };
+  // Combos listed *under* a card have to start with that card. Read from the
+  // closed <details> — the rows are in the DOM whether or not it is open.
+  const nested = (scope, cardSelector) => [...doc.querySelectorAll(scope)].slice(0, 3).map((row) => {
+    const focal = (row.querySelector(cardSelector) || {}).textContent || '';
+    const combos = [...row.querySelectorAll('details > .combo > h3')].map((h) => (
+      [...h.querySelectorAll(':scope > .card-name')].map((n) => n.textContent)
+    ));
+    return { focal, combos };
+  });
+  const leads = {
+    suggestions: nested('.tab-pane:not([hidden]) .combo.suggestion', 'h3 > .card-name'),
+    pieces: nested('#pieces .combo.suggestion', '.sug-head > .card-name'),
+  };
+
   const ageEl = doc.getElementById('data-age');
   const dataAge = {
     hidden: ageEl ? ageEl.hidden : null,
@@ -292,6 +306,7 @@ function measure(win, doc) {
     slots,
     stuck,
     order,
+    leads,
     dataAge,
     badges,
     sizes,
@@ -600,6 +615,10 @@ function serve(dir, extra, onVerdict) {
   });
 }
 
+// The same comparison key the page uses: a decklist writes "Valki, God of Lies"
+// where Spellbook writes both faces.
+const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toLowerCase();
+
 (async () => {
   const browser = findBrowser();
   if (!browser) {
@@ -898,6 +917,26 @@ function serve(dir, extra, onVerdict) {
         problems.push(`a combo row is not alphabetical: "${row.label}"`);
         break;
       }
+    }
+    // Under a card, that card leads and the rest follow alphabetically.
+    for (const [where, rows] of Object.entries(v.leads)) {
+      if (!rows.length) { problems.push(`no ${where} rows to check the card order of`); continue; }
+      let checked = 0;
+      for (const row of rows) {
+        for (const names of row.combos) {
+          if (names.length < 2) continue;
+          checked += 1;
+          if (DeckCombos_nameKey(names[0]) !== DeckCombos_nameKey(row.focal)) {
+            problems.push(`${where}: "${names.join(' + ')}" does not start with ${row.focal}`);
+          }
+          const rest = names.slice(1);
+          const sorted = rest.slice().sort((a, b) => a.localeCompare(b));
+          if (rest.join('|') !== sorted.join('|')) {
+            problems.push(`${where}: the cards after ${row.focal} are not alphabetical in "${names.join(' + ')}"`);
+          }
+        }
+      }
+      if (!checked) problems.push(`no ${where} combo lists the cards of, so the lead order is untested`);
     }
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');

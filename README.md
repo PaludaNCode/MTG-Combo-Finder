@@ -162,10 +162,30 @@ description shown that order carries nothing. Sorting is done at render time onl
 matching, grouping and slot-assignment code keeps the published order, since `groupVariants()`
 reasons about the position of a card within a combo.
 
-Both apply to **Cards carrying your combos** as well: the cards themselves stay ranked by how
+**Except where a combo is listed under a card: then that card goes first.** Both nested lists
+— *Combos this unlocks* under a suggestion, and *The combos it holds together* under one of
+your own cards — are about a particular card, and alphabetical order buries it somewhere
+different on every line, so the reader has to find it again each time. It leads instead, and
+the rest of the combo follows alphabetically:
+
+```
+1. Thassa's Oracle  +3   1 × 2-card  1 × 3-card  1 × 4-card
+   ▾ Combos this unlocks
+       Thassa's Oracle + Demonic Consultation
+       Thassa's Oracle + Grinding Station + Memnite + Underworld Breach
+       Thassa's Oracle + Mana Severance + Selective Memory
+```
+
+For a suggestion the lead is read **per variant**, not from the group: a group of
+interchangeable cards has a different one of them in each of its combos, so taking the
+group's representative would put the wrong card first on most rows. It is the card the deck
+does not hold — which is also why it renders in the "missing" colour, so what you would be
+adding reads first and reads differently.
+
+Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that
-appears in four costs four — while the combos listed under each one are ordered and named the
-same way as above. Measured on the fixture deck, Scurry Oak's ten combos come back as sizes
+appears in four costs four — while the combos under each one are size-ordered and lead with
+that card. Measured on the fixture deck, Scurry Oak's ten combos come back as sizes
 `2,3,3,3,3,3,3,3,3,3`.
 
 ### Ranking, and what popularity is for
