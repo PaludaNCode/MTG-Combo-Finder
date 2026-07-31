@@ -24,10 +24,11 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   interchangeable cards, **Compare all N on Scryfall** opens every one of them on a
   single Scryfall page. See
   [Comparing a whole choice at once](#comparing-a-whole-choice-at-once).
-- **Which bracket the list is in** — the Game Changers your deck plays and the
-  two-card combos it can win with, and the lowest Commander bracket that leaves it
-  eligible for. A floor, never a verdict, and it says which criteria it did not
-  check — see [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
+- **Which bracket the list is in** — five pips under the colour identity: the brackets
+  your list has ruled itself out of, the floor it lands on, and the ones still open. A
+  floor, never a verdict; hover, focus or tap the pips for the reasoning, the Game
+  Changers behind it and the criteria it did not check — see
+  [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
 - **What each recommendation's count is made of** — `Thassa's Oracle +3` reads
   *1 × 2-card · 1 × 3-card · 1 × 4-card*, on the card's own line, smallest first. A
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
@@ -585,13 +586,49 @@ the page checks the two and **names the ones it did not check**:
 | 4 Optimized | no limit on either |
 | 5 cEDH | a choice about how you play, not a fact about the list |
 
-So what the panel reports is a **floor** — the lowest bracket the list is still
+So what the page reports is a **floor** — the lowest bracket the list is still
 eligible for — and never a verdict. A deck with no Game Changers and no two-card
 win *could* be bracket 2; whether it is depends on mass land denial, chained extra
 turns, how many tutors counts as "a few", and how early a combo lands. None of
-those is a card name, so none of them is guessed at. That caveat is on the page,
-next to the number, and deliberately **not** foldable: a bracket number with its
-limits hidden behind a control reads as the whole answer.
+those is a card name, so none of them is guessed at.
+
+### One line, in the shape of the colour identity
+
+The check is **a label and five pips**, sitting directly under Colour identity and
+built from the same geometry — two readings of one list, so they read as a pair:
+
+```
+COLOUR IDENTITY  {U}{G}
+BRACKET          1̶  2̶  ③  4  5
+```
+
+Brackets the list has ruled itself out of are struck through and dimmed, the floor is
+the one filled pip, and the brackets still open are outlined. Three states, because
+"could be this" is genuinely not a milder version of either "cannot" or "is". Showing
+the whole scale is what makes the number a position rather than a score from nowhere,
+and it says *floor, not verdict* without a word: the lit range runs to the right-hand
+end.
+
+**Everything else is one hover, focus or tap away** — the reasoning, the Game Changers
+**with their EDHREC and Scryfall links**, the combos behind the floor, and the list of
+criteria nobody checked.
+
+This is a deliberate reversal. The caveat used to be printed under the number and kept
+unfoldable, on the argument that a bare bracket number reads as the whole answer. That
+argument still holds, which is why the hover panel carries the full caveat rather than
+a summary of it, and why the panel is reachable three ways rather than by mouse alone:
+
+- **Hover** for a mouse, via `:hover` on the wrapper.
+- **Keyboard**, via `:focus-within` — the pips are a `<button>`, so Tab reaches them
+  and Escape closes the panel.
+- **Tap**, via `aria-expanded` toggled on click, because a phone has no hover at all.
+  A `title` tooltip alone would have left phones with a number and no way to ask why.
+
+The pips are `aria-hidden`: five numbered circles read out as "1 2 3 4 5", which is
+worse than nothing. The button carries the whole answer as its accessible name —
+*"Bracket 3 at the earliest — Upgraded. Why this bracket?"* — which the layout test
+asserts, along with the pip states, that the panel starts closed, that a press opens
+it and a second press closes it, and that the card links survived the move.
 
 **"Two-card infinite combo" means a two-card line that wins**, which the page
 already knows: green tier, by the same written-down inventory the result chips use.

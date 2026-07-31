@@ -702,10 +702,24 @@
   // the name people actually use for it.
   const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
 
-  // A floor, never a verdict — see bracketCheck() in combos.js for why, and for
-  // the two criteria this rests on. The caveat is on the page rather than in the
-  // commit message: a bracket number with no statement of what went unchecked
-  // would be read as the whole answer.
+  // The five brackets as a row of pips, in the shape of the colour identity line
+  // above it: a label, a compact visual, no prose. Brackets the list has ruled
+  // itself out of are struck through, the floor is filled, the ones still open are
+  // outlined — so the number reads as a position on a scale rather than a score from
+  // nowhere, and "anything from here up" is visible without a word of explanation.
+  //
+  // A floor, never a verdict — see bracketCheck() in combos.js for why, and for the
+  // two criteria this rests on.
+  //
+  // Everything that used to be printed under the number now lives in one panel
+  // attached to the pips, and that is a real trade: the caveat was previously kept
+  // deliberately unfoldable, on the grounds that a bare bracket number reads as the
+  // whole answer. It is now one hover, focus or tap away. What follows from that is
+  // that the panel has to carry everything a reader needed in order not to be misled
+  // — the reasoning, the Game Changers *with their links*, the combos behind the
+  // floor, and the criteria nobody checked — rather than being a summary of it.
+  const BRACKET_STEPS = [1, 2, 3, 4, 5];
+
   function renderBracket(container, bracket) {
     container.textContent = '';
     // No published list means the question cannot be asked at all. Half a bracket
@@ -716,14 +730,37 @@
     const wins = bracket.twoCardWins || [];
     const floor = bracket.floor;
 
-    const body = panel(container, 'bracket', 'Bracket check', null);
+    const line = el('p', 'bracket-line');
+    line.appendChild(el('span', 'bracket-label', 'Bracket'));
 
-    const headline = el('p', 'bracket-floor');
-    headline.appendChild(el('strong', null, floor > 2
+    // The pips and their explanation share a wrapper: the panel is positioned
+    // against it, and shown while anything inside it is hovered or focused.
+    const wrap = el('span', 'bracket-wrap');
+
+    const headline = floor > 2
       ? `Bracket ${floor}${floor === 4 ? '' : ' at the earliest'}`
-      : 'Nothing here rules out bracket 2'));
-    headline.appendChild(el('span', 'bracket-name', ' — ' + BRACKET_NAMES[floor]));
-    body.appendChild(headline);
+      : 'Nothing here rules out bracket 2';
+    const named = headline + ' — ' + BRACKET_NAMES[floor];
+
+    const scale = el('button', 'bracket-scale');
+    scale.type = 'button';
+    scale.setAttribute('aria-expanded', 'false');
+    scale.setAttribute('aria-controls', 'bracket-why');
+    // Five numbered circles read as "1 2 3 4 5" to a screen reader, which is worse
+    // than nothing. The pips are decorative; the button carries the answer.
+    scale.setAttribute('aria-label', named + '. Why this bracket?');
+    scale.title = named;
+    BRACKET_STEPS.forEach((n) => {
+      const state = n < floor ? ' out' : n === floor ? ' floor' : ' open';
+      const pip = el('span', 'step' + state, String(n));
+      pip.setAttribute('aria-hidden', 'true');
+      scale.appendChild(pip);
+    });
+    wrap.appendChild(scale);
+
+    const why = el('div', 'bracket-why');
+    why.id = 'bracket-why';
+    why.appendChild(el('p', 'why-floor', named));
 
     const counts = [];
     if (changers.length) {
@@ -734,41 +771,58 @@
         ? '1 two-card combo that ends the game'
         : wins.length + ' two-card combos that end the game');
     }
-    const why = el('p', 'bracket-why');
-    if (floor === 4) {
-      why.textContent = `${counts.join(' · ')}. Bracket 3 allows three Game Changers, so a list with more sits at 4.`;
-    } else if (floor === 3) {
-      why.textContent = `${counts.join(' · ')}. Brackets 1 and 2 allow neither, so 3 is the floor.`;
-    } else {
-      why.textContent = 'No Game Changers, and no two-card combo that says it ends the game.';
-    }
-    body.appendChild(why);
+    const reason = floor === 4
+      ? `${counts.join(' · ')}. Bracket 3 allows three Game Changers, so a list with more sits at 4.`
+      : floor === 3
+        ? `${counts.join(' · ')}. Brackets 1 and 2 allow neither, so 3 is the floor.`
+        : 'No Game Changers, and no two-card combo that says it ends the game.';
+    why.appendChild(el('p', 'why-reason', reason));
 
+    // Named and still linked. These are the cards the answer rests on, and a name
+    // you cannot look up is a claim the reader has to take on trust.
     if (changers.length) {
-      const list = el('p', 'gc-list');
-      list.appendChild(el('span', 'gap-label', 'Game Changers in your deck: '));
+      const list = el('p', 'why-cards');
+      list.appendChild(el('span', 'why-label', 'Game Changers you play: '));
       changers.forEach((name, i) => {
         if (i > 0) list.appendChild(document.createTextNode(' · '));
         list.appendChild(el('span', 'card-name', name));
         list.appendChild(cardLinks(name));
       });
-      body.appendChild(list);
+      why.appendChild(list);
     }
 
+    // The combos behind the floor, named rather than drawn as cards: each is already
+    // rendered in full under "Combos in your deck", and repeating them there was the
+    // bulk of what made this a panel in the first place.
     if (wins.length) {
-      const details = el('details');
-      details.appendChild(el('summary', null, wins.length === 1
-        ? 'The two-card combo' : `The ${wins.length} two-card combos`));
-      wins.forEach((v) => details.appendChild(comboCard(v, null)));
-      body.appendChild(details);
+      const list = el('p', 'why-cards');
+      list.appendChild(el('span', 'why-label', wins.length === 1
+        ? 'The two-card win: ' : `The ${wins.length} two-card wins: `));
+      wins.forEach((v, i) => {
+        if (i > 0) list.appendChild(document.createTextNode(' · '));
+        list.appendChild(el('span', 'card-name', comboCardNames(v).join(' + ')));
+      });
+      why.appendChild(list);
     }
 
-    body.appendChild(el('p', 'bracket-note',
-      'Only the two criteria a card list can settle are checked: the cards Wizards names as '
-      + 'Game Changers, and combos your deck can already assemble out of two cards that say they '
-      + 'end the game. Mass land denial, chained extra turns, how many tutors counts as “a few” '
-      + 'and how early a combo lands are judgement calls this page does not make — so this is the '
-      + 'lowest bracket the list is eligible for, not a verdict on the deck.'));
+    why.appendChild(el('p', 'why-note',
+      'Only two of the criteria can be read off a card list, and those are the two above. '
+      + 'Mass land denial, chained extra turns, how many tutors counts as “a few” and how early a '
+      + 'combo lands are judgement calls this page does not make — so this is the lowest bracket the '
+      + 'list is eligible for, not a verdict on the deck.'));
+
+    wrap.appendChild(why);
+    line.appendChild(wrap);
+    container.appendChild(line);
+
+    // Hover and keyboard focus open it in CSS. This is for touch, where there is no
+    // hover: a tap opens it, a second tap closes it again.
+    scale.addEventListener('click', () => {
+      scale.setAttribute('aria-expanded', scale.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+    });
+    scale.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') scale.setAttribute('aria-expanded', 'false');
+    });
   }
 
   function renderResults(results, deckNames) {

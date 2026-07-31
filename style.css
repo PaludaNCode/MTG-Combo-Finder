@@ -489,25 +489,103 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* ---- the bracket check ---- */
 
-/* The number is the line people will read, so it gets the size. The bracket's
-   name follows it quietly: it labels the number rather than competing with it. */
-.bracket-floor { margin: 0 0 .2rem; font-size: 1.05rem; }
-.bracket-name { color: var(--muted); font-weight: 600; }
-.bracket-why { margin: 0 0 .5rem; font-size: .9rem; color: var(--muted); }
-.gc-list { margin: .2rem 0 .4rem; font-size: .9rem; color: var(--muted); }
-.gc-list .card-name { color: var(--text); font-weight: 600; }
-.gc-list .card-links { margin-left: .3rem; }
+/* One line, in the shape of the colour identity line above it: an uppercase label
+   and a compact visual. It shares .bracket-label's type with .identity-label on
+   purpose — two readings of the same list, so they should read as a pair. */
+.bracket-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: -.5rem 0 1rem;
+}
+.bracket-label {
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
 
-/* What the check did not look at. Quiet, but never folded away: a bracket number
-   with the caveat hidden behind a control reads as the whole answer. */
-.bracket-note {
-  margin: .6rem 0 0;
+/* The panel is positioned against this, and shown while anything inside is hovered
+   or focused. */
+.bracket-wrap { position: relative; display: inline-flex; }
+
+/* The pips. A button, because the explanation has to be reachable by keyboard and
+   by tap, not by hover alone — none of the button chrome comes with it. */
+.bracket-scale {
+  display: inline-flex;
+  gap: .25rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: help;
+}
+.bracket-scale:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 999px; }
+
+/* Same geometry as the mana pips, so the two lines sit at the same rhythm. */
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+/* Ruled out by the deck's own contents. Struck as well as dimmed: dimming alone
+   reads as "not selected", and these are brackets the list cannot be in. */
+.step.out { opacity: .38; text-decoration: line-through; }
+/* The floor itself, and the only filled pip on the line. */
+.step.floor { background: var(--accent); border-color: var(--accent); color: var(--brass-ink); }
+/* Still open. Brighter than a ruled-out pip and quieter than the floor, because
+   "could be this" is a third state and not a milder version of either. */
+.step.open { border-color: var(--line-strong); color: var(--text); }
+
+/* Why it landed there. Everything the panel used to print, one hover away. */
+.bracket-why {
+  display: none;
+  position: absolute;
+  top: calc(100% + .4rem);
+  left: 0;
+  z-index: 20;
+  /* Wide enough for the caveat to read as prose, never wider than the screen. */
+  width: max-content;
+  max-width: min(38rem, calc(100vw - 2rem));
+  padding: .7rem .85rem;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgb(0 0 0 / .35);
+}
+:root[data-theme='light'] .bracket-why { box-shadow: 0 8px 24px rgb(0 0 0 / .14); }
+
+/* Hover for a mouse, focus-within for a keyboard, aria-expanded for a tap. */
+.bracket-wrap:hover .bracket-why,
+.bracket-wrap:focus-within .bracket-why,
+.bracket-scale[aria-expanded='true'] + .bracket-why { display: block; }
+
+.why-floor { margin: 0 0 .25rem; font-size: 1rem; font-weight: 700; color: var(--text); }
+.why-reason { margin: 0 0 .4rem; font-size: .88rem; color: var(--muted); }
+.why-cards { margin: .2rem 0; font-size: .85rem; color: var(--muted); }
+.why-cards .card-name { color: var(--text); font-weight: 600; }
+.why-cards .card-links { margin-left: .3rem; font-size: .78rem; }
+.why-label { color: var(--muted); }
+/* What the check did not look at. Last, quiet, and never cut: the number is only
+   honest next to the list of things nobody judged. */
+.why-note {
+  margin: .5rem 0 0;
   padding-left: .6rem;
   border-left: 2px solid var(--line);
-  font-size: .82rem;
+  font-size: .8rem;
   line-height: 1.5;
   color: var(--muted);
-  max-width: 68ch;
 }
 
 /* ---- interchangeable cards ---- */

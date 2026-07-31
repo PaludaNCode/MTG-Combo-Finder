@@ -292,15 +292,39 @@ function measure(win, doc) {
   // The bracket check. Two of Wizards' criteria are readable off a card list and
   // the rest are not, so the panel has to state the floor *and* what it did not
   // look at — a bracket number on its own would be read as the whole answer.
+  const scaleButton = doc.querySelector('#bracket .bracket-scale');
+  const whyPanel = doc.querySelector('#bracket .bracket-why');
   const bracket = {
-    floor: (doc.querySelector('#bracket .bracket-floor') || {}).textContent || '',
-    why: (doc.querySelector('#bracket .bracket-why') || {}).textContent || '',
-    changers: [...doc.querySelectorAll('#bracket .gc-list .card-name')].map((e) => e.textContent),
-    twoCardCombos: doc.querySelectorAll('#bracket details > .combo').length,
-    caveat: (doc.querySelector('#bracket .bracket-note') || {}).textContent || '',
-    // The caveat must not be foldable: hidden behind a control it may as well not
-    // be written.
-    caveatFolded: Boolean(doc.querySelector('#bracket details .bracket-note')),
+    // One pip per bracket, and its state. Read as three lists rather than one
+    // string, because "which brackets are ruled out" is the claim being made.
+    pips: [...doc.querySelectorAll('#bracket .step')].map((p) => ({
+      n: p.textContent,
+      state: p.classList.contains('floor') ? 'floor' : p.classList.contains('out') ? 'out' : 'open',
+    })),
+    // The whole answer lives in the button's accessible name, since the pips are
+    // decorative — so this is also what a screen reader gets.
+    spoken: scaleButton ? scaleButton.getAttribute('aria-label') : '',
+    // Shut until asked. Read from computed style: display is what actually
+    // decides, and a panel left open would put the caveat back on the page.
+    closed: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
+    floor: (doc.querySelector('#bracket .why-floor') || {}).textContent || '',
+    why: (doc.querySelector('#bracket .why-reason') || {}).textContent || '',
+    changers: [...doc.querySelectorAll('#bracket .why-cards .card-name')].map((e) => e.textContent),
+    // The Game Changers keep their links, which is the one thing a hover cannot
+    // carry as plain text.
+    changerLinks: doc.querySelectorAll('#bracket .why-cards .card-links a').length,
+    caveat: (doc.querySelector('#bracket .why-note') || {}).textContent || '',
+    // The caveat is now behind a hover, so the ways of asking for it are what has to
+    // hold. Hover cannot be simulated here; a press is the path a phone has, and the
+    // one that would silently fail if the control were hover-only.
+    opensOnPress: (() => {
+      if (!scaleButton || !whyPanel) return false;
+      scaleButton.click();
+      const open = win.getComputedStyle(whyPanel).display !== 'none';
+      scaleButton.click(); // put it back, so nothing measured after this sees it open
+      return open;
+    })(),
+    closesOnSecondPress: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
   };
 
   const ageEl = doc.getElementById('data-age');
@@ -850,7 +874,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
         }
       }
-      if (s.panels < 5) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
+      if (s.panels < 4) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
       if (s.stuckRows < 2) wrong.push(`the one-slot-away rows did not render from a stamped page`);
       if (wrong.length) {
         failed = true;
@@ -955,8 +979,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
     // Bracket check, combos in your deck, one slot away, cards carrying them,
     // suggested additions.
-    if (v.panels.length < 5) problems.push(`expected 5 panels, got ${v.panels.length}`);
-    if (!v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket panel did not render');
+    // Four now: the bracket check stopped being a panel and became a line beside the
+    // colour identity, so a fifth would mean it had come back.
+    if (v.panels.length !== 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
+    if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
@@ -1152,23 +1178,44 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // The bracket check. The fixture holds two of its three Game Changers and a
     // two-card combo that wins, so the floor is 3 and both reasons are on screen.
     const bracket = v.bracket;
+    // Five pips, one per bracket: 1 and 2 ruled out, 3 the floor, 4 and 5 still
+    // open. The states are the claim — a scale that dims the wrong end says the
+    // deck cannot be something it can.
+    if (bracket.pips.length !== 5) problems.push(`${bracket.pips.length} bracket pips, expected 5`);
+    const pipState = bracket.pips.map((p) => p.n + ':' + p.state).join(' ');
+    if (pipState !== '1:out 2:out 3:floor 4:open 5:open') {
+      problems.push(`the bracket scale reads "${pipState}", expected 1 and 2 out, 3 the floor, 4 and 5 open`);
+    }
+    // The pips are decorative, so this is the entire answer for anyone not looking
+    // at them.
+    if (!/Bracket 3 at the earliest/.test(bracket.spoken) || !/Upgraded/.test(bracket.spoken)) {
+      problems.push(`the bracket scale is announced as "${bracket.spoken}"`);
+    }
     if (!/Bracket 3 at the earliest/.test(bracket.floor)) {
       problems.push(`the bracket floor reads "${bracket.floor}", expected bracket 3`);
     }
     if (!/Upgraded/.test(bracket.floor)) problems.push('the bracket number is not followed by its name');
-    if (bracket.changers.length !== 2) {
-      problems.push(`${bracket.changers.length} Game Changers named, expected the 2 the deck holds`);
+    if (bracket.changers.length < 3) {
+      problems.push(`${bracket.changers.length} cards named behind the pips, expected 2 Game Changers and the two-card wins`);
     }
     if (bracket.changers.includes('Bloom Tender')) {
       problems.push('a Game Changer the deck does not play was counted');
     }
+    // Cutting the prose must not cut the links with it: a card named without one is
+    // a claim the reader cannot check.
+    if (bracket.changerLinks < 4) {
+      problems.push(`${bracket.changerLinks} card links behind the pips, expected EDHREC and Scryfall for both Game Changers`);
+    }
     if (!/2 Game Changers/.test(bracket.why)) problems.push(`the bracket reason reads "${bracket.why}"`);
     if (!/two-card combo/.test(bracket.why)) problems.push('the two-card win was not given as a reason');
-    if (!bracket.twoCardCombos) problems.push('the two-card combos behind the floor are not shown');
-    // The caveat is the reason a number on this panel is honest. It must be
-    // present, and it must not be folded away.
-    if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket panel does not say what it did not check');
-    if (bracket.caveatFolded) problems.push('the bracket caveat is hidden behind a control');
+    // The line is a number and nothing else until asked — that is the whole point of
+    // the change — and the ways of asking have to work. Hover cannot be simulated,
+    // so the press path stands in: it is the one a phone has.
+    if (!bracket.closed) problems.push('the bracket explanation is on screen without being asked for');
+    if (!bracket.opensOnPress) problems.push('pressing the bracket scale did not open the explanation');
+    if (!bracket.closesOnSecondPress) problems.push('a second press did not close the bracket explanation again');
+    // The caveat is the reason a bracket number here is honest at all.
+    if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket explanation does not say what it did not check');
 
     // Taking a suggestion: the card lands in the decklist, the list is kept, and
     // the search runs again — proved by the deck holding more combos than it did.
@@ -1301,8 +1348,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
       const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
-      const bracketNote = `bracket ${v.bracket.floor.replace(/ — .*/, '')} `
-        + `(${v.bracket.changers.length} GC, ${v.bracket.twoCardCombos} two-card win)`;
+      const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
+        + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
