@@ -42,7 +42,7 @@ async function fullTemplateScan() {
   let variants = 0, withTemplates = 0, bytes = 0;
   // How much of the database is out of reach because of a template, split by
   // how close a deck could otherwise get.
-  let cardsAlongside = new Map();
+  const cardsAlongside = new Map();
 
   const push = createVariantScanner((v) => {
     variants += 1;

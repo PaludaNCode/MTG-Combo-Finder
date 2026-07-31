@@ -16,6 +16,9 @@
   // Bumping the name is how a payload shape change abandons old copies: a cached
   // response from before a new field existed would otherwise be served forever.
   const CACHE_NAME = 'mtg-combo-finder-data-v2';
+  // Which caches are ours to tidy up. Named by prefix rather than by listing the
+  // old versions, so bumping the name above is the only step a shape change needs.
+  const CACHE_PREFIX = 'mtg-combo-finder-data-';
 
   // Everything learned about a load, so a failure can be reported in full rather
   // than reduced to "it didn't work".
@@ -43,10 +46,44 @@
     ]);
   }
 
+  // Abandoning a copy is not the same as deleting it. Bumping CACHE_NAME stops us
+  // *reading* the old one and leaves it on the reader's disk for good — a ~28 MB
+  // orphan, per shape change, that nothing will ever ask for again. So every
+  // cache of ours that is not the current one is dropped.
+  //
+  // Housekeeping, and treated like it: once per worker, never awaited, never on
+  // the path to the data, and every failure ignored. A browser that will not let
+  // us tidy up is not a browser that should fail a search.
+  let tidied = false;
+  function dropStaleCaches(store) {
+    if (tidied || typeof store.keys !== 'function' || typeof store.delete !== 'function') return;
+    tidied = true;
+    let listing;
+    try {
+      listing = store.keys();
+    } catch (err) {
+      return; // a browser that will not list its caches still gets to use one
+    }
+    withDeadline(listing, []).then((names) => {
+      for (const name of names || []) {
+        // Only ours, and only the ones this version has stopped reading.
+        if (String(name) === CACHE_NAME || !String(name).startsWith(CACHE_PREFIX)) continue;
+        try {
+          Promise.resolve(store.delete(name)).catch(() => {});
+        } catch (err) {
+          /* nothing to do about it, and nothing depends on it */
+        }
+      }
+    }, () => {});
+  }
+
   function openCache() {
     const store = caches();
     if (!store) return Promise.resolve(null);
     try {
+      // Started alongside the open rather than before it, so a slow tidy-up
+      // cannot delay the search it is tidying up after.
+      dropStaleCaches(store);
       return withDeadline(store.open(CACHE_NAME), null);
     } catch (err) {
       return Promise.resolve(null);
@@ -155,6 +192,7 @@
   function matchAgainst(data, entries) {
     const deckNames = DeckCombos.deckNameSet(entries);
     const matched = DeckCombos.matchDeck(data, deckNames, entries);
+    const included = matched.included.map(DeckCombos.expand);
     return {
       meta: {
         updatedAt: data.updatedAt || null,
@@ -162,7 +200,10 @@
         source: diagnostics.source || null,
       },
       identity: matched.identity,
-      included: matched.included.map(DeckCombos.expand),
+      // The Game Changer list lives in the dataset, and the dataset stays here —
+      // so the bracket is worked out beside the match rather than in the page.
+      bracket: DeckCombos.bracketCheck(data, deckNames, included),
+      included,
       oneSlotAway: matched.oneSlotAway.map(DeckCombos.expand),
       slotCandidates: matched.slotCandidates,
       almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
@@ -191,6 +232,7 @@
     reset(options) {
       dataset = null;
       diagnostics = {};
+      tidied = false;
       if (options && typeof options.cacheDeadlineMs === 'number') cacheDeadlineMs = options.cacheDeadlineMs;
     },
   };

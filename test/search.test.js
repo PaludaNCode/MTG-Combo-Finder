@@ -25,7 +25,10 @@ const payload = (mark) => JSON.stringify({
 function fakeCaches(options) {
   const opts = options || {};
   const store = new Map(opts.entries || []);
-  const calls = { open: 0, match: 0, put: 0 };
+  const calls = { open: 0, match: 0, put: 0, keys: 0 };
+  // Which caches this browser holds, by name — the tidy-up's subject matter.
+  const names = (opts.names || []).slice();
+  const deleted = [];
   const cache = {
     match(url) {
       calls.match += 1;
@@ -40,18 +43,29 @@ function fakeCaches(options) {
       return Promise.resolve();
     },
   };
-  return {
-    calls,
-    store,
-    api: {
-      open() {
-        calls.open += 1;
-        if (opts.openHangs) return new Promise(() => {});
-        if (opts.openThrows) return Promise.reject(new Error('nope'));
-        return Promise.resolve(cache);
-      },
+  const api = {
+    open() {
+      calls.open += 1;
+      if (opts.openHangs) return new Promise(() => {});
+      if (opts.openThrows) return Promise.reject(new Error('nope'));
+      return Promise.resolve(cache);
     },
   };
+  // Left off entirely when the test is about a browser that has no listing at
+  // all, which has to be survivable rather than merely unlikely.
+  if (!opts.noKeys) {
+    api.keys = () => {
+      calls.keys += 1;
+      if (opts.keysHangs) return new Promise(() => {});
+      if (opts.keysThrows) throw new Error('no listing for you');
+      return Promise.resolve(names.slice());
+    };
+    api.delete = (name) => {
+      deleted.push(name);
+      return Promise.resolve(true);
+    };
+  }
+  return { calls, store, deleted, api };
 }
 
 function stubFetch(responses) {
@@ -166,6 +180,58 @@ test('the second search of a session touches neither network nor cache', async (
   const again = await ComboSearch.run(URL_A, DECK); // no fetch queued: any call throws
   assert.equal(again.meta.source, 'memory');
   assert.equal(fake.calls.match, 1);
+});
+
+// ---- tidying up after an abandoned cache version --------------------------
+//
+// Bumping CACHE_NAME stops the page reading an old copy. It does not delete it,
+// so before this the first version's ~28 MB sat in the reader's browser for good,
+// and every future shape change would have added another. Nothing observable goes
+// wrong, which is exactly why it is worth a test.
+
+const settled = () => new Promise((r) => setTimeout(r, 10));
+
+test('a copy left by an abandoned cache version is deleted', async () => {
+  const fake = setup({
+    caches: fakeCaches({ names: ['mtg-combo-finder-data-v1', ComboSearch.CACHE_NAME, 'unrelated-cache'] }),
+  });
+  stubFetch([new Response(payload('net'))]);
+  await ComboSearch.run(URL_A, DECK);
+  await settled();
+  assert.deepEqual(fake.deleted, ['mtg-combo-finder-data-v1'],
+    'the old version goes; the current one and other people\'s caches stay');
+});
+
+test('the tidy-up happens once a session, not once a search', async () => {
+  const fake = setup({ caches: fakeCaches({ names: ['mtg-combo-finder-data-v1'] }) });
+  stubFetch([new Response(payload('net'))]);
+  await ComboSearch.run(URL_A, DECK);
+  await ComboSearch.run(URL_A, DECK); // served from memory: any fetch would throw
+  await settled();
+  assert.equal(fake.calls.keys, 1);
+  assert.deepEqual(fake.deleted, ['mtg-combo-finder-data-v1']);
+});
+
+// The same rule the rest of the cache follows: it is a nicety, so every way it
+// can misbehave has to leave the search alone.
+test('a listing that never answers does not stop the search', async () => {
+  setup({ caches: fakeCaches({ keysHangs: true }) });
+  stubFetch([new Response(payload('net'))]);
+  assert.equal((await ComboSearch.run(URL_A, DECK)).meta.source, 'network');
+});
+
+test('a browser that refuses to list its caches still gets to use one', async () => {
+  const fake = setup({ caches: fakeCaches({ keysThrows: true }) });
+  stubFetch([new Response(payload('net'))]);
+  assert.equal((await ComboSearch.run(URL_A, DECK)).meta.source, 'network');
+  assert.equal(fake.calls.put, 1, 'the copy is still kept — only the tidy-up was lost');
+});
+
+test('a browser with no cache listing at all is fine', async () => {
+  const fake = setup({ caches: fakeCaches({ noKeys: true }) });
+  stubFetch([new Response(payload('net'))]);
+  assert.equal((await ComboSearch.run(URL_A, DECK)).meta.source, 'network');
+  assert.equal(fake.calls.put, 1);
 });
 
 // The failure report is the only thing a reader can act on, so what went wrong

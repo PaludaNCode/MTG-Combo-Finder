@@ -24,7 +24,10 @@ const path = require('node:path');
 const { execFile } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
+const MIME = {
+  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+  '.json': 'application/json', '.svg': 'image/svg+xml',
+};
 
 const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844, deck: 'marked' },
@@ -77,6 +80,12 @@ const FIXTURE = {
     'Murderous Redcap': 'BR',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
+  // Wizards' Game Changer list, as the fetcher publishes it. Which real cards are
+  // on it is not this test's business — it comes from Scryfall's own flag — so
+  // these are the fixture's own cards, chosen to make the page say something:
+  // two are in the deck (floor 3), and Bloom Tender is not, so a list of three
+  // must still report two.
+  gameChangers: ['Bloom Tender', 'Palinchron', 'Rings of Brighthearth'],
   // A combo slot that names a property rather than a card, and the deck's
   // Walking Ballista filling it. The rendered row has to say so — a combo that
   // appears because of a slot but cannot show which card filled it reads as
@@ -259,6 +268,20 @@ function measure(win, doc) {
     pieces: nested('#pieces .combo.suggestion', '.sug-head > .card-name'),
   };
 
+  // The bracket check. Two of Wizards' criteria are readable off a card list and
+  // the rest are not, so the panel has to state the floor *and* what it did not
+  // look at — a bracket number on its own would be read as the whole answer.
+  const bracket = {
+    floor: (doc.querySelector('#bracket .bracket-floor') || {}).textContent || '',
+    why: (doc.querySelector('#bracket .bracket-why') || {}).textContent || '',
+    changers: [...doc.querySelectorAll('#bracket .gc-list .card-name')].map((e) => e.textContent),
+    twoCardCombos: doc.querySelectorAll('#bracket details > .combo').length,
+    caveat: (doc.querySelector('#bracket .bracket-note') || {}).textContent || '',
+    // The caveat must not be foldable: hidden behind a control it may as well not
+    // be written.
+    caveatFolded: Boolean(doc.querySelector('#bracket details .bracket-note')),
+  };
+
   const ageEl = doc.getElementById('data-age');
   const dataAge = {
     hidden: ageEl ? ageEl.hidden : null,
@@ -312,6 +335,7 @@ function measure(win, doc) {
     stuck,
     order,
     leads,
+    bracket,
     dataAge,
     badges,
     sizes,
@@ -464,6 +488,35 @@ function runOne(vp) {
         };
         first.querySelector('.panel-head').click();
 
+        // Taking a suggestion. Every step of this is ours — appending the line,
+        // keeping the list, and re-submitting the form — and the only proof that
+        // it worked is that the deck now holds combos it did not hold before. A
+        // button that appends the card and forgets to search again looks fine.
+        const addBtn = doc.querySelector('.tab-pane:not([hidden]) .combo.suggestion .add-card');
+        const addRow = addBtn ? addBtn.closest('.combo.suggestion') : null;
+        const afterAdd = {
+          present: Boolean(addBtn),
+          spoken: addBtn ? addBtn.getAttribute('aria-label') : '',
+          card: addRow ? addRow.querySelector('h3 .card-name').textContent : '',
+          combosBefore: before.included.badge,
+        };
+        if (addBtn) {
+          addBtn.click();
+          await new Promise((r) => setTimeout(r, 600));
+          const now = measure(win, doc);
+          // The escape is doubled because this whole harness is a template literal
+          // in tools/verify-layout.js: a lone \\n would become a real newline here
+          // and break the string it sits in.
+          afterAdd.lastLine = doc.getElementById('decklist').value.trim().split('\\n').pop();
+          afterAdd.status = doc.getElementById('status').textContent;
+          afterAdd.combosAfter = now.included.badge;
+          afterAdd.suggestionsAfter = now.tabs.length ? now.tabs[0].count : null;
+          // Kept immediately rather than on the typing debounce: the search that
+          // follows must not be able to outrun the save.
+          const kept = win.localStorage.getItem('mtg-combo-finder.deck');
+          afterAdd.kept = kept ? JSON.parse(kept).decklist : '';
+        }
+
         // The decklist is kept between visits, so a search has to have stored
         // it — and Clear has to actually empty it, list and copy both.
         const storedDeck = win.localStorage.getItem('mtg-combo-finder.deck');
@@ -477,7 +530,7 @@ function runOne(vp) {
         };
 
         resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before,
-          { afterCollapse, expandedChips, storedDeck, afterClear }));
+          { afterCollapse, expandedChips, afterAdd, storedDeck, afterClear }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -708,7 +761,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
         }
       }
-      if (s.panels < 4) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
+      if (s.panels < 5) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
       if (s.stuckRows < 2) wrong.push(`the one-slot-away rows did not render from a stamped page`);
       if (wrong.length) {
         failed = true;
@@ -745,7 +798,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    if (v.panels.length < 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
+    // Bracket check, combos in your deck, one slot away, cards carrying them,
+    // suggested additions.
+    if (v.panels.length < 5) problems.push(`expected 5 panels, got ${v.panels.length}`);
+    if (!v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket panel did not render');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
@@ -900,6 +956,51 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const expectVia = vp.noWorker ? 'page' : 'worker';
     if (age.via !== expectVia) problems.push(`the search ran in the ${age.via}, expected the ${expectVia}`);
 
+    // The bracket check. The fixture holds two of its three Game Changers and a
+    // two-card combo that wins, so the floor is 3 and both reasons are on screen.
+    const bracket = v.bracket;
+    if (!/Bracket 3 at the earliest/.test(bracket.floor)) {
+      problems.push(`the bracket floor reads "${bracket.floor}", expected bracket 3`);
+    }
+    if (!/Upgraded/.test(bracket.floor)) problems.push('the bracket number is not followed by its name');
+    if (bracket.changers.length !== 2) {
+      problems.push(`${bracket.changers.length} Game Changers named, expected the 2 the deck holds`);
+    }
+    if (bracket.changers.includes('Bloom Tender')) {
+      problems.push('a Game Changer the deck does not play was counted');
+    }
+    if (!/2 Game Changers/.test(bracket.why)) problems.push(`the bracket reason reads "${bracket.why}"`);
+    if (!/two-card combo/.test(bracket.why)) problems.push('the two-card win was not given as a reason');
+    if (!bracket.twoCardCombos) problems.push('the two-card combos behind the floor are not shown');
+    // The caveat is the reason a number on this panel is honest. It must be
+    // present, and it must not be folded away.
+    if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket panel does not say what it did not check');
+    if (bracket.caveatFolded) problems.push('the bracket caveat is hidden behind a control');
+
+    // Taking a suggestion: the card lands in the decklist, the list is kept, and
+    // the search runs again — proved by the deck holding more combos than it did.
+    const added = v.afterAdd;
+    if (!added.present) {
+      problems.push('no suggestion offered a way to add the card');
+    } else {
+      if (added.lastLine !== `1 ${added.card}`) {
+        problems.push(`Add to deck appended "${added.lastLine}", expected "1 ${added.card}"`);
+      }
+      if (!added.kept || !added.kept.includes(added.card)) {
+        problems.push('an added card was not kept for the next visit');
+      }
+      if (!added.status || !added.status.includes(added.card)) {
+        problems.push(`adding a card did not say so: "${added.status}"`);
+      }
+      if (!(Number(added.combosAfter) > Number(added.combosBefore))) {
+        problems.push(`the deck held ${added.combosBefore} combos before adding ${added.card} and `
+          + `${added.combosAfter} after — the search did not run again`);
+      }
+      if (!/^Add .+ to your decklist/.test(added.spoken)) {
+        problems.push(`the add control's spoken label reads "${added.spoken}"`);
+      }
+    }
+
     // The decklist is the whole input; losing it on reload is the one thing a
     // page like this must not do. And Clear has to actually clear.
     if (!v.storedDeck || !/Basalt Monolith/.test(v.storedDeck)) problems.push('the decklist was not kept for the next visit');
@@ -1004,7 +1105,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
       const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      const bracketNote = `bracket ${v.bracket.floor.replace(/ — .*/, '')} `
+        + `(${v.bracket.changers.length} GC, ${v.bracket.twoCardCombos} two-card win)`;
+      const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`;
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

@@ -105,7 +105,7 @@
     // contains a bracket, so there is nothing to lose by being permissive.
     // Asterisk markers likewise take any run of letters — matching only a
     // single one left "*CMDR*" sitting in the card name.
-    let name = line
+    const name = line
       .replace(/\s*\((?:[A-Za-z0-9]{2,6})\)(?:\s+[\w★†-]+)?\s*/g, ' ')
       .replace(/\s*\[[^\]]*\]\s*/g, ' ')
       .replace(/\s*<[^>]*>\s*/g, ' ')

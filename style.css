@@ -1,3 +1,8 @@
+/* Dark is the base, and the light block below is an override rather than a second
+   theme: every colour on the page is a token here, so supporting light means
+   restating the tokens once instead of auditing 600 lines of rules. Anything
+   hardcoded outside this block is a colour that is deliberately the same in both
+   — the Wizards mana swatches, and the dark ink that sits on them. */
 :root {
   --bg: #12141a;
   --panel: #1b1e27;
@@ -10,8 +15,49 @@
   /* How many cards a combo needs. Kept clear of the accent and of the three
      result-tier colours, so a size never reads as a payoff. */
   --size: #8ba7cc;
+  /* Yellow tier: real value that something else still has to convert. */
+  --decisive: #cfc48a;
+  /* Borders. --line is the everyday one on inputs, notes and chips; --line-strong
+     outlines the things that are not cards — a template slot, "any of 3". */
+  --line: #333a4d;
+  --line-strong: #4a536b;
+  --size-line: #3f4759;
+  /* Failure reports and the unclassified-result flag on the tiers page. */
+  --diag-line: #4a3540;
+  --flag-line: #5c3b45;
+  /* Monospace blocks: a shade off the page, so a report reads as quoted. */
+  --code-bg: #14161d;
+  /* Ink on a brass fill. Dark on gold in either theme — the fill is what changes. */
+  --brass-ink: #17130a;
   --radius: 10px;
   color-scheme: dark;
+}
+
+/* The same page for anyone whose system asks for light. Only the tokens move.
+   Brass, green and red are all darkened rather than reused: #d4a24e is a good
+   accent on #12141a and unreadable on white, which is the whole reason a theme
+   is more than inverting two colours. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f2ec;
+    --panel: #ffffff;
+    --panel-2: #eceae2;
+    --text: #1a1d26;
+    --muted: #5c6373;
+    --accent: #8a5a12;
+    --error: #a8261c;
+    --ok: #2c7a34;
+    --size: #3c5b84;
+    --decisive: #7a6620;
+    --line: #d6d2c7;
+    --line-strong: #b4b0a5;
+    --size-line: #c3bfb4;
+    --diag-line: #dcb2ab;
+    --flag-line: #dcb2ab;
+    --code-bg: #f0eee6;
+    --brass-ink: #fffdf7;
+    color-scheme: light;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -67,7 +113,7 @@ input, textarea, button {
   font: inherit;
   color: var(--text);
   background: var(--panel-2);
-  border: 1px solid #333a4d;
+  border: 1px solid var(--line);
   border-radius: 6px;
   padding: .5rem .65rem;
 }
@@ -81,7 +127,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   font-size: .85rem;
   line-height: 1.45;
   color: var(--muted);
-  border-left: 2px solid #333a4d;
+  border-left: 2px solid var(--line);
   padding-left: .6rem;
 }
 .note strong { color: var(--text); font-weight: 600; }
@@ -92,7 +138,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 button {
   cursor: pointer;
   background: var(--accent);
-  color: #17130a;
+  color: var(--brass-ink);
   font-weight: 700;
   border: none;
 }
@@ -108,7 +154,7 @@ button:disabled { opacity: .6; cursor: wait; }
   background: var(--panel-2);
   color: var(--muted);
   font-weight: 600;
-  border: 1px solid #333a4d;
+  border: 1px solid var(--line);
   min-height: 44px;
 }
 .form-actions button:hover { color: var(--text); }
@@ -161,18 +207,18 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .diag {
   background: var(--panel);
-  border: 1px solid #4a3540;
+  border: 1px solid var(--diag-line);
   border-radius: var(--radius);
   padding: .7rem .9rem;
   margin-bottom: 1rem;
 }
 .diag summary { color: var(--error); font-weight: 600; }
-.diag.notice { border-color: #333a4d; }
+.diag.notice { border-color: var(--line); }
 .diag.notice summary { color: var(--muted); font-weight: 500; }
 .diag-body {
   margin: .6rem 0 .5rem;
   padding: .6rem;
-  background: #14161d;
+  background: var(--code-bg);
   border-radius: 6px;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: .78rem;
@@ -186,7 +232,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .copy-btn {
   background: var(--panel-2);
   color: var(--text);
-  border: 1px solid #333a4d;
+  border: 1px solid var(--line);
   font-size: .82rem;
   padding: .3rem .7rem;
 }
@@ -253,7 +299,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .tabs {
   display: flex;
   gap: .25rem;
-  border-bottom: 1px solid var(--line, #2b3244);
+  border-bottom: 1px solid var(--line);
   margin-bottom: .9rem;
 }
 
@@ -287,7 +333,7 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: .75rem;
   font-variant-numeric: tabular-nums;
 }
-.tab.is-active .tab-count { background: var(--accent); color: var(--brass-ink, #17130a); }
+.tab.is-active .tab-count { background: var(--accent); color: var(--brass-ink); }
 
 @media (max-width: 480px) {
   .tab { padding: .55rem .5rem; font-size: .84rem; }
@@ -323,13 +369,36 @@ button:disabled { opacity: .6; cursor: wait; }
   padding: .1rem .5rem;
   border-radius: 999px;
   background: var(--accent);
-  color: #17130a;
+  color: var(--brass-ink);
   font-size: .8rem;
   font-weight: 700;
   vertical-align: middle;
   white-space: nowrap;
 }
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
+
+/* Taking a suggestion: appends the card to the decklist and searches again.
+   Outlined rather than filled — it sits at the end of a row of links, and the
+   brass fill is spent on "Find combos", which is still the primary action even
+   while you are reading results. 32px rather than the 44px the form buttons get:
+   this one is in a list of eighty rows, and a thumb-sized target on each would
+   push the rows themselves apart. */
+.add-card {
+  margin-left: .5rem;
+  padding: .15rem .5rem;
+  min-height: 32px;
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.add-card:hover { background: var(--accent); color: var(--brass-ink); }
+.add-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.alt-list .add-card { margin-left: .2rem; }
 
 /* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card". Inline, on the
    card's own line — a second line would cost one per row down a list of eighty.
@@ -347,7 +416,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .size {
   padding: .02rem .45rem;
   border-radius: 999px;
-  border: 1px solid #3f4759;
+  border: 1px solid var(--size-line);
   color: var(--size);
   font-size: .78rem;
   font-weight: 600;
@@ -361,6 +430,29 @@ button:disabled { opacity: .6; cursor: wait; }
   background: rgba(139, 167, 204, .16);
 }
 
+/* ---- the bracket check ---- */
+
+/* The number is the line people will read, so it gets the size. The bracket's
+   name follows it quietly: it labels the number rather than competing with it. */
+.bracket-floor { margin: 0 0 .2rem; font-size: 1.05rem; }
+.bracket-name { color: var(--muted); font-weight: 600; }
+.bracket-why { margin: 0 0 .5rem; font-size: .9rem; color: var(--muted); }
+.gc-list { margin: .2rem 0 .4rem; font-size: .9rem; color: var(--muted); }
+.gc-list .card-name { color: var(--text); font-weight: 600; }
+.gc-list .card-links { margin-left: .3rem; }
+
+/* What the check did not look at. Quiet, but never folded away: a bracket number
+   with the caveat hidden behind a control reads as the whole answer. */
+.bracket-note {
+  margin: .6rem 0 0;
+  padding-left: .6rem;
+  border-left: 2px solid var(--line);
+  font-size: .82rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 68ch;
+}
+
 /* ---- interchangeable cards ---- */
 
 /* "+ any of 3" in a combo header: a slot, not a card, so it must not read as
@@ -368,7 +460,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .either {
   padding: .05rem .45rem;
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1px #4a536b;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--muted);
   font-size: .82rem;
   font-weight: 600;
@@ -384,7 +476,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .slot {
   padding: .05rem .45rem;
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1px #4a536b;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--muted);
   font-size: .82rem;
   font-style: italic;
@@ -403,7 +495,7 @@ button:disabled { opacity: .6; cursor: wait; }
   color: var(--accent);
   font-style: italic;
 }
-.slot-away { border-left: 2px solid #4a536b; }
+.slot-away { border-left: 2px solid var(--line-strong); }
 .gap { margin: .2rem 0 .1rem; font-size: .85rem; color: var(--muted); }
 .gap-label { color: var(--text); font-weight: 600; }
 .candidates { margin: .1rem 0 .35rem; font-size: .85rem; color: var(--muted); }
@@ -415,7 +507,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .alternatives {
   margin: .1rem 0 .5rem;
   padding-left: .6rem;
-  border-left: 2px solid #333a4d;
+  border-left: 2px solid var(--line);
 }
 .alt-label { display: block; font-size: .82rem; color: var(--muted); }
 .alt-list {
@@ -468,7 +560,7 @@ button:disabled { opacity: .6; cursor: wait; }
    of competing with the win. Hover says what it still needs. */
 .result.tier-decisive {
   background: rgba(203, 191, 138, .10);
-  color: #cfc48a;
+  color: var(--decisive);
   box-shadow: inset 0 0 0 1px rgba(203, 191, 138, .30);
   cursor: help;
 }
@@ -486,7 +578,7 @@ button.result.more {
   color: var(--muted);
   font-weight: 500;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px #333a4d;
+  box-shadow: inset 0 0 0 1px var(--line);
   padding: .15rem .5rem;
 }
 button.result.more:hover { color: var(--text); filter: none; }
@@ -516,7 +608,7 @@ footer code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; 
   padding: .9rem 0;
   margin: 1.2rem 0 .5rem;
   background: var(--bg);
-  border-bottom: 1px solid #2b3244;
+  border-bottom: 1px solid var(--line);
 }
 .tiers-page #q { flex: 1 1 14rem; min-width: 0; font-size: .9rem; }
 
@@ -526,7 +618,7 @@ footer code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; 
   gap: .45rem;
   padding: .5rem .8rem;
   min-height: 44px;
-  border: 1px solid #333a4d;
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--panel);
   color: var(--muted);
@@ -537,8 +629,8 @@ footer code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; 
 .chip .dot { width: .6rem; height: .6rem; border-radius: 50%; background: currentColor; }
 .chip .n { font-variant-numeric: tabular-nums; opacity: .8; }
 .chip[aria-pressed="true"].t-win { color: var(--ok); border-color: var(--ok); }
-.chip[aria-pressed="true"].t-decisive { color: #cfc48a; border-color: #cfc48a; }
-.chip[aria-pressed="true"].t-other { color: var(--text); border-color: #4a536b; }
+.chip[aria-pressed="true"].t-decisive { color: var(--decisive); border-color: var(--decisive); }
+.chip[aria-pressed="true"].t-other { color: var(--text); border-color: var(--line-strong); }
 .chip[aria-pressed="false"] { opacity: .5; }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
@@ -548,7 +640,7 @@ footer code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; 
 .tier-head .meta { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .tier-note { margin: .15rem 0 .7rem; font-size: .88rem; color: var(--muted); max-width: 62ch; }
 .t-win .tier-head h2 { color: var(--ok); }
-.t-decisive .tier-head h2 { color: #cfc48a; }
+.t-decisive .tier-head h2 { color: var(--decisive); }
 .t-other .tier-head h2 { color: var(--muted); }
 
 ol.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -562,8 +654,8 @@ ol.rows > li {
 }
 .stripe { align-self: stretch; }
 .t-win .stripe { background: var(--ok); }
-.t-decisive .stripe { background: #cfc48a; }
-.t-other .stripe { background: #4a536b; }
+.t-decisive .stripe { background: var(--decisive); }
+.t-other .stripe { background: var(--line-strong); }
 .unclassified .stripe { background: var(--error); }
 
 ol.rows .name { padding: .5rem .75rem; min-width: 0; }
@@ -594,7 +686,7 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
 /* The whole reason this page ships: a result the list has never seen. */
 .unclassified {
   background: var(--panel);
-  border: 1px solid #5c3b45;
+  border: 1px solid var(--flag-line);
   border-left: 3px solid var(--error);
   border-radius: var(--radius);
   padding: 1rem;
@@ -606,7 +698,7 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
 .snippet {
   margin: 0 0 .6rem;
   padding: .6rem;
-  background: #14161d;
+  background: var(--code-bg);
   border-radius: 6px;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: .78rem;

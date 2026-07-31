@@ -3,7 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Everything this page runs is its own, and the only two hosts it talks to are
+       the data branch and Archidekt's deck API. Saying so in a header means a
+       script injected into a decklist — the one piece of text here that comes from
+       outside — has nowhere to load from and nowhere to report to.
+       `default-src 'none'` so a source added later has to be named rather than
+       inherited; `form-action 'none'` because this form is handled in JS and never
+       navigates. Both pages carry the same policy.
+
+       Archidekt is listed with and without `www.`: a redirect between the two is
+       re-checked against this list, and nothing here loads a deck URL under test,
+       so that particular mistake would only ever be found in production. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+    script-src 'self'; worker-src 'self'; style-src 'self'; img-src 'self';
+    connect-src 'self' https://raw.githubusercontent.com
+      https://archidekt.com https://www.archidekt.com;
+    base-uri 'none'; form-action 'none'">
   <title>MTG Combo Finder</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -49,6 +66,10 @@
 
       <section id="results" hidden>
         <div id="identity"></div>
+        <!-- Which Commander bracket the list is still eligible for. Two of the
+             bracket criteria are readable off a decklist; the rest are judgement
+             calls, and the panel says which it did not check. -->
+        <div id="bracket"></div>
         <div id="included"></div>
         <!-- Combos you hold every named card for and cannot assemble because
              nothing fills their slot. Kept apart from the combos above, which
