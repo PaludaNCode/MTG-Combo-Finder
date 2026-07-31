@@ -259,11 +259,32 @@ still leads — a card unlocking four combos beats one unlocking three however p
 three are — because "+N combos" is what the page claims and the ranking has to match it.
 Popularity decides between cards that make the same claim.
 
-**Inside a suggestion, size leads and popularity breaks the tie** — the same rule the deck's
-own combos use. Sorting those lists on popularity alone put a 4-card line at the top of a
-list whose own heading read *1 × 2-card · 4 × 3-card · 7 × 4-card*: two orderings of one set
-of combos, one line apart, and the panel opening on the hardest thing to assemble rather than
-the easiest. A template slot counts toward that size, because something has to occupy it.
+**Inside a card, size leads and the card names break the tie** — not popularity. Both nested
+lists work this way: *Combos this unlocks* under a suggestion, and *The combos it holds
+together* under one of your own cards.
+
+Size first, because sorting those lists on play count alone put a 4-card line at the top of a
+list whose own heading read *1 × 2-card · 4 × 3-card · 7 × 4-card* — two orderings of one set
+of combos, one line apart, opening on the hardest thing to assemble. A template slot counts
+toward that size, because something has to occupy it.
+
+Then **alphabetically, and deliberately not by play count**. Ordering eleven rows by
+popularity scatters every repeated partner down the list:
+
+```
+Scurry Oak + Archangel of Thune + Essence Warden          999 plays
+Scurry Oak + Archangel of Thune + Prosperous Innkeeper    493
+Scurry Oak + Sadistic Glee + Viscera Seer                 377
+Scurry Oak + Ashnod's Altar + Sadistic Glee               333
+Scurry Oak + Ashnod's Altar + Necrosynthesis              305
+Scurry Oak + Carrion Feeder + Sadistic Glee               216
+Scurry Oak + Archangel of Thune + Lunarch Veteran         186
+```
+
+Nothing there is out of order and all of it reads as unsorted, because the play counts are not
+on screen — the Archangel rows are scattered across positions 1, 2 and 7, and a reader
+scanning for a card cannot see why. Popularity still ranks the cards *above* these lists,
+which is the job it is for: deciding which suggestion to show first.
 
 Popularity is a tie-break rather than the ranking, and `pop` is absent from some variants:
 a missing one counts as zero, so ordering never depends on whether a field is there. With
