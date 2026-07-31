@@ -34,20 +34,25 @@ test('computeSuggestions: a card unlocking more still wins over a popular one', 
   assert.deepStrictEqual(suggestions.map((s) => s.card), ['Power Artifact', 'Rings of Brighthearth']);
 });
 
-test('computeSuggestions: the combos a suggestion unlocks list the most played first', () => {
+// Popularity ranks the *cards* above, and deliberately does not order the combos
+// underneath one. Ordering those by play count scatters every repeated partner down
+// the list — Archangel of Thune at 999 plays, two other combos, Archangel again at
+// 493, three more, Archangel at 186 — which reads as unsorted to anyone scanning for
+// a card, since the play counts are not on screen.
+test('computeSuggestions: play count does not order the combos inside a suggestion', () => {
   const [suggestion] = computeSuggestions([
     variant('Power Artifact', 10, ['a']),
     variant('Power Artifact', 800, ['b']),
     variant('Power Artifact', 300, ['c']),
   ], deck);
-  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [800, 300, 10]);
+  // Same two cards in each, so nothing distinguishes them and the input order
+  // survives. What matters is that 800 was not floated to the top.
+  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [10, 800, 300]);
 });
 
-// ...but only among combos of the same size. Two cards on the table is a different
-// proposition from four, so a suggestion opens on its easiest line — the same rule
-// the deck's own combos are sorted by, and the same order as the size breakdown
-// printed on the row above them. Popularity alone put a 4-card combo at the top of a
-// list headed "1 × 2-card · 4 × 3-card · 7 × 4-card".
+// Size first: a suggestion opens on its easiest line, the same order as the size
+// breakdown printed on the row above it. Popularity alone put a 4-card combo at the
+// top of a list headed "1 × 2-card · 4 × 3-card · 7 × 4-card".
 test('computeSuggestions: a suggestion lists its smallest combos first', () => {
   const held = deckNameSet([{ card: 'Basalt Monolith' }, { card: 'Sol Ring' }]);
   const sized = (cards, pop) => ({
@@ -59,12 +64,44 @@ test('computeSuggestions: a suggestion lists its smallest combos first', () => {
     // The most played is also the largest, so popularity alone would float it to the
     // top. That is exactly the shape this pins.
     sized(['Basalt Monolith', 'Sol Ring', 'Power Artifact'], 900),
-    sized(['Basalt Monolith', 'Power Artifact'], 5),
     sized(['Sol Ring', 'Power Artifact'], 50),
+    sized(['Basalt Monolith', 'Power Artifact'], 5),
   ], held);
   assert.deepStrictEqual(suggestion.unlocks.map((v) => v.uses.length), [2, 2, 3]);
-  // Popularity still decides within a size.
-  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [50, 5, 900]);
+  // Alphabetical within a size, by the cards as they are drawn: "Basalt Monolith +
+  // Power Artifact" before "Power Artifact + Sol Ring" — and note that puts the
+  // 5-play combo above the 50-play one, which is the point.
+  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [5, 50, 900]);
+});
+
+// Within a size, the order is the names as drawn. This is the case from the report:
+// a combo whose partner sorts late was sitting third of eleven because it had more
+// plays than the two below it.
+test('computeSuggestions: within a size, combos are alphabetical by their cards', () => {
+  // Everything but Scurry Oak is in the deck, so all three combos are one card away
+  // from the same card and land under one suggestion — which is the shape the report
+  // came from: eleven rows under a single card, differing in one partner.
+  const held = deckNameSet([
+    { card: 'Sadistic Glee' }, { card: 'Viscera Seer' },
+    { card: "Ashnod's Altar" }, { card: 'Carrion Feeder' },
+  ]);
+  const trio = (partner, pop) => ({
+    uses: [{ card: { name: 'Scurry Oak' } }, { card: { name: 'Sadistic Glee' } }, { card: { name: partner } }],
+    produces: [{ feature: { name: 'Infinite creature tokens' } }],
+    pop,
+  });
+  const [suggestion] = computeSuggestions([
+    trio('Viscera Seer', 377),
+    trio("Ashnod's Altar", 333),
+    trio('Carrion Feeder', 216),
+  ], held);
+  assert.strictEqual(suggestion.card, 'Scurry Oak');
+  // Play count would have given 377, 333, 216 — exactly the order that put Viscera
+  // Seer third of eleven on screen.
+  assert.deepStrictEqual(
+    suggestion.unlocks.map((v) => v.uses[2].card.name),
+    ["Ashnod's Altar", 'Carrion Feeder', 'Viscera Seer']
+  );
 });
 
 // A slot counts as a card, because something has to occupy it — so a combo needing

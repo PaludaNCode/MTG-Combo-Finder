@@ -275,7 +275,10 @@ test('comboPieces: ranks cards by how many combos they hold together', () => {
   ]);
   assert.strictEqual(pieces[0].card, 'Basalt Monolith');
   assert.strictEqual(pieces[0].count, 3);
-  assert.deepStrictEqual(pieces[0].combos.map((c) => c.id), ['1', '2', '3']);
+  // The combos under a card are re-sorted rather than left in the order they arrived:
+  // smallest first, then alphabetically by their cards. All three are two-card here,
+  // so it comes down to the names — Kinnan, then Power Artifact, then Rings.
+  assert.deepStrictEqual(pieces[0].combos.map((c) => c.id), ['2', '3', '1']);
   assert.ok(pieces.slice(1).every((p) => p.count === 1));
 });
 

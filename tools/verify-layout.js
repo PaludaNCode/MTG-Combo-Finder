@@ -307,7 +307,21 @@ function measure(win, doc) {
     const combos = [...row.querySelectorAll('details > .combo > h3')].map((h) => (
       [...h.querySelectorAll(':scope > .card-name')].map((n) => n.textContent)
     ));
-    return { focal, combos };
+    // The order these are listed in: size first, then alphabetically by the cards.
+    // Sizes count a slot and an "any of N" too, since something has to occupy them —
+    // without that a two-card-plus-slot row looks smaller than it is and the size
+    // sequence appears to go backwards.
+    const order = [...row.querySelectorAll('details > .combo > h3')].map((h) => {
+      const names = [...h.querySelectorAll(':scope > .card-name')].map((n) => n.textContent);
+      return {
+        size: names.length + h.querySelectorAll(':scope > .slot').length
+          + (h.querySelector(':scope > .either') ? 1 : 0),
+        // Compared on the names sorted, not as drawn: the focal card is pulled to the
+        // front on screen, and it is the same card on every row here.
+        sig: names.slice().sort().join(' + '),
+      };
+    });
+    return { focal, combos, order };
   });
   const leads = {
     suggestions: nested('.tab-pane:not([hidden]) .combo.suggestion', 'h3 > .card-name'),
@@ -1390,6 +1404,26 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         }
       }
       if (!checked) problems.push(`no ${where} combo lists the cards of, so the lead order is untested`);
+
+      // And the rows themselves: smallest first, then alphabetically by their cards.
+      // Play count used to order these, which scatters every repeated partner down the
+      // list — the reported symptom was one row sitting third of eleven because it had
+      // more plays than the two above it, in a list where no play count is on screen.
+      for (const row of rows) {
+        const order = row.order || [];
+        for (let i = 1; i < order.length; i++) {
+          const prev = order[i - 1];
+          const cur = order[i];
+          if (cur.size < prev.size) {
+            problems.push(`${where}: under ${row.focal}, a ${cur.size}-card combo follows a ${prev.size}-card one`);
+            break;
+          }
+          if (cur.size === prev.size && cur.sig.localeCompare(prev.sig) < 0) {
+            problems.push(`${where}: under ${row.focal}, "${cur.sig}" is listed after "${prev.sig}"`);
+            break;
+          }
+        }
+      }
     }
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');

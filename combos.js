@@ -61,12 +61,11 @@
       }
       entry.unlocks.push(variant);
     }
-    // Inside a suggestion too, and by the same rule the deck's own combos use:
-    // smallest first, most played breaking the tie. Popularity alone put a 4-card
-    // line above a 2-card one, which reads as a recommendation to build the harder
-    // combo — and it disagreed with the size breakdown printed on the row directly
-    // above it ("1 × 2-card · 4 × 3-card · 7 × 4-card"), which is in size order.
-    for (const entry of byCard.values()) entry.unlocks.sort(bySizeThenPopularity);
+    // Smallest first — the size breakdown printed on the row above says the same,
+    // and a 4-card line at the top of that list reads as a recommendation to build
+    // the harder combo — then alphabetically, so a reader can find a card in the
+    // list. Popularity still ranks the suggestions themselves; see bySizeThenName.
+    for (const entry of byCard.values()) entry.unlocks.sort(bySizeThenName);
     return [...byCard.values()].sort(
       (a, b) => b.unlocks.length - a.unlocks.length
         || bestPopularity(b.unlocks) - bestPopularity(a.unlocks)
@@ -100,6 +99,26 @@
   // different proposition from four, so the combos a deck can actually assemble
   // are ordered by how hard they are before how popular they are.
   const bySizeThenPopularity = (a, b) => comboSize(a) - comboSize(b) || popularity(b) - popularity(a);
+
+  // Smallest first, then alphabetically by the cards themselves. For the lists that
+  // sit *under* one card — the combos a suggestion unlocks, the combos one of your
+  // cards holds together — where the job is finding a particular combo in a list of
+  // seventeen rather than being told which to build.
+  //
+  // Popularity is wrong for those, even though it is right for ranking the cards
+  // above them. Ordering eleven rows by play count scatters every repeated partner
+  // down the list: Archangel of Thune at 999 plays, then two other combos, then
+  // Archangel again at 493, then three more, then Archangel at 186. Nothing about
+  // that is out of order and all of it reads as unsorted, because a reader scanning
+  // for a card has no idea what the play counts are.
+  //
+  // Compared on the names as drawn, so the order on screen is the order the
+  // comparator produced and there is no second arrangement to reconcile.
+  const nameSignature = (variant) => orderComboNames(
+    variant && variant.uses ? variantCardNames(variant) : ((variant && variant.c) || [])
+  ).join(' + ');
+  const bySizeThenName = (a, b) => comboSize(a) - comboSize(b)
+    || nameSignature(a).localeCompare(nameSignature(b));
 
   // What a set of combos is made of, smallest first:
   // [{ size, count }] — "one 2-card combo and nine 3-card ones".
@@ -584,8 +603,14 @@
         entry.combos.push(variant);
       }
     }
+    // The cards stay ranked by how many combos each holds up — that is this panel's
+    // whole question, since cutting a card that appears in four costs four. The
+    // combos *under* each card are re-sorted rather than left in the order they
+    // arrived: they inherited the deck list's ranking, which is by play count, and
+    // eleven rows ordered by play count read as unsorted to anyone scanning them for
+    // a card name.
     return [...byCard.values()]
-      .map((e) => ({ card: e.card, count: e.combos.length, combos: e.combos }))
+      .map((e) => ({ card: e.card, count: e.combos.length, combos: e.combos.slice().sort(bySizeThenName) }))
       .sort((a, b) => b.count - a.count || a.card.localeCompare(b.card));
   }
 
