@@ -418,6 +418,16 @@ decision means looking at sixteen cards, and the links beside each name go to on
 card each. So a choice carries one more link — **Compare all 16** — which opens every
 card in the group on a single Scryfall page, images and all.
 
+**Every combo row carries the same link.** *Combos in your deck*, *Combos this
+unlocks*, *The combos it holds together* — each row ends with **Compare all N** beside
+its Spellbook link, opening every card in that combo on one Scryfall page. The point is
+a look at what a combo actually asks for before committing to it, and it is **one link
+rather than one per card name**: a four-card row would carry four, the heading is the
+combo rather than a list of links, and reading the cards is a single action so it is a
+single press. Named cards only — a template slot has no card to open, and the row
+already names what fills it. A collapsed row's link covers its shared cards *plus* all
+the interchangeable ones, since that whole set is what the reader is choosing between.
+
 **The label and that link share one row, and the wording is cut to fit it.** On a
 phone the label's box is 298px and the link takes 108 of them, which leaves about
 180px for words. *"or any one of these 15 instead — same combos:"* needed two rows and
