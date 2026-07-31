@@ -431,7 +431,14 @@ row's link says "compare".
 
 It is **one link rather than one per card name**: a four-card row would carry four, the
 heading is the combo rather than a list of links, and reading the cards is a single
-action so it is a single press. Named cards only — a template slot has no card to open, and the row
+action so it is a single press.
+
+**Both links sit above the result chips, not below them.** What a combo *needs* is read
+before what it *does* — the cards decide whether the row is worth reading at all, and a
+reader after the steps or the card images should not have to scroll past a wall of
+result chips to find the way out. All three row types do it in that order: an ordinary
+combo, a collapsed choice, and a *one slot away* row. The layout test compares the two
+elements' document positions and fails if the links drop below the chips. Named cards only — a template slot has no card to open, and the row
 already names what fills it. A collapsed row's link covers its shared cards *plus* all
 the interchangeable ones, since that whole set is what the reader is choosing between.
 

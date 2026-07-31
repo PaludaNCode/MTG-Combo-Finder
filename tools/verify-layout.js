@@ -332,6 +332,14 @@ function measure(win, doc) {
       label: a ? a.textContent : null,
       href: a ? a.getAttribute('href') : null,
       hasSpellbook: Boolean(spellbook),
+      // The link line sits above the result chips: what a combo needs is read before
+      // what it does. 4 is DOCUMENT_POSITION_FOLLOWING — the chips come after.
+      beforeChips: (() => {
+        const line = row.querySelector(':scope > .combo-link');
+        const chips = row.querySelector(':scope > .results');
+        if (!line || !chips) return null;
+        return (line.compareDocumentPosition(chips) & 4) !== 0;
+      })(),
     };
   });
 
@@ -1317,6 +1325,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       }
       const claimed = Number((/^See all (\d+) cards?$/.exec(row.label || '') || [])[1]);
       if (claimed !== wanted.length) problems.push(`${whose}'s link reads "${row.label}" for ${wanted.length} cards`);
+      if (row.beforeChips === false) {
+        problems.push(`${whose} puts its links below the result chips instead of above them`);
+      }
       // A collapsed row links its versions to Spellbook individually rather than as a
       // group, so only the ungrouped rows carry both links.
     });
