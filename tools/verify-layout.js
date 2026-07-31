@@ -260,6 +260,21 @@ function measure(win, doc) {
     eitherRows: [...doc.querySelectorAll('#included .either')].map((e) => e.textContent),
     choiceRows: doc.querySelectorAll('#included .choices').length,
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
+    // Does the label and its comparison link fit on one row? Measured in lines, not
+    // characters: the wording, the font and the width all decide it together.
+    altLabel: (() => {
+      const label = doc.querySelector('.alternatives .alt-label');
+      if (!label) return null;
+      const lineHeight = parseFloat(win.getComputedStyle(label).lineHeight) || 16;
+      const pill = label.querySelector('.alt-all');
+      const box = label.getBoundingClientRect();
+      return {
+        lines: Math.round(box.height / lineHeight),
+        boxWidth: Math.round(box.width),
+        pillWidth: pill ? Math.round(pill.getBoundingClientRect().width) : 0,
+        text: label.textContent,
+      };
+    })(),
     altNames: doc.querySelectorAll('.alternatives .alt-list .card-name').length,
     // Where each interchangeable row's + Add actually sits. A wrapping row put the
     // button of a long name on a second line and started every button at a different
@@ -1225,7 +1240,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (g.eitherRows.some((t) => !/any of \d+/.test(t))) problems.push(`a collapsed row reads "${g.eitherRows[0]}"`);
     if (g.choiceRows !== g.eitherRows.length) problems.push('a collapsed row did not list its choices');
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
-    if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
+    if (g.altGroups.some((t) => !/or (these \d+|this one), same combos?:/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
+    // One row, label and comparison link together. At 390px there is 298px for both
+    // and the link takes 108 of it, so the wording has to stay short — the previous
+    // "or any one of these N instead — same combos:" took two lines and pushed the
+    // link onto its own.
+    if (g.altLabel && g.altLabel.lines !== 1) {
+      problems.push(`the alternatives label needs ${g.altLabel.lines} rows for "${g.altLabel.text}" in ${g.altLabel.boxWidth}px`);
+    }
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
 
     // Every + Add in a choice on the same line as its card, and every one of them on
@@ -1276,7 +1298,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       });
       // What the label promises has to be what the query asks for, since the number
       // is the only part of this a reader can check.
-      const claimed = Number((/Compare all (\d+) on Scryfall/.exec(c.label || '') || [])[1]);
+      const claimed = Number((/^Compare all (\d+)$/.exec(c.label || '') || [])[1]);
       if (!claimed) problems.push(`${whose}'s comparison link reads "${c.label}"`);
       else if (claimed !== terms.length) {
         problems.push(`${whose}'s link offers ${claimed} cards but asks Scryfall for ${terms.length}`);
@@ -1526,7 +1548,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     } else {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       const compareNote = v.grouped.compare.length
-        ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+) on Scryfall/, '$1 on Scryfall')).join(' / ')}`
+        ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
         : '';
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;

@@ -346,7 +346,7 @@
     const query = DeckCombos.scryfallSetQuery(names);
     if (!query) return null;
     const a = link('https://scryfall.com/search?q=' + encodeURIComponent(query),
-      `Compare all ${names.length} on Scryfall`);
+      `Compare all ${names.length}`);
     a.className = 'alt-all';
     // The visible label says how many; what the page will be is spelled out for a
     // screen reader, since "compare" alone does not say where it leads.
@@ -386,8 +386,13 @@
 
     if (rest.length) {
       const alt = el('div', 'alternatives');
+      // Terse on purpose: this line and the comparison link beside it have to fit one
+      // row on a phone, where the label's box is 298px and the link takes 108 of it.
+      // "or any one of these 15 instead — same combos:" wrapped to two lines and put
+      // the link on a line of its own. The layout test measures the line count.
       const label = el('span', 'alt-label',
-        `or any one of these ${rest.length} instead — same ${group.unlocks.length === 1 ? 'combo' : 'combos'}:`);
+        `${rest.length === 1 ? 'or this one' : `or these ${rest.length}`}, `
+        + `same ${group.unlocks.length === 1 ? 'combo' : 'combos'}:`);
       // The whole choice, not just the folded-away part: the card in the heading is
       // one of the options being weighed, and a comparison missing the recommended
       // card is the wrong comparison.
