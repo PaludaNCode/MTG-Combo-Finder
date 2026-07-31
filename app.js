@@ -213,22 +213,31 @@
   //
   // The smallest is marked, because that is the one being looked for. The parts
   // sum to the badge beside them, so there is no second total to reconcile.
+  // Rendered inline, on the same line as the card and its count, so the whole
+  // recommendation is one line: "Herd Baloth +10  1 × 2-card  9 × 3-card". A
+  // second line per row costs 80 lines down a list this long, and the pills are
+  // short enough not to need one.
+  //
+  // Unlabelled on purpose. "1 × 2-card" beside a count, under a heading reading
+  // "Suggested additions", does not need a caption telling the reader it is about
+  // combo sizes — and a caption repeated on every row is 80 of them.
   function sizeRow(variants) {
     const breakdown = DeckCombos.sizeBreakdown(variants);
     if (!breakdown.length) return null;
-    // One combo of one size is what the header already says.
-    if (breakdown.length === 1 && breakdown[0].count === 1) {
-      const only = el('p', 'sizes');
-      only.appendChild(el('span', 'size is-easiest', breakdown[0].size + '-card combo'));
-      return only;
-    }
 
-    const row = el('p', 'sizes');
-    row.appendChild(el('span', 'sizes-label', 'Combo sizes'));
-    breakdown.forEach(({ size, count }, i) => {
+    const row = el('span', 'sizes');
+    // A single combo needs no multiplier: "2-card" says it.
+    const only = breakdown.length === 1 && breakdown[0].count === 1;
+    breakdown.forEach(({ size, count }) => {
+      // Two cards is as small as a combo gets, so a two-card pill is the easiest
+      // thing on the page and the one worth marking. Filling whichever pill
+      // happens to be smallest on its row would instead mark "smallest of one
+      // size" — a card whose seven combos all need three would light up for it.
+      const easiest = size <= 2;
       // Slate, deliberately not the green/yellow/grey a result uses: those say
       // what a combo achieves, and "2-card" must not read as "this wins".
-      const pill = el('span', 'size' + (i === 0 ? ' is-easiest' : ''), count + ' × ' + size + '-card');
+      const label = only ? size + '-card' : count + ' × ' + size + '-card';
+      const pill = el('span', 'size' + (easiest ? ' is-easiest' : ''), label);
       pill.title = count === 1
         ? `One combo needing ${size} cards on the table`
         : `${count} combos needing ${size} cards on the table`;
@@ -247,11 +256,18 @@
     const header = el('h3');
     header.appendChild(el('span', 'rank', rank + '. '));
     header.appendChild(el('span', 'card-name', first));
-    header.appendChild(el('span', 'badge', '+' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's')));
-    card.appendChild(header);
-
+    // Just the number. The word was carrying nothing that the panel heading and
+    // the size pills beside it do not already say, and it was repeated on every
+    // row — but the meaning still has to reach a screen reader, so it moves into
+    // the label rather than disappearing.
+    const badge = el('span', 'badge', '+' + group.unlocks.length);
+    const spoken = 'unlocks ' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's');
+    badge.title = spoken;
+    badge.setAttribute('aria-label', spoken);
+    header.appendChild(badge);
     const sizes = sizeRow(group.unlocks);
-    if (sizes) card.appendChild(sizes);
+    if (sizes) header.appendChild(sizes);
+    card.appendChild(header);
 
     const links = el('p', 'card-links');
     links.appendChild(cardLinks(first));

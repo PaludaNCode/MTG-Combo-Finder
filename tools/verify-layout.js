@@ -178,6 +178,7 @@ function measure(win, doc) {
   // was being dropped at narrow widths, exactly where the two are tightest.
   const badges = [...doc.querySelectorAll('.badge')].map((b) => ({
     text: b.textContent,
+    spoken: b.getAttribute('aria-label') || '',
     gap: parseFloat(win.getComputedStyle(b).marginLeft) || 0,
     wraps: win.getComputedStyle(b).whiteSpace,
   }));
@@ -195,6 +196,7 @@ function measure(win, doc) {
   const sizes = [...doc.querySelectorAll('.tab-pane:not([hidden]) .combo.suggestion')].map((row) => ({
     badge: (row.querySelector('.badge') || {}).textContent || '',
     label: (row.querySelector('.sizes-label') || {}).textContent || '',
+    inHeader: Boolean(row.querySelector('h3 .sizes')),
     pills: [...row.querySelectorAll('.sizes .size')].map((p) => p.textContent),
     easiest: [...row.querySelectorAll('.sizes .size.is-easiest')].map((p) => p.textContent),
     colour: row.querySelector('.sizes .size') ? win.getComputedStyle(row.querySelector('.sizes .size')).color : null,
@@ -711,6 +713,13 @@ function serve(dir, extra, onVerdict) {
       if (flush.length) problems.push(`${flush.length} badge(s) sit flush against the card name, e.g. "${flush[0].text}" (${flush[0].gap}px)`);
       const breakable = v.badges.filter((b) => b.wraps !== 'nowrap');
       if (breakable.length) problems.push(`a badge can break across lines: "${breakable[0].text}"`);
+      // "+10" alone is terse by request; the word it lost has to reach a screen
+      // reader instead of simply going away.
+      const terse = v.badges.filter((b) => /^\+\d+$/.test(b.text));
+      const unspoken = terse.filter((b) => !/\d+ combos?/.test(b.spoken));
+      if (terse.length && unspoken.length) {
+        problems.push(`a bare count badge ("${unspoken[0].text}") has no spoken label`);
+      }
     }
 
     // Every suggestion says what its count is made of, and the parts have to
@@ -732,7 +741,11 @@ function serve(dir, extra, onVerdict) {
         if (claimed !== counted) {
           problems.push(`"${row.badge}" but its sizes total ${counted} [${row.pills.join(', ')}]`);
         }
-        if (!row.easiest.length) problems.push(`no smallest combo marked on "${row.badge}"`);
+        // Only a two-card pill is marked — that is the floor, and a row with
+        // nothing that easy should light nothing up.
+        const hasTwo = row.pills.some((t) => /(^|\s)2-card$/.test(t));
+        if (hasTwo && !row.easiest.length) problems.push(`a two-card combo is not marked on "${row.badge}"`);
+        if (!hasTwo && row.easiest.length) problems.push(`"${row.easiest[0]}" is marked as easiest but is not a two-card combo`);
       }
       // The mixed row is the one worth having: several sizes, smallest first.
       const mixed = v.sizes.find((row) => row.pills.length > 1);
@@ -742,8 +755,13 @@ function serve(dir, extra, onVerdict) {
         const first = Number((mixed.pills[0].match(/(\d+)-card/) || [0, 0])[1]);
         const rest = mixed.pills.slice(1).map((t) => Number((t.match(/(\d+)-card/) || [0, 0])[1]));
         if (rest.some((n) => n < first)) problems.push(`sizes are not smallest-first: [${mixed.pills.join(', ')}]`);
-        if (mixed.easiest[0] !== mixed.pills[0]) problems.push('the marked size is not the smallest one');
-        if (!/combo sizes/i.test(mixed.label)) problems.push(`the breakdown is unlabelled: "${mixed.label}"`);
+        if (mixed.easiest.length && mixed.easiest[0] !== mixed.pills[0]) {
+          problems.push('the marked size is not the smallest one');
+        }
+        // The label was dropped deliberately — it repeated on every row and said
+        // nothing the pills and the panel heading did not.
+        if (mixed.label) problems.push(`the size breakdown carries a label again: "${mixed.label}"`);
+        if (!mixed.inHeader) problems.push('the size pills are not on the same line as the card');
       }
     }
 

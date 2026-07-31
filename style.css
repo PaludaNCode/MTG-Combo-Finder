@@ -325,21 +325,18 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
 
-/* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card".
+/* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card". Inline, on the
+   card's own line — a second line would cost one per row down a list of eighty.
    Slate on purpose. Green, yellow and grey are already spent on what a combo
    achieves, so a size pill in any of them would read as a verdict on the payoff
    rather than a count of pieces. */
 .sizes {
-  margin: .1rem 0 .4rem;
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: .3rem;
-}
-.sizes-label {
-  color: var(--muted);
-  font-size: .8rem;
-  margin-right: .1rem;
+  margin-left: .45rem;
+  vertical-align: middle;
 }
 .size {
   padding: .02rem .45rem;
