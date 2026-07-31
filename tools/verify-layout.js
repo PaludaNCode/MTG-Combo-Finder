@@ -315,6 +315,26 @@ function measure(win, doc) {
         };
       }),
   };
+  // One link per combo row that opens all of its cards on Scryfall. Read as the real
+  // href and checked against the row's own card names, because the query is the part
+  // that can quietly stop matching the row it sits under.
+  const comboCompare = [...doc.querySelectorAll('#included .panel-body > .combo')].slice(0, 4).map((row) => {
+    const head = row.querySelector(':scope > h3');
+    const a = row.querySelector(':scope > .combo-link .alt-all');
+    const spellbook = row.querySelector(':scope > .combo-link a:not(.alt-all)');
+    return {
+      names: head ? [...head.querySelectorAll(':scope > .card-name')].map((n) => n.textContent) : [],
+      slots: head ? head.querySelectorAll(':scope > .slot').length : 0,
+      // A collapsed row names its shared cards in the heading and its interchangeable
+      // ones underneath, and the comparison has to cover both — that whole set is what
+      // the reader is choosing between.
+      choices: [...row.querySelectorAll(':scope > .choices .card-name')].map((n) => n.textContent),
+      label: a ? a.textContent : null,
+      href: a ? a.getAttribute('href') : null,
+      hasSpellbook: Boolean(spellbook),
+    };
+  });
+
   const slots = {
     labels: [...doc.querySelectorAll('#included .slot')].map((e) => e.textContent),
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
@@ -457,6 +477,7 @@ function measure(win, doc) {
     header,
     grouped,
     slots,
+    comboCompare,
     stuck,
     order,
     leads,
@@ -1266,6 +1287,34 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // information rather than just space.
     const mute = g.altRows.filter((r) => !r.titled);
     if (mute.length) problems.push(`${mute.length} clipped name(s) carry no title, e.g. ${mute[0].name}`);
+
+    // Every combo row offers one link that opens all its cards at once — the point
+    // being a quick look at what a combo asks for before committing to it. One link
+    // and not one per name: a four-card row would carry four, and reading the cards is
+    // a single action.
+    if (!v.comboCompare.length) problems.push('no combo rows to check the comparison link on');
+    v.comboCompare.forEach((row) => {
+      const whose = row.names.join(' + ') || 'a combo';
+      if (!row.names.length) return; // a row of nothing but slots has no cards to open
+      const wanted = row.names.concat(row.choices);
+      if (!row.href) { problems.push(`${whose} offers no way to open its cards`); return; }
+      if (!row.href.startsWith('https://scryfall.com/search?q=')) {
+        problems.push(`${whose}'s comparison link does not go to Scryfall: ${row.href}`);
+        return;
+      }
+      const terms = decodeURIComponent(row.href.slice('https://scryfall.com/search?q='.length)).split(' or ');
+      wanted.forEach((n) => {
+        if (!terms.includes('!"' + n + '"')) problems.push(`${whose}'s comparison link leaves out ${n}`);
+      });
+      // A slot is not a card and cannot be opened, so it must not be asked for.
+      if (terms.length !== wanted.length) {
+        problems.push(`${whose} names ${wanted.length} cards but its link asks for ${terms.length}`);
+      }
+      const claimed = Number((/^Compare all (\d+)$/.exec(row.label || '') || [])[1]);
+      if (claimed !== wanted.length) problems.push(`${whose}'s link reads "${row.label}" for ${wanted.length} cards`);
+      // A collapsed row links its versions to Spellbook individually rather than as a
+      // group, so only the ungrouped rows carry both links.
+    });
 
     // Sixteen interchangeable cards is one decision, and making it means looking at
     // all sixteen. The link that does that in one press is only worth having if the

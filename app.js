@@ -167,6 +167,17 @@
     if (variant.id) {
       const p = el('p', 'combo-link');
       p.appendChild(link(SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
+      // Every card in the combo on one Scryfall page. One link rather than a link per
+      // name: a four-card combo would carry four, and the heading is the combo, not a
+      // list of links — and reading the cards is one action, so it is one press.
+      //
+      // Named cards only. A template slot has no card to open, and the row already
+      // names what fills it.
+      const compare = compareOnScryfall(DeckCombos.variantCardNames(variant));
+      if (compare) {
+        p.appendChild(document.createTextNode(' · '));
+        p.appendChild(compare);
+      }
       card.appendChild(p);
     }
 
@@ -198,6 +209,16 @@
     card.appendChild(choices);
 
     card.appendChild(resultChips(group.variants[0]));
+
+    // The same one-press look at the cards the other rows get. A collapsed row asks
+    // for its shared cards plus one of the interchangeable ones, so the comparison
+    // covers the whole set — that is what the reader is choosing between.
+    const groupCompare = compareOnScryfall(alphabetical(group.shared).concat(alphabetical(group.choices)));
+    if (groupCompare) {
+      const p = el('p', 'combo-link');
+      p.appendChild(groupCompare);
+      card.appendChild(p);
+    }
 
     const details = el('details');
     details.appendChild(el('summary', null, `All ${group.variants.length} versions`));
