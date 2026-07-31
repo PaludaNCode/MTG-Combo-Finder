@@ -175,30 +175,38 @@ test('the threshold warns one short and stays quiet on the number', () => {
 });
 
 // The tests above all derive from the constant, so they pass at any value it takes —
-// including the 20 this started at, which was set before the real size of Wizards' list
-// was known and would have let a flag that had half stopped working through: 21 of 53
-// flagged cards would have been reported as fine.
+// including the 20 this started at, which was set before the size of Wizards' list was
+// known at all and would have let a flag that had half stopped working through: 21 of
+// 53 flagged cards would have been reported as fine.
 //
-// So the value gets pinned, not just the comparison. The band is deliberate rather than
-// exact: 53 is the count as of the 9 February 2026 bracket update and Wizards revise the
-// list with every one, so a threshold equal to it would fail the first time they trim a
-// card, and one below ~two-thirds of it stops being a check at all.
-const OFFICIAL_GAME_CHANGERS_2026_02_09 = 53;
-test('the threshold is a real check against the size of the published list', () => {
+// So the value gets pinned, not just the comparison. Two figures are in play and the
+// band has to hold under both: Wizards' own bracket infographic lists 40 cards, and
+// secondary sources report 53 as of the 9 February 2026 update. The smaller one is what
+// the headroom has to be measured against — a threshold at or above 40 would warn the
+// first time Wizards trimmed a card if 40 is current.
+const GAME_CHANGERS_INFOGRAPHIC = 40; // counted off Wizards' own chart
+const GAME_CHANGERS_REPORTED_2026 = 53; // secondary sources, unconfirmed here
+test('the threshold has headroom under the smaller published figure', () => {
   assert.ok(
-    GAME_CHANGERS_EXPECTED >= Math.floor(OFFICIAL_GAME_CHANGERS_2026_02_09 * 0.66),
-    `${GAME_CHANGERS_EXPECTED} is too low to catch a half-broken flag against a list of `
-      + `${OFFICIAL_GAME_CHANGERS_2026_02_09}`
+    GAME_CHANGERS_EXPECTED < GAME_CHANGERS_INFOGRAPHIC,
+    `${GAME_CHANGERS_EXPECTED} leaves no headroom against a list of `
+      + `${GAME_CHANGERS_INFOGRAPHIC}: trimming one card would warn`
   );
+});
+test('the threshold still catches a flag that half stopped working', () => {
+  // Half of the larger figure is the case the old value of 20 waved through.
+  const half = Math.floor(GAME_CHANGERS_REPORTED_2026 / 2);
   assert.ok(
-    GAME_CHANGERS_EXPECTED < OFFICIAL_GAME_CHANGERS_2026_02_09,
-    `${GAME_CHANGERS_EXPECTED} leaves no headroom for Wizards trimming the list`
+    GAME_CHANGERS_EXPECTED > half,
+    `${GAME_CHANGERS_EXPECTED} would call ${half} of ${GAME_CHANGERS_REPORTED_2026} healthy`
   );
 });
 
 // The log has to be actionable on its own: whoever reads a failed refresh should not
-// have to come back here to learn what the number ought to be.
+// have to come back here to learn what the number ought to be. Both figures, because
+// which one is current is exactly what the reader needs to go and check.
 test('the warning says how long the official list is', () => {
   const out = captureGameChangers([]);
-  assert.match(out, new RegExp(String(OFFICIAL_GAME_CHANGERS_2026_02_09)));
+  assert.match(out, new RegExp(String(GAME_CHANGERS_INFOGRAPHIC)));
+  assert.match(out, new RegExp(String(GAME_CHANGERS_REPORTED_2026)));
 });

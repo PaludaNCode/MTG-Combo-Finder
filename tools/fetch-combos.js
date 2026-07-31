@@ -329,23 +329,30 @@ async function fetchCardIdentities() {
   return { identities, gameChangers: gameChangers.sort((a, b) => a.localeCompare(b)) };
 }
 
-// Wizards' Game Changer list stood at 53 cards as of the 9 February 2026 bracket
-// update. Nought is not a short list: it means Scryfall's flag has moved, and the
-// consequence is invisible on the page — the bracket line simply stops being
+// Nought Game Changers is not a short list: it means Scryfall's flag has moved, and
+// the consequence is invisible on the page — the bracket line simply stops being
 // rendered, which looks exactly like a deck that has nothing to report.
 //
-// 40 rather than 53, and rather than the 20 this started at. 20 was set before the
-// list's real size was known and would have passed with 21 of 53 — a flag that had
-// half stopped working would have gone unremarked. 53 exactly would fail the moment
-// Wizards trims the list, which they revise with every bracket update, so the
-// headroom is deliberate and points the same way as the coverage floors: a number
-// under what the data currently manages, there to catch something breaking rather
-// than to bicker over a card or two.
+// How long the list actually is has two answers, and this number has to be safe under
+// both. Wizards' own Commander Brackets Beta infographic lists **40** cards. Secondary
+// sources report **53** as of the 9 February 2026 bracket update, which would make the
+// infographic the launch version — plausible, since they revise the list with every
+// update, but not something this repo can confirm: Scryfall and Wizards are both
+// unreachable from the sandbox this was written in.
+//
+// So: 30. Under 40 it keeps ten cards of headroom for Wizards trimming the list, and
+// against 53 it still catches a flag that had half stopped working — 21 of 53 would
+// warn. It replaces the 20 this started at, which was set before either figure was
+// known and would have called 21 of 53 healthy.
+//
+// The point is a number under whatever the data currently manages, there to catch
+// something breaking rather than to bicker over a card or two — the same reasoning as
+// the coverage floors in CI. If the list is ever confirmed at 53, this can go up.
 //
 // Not fatal, unlike missing colour data: combo results are what this file is for,
 // and they are all still correct without it. But it must be impossible to miss in
 // the log, which is what this is for.
-const GAME_CHANGERS_EXPECTED = 40;
+const GAME_CHANGERS_EXPECTED = 30;
 
 function reportGameChangers(names) {
   if (names.length >= GAME_CHANGERS_EXPECTED) {
@@ -357,8 +364,9 @@ function reportGameChangers(names) {
   console.log('Scryfall publishes this as `game_changer` on the card object. If it has been');
   console.log('renamed or dropped, the deck page stops showing its bracket check — which is');
   console.log('indistinguishable from a deck that has no Game Changers in it.');
-  console.log('Wizards listed 53 as of 2026-02-09, so a number well under that is either the');
-  console.log('flag changing or the list being cut; either way it is worth a look.');
+  console.log("Wizards' own bracket infographic lists 40; secondary sources report 53 as of");
+  console.log('2026-02-09. Either way a number well under that is the flag changing or the list');
+  console.log('being cut, and both are worth a look.');
   console.log('Check the card object: https://scryfall.com/docs/api/cards\n');
 }
 

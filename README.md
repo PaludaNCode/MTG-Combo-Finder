@@ -671,6 +671,14 @@ the page checks the two and **names the ones it did not check**:
 | 4 Optimized | no limit on either |
 | 5 cEDH | a choice about how you play, not a fact about the list |
 
+**Checked against Wizards' own Commander Brackets Beta chart**, not just against
+write-ups of it. Every line above matches it, including the one that matters most here:
+bracket 3 permits *late-game* two-card infinite combos, which is why a two-card win puts
+a list at 3 rather than 4 — how early it lands is a judgement about play, and that is
+one of the criteria this page does not make. The chart also lists *few tutors* for
+brackets 1 and 2, and mass land denial and chained extra turns throughout; none of those
+is a card name, so none is checked.
+
 So what the page reports is a **floor** — the lowest bracket the list is still
 eligible for — and never a verdict. A deck with no Game Changers and no two-card
 win *could* be bracket 2; whether it is depends on mass land denial, chained extra
@@ -732,17 +740,22 @@ mode `templates.json` has to work to avoid.
 The one way that can break is the flag being renamed, and the consequence is
 nothing: `bracketCheck()` returns null, the line is not drawn, and that looks
 exactly like a deck with nothing to report. So the refresh **says so, loudly** —
-fewer than **40** flagged cards prints a warning naming the field and linking their
+fewer than **30** flagged cards prints a warning naming the field and linking their
 card object docs. It is not fatal, unlike missing colour data: the combo results are
 all still correct without it.
 
-**40, against a list of 53** as of the 9 February 2026 bracket update. This started at
-20, which was set before the list's real size was known and would have passed with 21
-of 53 — a flag that had half stopped working would have gone unremarked. 53 exactly
-would fail the moment Wizards trims the list, which they revise with every update, so
-the headroom points the same way as the coverage floors: a number under what the data
-currently manages, there to catch something breaking rather than to bicker over a card
-or two.
+**How long the list is has two answers, and 30 is safe under both.** Wizards' own
+Commander Brackets Beta infographic lists **40** cards. Secondary sources report **53**
+as of the 9 February 2026 update, which would make the infographic the launch version —
+plausible, since the list is revised with every update, but unconfirmed here: Scryfall
+and Wizards are both unreachable from the sandbox this was written in.
+
+30 keeps ten cards of headroom under 40, and against 53 still catches a flag that had
+half stopped working. It replaces the 20 this started at, which predates either figure
+and would have called 21 of 53 healthy. Both numbers are asserted in
+`test/bracket.test.js` — one test for the headroom, one for the half-broken case — so 40
+fails on the first and 20 on the second. If the list is ever confirmed at 53, 30 can go
+up.
 
 Half a check is worse than none, which is why a missing list draws nothing rather
 than a bracket based on combos alone — a deck full of Game Changers would otherwise
