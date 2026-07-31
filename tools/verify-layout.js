@@ -30,6 +30,10 @@ const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844, deck: 'marked' },
   { name: 'tablet', width: 768, height: 1024, deck: 'marked' },
   { name: 'desktop', width: 1440, height: 900, deck: 'marked' },
+  // A real PC. The shell was capped at 1140px at every size, so this left 780px
+  // of the screen empty while combo names wrapped inside a 714px column — the
+  // widest viewport the test ran was 1440, where it is much less obvious.
+  { name: 'wide desktop', width: 1920, height: 1200, deck: 'marked' },
   // Same deck with the commander marker taken off. Nothing about the output
   // should change: colours are read off the cards either way.
   { name: 'desktop (no marker)', width: 1440, height: 900, deck: 'plain' },
@@ -300,6 +304,7 @@ function measure(win, doc) {
 
   const form = doc.querySelector('.col-input').getBoundingClientRect();
   const out = doc.querySelector('.col-output').getBoundingClientRect();
+  const shell = doc.body.getBoundingClientRect();
   return {
     header,
     grouped,
@@ -317,6 +322,8 @@ function measure(win, doc) {
     topPiece,
     tabs,
     sideBySide: out.left >= form.right - 1,
+    shellWidth: Math.round(shell.width),
+    unusedWidth: Math.round(win.innerWidth - shell.width),
     formWidth: Math.round(form.width),
     outWidth: Math.round(out.width),
     chips,
@@ -972,7 +979,19 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (wide && !v.sideBySide) problems.push('wide viewport did not lay out in two columns');
     if (!wide && v.sideBySide) problems.push('narrow viewport did not stack to one column');
 
-    const layout = wide ? `two columns (${v.formWidth}px + ${v.outWidth}px)` : `stacked (${v.outWidth}px)`;
+    // A desktop should be used, not framed. The sidebar is a fixed 370px, so all
+    // the room a bigger screen offers belongs to the results.
+    if (v.width >= 1600) {
+      if (v.shellWidth < 1400) problems.push(`at ${v.width}px the page is only ${v.shellWidth}px wide, leaving ${v.unusedWidth}px unused`);
+      if (v.outWidth < 1000) problems.push(`at ${v.width}px the results column is only ${v.outWidth}px`);
+    }
+    // And capped, so an ultrawide monitor does not string a combo's result chips
+    // across half a metre.
+    if (v.shellWidth > 1520) problems.push(`the page grew to ${v.shellWidth}px; the cap should hold it near 1500px`);
+
+    const layout = wide
+      ? `two columns (${v.formWidth}px + ${v.outWidth}px, ${v.unusedWidth}px unused)`
+      : `stacked (${v.outWidth}px)`;
     const pieceNote = v.topPiece ? `top piece ${v.topPiece.card} ${v.topPiece.badge}` : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
     const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;

@@ -18,7 +18,13 @@
 
 body {
   margin: 0 auto;
-  max-width: 1140px;
+  /* Wide enough to use a desktop, capped so a very wide monitor does not string
+     a combo's result chips across half a metre.
+     1140px was set when this was one column of prose. It is now a fixed-width
+     sidebar beside a list of rows, and that cap applied at every size: measured
+     at 1920px it left 780px of the screen empty — 1420px at 2560px — while combo
+     names wrapped inside a 714px results column. */
+  max-width: 1500px;
   padding: 1.5rem 1rem 3rem;
   background: var(--bg);
   color: var(--text);

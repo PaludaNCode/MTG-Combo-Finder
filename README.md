@@ -470,6 +470,21 @@ column beside the results, so you can edit the list while reading suggestions.
 Section headers are 48px tall for thumbs, and `tools/verify-layout.js` asserts
 all of it — see Commands.
 
+**The page uses the desktop it is on, up to 1500px.** The shell was capped at
+1140px at every size, from a time when this was one column of prose. It is now a
+fixed 370px sidebar beside a list of rows, so that cap cost the results
+everything a bigger screen offered: measured at 1920px it left **780px of the
+screen empty** — 1420px at 2560px — while combo names wrapped inside a 714px
+column. The sidebar keeps its width, so the room goes where it is useful: the
+results column runs 714 → 999px at 1440 and 1074px from 1680 up.
+
+It is capped rather than fluid because these rows are not prose but they are not
+tables either — a combo's result chips strung across an ultrawide monitor is
+worse than a margin. The layout test now renders a **1920px** viewport and fails
+both ways: if the page stops using the screen, and if it stops respecting the cap.
+1440px was the widest viewport it checked before, which is exactly where the old
+cap was least visible.
+
 The layout test loads the page in a **sized iframe** rather than resizing the
 browser window: media queries follow the iframe's width, and the full Chrome
 build silently clamps `--window-size` to 500px, which quietly turned a "390px"
