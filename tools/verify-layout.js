@@ -1310,7 +1310,12 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (terms.length !== wanted.length) {
         problems.push(`${whose} names ${wanted.length} cards but its link asks for ${terms.length}`);
       }
-      const claimed = Number((/^Compare all (\d+)$/.exec(row.label || '') || [])[1]);
+      // "Compare" would be wrong here: a combo's cards are not alternatives to weigh,
+      // they are all required, and the verb has to say so.
+      if (/compare/i.test(row.label || '')) {
+        problems.push(`${whose}'s link says "${row.label}" — its cards are required, not alternatives`);
+      }
+      const claimed = Number((/^See all (\d+) cards?$/.exec(row.label || '') || [])[1]);
       if (claimed !== wanted.length) problems.push(`${whose}'s link reads "${row.label}" for ${wanted.length} cards`);
       // A collapsed row links its versions to Spellbook individually rather than as a
       // group, so only the ungrouped rows carry both links.

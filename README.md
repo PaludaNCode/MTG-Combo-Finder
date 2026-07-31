@@ -418,13 +418,20 @@ decision means looking at sixteen cards, and the links beside each name go to on
 card each. So a choice carries one more link — **Compare all 16** — which opens every
 card in the group on a single Scryfall page, images and all.
 
-**Every combo row carries the same link.** *Combos in your deck*, *Combos this
-unlocks*, *The combos it holds together* — each row ends with **Compare all N** beside
-its Spellbook link, opening every card in that combo on one Scryfall page. The point is
-a look at what a combo actually asks for before committing to it, and it is **one link
-rather than one per card name**: a four-card row would carry four, the heading is the
-combo rather than a list of links, and reading the cards is a single action so it is a
-single press. Named cards only — a template slot has no card to open, and the row
+**Every combo row carries the same link, under a different verb.** *Combos in your
+deck*, *Combos this unlocks*, *The combos it holds together* — each row ends with **See
+all N cards** beside its Spellbook link, opening every card in that combo on one
+Scryfall page.
+
+It says *see* and not *compare* deliberately. A choice between interchangeable cards is
+a comparison: the reader weighs them and picks one. The cards a combo needs are not
+alternatives at all — they are all required — so inviting a comparison is inviting the
+wrong idea. One query builder, two callers, two verbs; the layout test fails if a combo
+row's link says "compare".
+
+It is **one link rather than one per card name**: a four-card row would carry four, the
+heading is the combo rather than a list of links, and reading the cards is a single
+action so it is a single press. Named cards only — a template slot has no card to open, and the row
 already names what fills it. A collapsed row's link covers its shared cards *plus* all
 the interchangeable ones, since that whole set is what the reader is choosing between.
 

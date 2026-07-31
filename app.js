@@ -173,7 +173,12 @@
       //
       // Named cards only. A template slot has no card to open, and the row already
       // names what fills it.
-      const compare = compareOnScryfall(DeckCombos.variantCardNames(variant));
+      const cards = DeckCombos.variantCardNames(variant);
+      const compare = cardsOnScryfall(
+        cards,
+        `See all ${cards.length} cards`,
+        `Open all ${cards.length} cards in this combo on Scryfall`
+      );
       if (compare) {
         p.appendChild(document.createTextNode(' · '));
         p.appendChild(compare);
@@ -213,7 +218,12 @@
     // The same one-press look at the cards the other rows get. A collapsed row asks
     // for its shared cards plus one of the interchangeable ones, so the comparison
     // covers the whole set — that is what the reader is choosing between.
-    const groupCompare = compareOnScryfall(alphabetical(group.shared).concat(alphabetical(group.choices)));
+    const groupCards = alphabetical(group.shared).concat(alphabetical(group.choices));
+    const groupCompare = cardsOnScryfall(
+      groupCards,
+      `See all ${groupCards.length} cards`,
+      `Open all ${groupCards.length} cards this row involves on Scryfall`
+    );
     if (groupCompare) {
       const p = el('p', 'combo-link');
       p.appendChild(groupCompare);
@@ -363,15 +373,23 @@
   // comparison costs this page no request, needs no JavaScript to have run, and
   // opens in a new tab like every other card link here. It is styled as a button
   // because that is what it does.
-  function compareOnScryfall(names) {
+  // A link that opens a set of cards on one Scryfall page. Two callers, and they need
+  // two different verbs, because they are asking two different things of the reader:
+  //
+  //   - a choice between interchangeable cards is a *comparison* — the point is to
+  //     weigh them and pick one
+  //   - the cards a combo needs are not alternatives at all, they are all required.
+  //     Calling that "compare" invites the reader to choose between them, which is
+  //     the opposite of what the row means.
+  //
+  // So the label and the spoken name are the caller's, and only the query is shared.
+  function cardsOnScryfall(names, label, spoken) {
     const query = DeckCombos.scryfallSetQuery(names);
     if (!query) return null;
-    const a = link('https://scryfall.com/search?q=' + encodeURIComponent(query),
-      `Compare all ${names.length}`);
+    const a = link('https://scryfall.com/search?q=' + encodeURIComponent(query), label);
     a.className = 'alt-all';
-    // The visible label says how many; what the page will be is spelled out for a
-    // screen reader, since "compare" alone does not say where it leads.
-    const spoken = `Open all ${names.length} of these cards on Scryfall, side by side`;
+    // An icon-free pill saying "all 3" does not say where it goes; the accessible name
+    // and the tooltip do.
     a.title = spoken;
     a.setAttribute('aria-label', spoken);
     return a;
@@ -417,7 +435,11 @@
       // The whole choice, not just the folded-away part: the card in the heading is
       // one of the options being weighed, and a comparison missing the recommended
       // card is the wrong comparison.
-      const compare = compareOnScryfall(group.cards);
+      const compare = cardsOnScryfall(
+        group.cards,
+        `Compare all ${group.cards.length}`,
+        `Open all ${group.cards.length} of these cards on Scryfall, side by side`
+      );
       if (compare) label.appendChild(compare);
       alt.appendChild(label);
       const shown = rest.slice(0, ALTERNATIVES_SHOWN);
