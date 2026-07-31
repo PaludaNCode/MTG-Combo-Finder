@@ -330,6 +330,28 @@
     return li;
   }
 
+  // Every card in one choice, on one Scryfall page, with the images that make the
+  // choice possible to actually make. Sixteen alternatives is sixteen tabs
+  // otherwise, and the row of links beside each name only ever goes to one card.
+  //
+  // A link and not a button on purpose: Scryfall serves this as a GET, so the
+  // comparison costs this page no request, needs no JavaScript to have run, and
+  // opens in a new tab like every other card link here. It is styled as a button
+  // because that is what it does.
+  function compareOnScryfall(names) {
+    const query = DeckCombos.scryfallSetQuery(names);
+    if (!query) return null;
+    const a = link('https://scryfall.com/search?q=' + encodeURIComponent(query),
+      `Compare all ${names.length} on Scryfall`);
+    a.className = 'alt-all';
+    // The visible label says how many; what the page will be is spelled out for a
+    // screen reader, since "compare" alone does not say where it leads.
+    const spoken = `Open all ${names.length} of these cards on Scryfall, side by side`;
+    a.title = spoken;
+    a.setAttribute('aria-label', spoken);
+    return a;
+  }
+
   // One suggestion, which may be a choice between cards that do the same job.
   // Grouping them matters: four cards each claiming "+7 combos" is four ways of
   // describing one decision, and reads as four decisions.
@@ -360,8 +382,14 @@
 
     if (rest.length) {
       const alt = el('div', 'alternatives');
-      alt.appendChild(el('span', 'alt-label',
-        `or any one of these ${rest.length} instead — same ${group.unlocks.length === 1 ? 'combo' : 'combos'}:`));
+      const label = el('span', 'alt-label',
+        `or any one of these ${rest.length} instead — same ${group.unlocks.length === 1 ? 'combo' : 'combos'}:`);
+      // The whole choice, not just the folded-away part: the card in the heading is
+      // one of the options being weighed, and a comparison missing the recommended
+      // card is the wrong comparison.
+      const compare = compareOnScryfall(group.cards);
+      if (compare) label.appendChild(compare);
+      alt.appendChild(label);
       const shown = rest.slice(0, ALTERNATIVES_SHOWN);
       const list = el('ul', 'alt-list');
       shown.forEach((name) => list.appendChild(alternativeItem(name)));

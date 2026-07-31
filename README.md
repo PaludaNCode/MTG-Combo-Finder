@@ -20,6 +20,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   interchangeable alternative) carries **+ Add to deck**: the card is appended to
   the decklist, kept, and the search runs again against the database already in
   memory. See [Adding a card, and searching again](#adding-a-card-and-searching-again).
+- **Compare a whole choice in one press** — when a suggestion is a choice between
+  interchangeable cards, **Compare all N on Scryfall** opens every one of them on a
+  single Scryfall page. See
+  [Comparing a whole choice at once](#comparing-a-whole-choice-at-once).
 - **Which bracket the list is in** — the Game Changers your deck plays and the
   two-card combos it can win with, and the lowest Commander bracket that leaves it
   eligible for. A floor, never a verdict, and it says which criteria it did not
@@ -319,6 +323,35 @@ Two details worth keeping:
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
+
+#### Comparing a whole choice at once
+
+Grouping sixteen cards into one decision is only half the job: **making** that
+decision means looking at sixteen cards, and the links beside each name go to one
+card each. So a choice carries one more link — **Compare all 16 on Scryfall** —
+which opens every card in the group on a single Scryfall page, images and all.
+
+- **The query is exact.** `DeckCombos.scryfallSetQuery()` builds
+  `!"Blood Artist" or !"Zulaport Cutthroat" or …`. Without the `!`, Scryfall reads
+  the words as a substring search and returns a different, larger set of cards than
+  the group being offered — which would look like a working comparison.
+- **The recommended card is included.** The link covers `group.cards`, not just the
+  folded-away alternatives: the card in the heading is one of the options being
+  weighed, and a comparison missing it is the wrong comparison.
+- **A link, not a fetch.** Scryfall serves this as a GET, so the comparison costs
+  this page no request and nothing to rate-limit, and it needs no JavaScript to
+  have run. It is styled as a button because that is what it does, and kept quieter
+  than the `+ Add` pills — adding a card is the decision, this is the reading you do
+  first.
+- **Whitespace is collapsed, which `nameKey()` does not do.** That function trims
+  and lowercases but leaves inner spacing alone, correctly, because it decides
+  whether a deck holds a card. Here the string goes into a search, where
+  `!"Blood   Artist"` matches nothing at all.
+
+Nine unit tests in `test/scryfall-query.test.js` cover the query; the layout test
+reads the real `href` out of the rendered page and checks it names every card the
+group shows, that every term is exact, and that the number in the label is the
+number the query actually asks for.
 
 ### Template slots ("a Persist Creature")
 

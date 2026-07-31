@@ -227,6 +227,24 @@ function measure(win, doc) {
     choiceRows: doc.querySelectorAll('#included .choices').length,
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
     altNames: doc.querySelectorAll('.alternatives .alt-list .card-name').length,
+    // The one link that covers a whole choice at once. Gathered per suggestion and
+    // alongside the names that suggestion shows, because the query inside the href
+    // is the part that can silently stop matching what the group actually offers —
+    // and a document-wide query could not tell which cards it was meant to carry.
+    compare: [...doc.querySelectorAll('.combo.suggestion')]
+      .filter((row) => row.querySelector('.alternatives'))
+      .map((row) => {
+        const a = row.querySelector('.alternatives .alt-all');
+        return {
+          headline: (row.querySelector('h3 > .card-name') || {}).textContent || '',
+          // Both lists: the spelled-out few and the folded-away remainder.
+          alts: [...row.querySelectorAll('.alternatives .alt-list .card-name')].map((n) => n.textContent),
+          label: a ? a.textContent : null,
+          href: a ? a.getAttribute('href') : null,
+          opensAway: Boolean(a) && a.getAttribute('target') === '_blank'
+            && (a.getAttribute('rel') || '').includes('noopener'),
+        };
+      }),
   };
   const slots = {
     labels: [...doc.querySelectorAll('#included .slot')].map((e) => e.textContent),
@@ -902,6 +920,44 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
 
+    // Sixteen interchangeable cards is one decision, and making it means looking at
+    // all sixteen. The link that does that in one press is only worth having if the
+    // query behind it really carries every card in the choice — a query short by
+    // one is a comparison missing an option, and nothing on screen would show it.
+    if (!g.compare.length) problems.push('a suggestion offered alternatives but no way to compare them');
+    g.compare.forEach((c) => {
+      const whose = c.headline || 'a suggestion';
+      if (!c.href) { problems.push(`${whose} offered alternatives with no Scryfall comparison link`); return; }
+      if (!c.href.startsWith('https://scryfall.com/search?q=')) {
+        problems.push(`${whose}'s comparison link does not go to a Scryfall search: ${c.href}`);
+        return;
+      }
+      if (!c.opensAway) problems.push(`${whose}'s comparison link would navigate away from the deck`);
+
+      const query = decodeURIComponent(c.href.slice('https://scryfall.com/search?q='.length));
+      const terms = query.split(' or ');
+      // The recommended card is one of the options being weighed, so a comparison
+      // without it is the wrong comparison.
+      const wanted = [c.headline].concat(c.alts).filter(Boolean);
+      wanted.forEach((name) => {
+        if (!terms.includes('!"' + name + '"')) {
+          problems.push(`${whose}'s comparison link leaves out ${name}`);
+        }
+      });
+      // Anchored, or Scryfall reads the words as a substring search and returns a
+      // different set of cards than the one being offered.
+      terms.forEach((t) => {
+        if (!/^!".+"$/.test(t)) problems.push(`${whose}'s comparison query is not exact: ${t}`);
+      });
+      // What the label promises has to be what the query asks for, since the number
+      // is the only part of this a reader can check.
+      const claimed = Number((/Compare all (\d+) on Scryfall/.exec(c.label || '') || [])[1]);
+      if (!claimed) problems.push(`${whose}'s comparison link reads "${c.label}"`);
+      else if (claimed !== terms.length) {
+        problems.push(`${whose}'s link offers ${claimed} cards but asks Scryfall for ${terms.length}`);
+      }
+    });
+
     // Counting rows instead of combos under-reports a deck with interchangeable
     // versions in it — 34 combos shown as 23. The fixture collapses two combos
     // into one row on purpose, so the badge and the row count must disagree.
@@ -1101,7 +1157,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
-      const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
+      const compareNote = v.grouped.compare.length
+        ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+) on Scryfall/, '$1 on Scryfall')).join(' / ')}`
+        : '';
+      const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
       const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;

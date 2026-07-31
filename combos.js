@@ -726,8 +726,46 @@
       .replace(/^-+|-+$/g, '');
   }
 
+  // A Scryfall query matching a whole set of cards at once: `!"A" or !"B"`. Its
+  // point is comparison — sixteen interchangeable cards are one decision, and
+  // making it means looking at sixteen cards, which is one page on Scryfall and
+  // sixteen middle-clicks without this.
+  //
+  // `!"..."` is Scryfall's exact-name form, so a card is never confused for
+  // another that merely contains its name (there is a real "Blood Artist" and a
+  // real "Blood Artist Avatar" problem here). A repeated name is dropped, because
+  // it costs ~25 characters of a URL already carrying sixteen and Scryfall shows
+  // the card once either way.
+  //
+  // Runs of whitespace are collapsed rather than passed through, which is where
+  // this parts company with nameKey(): that trims and lowercases but leaves inner
+  // spacing alone, and it is right to, since it decides whether a deck holds a
+  // card. Here the string goes into a search — `!"Blood   Artist"` matches nothing
+  // at all — so the spacing has to be fixed rather than preserved, and fixing it
+  // is also what makes the two spellings dedupe to one term.
+  //
+  // Returns the query, not the URL: the caller already builds
+  // `scryfall.com/search?q=` for single cards and there is no reason for a second
+  // place that knows the host.
+  function scryfallSetQuery(names) {
+    const seen = new Set();
+    const exact = [];
+    (names || []).forEach((name) => {
+      if (typeof name !== 'string' || !name.trim()) return;
+      // No Magic card name contains a double quote, and one arriving here would
+      // end the quoted term early and change what the query matches.
+      const tidy = name.trim().replace(/\s+/g, ' ').replace(/"/g, '');
+      if (!tidy) return;
+      const key = nameKey(tidy);
+      if (seen.has(key)) return;
+      seen.add(key);
+      exact.push('!"' + tidy + '"');
+    });
+    return exact.join(' or ');
+  }
+
   const api = {
-    computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
+    computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
