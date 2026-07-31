@@ -99,6 +99,10 @@ const FIXTURE = {
     { id: '6', c: ['Basalt Monolith', 'Kinnan, Bonder Prodigy', 'Walking Ballista'], p: ['Infinite damage'], i: 'GU', pop: 10 },
     { id: '3', c: ['Palinchron', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
     { id: '4', c: ['Great Whale', 'Deadeye Navigator'], p: ['Infinite mana'], i: 'U' },
+    // A third combo Deadeye Navigator would unlock, needing one more card than
+    // the two above. Without a suggestion whose combos differ in size, the
+    // per-card breakdown renders one pill and proves nothing.
+    { id: '14', c: ['Palinchron', 'Deadeye Navigator', 'Basalt Monolith'], p: ['Infinite mana'], i: 'U' },
     // Interchangeable with combo 2: same partner, same result, one card swapped.
     // Both are already in the deck, so they must collapse into one row.
     { id: '8', c: ['Basalt Monolith', 'Sword of the Meek'], p: ['Infinite colorless mana'], i: 'C', pop: 80 },
@@ -185,6 +189,16 @@ function measure(win, doc) {
     paneVisible: !doc.getElementById(t.getAttribute('aria-controls')).hidden,
     height: t.offsetHeight,
   }));
+  // The per-card breakdown of what each suggestion's count is made of. The pills
+  // on a row must add up to that row's own badge — that is the whole reason it
+  // is reported per card rather than per panel.
+  const sizes = [...doc.querySelectorAll('.tab-pane:not([hidden]) .combo.suggestion')].map((row) => ({
+    badge: (row.querySelector('.badge') || {}).textContent || '',
+    label: (row.querySelector('.sizes-label') || {}).textContent || '',
+    pills: [...row.querySelectorAll('.sizes .size')].map((p) => p.textContent),
+    easiest: [...row.querySelectorAll('.sizes .size.is-easiest')].map((p) => p.textContent),
+    colour: row.querySelector('.sizes .size') ? win.getComputedStyle(row.querySelector('.sizes .size')).color : null,
+  }));
   const grouped = {
     // A combo row offering a choice of part, and a suggestion offering a choice
     // of card. Both exist in the fixture, so both must render.
@@ -259,6 +273,7 @@ function measure(win, doc) {
     stuck,
     dataAge,
     badges,
+    sizes,
     included,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
@@ -698,6 +713,40 @@ function serve(dir, extra, onVerdict) {
       if (breakable.length) problems.push(`a badge can break across lines: "${breakable[0].text}"`);
     }
 
+    // Every suggestion says what its count is made of, and the parts have to
+    // agree with the count: "+3 combos" alongside pills totalling 2 is worse
+    // than no breakdown at all.
+    if (!v.sizes.length) {
+      problems.push('no suggestions rendered, so the per-card breakdown is untested');
+    } else {
+      for (const row of v.sizes) {
+        if (!row.pills.length) {
+          problems.push(`a suggestion (${row.badge}) shows no combo sizes`);
+          continue;
+        }
+        const claimed = Number((row.badge.match(/\d+/) || [0])[0]);
+        const counted = row.pills.reduce((n, text) => {
+          const m = text.match(/^(\d+) × (\d+)-card$/);
+          return n + (m ? Number(m[1]) : 1); // the single-combo row reads "N-card combo"
+        }, 0);
+        if (claimed !== counted) {
+          problems.push(`"${row.badge}" but its sizes total ${counted} [${row.pills.join(', ')}]`);
+        }
+        if (!row.easiest.length) problems.push(`no smallest combo marked on "${row.badge}"`);
+      }
+      // The mixed row is the one worth having: several sizes, smallest first.
+      const mixed = v.sizes.find((row) => row.pills.length > 1);
+      if (!mixed) {
+        problems.push('no suggestion unlocks combos of differing sizes, so the breakdown proves nothing');
+      } else {
+        const first = Number((mixed.pills[0].match(/(\d+)-card/) || [0, 0])[1]);
+        const rest = mixed.pills.slice(1).map((t) => Number((t.match(/(\d+)-card/) || [0, 0])[1]));
+        if (rest.some((n) => n < first)) problems.push(`sizes are not smallest-first: [${mixed.pills.join(', ')}]`);
+        if (mixed.easiest[0] !== mixed.pills[0]) problems.push('the marked size is not the smallest one');
+        if (!/combo sizes/i.test(mixed.label)) problems.push(`the breakdown is unlabelled: "${mixed.label}"`);
+      }
+    }
+
     if (v.tabs.length !== 2) {
       problems.push(`expected 2 suggestion tabs, got ${v.tabs.length}`);
     } else {
@@ -841,7 +890,8 @@ function serve(dir, extra, onVerdict) {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`;
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

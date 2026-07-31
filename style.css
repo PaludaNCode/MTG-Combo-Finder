@@ -7,6 +7,9 @@
   --accent: #d4a24e;
   --error: #e06c75;
   --ok: #7bc275;
+  /* How many cards a combo needs. Kept clear of the accent and of the three
+     result-tier colours, so a size never reads as a payoff. */
+  --size: #8ba7cc;
   --radius: 10px;
   color-scheme: dark;
 }
@@ -321,6 +324,39 @@ button:disabled { opacity: .6; cursor: wait; }
   white-space: nowrap;
 }
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
+
+/* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card".
+   Slate on purpose. Green, yellow and grey are already spent on what a combo
+   achieves, so a size pill in any of them would read as a verdict on the payoff
+   rather than a count of pieces. */
+.sizes {
+  margin: .1rem 0 .4rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .3rem;
+}
+.sizes-label {
+  color: var(--muted);
+  font-size: .8rem;
+  margin-right: .1rem;
+}
+.size {
+  padding: .02rem .45rem;
+  border-radius: 999px;
+  border: 1px solid #3f4759;
+  color: var(--size);
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* The smallest combo is the one being looked for, so it is the one that reads
+   first. */
+.size.is-easiest {
+  border-color: var(--size);
+  background: rgba(139, 167, 204, .16);
+}
 
 /* ---- interchangeable cards ---- */
 

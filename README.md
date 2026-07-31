@@ -16,6 +16,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
   **Ties break on popularity** — see [Ranking, and what popularity is for](#ranking-and-what-popularity-is-for).
+- **What each recommendation's count is made of** — "+10 combos" splits into
+  *1 × 2-card, 9 × 3-card*, smallest first and marked. A two-card combo is a far easier
+  thing to assemble in a game than a four-card one, and a count hides the difference
+  entirely — see [What "+10 combos" is made of](#what-10-combos-is-made-of).
 - **One slot away** — combos you hold every named card for and cannot assemble because
   nothing in your deck fills their slot ("a Persist Creature"). Reported separately, never
   counted among the combos you have — see [Template slots](#template-slots-a-persist-creature).
@@ -160,6 +164,42 @@ Popularity is a tie-break rather than the ranking, and `pop` is absent from some
 a missing one counts as zero, so ordering never depends on whether a field is there. With
 no popularity anywhere — old data, or a test fixture — the order falls back to alphabetical
 exactly as before.
+
+### What "+10 combos" is made of
+
+A count of combos says nothing about how hard they are to pull off, and the difference is
+large: a two-card combo needs two cards on the table, a four-card one needs four to be
+found, cast and kept alive. "+6 combos" reads identically whether it is six two-carders or
+five four-carders and a two.
+
+So every recommendation carries its own breakdown — **`Combo sizes  1 × 2-card  9 × 3-card`**
+— smallest first, and the smallest marked, because that is the one being looked for. A
+recommendation unlocking a single combo just says `2-card combo`.
+
+Measured on the deck in `test/fixtures/deck.txt`, this is not a marginal distinction:
+
+| | 2-card | 3-card | 4-card | 5-card |
+|---|---:|---:|---:|---:|
+| Combos unlocked | 21 | 146 | 28 | 3 |
+| Recommendations whose easiest is this | 19 | 47 | 13 | 1 |
+
+The case that settles the design: **Pitiless Plunderer** ranks 5th on "+6 combos", and five
+of those six need four cards — but the sixth needs two. **Ashnod's Altar** outranks it on
+"+7 combos", every one of them three cards. Nothing in a count can tell you that, and it is
+the difference between a card you play and a card you cut.
+
+Three decisions:
+
+- **A slot counts as a card.** Something has to occupy it, so
+  `Rings of Brighthearth + a Persist Creature` is a two-card combo. Counting only named
+  cards would call it a one-card combo, which is not a thing.
+- **Per card, not per panel.** An aggregate summary over the whole list needs a
+  denominator, and there are two defensible ones — 19 of 80 recommendations and 21 of 198
+  combos are both true and answer different questions. A per-row breakdown has neither
+  problem: its parts sum to the badge sitting beside them, which the layout test asserts.
+- **Slate, not the tier colours.** Green, yellow and grey already mean *what a combo
+  achieves*. A size pill in green would read as "this wins the game" rather than "this needs
+  two cards", so size gets a colour of its own (`--size`).
 
 ### Collapsing interchangeable cards
 

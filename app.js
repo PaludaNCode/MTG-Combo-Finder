@@ -205,6 +205,38 @@
   // 17 is real — the whole list is a wall, and the first few make the point.
   const ALTERNATIVES_SHOWN = 5;
 
+  // What a suggestion's count is actually made of, card by card: "1 × 2-card,
+  // 9 × 3-card". A two-card combo is far easier to assemble in a game than a
+  // four-card one, and "+10 combos" hides the difference completely — a card
+  // whose ten combos all need four pieces reads exactly like one that hands you
+  // a two-card line.
+  //
+  // The smallest is marked, because that is the one being looked for. The parts
+  // sum to the badge beside them, so there is no second total to reconcile.
+  function sizeRow(variants) {
+    const breakdown = DeckCombos.sizeBreakdown(variants);
+    if (!breakdown.length) return null;
+    // One combo of one size is what the header already says.
+    if (breakdown.length === 1 && breakdown[0].count === 1) {
+      const only = el('p', 'sizes');
+      only.appendChild(el('span', 'size is-easiest', breakdown[0].size + '-card combo'));
+      return only;
+    }
+
+    const row = el('p', 'sizes');
+    row.appendChild(el('span', 'sizes-label', 'Combo sizes'));
+    breakdown.forEach(({ size, count }, i) => {
+      // Slate, deliberately not the green/yellow/grey a result uses: those say
+      // what a combo achieves, and "2-card" must not read as "this wins".
+      const pill = el('span', 'size' + (i === 0 ? ' is-easiest' : ''), count + ' × ' + size + '-card');
+      pill.title = count === 1
+        ? `One combo needing ${size} cards on the table`
+        : `${count} combos needing ${size} cards on the table`;
+      row.appendChild(pill);
+    });
+    return row;
+  }
+
   // One suggestion, which may be a choice between cards that do the same job.
   // Grouping them matters: four cards each claiming "+7 combos" is four ways of
   // describing one decision, and reads as four decisions.
@@ -217,6 +249,9 @@
     header.appendChild(el('span', 'card-name', first));
     header.appendChild(el('span', 'badge', '+' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's')));
     card.appendChild(header);
+
+    const sizes = sizeRow(group.unlocks);
+    if (sizes) card.appendChild(sizes);
 
     const links = el('p', 'card-links');
     links.appendChild(cardLinks(first));

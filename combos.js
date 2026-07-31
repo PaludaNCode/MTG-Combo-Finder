@@ -71,6 +71,38 @@
     );
   }
 
+  // ---- how big a combo is ---------------------------------------------------
+  //
+  // How many cards have to be on the table for a combo to do anything. A
+  // two-card combo and a four-card one are different propositions — fewer
+  // pieces to find, fewer to keep alive — and a count of combos says nothing
+  // about it: "+6 combos" reads the same whether it is six two-carders or five
+  // four-carders and a two.
+  //
+  // A slot counts as a card, because something has to occupy it: a combo of
+  // "Rings of Brighthearth + a Persist Creature" needs two cards, one of which
+  // your deck happens to supply.
+  function comboSize(variant) {
+    return variantCardNames(variant).length + (((variant && variant.fills) || []).length);
+  }
+
+  // What a set of combos is made of, smallest first:
+  // [{ size, count }] — "one 2-card combo and nine 3-card ones".
+  //
+  // The counts always sum to the number of combos passed in, which is the whole
+  // point: a row can show its own breakdown without inviting the reader to work
+  // out which total it is a fraction of.
+  function sizeBreakdown(variants) {
+    const counts = new Map();
+    for (const variant of variants || []) {
+      const size = comboSize(variant);
+      counts.set(size, (counts.get(size) || 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([size, count]) => ({ size, count }));
+  }
+
   // ---- interchangeable cards -----------------------------------------------
   //
   // Spellbook stores one variant per concrete card list, so a combo its own site
@@ -627,6 +659,7 @@
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
+    comboSize, sizeBreakdown,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
