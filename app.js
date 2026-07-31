@@ -322,7 +322,13 @@
   // it. Two lists render these — the first few, and the folded-away remainder.
   function alternativeItem(name) {
     const li = el('li');
-    li.appendChild(el('span', 'card-name', name));
+    // The name is the column that gives way when the row is too narrow, clipped with
+    // an ellipsis in CSS rather than shortened here — the text stays whole in the DOM
+    // that way. The title is for the pointer, which has nothing else to go on once
+    // the drawing stops early.
+    const cardName = el('span', 'card-name', name);
+    cardName.title = name;
+    li.appendChild(cardName);
     li.appendChild(cardLinks(name));
     li.appendChild(addButton(name, '+ Add'));
     return li;

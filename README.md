@@ -400,6 +400,16 @@ Two details worth keeping:
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
+- **Each option is one grid row, not a wrapping line.** *name · links · + Add*, where
+  the name column is the only one that gives: `minmax(0, 1fr)` plus an ellipsis. As a
+  wrapping flex row, a long name pushed its **+ Add** onto a second line — measured on
+  a phone, *The Destined White Mage* put its button 113px left of the row above it —
+  so some rows were one line, some were two, and no two buttons shared an edge. The
+  layout test measures the buttons' right edges and fails if they differ.
+- **The name is clipped, not shortened.** The full text stays in the DOM, so a screen
+  reader reads it, find-in-page finds it, and copying the row copies all of it; only
+  the drawing stops early, with `title` putting it back within reach of a pointer.
+  Cutting the string in JavaScript would have taken the information away for real.
 
 #### Comparing a whole choice at once
 
