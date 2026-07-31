@@ -118,7 +118,11 @@ const FIXTURE = {
     // A third combo Deadeye Navigator would unlock, needing one more card than
     // the two above. Without a suggestion whose combos differ in size, the
     // per-card breakdown renders one pill and proves nothing.
-    { id: '14', c: ['Palinchron', 'Deadeye Navigator', 'Basalt Monolith'], p: ['Infinite mana'], i: 'U' },
+    // Deliberately the most-played of Deadeye Navigator's three, and the largest.
+    // Sorting a suggestion's combos on popularity alone floats this above the two
+    // 2-card lines, so this `pop` is what makes "smallest first" a claim the run can
+    // actually falsify rather than one the fixture satisfies by accident.
+    { id: '14', c: ['Palinchron', 'Deadeye Navigator', 'Basalt Monolith'], p: ['Infinite mana'], i: 'U', pop: 95 },
     // Interchangeable with combo 2: same partner, same result, one card swapped.
     // Both are already in the deck, so they must collapse into one row.
     { id: '8', c: ['Basalt Monolith', 'Sword of the Meek'], p: ['Infinite colorless mana'], i: 'C', pop: 80 },
@@ -222,6 +226,20 @@ function measure(win, doc) {
     pills: [...row.querySelectorAll('.sizes .size')].map((p) => p.textContent),
     easiest: [...row.querySelectorAll('.sizes .size.is-easiest')].map((p) => p.textContent),
     colour: row.querySelector('.sizes .size') ? win.getComputedStyle(row.querySelector('.sizes .size')).color : null,
+    // The sizes of the combos listed inside "Combos this unlocks", in the order they
+    // are drawn. The pills above them are in size order, so a list that is not says
+    // two different things about the same set of combos — and it puts the hardest
+    // line to assemble at the top of a panel headed by the easiest.
+    //
+    // Counted the way the top-level rows are: named cards, plus a slot or an
+    // "any of N" choice, each of which something has to occupy.
+    unlockSizes: [...row.querySelectorAll('details > .combo')].map((c) => {
+      const head = c.querySelector(':scope > h3');
+      if (!head) return 0;
+      return head.querySelectorAll(':scope > .card-name').length
+        + head.querySelectorAll(':scope > .slot').length
+        + (head.querySelector(':scope > .either') ? 1 : 0);
+    }),
   }));
   const grouped = {
     // A combo row offering a choice of part, and a suggestion offering a choice
@@ -1029,6 +1047,29 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         if (hasTwo && !row.easiest.length) problems.push(`a two-card combo is not marked on "${row.badge}"`);
         if (!hasTwo && row.easiest.length) problems.push(`"${row.easiest[0]}" is marked as easiest but is not a two-card combo`);
       }
+      // The combos inside a suggestion are ordered the same way the pills above them
+      // are: smallest first. Two orderings of one set of combos, one panel apart, is
+      // the page contradicting itself — and the fixture's most-played combo is also
+      // its largest, so sorting on popularity alone fails this.
+      for (const row of v.sizes) {
+        const u = row.unlockSizes;
+        if (!u.length) problems.push(`a suggestion (${row.badge}) listed no combos`);
+        for (let i = 1; i < u.length; i++) {
+          if (u[i] < u[i - 1]) {
+            problems.push(`"Combos this unlocks" on ${row.badge} runs [${u.join(', ')}] — not smallest first`);
+            break;
+          }
+        }
+        // The nested list has to be the whole set, or its order is beside the point.
+        const claimed = row.pills.reduce((sum, t) => {
+          const m = t.match(/^(?:(\d+) × )?(\d+)-card$/);
+          return sum + (m ? Number(m[1] || 1) : 0);
+        }, 0);
+        if (claimed && claimed !== u.length) {
+          problems.push(`${row.badge} claims ${claimed} combos in its pills but lists ${u.length}`);
+        }
+      }
+
       // The mixed row is the one worth having: several sizes, smallest first.
       const mixed = v.sizes.find((row) => row.pills.length > 1);
       if (!mixed) {
@@ -1346,7 +1387,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         : '';
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
-      const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`
+      const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
+      const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;

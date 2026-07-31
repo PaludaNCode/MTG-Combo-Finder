@@ -61,9 +61,12 @@
       }
       entry.unlocks.push(variant);
     }
-    // Inside a suggestion too: "combos this unlocks" should open on the one
-    // people actually play, not on whichever the database happened to list first.
-    for (const entry of byCard.values()) entry.unlocks.sort(byPopularity);
+    // Inside a suggestion too, and by the same rule the deck's own combos use:
+    // smallest first, most played breaking the tie. Popularity alone put a 4-card
+    // line above a 2-card one, which reads as a recommendation to build the harder
+    // combo — and it disagreed with the size breakdown printed on the row directly
+    // above it ("1 × 2-card · 4 × 3-card · 7 × 4-card"), which is in size order.
+    for (const entry of byCard.values()) entry.unlocks.sort(bySizeThenPopularity);
     return [...byCard.values()].sort(
       (a, b) => b.unlocks.length - a.unlocks.length
         || bestPopularity(b.unlocks) - bestPopularity(a.unlocks)
