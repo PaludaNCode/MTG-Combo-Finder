@@ -80,6 +80,7 @@ const FIXTURE = {
     'Palinchron': 'U', 'Deadeye Navigator': 'U', 'Great Whale': 'U',
     'Walking Ballista': '', 'Heliod, Sun-Crowned': 'W', 'Island': 'U',
     'Sword of the Meek': '', 'Bloom Tender': 'G', 'Devoted Druid': 'G',
+    'The Destined White Mage': 'G',
     'Murderous Redcap': 'BR',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
@@ -130,6 +131,11 @@ const FIXTURE = {
     // suggestion for them has to read as one choice, not two recommendations.
     { id: '9', c: ['Walking Ballista', 'Bloom Tender'], p: ['Infinite damage'], i: 'G' },
     { id: '10', c: ['Walking Ballista', 'Devoted Druid'], p: ['Infinite damage'], i: 'G' },
+    // A third interchangeable option, deliberately long-named. With one alternative
+    // row the claim "every + Add lines up" is true whatever the CSS does; with two of
+    // very different widths it is a claim about the layout. The name is real, and it
+    // is the one from the report that pushed its button onto a second line.
+    { id: '15', c: ['Walking Ballista', 'The Destined White Mage'], p: ['Infinite damage'], i: 'G' },
     { id: '5', c: ['Walking Ballista', 'Heliod, Sun-Crowned'], p: ['Infinite damage'], i: 'W' },
     // Complete only because the deck fills the slot.
     { id: '11', c: ['Rings of Brighthearth'], t: [42], p: ['Infinite damage'], i: 'C', pop: 70 },
@@ -255,6 +261,26 @@ function measure(win, doc) {
     choiceRows: doc.querySelectorAll('#included .choices').length,
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
     altNames: doc.querySelectorAll('.alternatives .alt-list .card-name').length,
+    // Where each interchangeable row's + Add actually sits. A wrapping row put the
+    // button of a long name on a second line and started every button at a different
+    // x, so the list read as ragged — measured, because "they line up" is a fact
+    // about geometry and nothing in the markup states it.
+    altRows: [...doc.querySelectorAll('.alternatives .alt-list li')].map((li) => {
+      const name = li.querySelector('.card-name');
+      const add = li.querySelector('.add-card');
+      if (!name || !add) return null;
+      const nameBox = name.getBoundingClientRect();
+      const addBox = add.getBoundingClientRect();
+      return {
+        name: name.textContent,
+        // Rounded: sub-pixel layout differences are not raggedness.
+        addRight: Math.round(addBox.right),
+        sameLine: Math.abs(addBox.top - nameBox.top) < 12,
+        // Clipped rather than shortened, so the text is all still there to be read.
+        clipped: name.scrollWidth > name.clientWidth + 1,
+        titled: name.getAttribute('title') === name.textContent,
+      };
+    }).filter(Boolean),
     // The one link that covers a whole choice at once. Gathered per suggestion and
     // alongside the names that suggestion shows, because the query inside the href
     // is the part that can silently stop matching what the group actually offers —
@@ -1201,6 +1227,23 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
     if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
+
+    // Every + Add in a choice on the same line as its card, and every one of them on
+    // the same right edge. The second is the point: buttons that each start wherever
+    // the name before them happened to end make a list of four look like a mistake.
+    if (!g.altRows.length) problems.push('no interchangeable row offered a + Add to measure');
+    const strays = g.altRows.filter((r) => !r.sameLine);
+    if (strays.length) {
+      problems.push(`${strays.length} + Add button(s) wrapped off their card's line, e.g. ${strays[0].name}`);
+    }
+    const edges = [...new Set(g.altRows.map((r) => r.addRight))];
+    if (edges.length > 1) {
+      problems.push(`the + Add buttons sit on ${edges.length} different edges (${edges.join('px, ')}px), so they do not line up`);
+    }
+    // A clipped name must still be readable some other way, or the row has lost
+    // information rather than just space.
+    const mute = g.altRows.filter((r) => !r.titled);
+    if (mute.length) problems.push(`${mute.length} clipped name(s) carry no title, e.g. ${mute[0].name}`);
 
     // Sixteen interchangeable cards is one decision, and making it means looking at
     // all sixteen. The link that does that in one press is only worth having if the

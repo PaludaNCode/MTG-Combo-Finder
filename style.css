@@ -672,14 +672,39 @@ button:disabled { opacity: .6; cursor: wait; }
   flex-direction: column;
   gap: .15rem;
 }
+/* Three columns, not a wrapping row: name, links, button. A flex row that wraps put
+   the + Add of a long name on a line of its own — "Spider-Man, Peter Parker" fits a
+   phone, and the button after its two links does not — which left a list where some
+   rows are one line and some are two, and no two buttons share an edge.
+
+   The name column is the one that gives: minmax(0, 1fr) lets it shrink below its
+   content, and the ellipsis on .card-name below is what it shrinks to. Everything
+   else keeps its natural width, so the buttons line up down the list whatever the
+   names do.
+
+   No justify-self is needed and none is set: every row is its own grid, the link text
+   is the same on all of them, and the button column is exactly one button wide — so
+   pinning the button to either edge of that column is the same pixel. Tested: adding
+   `justify-self: start` changes nothing the layout run can measure. */
 .alt-list li {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: baseline;
   gap: .5rem;
   font-size: .9rem;
 }
-.alt-list .card-links { margin: 0; font-size: .78rem; }
+/* Clipped, not truncated: the full name stays in the DOM, so a screen reader reads
+   it, a search inside the page finds it, and copying the row copies all of it. Only
+   the drawing stops early. `title` puts it back within reach of a pointer. */
+.alt-list li > .card-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Both links stay together on their own line-worth of space; breaking "EDHREC ·
+   Scryfall" across a wrap was the other way this row lost its shape. */
+.alt-list .card-links { margin: 0; font-size: .78rem; white-space: nowrap; }
 .alt-more { margin-top: .3rem; }
 .alt-more summary { font-size: .82rem; }
 .alt-more .alt-list { margin-top: .25rem; }
