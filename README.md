@@ -415,8 +415,18 @@ Two details worth keeping:
 
 Grouping sixteen cards into one decision is only half the job: **making** that
 decision means looking at sixteen cards, and the links beside each name go to one
-card each. So a choice carries one more link — **Compare all 16 on Scryfall** —
-which opens every card in the group on a single Scryfall page, images and all.
+card each. So a choice carries one more link — **Compare all 16** — which opens every
+card in the group on a single Scryfall page, images and all.
+
+**The label and that link share one row, and the wording is cut to fit it.** On a
+phone the label's box is 298px and the link takes 108 of them, which leaves about
+180px for words. *"or any one of these 15 instead — same combos:"* needed two rows and
+pushed the link onto a line of its own, so it reads **"or these 15, same combos:"** —
+and *"or this one, same combos:"* when there is a single alternative, since *"or these
+1"* is not English. The link dropped *on Scryfall* for the same 70px; its `title` and
+accessible name still say where it goes. The layout test measures the label's line
+count and fails at two, and both halves of that budget are pinned: putting either the
+old wording or *on Scryfall* back fails the run.
 
 - **The query is exact.** `DeckCombos.scryfallSetQuery()` builds
   `!"Blood Artist" or !"Zulaport Cutthroat" or …`. Without the `!`, Scryfall reads
