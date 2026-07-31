@@ -255,8 +255,13 @@ you already have, and nothing else. Two consequences, both of them wrong:
 Now: **most combos unlocked first, then the most-played of them, then alphabetical.** Count
 still leads — a card unlocking four combos beats one unlocking three however popular the
 three are — because "+N combos" is what the page claims and the ranking has to match it.
-Popularity decides between cards that make the same claim, and orders every list of combos
-on the page.
+Popularity decides between cards that make the same claim.
+
+**Inside a suggestion, size leads and popularity breaks the tie** — the same rule the deck's
+own combos use. Sorting those lists on popularity alone put a 4-card line at the top of a
+list whose own heading read *1 × 2-card · 4 × 3-card · 7 × 4-card*: two orderings of one set
+of combos, one line apart, and the panel opening on the hardest thing to assemble rather than
+the easiest. A template slot counts toward that size, because something has to occupy it.
 
 Popularity is a tie-break rather than the ranking, and `pop` is absent from some variants:
 a missing one counts as zero, so ordering never depends on whether a field is there. With
@@ -759,10 +764,23 @@ inside the layout runs, for the same reason:
 - **`+ Add to deck`** is pressed, and the run asserts the deck ends up holding *more
   combos than it did* — not merely that a line appeared in the box. An append that
   forgets to search again looks entirely correct on screen.
-- **The bracket panel** has to name the two Game Changers the fixture's deck holds
-  (of three published), give both reasons for its floor, and carry the caveat about
-  what it did not check — unfolded. Every one of those was confirmed by breaking the
-  code and watching them fail.
+- **The bracket line** has to strike the two brackets the list rules out, fill the
+  floor, leave the rest open, and announce the whole answer through the button's
+  accessible name — the pips are `aria-hidden`, so that name is all a screen reader
+  gets. Its explanation must start *closed*, open on a press and close on a second
+  one, and still carry the two Game Changers the fixture's deck holds (of three
+  published), both reasons for the floor, and the caveat about what went unchecked,
+  with the card links intact.
+- **The theme toggle** is pressed and the computed colours read back: the page
+  repaints, the choice beats the system preference, it survives a reload, pressing
+  twice returns *and* is remembered, `tiers.html` opens in the same theme, and
+  exactly one of the two icons is visible.
+- **`Compare all N on Scryfall`** is read as a real `href` and checked to name every
+  card the group shows — the recommended one included — with every term exact.
+- **"Combos this unlocks"** must run smallest-first. The fixture's most-played combo
+  is deliberately also its largest, so sorting on popularity alone fails the run.
+
+Every one of those was confirmed by breaking the code and watching them fail.
 
 - **`desktop (no worker)`** deletes `Worker` from the page and expects identical
   output from the in-page fallback. On its own that proves only that *something*
@@ -818,7 +836,13 @@ Static site, zero dependencies, no build step:
   double-faced cards, ties broken on popularity then alphabetically), works out which
   template slots the deck fills and which it is short of, collapses interchangeable
   cards via `groupSuggestions()` / `groupVariants()`, and works out the deck's bracket
-  floor in `bracketCheck()`.
+  floor in `bracketCheck()`. Also the small view helpers that need testing without a
+  browser: `edhrecSlug()`, `scryfallSetQuery()` for the whole-choice comparison link,
+  and `orderComboNames()` for the order a combo's cards are named in.
+- `theme.js` — resolves the theme (`DeckTheme`): the reader's stored choice, else what
+  the browser asks for, written on `<html>` before the first paint and toggled by the
+  sun/moon button. Loaded from `<head>` rather than with the rest, and excluded from
+  coverage by name — see Commands.
 - `search.js` — downloading the database, keeping a copy, dropping the copies an
   earlier `CACHE_NAME` left behind, and running the match (`ComboSearch`). No DOM, so
   it runs in a worker, in the page, or under Node. The bracket check runs here too,
@@ -1083,9 +1107,10 @@ npm run lint
 # being used on the second load, the decklist surviving a search, Clear
 # actually clearing, the share link's whole round trip, the same output with
 # Worker taken away, "+ Add to deck" leaving the deck with more combos than it
-# had, the bracket panel naming its Game Changers and its caveat — and that the
-# search really did run where it was supposed to. See "What the layout test
-# proves" below.
+# had, the bracket pips and the explanation behind them, the theme toggle
+# overriding the system and being remembered, and the Scryfall comparison link
+# naming every card in a choice — and that the search really did run where it was
+# supposed to. See "What the layout test proves" below.
 npm run verify
 
 # Syntax-check everything (same as CI)

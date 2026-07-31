@@ -43,6 +43,49 @@ test('computeSuggestions: the combos a suggestion unlocks list the most played f
   assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [800, 300, 10]);
 });
 
+// ...but only among combos of the same size. Two cards on the table is a different
+// proposition from four, so a suggestion opens on its easiest line — the same rule
+// the deck's own combos are sorted by, and the same order as the size breakdown
+// printed on the row above them. Popularity alone put a 4-card combo at the top of a
+// list headed "1 × 2-card · 4 × 3-card · 7 × 4-card".
+test('computeSuggestions: a suggestion lists its smallest combos first', () => {
+  const held = deckNameSet([{ card: 'Basalt Monolith' }, { card: 'Sol Ring' }]);
+  const sized = (cards, pop) => ({
+    uses: cards.map((name) => ({ card: { name } })),
+    produces: [{ feature: { name: 'Infinite colorless mana' } }],
+    pop,
+  });
+  const [suggestion] = computeSuggestions([
+    // The most played is also the largest, so popularity alone would float it to the
+    // top. That is exactly the shape this pins.
+    sized(['Basalt Monolith', 'Sol Ring', 'Power Artifact'], 900),
+    sized(['Basalt Monolith', 'Power Artifact'], 5),
+    sized(['Sol Ring', 'Power Artifact'], 50),
+  ], held);
+  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.uses.length), [2, 2, 3]);
+  // Popularity still decides within a size.
+  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [50, 5, 900]);
+});
+
+// A slot counts as a card, because something has to occupy it — so a combo needing
+// "Rings of Brighthearth + a Persist Creature" is not easier than a two-card line.
+test('computeSuggestions: a template slot counts toward the size it is sorted by', () => {
+  const held = deckNameSet([{ card: 'Basalt Monolith' }]);
+  const withSlot = {
+    uses: [{ card: { name: 'Basalt Monolith' } }, { card: { name: 'Power Artifact' } }],
+    produces: [{ feature: { name: 'Infinite colorless mana' } }],
+    fills: [{ slot: 'a Persist Creature', card: 'Kitchen Finks' }],
+    pop: 900,
+  };
+  const plain = {
+    uses: [{ card: { name: 'Basalt Monolith' } }, { card: { name: 'Power Artifact' } }],
+    produces: [{ feature: { name: 'Infinite colorless mana' } }],
+    pop: 1,
+  };
+  const [suggestion] = computeSuggestions([withSlot, plain], held);
+  assert.deepStrictEqual(suggestion.unlocks.map((v) => v.pop), [1, 900]);
+});
+
 // Popularity is a tie-break, not a replacement: data with no popularity at all
 // must still come out in a stable, predictable order.
 test('computeSuggestions: with nothing to choose between them, ties stay alphabetical', () => {
