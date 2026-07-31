@@ -51,9 +51,11 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 - **Deck import** — paste an Archidekt deck URL, or paste any site's text export
   (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
 - **Cards carrying your combos** — every card that takes part in a combo you can
-  already assemble, ranked by how many. A list of combos hides this: cutting a
-  card that turns up in four of them costs four combos, which is exactly what
-  you want to know before trimming a deck.
+  already assemble, ranked by how many, each with the same size breakdown a
+  suggestion carries (*in 5 combos · 3 × 2-card · 1 × 3-card · 1 × 4-card*). A list
+  of combos hides this: cutting a card that turns up in four of them costs four
+  combos, which is exactly what you want to know before trimming a deck — and
+  whether those four are two-carders or four-carders changes the answer.
 - **Suggestions split by colour** — two tabs, *In your colours* and *Other
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
   tab rather than into the list. **Colours are read off the cards** — every card
@@ -281,6 +283,19 @@ So every recommendation carries its own breakdown, on the card's own line:
 1. Thassa's Oracle  +3   1 × 2-card   1 × 3-card   1 × 4-card
 5. Mana Crypt       +1   3-card
 ```
+
+**And so does every card in *Cards carrying your combos***, where the same argument applies
+in reverse. That panel exists to answer "what would cutting this cost me", and *in 9 combos*
+is one number covering nine different propositions:
+
+```
+1. Basalt Monolith   in 5 combos   3 × 2-card   1 × 3-card   1 × 4-card
+```
+
+A card holding up three two-card lines is a very different card to cut than one holding up
+nine four-card ones, and the count alone cannot tell them apart. The layout test asserts the
+pills are on the card's own line, are smallest-first, and **sum to the badge beside them** —
+a breakdown that disagrees with its own total is worse than none.
 
 Four details, each of them a decision:
 

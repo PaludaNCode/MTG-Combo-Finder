@@ -198,6 +198,13 @@ function measure(win, doc) {
   const topPiece = piecesPanel ? {
     card: piecesPanel.querySelector('.card-name').textContent,
     badge: piecesPanel.querySelector('.badge').textContent,
+    // The size breakdown on the row, same as a suggestion carries. "in 9 combos" is
+    // one number over nine different propositions, and this panel's whole question is
+    // what cutting the card would cost.
+    pills: [...piecesPanel.querySelectorAll('.combo.suggestion .sizes .size')].length
+      ? [...piecesPanel.querySelector('.combo.suggestion').querySelectorAll('.sizes .size')].map((p) => p.textContent)
+      : [],
+    inHead: Boolean(piecesPanel.querySelector('.combo.suggestion .sug-head .sizes')),
   } : null;
   // Every "+4 combos" / "in 4 combos" pill sits directly after a card name in
   // the same line, so the space before it has to survive every breakpoint — it
@@ -1005,6 +1012,24 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
       problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
+    } else {
+      // The breakdown has to be here too, on the row's own line, and it has to add up
+      // to the badge beside it — a breakdown that disagrees with its own total is
+      // worse than no breakdown.
+      if (!v.topPiece.pills.length) problems.push('a card carrying combos shows no size breakdown');
+      if (!v.topPiece.inHead) problems.push("the pieces breakdown is not on the card's own line");
+      const claimed = v.topPiece.pills.reduce((sum, t) => {
+        const m = t.match(/^(?:(\d+) × )?(\d+)-card$/);
+        return sum + (m ? Number(m[1] || 1) : 0);
+      }, 0);
+      const badged = Number((v.topPiece.badge.match(/in (\d+)/) || [0, 0])[1]);
+      if (claimed !== badged) {
+        problems.push(`the pieces breakdown [${v.topPiece.pills.join(', ')}] sums to ${claimed}, not the ${badged} its badge claims`);
+      }
+      const nums = v.topPiece.pills.map((t) => Number((t.match(/(\d+)-card/) || [0, 0])[1]));
+      if (nums.some((n, i) => i && n < nums[i - 1])) {
+        problems.push(`the pieces breakdown is not smallest-first: [${v.topPiece.pills.join(', ')}]`);
+      }
     }
     if (!v.badges.length) {
       problems.push('no "+N combos" badges rendered at all, so their spacing is untested');
@@ -1374,7 +1399,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const layout = wide
       ? `two columns (${v.formWidth}px + ${v.outWidth}px, ${v.unusedWidth}px unused)`
       : `stacked (${v.outWidth}px)`;
-    const pieceNote = v.topPiece ? `top piece ${v.topPiece.card} ${v.topPiece.badge}` : 'no pieces';
+    const pieceNote = v.topPiece
+      ? `top piece ${v.topPiece.card} ${v.topPiece.badge} ${JSON.stringify(v.topPiece.pills)}`
+      : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
     const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {

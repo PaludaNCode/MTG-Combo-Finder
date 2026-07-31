@@ -489,6 +489,13 @@
     head.appendChild(el('span', 'rank', rank + '. '));
     head.appendChild(el('span', 'card-name', piece.card));
     head.appendChild(el('span', 'badge', 'in ' + piece.count + ' combo' + (piece.count === 1 ? '' : 's')));
+    // The same breakdown a suggestion carries, for the same reason: "in 9 combos" is
+    // one number covering nine different propositions, and a card holding up three
+    // two-card lines is a very different card to cut than one holding up nine
+    // four-card ones. This panel exists to answer "what does cutting this cost me",
+    // which the count alone answers only in the crudest terms.
+    const sizes = sizeRow(piece.combos);
+    if (sizes) head.appendChild(sizes);
     card.appendChild(head);
 
     const links = el('p', 'card-links');
