@@ -435,6 +435,33 @@ function load(src, width) {
   });
 }
 
+// Wait for the search to have rendered, rather than guessing how long it takes.
+//
+// This used to be a flat 500ms after submitting the form. The first run of the
+// suite pays for the database download *and* the parse, so on a slower machine
+// that guess lost: nothing was on screen, doc.querySelector('.combo') returned
+// null, and the next line died with "Cannot read properties of null" — a crash
+// where the truth was "the search had not finished yet". Worse, it cascaded: the
+// run that crashed never populated the cache, so the following run reported its
+// data as coming from the network and failed too.
+//
+// Polls for the condition and gives up loudly, naming the page's own status line,
+// which is where a real failure to search says so.
+async function settled(doc, selector, timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 15000);
+  while (!doc.querySelector(selector) && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  if (!doc.querySelector(selector)) {
+    const status = (doc.getElementById('status') || {}).textContent || '(no status)';
+    throw new Error('nothing matched ' + selector + ' within '
+      + ((timeoutMs || 15000) / 1000) + 's of the search — status: "' + status + '"');
+  }
+  // One more tick, so panels rendered in the same pass are all in place before
+  // anything is measured.
+  await new Promise((r) => setTimeout(r, 120));
+}
+
 // The share link, end to end: a deck typed in, kept without a search, put into
 // the URL by Copy link, and read back out of that URL by a page that has never
 // seen it. Every step of that is our own encoding, so none of it is safe to
@@ -557,7 +584,7 @@ async function runStamped(vp) {
     win.localStorage.clear();
     doc.getElementById('decklist').value = DECKS[vp.deck];
     doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
-    await new Promise((r) => setTimeout(r, 700));
+    await settled(doc, '.combo');
     const age = doc.getElementById('data-age');
     return {
       ok: true,
@@ -594,7 +621,7 @@ function runOne(vp) {
         doc.getElementById('commanders').value = '';
         doc.getElementById('decklist').value = DECKS[vp.deck];
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
-        await new Promise((r) => setTimeout(r, 500));
+        await settled(doc, '.combo');
 
         const before = measure(win, doc);
 
@@ -640,7 +667,19 @@ function runOne(vp) {
         };
         if (addBtn) {
           addBtn.click();
-          await new Promise((r) => setTimeout(r, 600));
+          // Wait for the count to move rather than for a guessed interval: the whole
+          // claim here is "adding a card left the deck holding more combos", so a
+          // fixed wait would decide the assertion it is supposed to be testing. If
+          // the re-search never happens the loop simply times out and the existing
+          // check reports the numbers, which is the failure worth reading.
+          const wasBadge = before.included.badge;
+          const moved = Date.now() + 15000;
+          while (Date.now() < moved) {
+            const nowBadge = (doc.querySelector('#included .panel-count') || {}).textContent;
+            if (nowBadge && nowBadge !== wasBadge) break;
+            await new Promise((r) => setTimeout(r, 50));
+          }
+          await new Promise((r) => setTimeout(r, 120));
           const now = measure(win, doc);
           // The escape is doubled because this whole harness is a template literal
           // in tools/verify-layout.js: a lone \\n would become a real newline here
