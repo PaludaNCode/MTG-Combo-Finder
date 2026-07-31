@@ -56,6 +56,9 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   cannot be wrong about it.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
+- **Light or dark, whichever your system asks for** — one set of colour tokens with
+  a light override, so the page follows `prefers-color-scheme` instead of being dark
+  for everyone. See [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
 - **Your decklist survives a reload** — the list is the whole input, and losing it to a
   refresh was a strange thing for this page to do. It's kept in `localStorage` (it never
   leaves the browser), **Clear** empties it in one press, and **Copy link** puts the deck
@@ -670,10 +673,14 @@ Static site, zero dependencies, no build step:
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken on popularity then alphabetically), works out which
-  template slots the deck fills and which it is short of, and collapses interchangeable
-  cards via `groupSuggestions()` / `groupVariants()`.
-- `search.js` — downloading the database, keeping a copy, and running the match
-  (`ComboSearch`). No DOM, so it runs in a worker, in the page, or under Node.
+  template slots the deck fills and which it is short of, collapses interchangeable
+  cards via `groupSuggestions()` / `groupVariants()`, and works out the deck's bracket
+  floor in `bracketCheck()`.
+- `search.js` — downloading the database, keeping a copy, dropping the copies an
+  earlier `CACHE_NAME` left behind, and running the match (`ComboSearch`). No DOM, so
+  it runs in a worker, in the page, or under Node. The bracket check runs here too,
+  beside the match: the Game Changer list is in the dataset, and the dataset stays in
+  the worker.
 - `search-worker.js` — the worker that does all of the above off the thread drawing
   the page. Imports the three files above.
 - `app.js` — reads the form, asks for a search, renders the sections above. On failure it
@@ -925,13 +932,15 @@ npm run test:coverage
 npm run lint
 
 # Layout smoke test — REQUIRED after any UI change. Renders the real page at
-# 390/768/1440 px and fails on horizontal overflow, a collapse control that
+# 390/768/1440/1920 px and fails on horizontal overflow, a collapse control that
 # doesn't collapse, or the desktop columns not splitting. Also asserts the
 # behaviour that is invisible when it breaks: the kept copy of the database
 # being used on the second load, the decklist surviving a search, Clear
 # actually clearing, the share link's whole round trip, the same output with
-# Worker taken away — and that the search really did run where it was supposed
-# to. See "What the layout test proves" below.
+# Worker taken away, "+ Add to deck" leaving the deck with more combos than it
+# had, the bracket panel naming its Game Changers and its caveat — and that the
+# search really did run where it was supposed to. See "What the layout test
+# proves" below.
 npm run verify
 
 # Syntax-check everything (same as CI)
