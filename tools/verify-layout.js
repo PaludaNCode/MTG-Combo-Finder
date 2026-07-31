@@ -198,6 +198,13 @@ function measure(win, doc) {
   const topPiece = piecesPanel ? {
     card: piecesPanel.querySelector('.card-name').textContent,
     badge: piecesPanel.querySelector('.badge').textContent,
+    // The size breakdown on the row, same as a suggestion carries. "in 9 combos" is
+    // one number over nine different propositions, and this panel's whole question is
+    // what cutting the card would cost.
+    pills: [...piecesPanel.querySelectorAll('.combo.suggestion .sizes .size')].length
+      ? [...piecesPanel.querySelector('.combo.suggestion').querySelectorAll('.sizes .size')].map((p) => p.textContent)
+      : [],
+    inHead: Boolean(piecesPanel.querySelector('.combo.suggestion .sug-head .sizes')),
   } : null;
   // Every "+4 combos" / "in 4 combos" pill sits directly after a card name in
   // the same line, so the space before it has to survive every breakpoint — it
@@ -428,6 +435,33 @@ function load(src, width) {
   });
 }
 
+// Wait for the search to have rendered, rather than guessing how long it takes.
+//
+// This used to be a flat 500ms after submitting the form. The first run of the
+// suite pays for the database download *and* the parse, so on a slower machine
+// that guess lost: nothing was on screen, doc.querySelector('.combo') returned
+// null, and the next line died with "Cannot read properties of null" — a crash
+// where the truth was "the search had not finished yet". Worse, it cascaded: the
+// run that crashed never populated the cache, so the following run reported its
+// data as coming from the network and failed too.
+//
+// Polls for the condition and gives up loudly, naming the page's own status line,
+// which is where a real failure to search says so.
+async function settled(doc, selector, timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 15000);
+  while (!doc.querySelector(selector) && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  if (!doc.querySelector(selector)) {
+    const status = (doc.getElementById('status') || {}).textContent || '(no status)';
+    throw new Error('nothing matched ' + selector + ' within '
+      + ((timeoutMs || 15000) / 1000) + 's of the search — status: "' + status + '"');
+  }
+  // One more tick, so panels rendered in the same pass are all in place before
+  // anything is measured.
+  await new Promise((r) => setTimeout(r, 120));
+}
+
 // The share link, end to end: a deck typed in, kept without a search, put into
 // the URL by Copy link, and read back out of that URL by a page that has never
 // seen it. Every step of that is our own encoding, so none of it is safe to
@@ -550,7 +584,7 @@ async function runStamped(vp) {
     win.localStorage.clear();
     doc.getElementById('decklist').value = DECKS[vp.deck];
     doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
-    await new Promise((r) => setTimeout(r, 700));
+    await settled(doc, '.combo');
     const age = doc.getElementById('data-age');
     return {
       ok: true,
@@ -587,7 +621,7 @@ function runOne(vp) {
         doc.getElementById('commanders').value = '';
         doc.getElementById('decklist').value = DECKS[vp.deck];
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
-        await new Promise((r) => setTimeout(r, 500));
+        await settled(doc, '.combo');
 
         const before = measure(win, doc);
 
@@ -633,7 +667,19 @@ function runOne(vp) {
         };
         if (addBtn) {
           addBtn.click();
-          await new Promise((r) => setTimeout(r, 600));
+          // Wait for the count to move rather than for a guessed interval: the whole
+          // claim here is "adding a card left the deck holding more combos", so a
+          // fixed wait would decide the assertion it is supposed to be testing. If
+          // the re-search never happens the loop simply times out and the existing
+          // check reports the numbers, which is the failure worth reading.
+          const wasBadge = before.included.badge;
+          const moved = Date.now() + 15000;
+          while (Date.now() < moved) {
+            const nowBadge = (doc.querySelector('#included .panel-count') || {}).textContent;
+            if (nowBadge && nowBadge !== wasBadge) break;
+            await new Promise((r) => setTimeout(r, 50));
+          }
+          await new Promise((r) => setTimeout(r, 120));
           const now = measure(win, doc);
           // The escape is doubled because this whole harness is a template literal
           // in tools/verify-layout.js: a lone \\n would become a real newline here
@@ -1005,6 +1051,24 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
       problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
+    } else {
+      // The breakdown has to be here too, on the row's own line, and it has to add up
+      // to the badge beside it — a breakdown that disagrees with its own total is
+      // worse than no breakdown.
+      if (!v.topPiece.pills.length) problems.push('a card carrying combos shows no size breakdown');
+      if (!v.topPiece.inHead) problems.push("the pieces breakdown is not on the card's own line");
+      const claimed = v.topPiece.pills.reduce((sum, t) => {
+        const m = t.match(/^(?:(\d+) × )?(\d+)-card$/);
+        return sum + (m ? Number(m[1] || 1) : 0);
+      }, 0);
+      const badged = Number((v.topPiece.badge.match(/in (\d+)/) || [0, 0])[1]);
+      if (claimed !== badged) {
+        problems.push(`the pieces breakdown [${v.topPiece.pills.join(', ')}] sums to ${claimed}, not the ${badged} its badge claims`);
+      }
+      const nums = v.topPiece.pills.map((t) => Number((t.match(/(\d+)-card/) || [0, 0])[1]));
+      if (nums.some((n, i) => i && n < nums[i - 1])) {
+        problems.push(`the pieces breakdown is not smallest-first: [${v.topPiece.pills.join(', ')}]`);
+      }
     }
     if (!v.badges.length) {
       problems.push('no "+N combos" badges rendered at all, so their spacing is untested');
@@ -1374,7 +1438,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const layout = wide
       ? `two columns (${v.formWidth}px + ${v.outWidth}px, ${v.unusedWidth}px unused)`
       : `stacked (${v.outWidth}px)`;
-    const pieceNote = v.topPiece ? `top piece ${v.topPiece.card} ${v.topPiece.badge}` : 'no pieces';
+    const pieceNote = v.topPiece
+      ? `top piece ${v.topPiece.card} ${v.topPiece.badge} ${JSON.stringify(v.topPiece.pills)}`
+      : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
     const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {
