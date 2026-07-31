@@ -1,0 +1,13 @@
+<!-- An infinity loop in the site's brass, on the panel colour the page uses.
+     "Infinite combo" is the format's own shorthand for what this page finds, so
+     the mark says "combos" without needing a word — and one thick stroke is the
+     only kind of detail that survives being drawn at 16px in a browser tab.
+
+     Two loops meeting at a pinch rather than a crossing stroke: at tab size a
+     crossing turns into a blob. The tile carries its own dark background so the
+     mark reads the same against light and dark browser chrome. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="MTG Combo Finder">
+  <rect width="32" height="32" rx="7" fill="#1b1e27"/>
+  <path d="M16 16C13 11 7 11 7 16C7 21 13 21 16 16C19 11 25 11 25 16C25 21 19 21 16 16Z"
+        fill="none" stroke="#d4a24e" stroke-width="3.2" stroke-linejoin="round"/>
+</svg>

@@ -16,6 +16,14 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
   **Ties break on popularity** — see [Ranking, and what popularity is for](#ranking-and-what-popularity-is-for).
+- **Take a suggestion without retyping it** — every suggestion (and every
+  interchangeable alternative) carries **+ Add to deck**: the card is appended to
+  the decklist, kept, and the search runs again against the database already in
+  memory. See [Adding a card, and searching again](#adding-a-card-and-searching-again).
+- **Which bracket the list is in** — the Game Changers your deck plays and the
+  two-card combos it can win with, and the lowest Commander bracket that leaves it
+  eligible for. A floor, never a verdict, and it says which criteria it did not
+  check — see [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
 - **What each recommendation's count is made of** — `Thassa's Oracle +3` reads
   *1 × 2-card · 1 × 3-card · 1 × 4-card*, on the card's own line, smallest first. A
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
@@ -48,6 +56,9 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   cannot be wrong about it.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
+- **Light or dark, whichever your system asks for** — one set of colour tokens with
+  a light override, so the page follows `prefers-color-scheme` instead of being dark
+  for everyone. See [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
 - **Your decklist survives a reload** — the list is the whole input, and losing it to a
   refresh was a strange thing for this page to do. It's kept in `localStorage` (it never
   leaves the browser), **Clear** empties it in one press, and **Copy link** puts the deck
@@ -463,12 +474,106 @@ not error, it silently yields a card list that is slightly wrong. Cost was never
 the objection: 465 requests and ~23 minutes, on a job that already streams a
 578 MB export.
 
+## Adding a card, and searching again
+
+Every suggestion carries **+ Add to deck**, and so does every interchangeable
+alternative under it. It appends `1 <card>` to the decklist, keeps the list, and
+submits the form again.
+
+It is a button rather than a note telling you to type the card in because of where
+the database already is: parsed, in the worker, from the search you just ran.
+Matching a 100-card deck against ~104k combos is **~115 ms** over data in memory,
+so taking a suggestion costs a walk rather than a download, and the page stops
+being a one-shot report.
+
+Three details, each the kind that is invisible when wrong:
+
+- **It goes through the form**, not through the render code. `requestSubmit()` on
+  the real form is what disables the button, clears the previous failure report and
+  re-reads both boxes — none of which should have a second implementation that can
+  drift from the first.
+- **The list is saved before the search**, not on the usual typing debounce, so a
+  fast search cannot outrun the save and leave the addition unkept.
+- **The status line survives the search.** "Added Deadeye Navigator" was previously
+  replaced by the search's own status about 200 ms later, which is not long enough
+  to read — so the note is handed to the next search and rendered as part of its
+  line: *"Added Deadeye Navigator. Searched 9 cards against 104,000 known combos."*
+
+A card already in either box is not added twice; the page says so instead. The
+layout test presses the button and asserts the deck ends up holding **more combos
+than it did**, because an append that forgets to search again looks completely
+fine on screen.
+
+## Classifying the decklist: which bracket is it?
+
+Wizards' bracket system rates a Commander deck 1–5. Two of its criteria are
+properties of a card list, and the rest are judgements about how a deck plays — so
+the page checks the two and **names the ones it did not check**:
+
+| | |
+|---|---|
+| 1 Exhibition / 2 Core | no Game Changers, no two-card infinite combos |
+| 3 Upgraded | up to three Game Changers, no early two-card combo |
+| 4 Optimized | no limit on either |
+| 5 cEDH | a choice about how you play, not a fact about the list |
+
+So what the panel reports is a **floor** — the lowest bracket the list is still
+eligible for — and never a verdict. A deck with no Game Changers and no two-card
+win *could* be bracket 2; whether it is depends on mass land denial, chained extra
+turns, how many tutors counts as "a few", and how early a combo lands. None of
+those is a card name, so none of them is guessed at. That caveat is on the page,
+next to the number, and deliberately **not** foldable: a bracket number with its
+limits hidden behind a control reads as the whole answer.
+
+**"Two-card infinite combo" means a two-card line that wins**, which the page
+already knows: green tier, by the same written-down inventory the result chips use.
+Basalt Monolith + Rings of Brighthearth loops all day and wins nothing, so it is
+not one. A filled template slot counts as one of the two cards — something has to
+occupy it, and your deck is what does.
+
+### The Game Changer list is read, not kept
+
+`tools/fetch-combos.js` publishes the list off **Scryfall's own `game_changer`
+flag**, in the same pass that already streams the oracle bulk file for colour
+identity. It is deliberately not a list in this repository: Wizards revises it with
+each bracket update, and a copy here would go stale silently — the exact failure
+mode `templates.json` has to work to avoid.
+
+The one way that can break is the flag being renamed, and the consequence is
+nothing: `bracketCheck()` returns null, the panel is not drawn, and that looks
+exactly like a deck with nothing to report. So the refresh **says so, loudly** —
+under 20 flagged cards prints a warning naming the field and linking their card
+object docs. It is not fatal, unlike missing colour data: the combo results are all
+still correct without it.
+
+Half a check is worse than none, which is why a missing list draws nothing rather
+than a bracket based on combos alone — a deck full of Game Changers would otherwise
+read as bracket 3.
+
 ## Layout
 
 One column on phones and tablets; from 900px the decklist sits in a sticky left
 column beside the results, so you can edit the list while reading suggestions.
 Section headers are 48px tall for thumbs, and `tools/verify-layout.js` asserts
 all of it — see Commands.
+
+### Light and dark, from one set of tokens
+
+Dark is the base. A `prefers-color-scheme: light` block **restates the tokens and
+nothing else** — every colour on the page is a custom property, so supporting light
+meant naming eight more (`--line`, `--decisive`, `--code-bg`, `--brass-ink` and the
+rest) rather than auditing 600 lines of rules. The only hardcoded colours left
+outside that block are Wizards' mana swatches and the dark ink that sits on them,
+which are the same in both themes on purpose.
+
+Brass, green and red are **darkened for light rather than reused**: `#d4a24e` is a
+good accent on `#12141a` and unreadable on white, which is the whole reason a theme
+is more than swapping two colours.
+
+**Worth knowing:** browsers report `light` for anyone who has not chosen, so this
+flips the default for most visitors rather than only serving people who asked for
+light. If dark should stay the default, the media query is the one place to change
+— gate it behind a toggle, or invert the condition.
 
 **The page uses the desktop it is on, up to 1500px.** The shell was capped at
 1140px at every size, from a time when this was one column of prose. It is now a
@@ -504,8 +609,17 @@ That discovery is also why `search.js` never *waits* on the cache: see
 
 ### What the layout test proves
 
-Nine runs. Four are layout at 390/768/1440px, two are the tier page, and three
-exist because the thing they check fails *silently*:
+Ten runs. Four are layout at 390/768/1440/1920px, two are the tier page, and three
+exist because the thing they check fails *silently*. Two more assertions ride along
+inside the layout runs, for the same reason:
+
+- **`+ Add to deck`** is pressed, and the run asserts the deck ends up holding *more
+  combos than it did* — not merely that a line appeared in the box. An append that
+  forgets to search again looks entirely correct on screen.
+- **The bracket panel** has to name the two Game Changers the fixture's deck holds
+  (of three published), give both reasons for its floor, and carry the caveat about
+  what it did not check — unfolded. Every one of those was confirmed by breaking the
+  code and watching them fail.
 
 - **`desktop (no worker)`** deletes `Worker` from the page and expects identical
   output from the in-page fallback. On its own that proves only that *something*
@@ -536,7 +650,17 @@ requesting the same files with it.
 
 Static site, zero dependencies, no build step:
 
-- `index.html` / `style.css` — the page.
+- `index.html` / `style.css` — the page. Both HTML files carry a
+  **Content-Security-Policy** meta tag: `default-src 'none'`, scripts and styles from
+  `'self'`, and `connect-src` naming the only two hosts this page talks to — the data
+  branch on `raw.githubusercontent.com` and Archidekt's deck API. A decklist is the one
+  piece of text here that comes from outside, and this leaves an injected script with
+  nowhere to load from and nowhere to report to. `form-action 'none'` because the form is
+  handled in JS and never navigates.
+- `favicon.svg` — an infinity loop in the site's brass, drawn rather than fetched. Two
+  loops meeting at a pinch instead of a crossing stroke, which turns into a blob at 16px.
+- `eslint.config.mjs` — the lint rules, with no lint dependency: CI fetches ESLint for
+  that one step. See Commands.
 - `parser.js` — decklist parsing (`DeckParser`). Understands plain names, `1x Card`,
   Moxfield/Arena exports (`1 Sol Ring (C21) 263 *F*`), `Commander:` / `Sideboard:`
   sections, per-line commander markers (`*CMDR*`, `[Commander{top}]`), MTGO `SB:`
@@ -549,10 +673,14 @@ Static site, zero dependencies, no build step:
 - `combos.js` — combo-result analysis (`DeckCombos`): turns the API's "almost included"
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken on popularity then alphabetically), works out which
-  template slots the deck fills and which it is short of, and collapses interchangeable
-  cards via `groupSuggestions()` / `groupVariants()`.
-- `search.js` — downloading the database, keeping a copy, and running the match
-  (`ComboSearch`). No DOM, so it runs in a worker, in the page, or under Node.
+  template slots the deck fills and which it is short of, collapses interchangeable
+  cards via `groupSuggestions()` / `groupVariants()`, and works out the deck's bracket
+  floor in `bracketCheck()`.
+- `search.js` — downloading the database, keeping a copy, dropping the copies an
+  earlier `CACHE_NAME` left behind, and running the match (`ComboSearch`). No DOM, so
+  it runs in a worker, in the page, or under Node. The bracket check runs here too,
+  beside the match: the Game Changer list is in the dataset, and the dataset stays in
+  the worker.
 - `search-worker.js` — the worker that does all of the above off the thread drawing
   the page. Imports the three files above.
 - `app.js` — reads the form, asks for a search, renders the sections above. On failure it
@@ -613,6 +741,14 @@ the stored ETag, so a 304 costs a few hundred bytes instead of 2.9 MB. When some
 changed, the new copy is stored for next time rather than swapped in mid-session — the data
 refresh runs daily, so a page showing this morning's snapshot instead of this afternoon's
 is not worth a surprise. The footer says which one it is either way.
+
+**An abandoned cache version is deleted, not just ignored.** Bumping `CACHE_NAME` stops the
+page *reading* an old copy; it does not remove it, so the first version's ~28 MB sat in the
+reader's browser indefinitely and every future shape change would have added another. Every
+cache matching `mtg-combo-finder-data-` that is not the current one is now dropped — once per
+session, alongside the open rather than before it, never awaited, and every failure ignored.
+A browser that will not let us tidy up is not a browser that should fail a search, so
+`test/search.test.js` covers a listing that hangs, one that throws, and one that isn't there.
 
 **Nothing ever waits on the cache.** Every call to it is raced against a 1.5s deadline and
 a slow cache is treated as an absent one, because Cache Storage can do worse than fail: in
@@ -699,6 +835,10 @@ suggested card fits the deck's colours. `tools/fetch-combos.js` therefore also
 streams [Scryfall's oracle-cards bulk file](https://scryfall.com/docs/api/bulk-data)
 and publishes a name → identity map alongside the combos.
 
+The same pass reads Scryfall's `game_changer` flag, which is where the bracket check's
+list comes from — see
+[The Game Changer list is read, not kept](#the-game-changer-list-is-read-not-kept).
+
 **That map is the only thing colour filtering rests on**, now that colours are read
 off the cards rather than off a commander — see "Colours come from the cards" above.
 It is also the most load-bearing external data here: one bulk download per refresh,
@@ -778,14 +918,29 @@ node tools/templates.js templates.json
 # Unit tests (node:test, zero deps)
 npm test
 
+# The same tests with coverage floors, which is what CI runs. Set a point under
+# what the suite currently manages (94% lines / 90% branches / 95% functions), so
+# they catch a module arriving untested rather than bickering over a line. Only
+# files the tests load are measured — app.js and tiers-page.js are the layout
+# test's job. Needs Node 22.8+ for the threshold flags.
+npm run test:coverage
+
+# Lint. Fetched for the run rather than installed: this repo has no node_modules
+# and one that only a linter needs would be the first entry in it. Catches what
+# node --check cannot — a misspelled global, a variable a refactor left behind,
+# a duplicate object key.
+npm run lint
+
 # Layout smoke test — REQUIRED after any UI change. Renders the real page at
-# 390/768/1440 px and fails on horizontal overflow, a collapse control that
+# 390/768/1440/1920 px and fails on horizontal overflow, a collapse control that
 # doesn't collapse, or the desktop columns not splitting. Also asserts the
 # behaviour that is invisible when it breaks: the kept copy of the database
 # being used on the second load, the decklist surviving a search, Clear
 # actually clearing, the share link's whole round trip, the same output with
-# Worker taken away — and that the search really did run where it was supposed
-# to. See "What the layout test proves" below.
+# Worker taken away, "+ Add to deck" leaving the deck with more combos than it
+# had, the bracket panel naming its Game Changers and its caveat — and that the
+# search really did run where it was supposed to. See "What the layout test
+# proves" below.
 npm run verify
 
 # Syntax-check everything (same as CI)
@@ -828,8 +983,8 @@ Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk
 short-lived branches.
 
 1. Branch off `main`: `feat/<thing>` or `fix/<thing>`
-2. Push, open a PR — CI runs (`checks` job: JS syntax check + unit tests + layout
-   smoke test)
+2. Push, open a PR — CI runs (`checks` job: JS syntax check + lint + unit tests with
+   coverage floors + layout smoke test)
 3. Merge when green. "Allow auto-merge" is enabled on the repo, so the usual move is
    to hit **Enable auto-merge** on the PR right after opening it — it then lands on
    its own the moment CI passes. Merging to `main` **is** the release: the deploy

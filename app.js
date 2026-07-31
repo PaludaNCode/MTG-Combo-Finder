@@ -220,6 +220,61 @@
     return links;
   }
 
+  // ---- taking a suggestion -------------------------------------------------
+  //
+  // A suggestion is a decision, and until now the step after taking one was to
+  // type the card into the box yourself and press the button again. The dataset is
+  // already parsed and sitting in the worker, so searching again is a walk over
+  // memory — which is what makes this worth a button rather than a note.
+
+  // What the next search should say it was for. The search that follows an add
+  // writes its own status line the moment it finishes, so "Added X" would be on
+  // screen for about as long as it took to read the first word — the note has to
+  // survive into that line instead of being replaced by it.
+  let addedNote = null;
+
+  function addCardToDeck(name) {
+    const box = $('decklist');
+    // Both boxes, the same two the search itself reads: a card already in the
+    // command zone is already in the deck, and adding it again is not an edit.
+    const decklist = DeckParser.parseDecklist(box.value);
+    const commanders = DeckParser.parseDecklist($('commanders').value);
+    const held = DeckCombos.deckNameSet(
+      decklist.main.concat(decklist.commanders, commanders.main, commanders.commanders)
+    );
+    if (held.has(DeckCombos.nameKey(name))) {
+      setStatus(name + ' is already in this decklist.');
+      return;
+    }
+
+    // Written with a quantity, so the line reads like every other line in the box
+    // and survives being copied out of it.
+    const text = box.value.replace(/\s+$/, '');
+    box.value = (text ? text + '\n' : '') + '1 ' + name;
+    saveDeck();
+    addedNote = name;
+    setStatus('Added ' + name + ' — searching again…');
+
+    // Through the form rather than by calling the handler: the form is what knows
+    // what a search involves — disabling the button, clearing the last report,
+    // re-reading both boxes — and none of that should have a second path.
+    const form = $('deck-form');
+    if (typeof form.requestSubmit === 'function') form.requestSubmit($('find-combos'));
+    else form.dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+
+  function addButton(name, label) {
+    const button = el('button', 'add-card', label || '+ Add to deck');
+    button.type = 'button';
+    // The visible label is short because it sits at the end of a row of links;
+    // what it will do is spelled out for a screen reader and on hover.
+    const spoken = 'Add ' + name + ' to your decklist and search again';
+    button.title = spoken;
+    button.setAttribute('aria-label', spoken);
+    button.addEventListener('click', () => addCardToDeck(name));
+    return button;
+  }
+
   // How many alternatives to spell out before folding the rest away. A group of
   // 17 is real — the whole list is a wall, and the first few make the point.
   const ALTERNATIVES_SHOWN = 5;
@@ -265,6 +320,16 @@
     return row;
   }
 
+  // One interchangeable card: its name, where to read about it, and a way to take
+  // it. Two lists render these — the first few, and the folded-away remainder.
+  function alternativeItem(name) {
+    const li = el('li');
+    li.appendChild(el('span', 'card-name', name));
+    li.appendChild(cardLinks(name));
+    li.appendChild(addButton(name, '+ Add'));
+    return li;
+  }
+
   // One suggestion, which may be a choice between cards that do the same job.
   // Grouping them matters: four cards each claiming "+7 combos" is four ways of
   // describing one decision, and reads as four decisions.
@@ -290,6 +355,7 @@
 
     const links = el('p', 'card-links');
     links.appendChild(cardLinks(first));
+    links.appendChild(addButton(first));
     card.appendChild(links);
 
     if (rest.length) {
@@ -298,24 +364,14 @@
         `or any one of these ${rest.length} instead — same ${group.unlocks.length === 1 ? 'combo' : 'combos'}:`));
       const shown = rest.slice(0, ALTERNATIVES_SHOWN);
       const list = el('ul', 'alt-list');
-      shown.forEach((name) => {
-        const li = el('li');
-        li.appendChild(el('span', 'card-name', name));
-        li.appendChild(cardLinks(name));
-        list.appendChild(li);
-      });
+      shown.forEach((name) => list.appendChild(alternativeItem(name)));
       alt.appendChild(list);
 
       if (rest.length > shown.length) {
         const more = el('details', 'alt-more');
         more.appendChild(el('summary', null, `${rest.length - shown.length} more`));
         const tail = el('ul', 'alt-list');
-        rest.slice(ALTERNATIVES_SHOWN).forEach((name) => {
-          const li = el('li');
-          li.appendChild(el('span', 'card-name', name));
-          li.appendChild(cardLinks(name));
-          tail.appendChild(li);
-        });
+        rest.slice(ALTERNATIVES_SHOWN).forEach((name) => tail.appendChild(alternativeItem(name)));
         more.appendChild(tail);
         alt.appendChild(more);
       }
@@ -614,10 +670,86 @@
     container.appendChild(line);
   }
 
+  // ---- what bracket the list is in ----------------------------------------
+  //
+  // Wizards' own words for each bracket, so a number on the page is followed by
+  // the name people actually use for it.
+  const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
+
+  // A floor, never a verdict — see bracketCheck() in combos.js for why, and for
+  // the two criteria this rests on. The caveat is on the page rather than in the
+  // commit message: a bracket number with no statement of what went unchecked
+  // would be read as the whole answer.
+  function renderBracket(container, bracket) {
+    container.textContent = '';
+    // No published list means the question cannot be asked at all. Half a bracket
+    // check is worse than none, so nothing is drawn.
+    if (!bracket) return;
+
+    const changers = bracket.gameChangers || [];
+    const wins = bracket.twoCardWins || [];
+    const floor = bracket.floor;
+
+    const body = panel(container, 'bracket', 'Bracket check', null);
+
+    const headline = el('p', 'bracket-floor');
+    headline.appendChild(el('strong', null, floor > 2
+      ? `Bracket ${floor}${floor === 4 ? '' : ' at the earliest'}`
+      : 'Nothing here rules out bracket 2'));
+    headline.appendChild(el('span', 'bracket-name', ' — ' + BRACKET_NAMES[floor]));
+    body.appendChild(headline);
+
+    const counts = [];
+    if (changers.length) {
+      counts.push(changers.length + ' Game Changer' + (changers.length === 1 ? '' : 's'));
+    }
+    if (wins.length) {
+      counts.push(wins.length === 1
+        ? '1 two-card combo that ends the game'
+        : wins.length + ' two-card combos that end the game');
+    }
+    const why = el('p', 'bracket-why');
+    if (floor === 4) {
+      why.textContent = `${counts.join(' · ')}. Bracket 3 allows three Game Changers, so a list with more sits at 4.`;
+    } else if (floor === 3) {
+      why.textContent = `${counts.join(' · ')}. Brackets 1 and 2 allow neither, so 3 is the floor.`;
+    } else {
+      why.textContent = 'No Game Changers, and no two-card combo that says it ends the game.';
+    }
+    body.appendChild(why);
+
+    if (changers.length) {
+      const list = el('p', 'gc-list');
+      list.appendChild(el('span', 'gap-label', 'Game Changers in your deck: '));
+      changers.forEach((name, i) => {
+        if (i > 0) list.appendChild(document.createTextNode(' · '));
+        list.appendChild(el('span', 'card-name', name));
+        list.appendChild(cardLinks(name));
+      });
+      body.appendChild(list);
+    }
+
+    if (wins.length) {
+      const details = el('details');
+      details.appendChild(el('summary', null, wins.length === 1
+        ? 'The two-card combo' : `The ${wins.length} two-card combos`));
+      wins.forEach((v) => details.appendChild(comboCard(v, null)));
+      body.appendChild(details);
+    }
+
+    body.appendChild(el('p', 'bracket-note',
+      'Only the two criteria a card list can settle are checked: the cards Wizards names as '
+      + 'Game Changers, and combos your deck can already assemble out of two cards that say they '
+      + 'end the game. Mass land denial, chained extra turns, how many tutors counts as “a few” '
+      + 'and how early a combo lands are judgement calls this page does not make — so this is the '
+      + 'lowest bracket the list is eligible for, not a verdict on the deck.'));
+  }
+
   function renderResults(results, deckNames) {
     $('results').hidden = false;
 
     renderIdentity($('identity'), results.identity);
+    renderBracket($('bracket'), results.bracket);
 
     const included = results.included;
     // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
@@ -838,6 +970,11 @@
     event.preventDefault();
     $('diagnostics').hidden = true;
     lastSent = {}; // so a report about this search never quotes the last one
+    // Claimed by whichever search runs next, whether or not that is the one the
+    // add started — a note left over from an earlier add would be a lie on a
+    // search someone else asked for.
+    const added = addedNote;
+    addedNote = null;
 
     const parsed = DeckParser.parseDecklist($('decklist').value);
     const commanderParsed = DeckParser.parseDecklist($('commanders').value);
@@ -894,7 +1031,8 @@
       if (unparsed.length) notes.push(`${unparsed.length} line(s) not understood`);
       notes.push(...trimmed);
       notes.unshift(`${(results.meta.count || 0).toLocaleString()} known combos`);
-      setStatus('Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
+      setStatus((added ? 'Added ' + added + '. ' : '')
+        + 'Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
       renderResults(results, deckNames);
       renderDataAge(results.meta);
       saveDeck();

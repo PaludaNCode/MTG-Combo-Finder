@@ -299,6 +299,11 @@ async function fetchCardIdentities() {
   const meta = await res.json();
 
   const identities = Object.create(null);
+  // Wizards' Game Changer list, which decides a deck's Commander bracket. Read
+  // off Scryfall's own flag rather than kept as a list in this repo: the list is
+  // revised with each bracket update, and a copy here would go stale silently —
+  // the exact failure mode templates.json has to work to avoid.
+  const gameChangers = [];
   let cards = 0;
   const collect = (card) => {
     cards += 1;
@@ -307,6 +312,7 @@ async function fetchCardIdentities() {
     if (Array.isArray(card.color_identity)) {
       identities[card.name] = card.color_identity.join('');
     }
+    if (pick(card, 'game_changer', 'gameChanger') === true) gameChangers.push(card.name);
   };
 
   if (meta.jsonl_download_uri) {
@@ -320,7 +326,30 @@ async function fetchCardIdentities() {
   }
 
   console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity`);
-  return { identities };
+  return { identities, gameChangers: gameChangers.sort((a, b) => a.localeCompare(b)) };
+}
+
+// The Game Changer list runs to a few dozen cards. Nought is not a short list: it
+// means Scryfall's flag has moved, and the consequence is invisible on the page —
+// the bracket panel simply stops being rendered, which looks exactly like a deck
+// that has nothing to report.
+//
+// Not fatal, unlike missing colour data: combo results are what this file is for,
+// and they are all still correct without it. But it must be impossible to miss in
+// the log, which is what this is for.
+const GAME_CHANGERS_EXPECTED = 20;
+
+function reportGameChangers(names) {
+  if (names.length >= GAME_CHANGERS_EXPECTED) {
+    console.log(`Read ${names.length} Game Changers from Scryfall's own flag.`);
+    return;
+  }
+  console.log(`\nOnly ${names.length} card(s) came back flagged as Game Changers, expected `
+    + `at least ${GAME_CHANGERS_EXPECTED}.`);
+  console.log('Scryfall publishes this as `game_changer` on the card object. If it has been');
+  console.log('renamed or dropped, the deck page stops showing its bracket check — which is');
+  console.log('indistinguishable from a deck that has no Game Changers in it.');
+  console.log('Check the card object: https://scryfall.com/docs/api/cards\n');
 }
 
 // result-tiers.js is a written-down list, so a result Spellbook adds after it
@@ -429,7 +458,7 @@ async function main() {
 
   if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
 
-  const { identities: cardIdentity } = await fetchCardIdentities();
+  const { identities: cardIdentity, gameChangers } = await fetchCardIdentities();
   // An empty map silently disables colour filtering in the page, which is how
   // this went unnoticed the first time. Fail loudly instead.
   if (Object.keys(cardIdentity).length < 1000) {
@@ -437,6 +466,7 @@ async function main() {
   }
 
   reportUnclassified(combos);
+  reportGameChangers(gameChangers);
 
   const templateData = readTemplates();
   const templates = templateData.templates;
@@ -450,6 +480,11 @@ async function main() {
     source: 'https://commanderspellbook.com/',
     count: combos.length,
     cardIdentity,
+    // The cards Wizards names as Game Changers, for the deck page's bracket
+    // check. Empty is published as empty rather than omitted: the page treats a
+    // missing list as "cannot say" and shows nothing, which is the right answer
+    // either way.
+    gameChangers,
     templates,
     // The 29 templates Spellbook gives no Scryfall query for, by name only.
     // There is no card list to match against and there never will be, so these
@@ -463,12 +498,13 @@ async function main() {
   fs.writeFileSync(OUT, JSON.stringify(payload));
   const mb = (fs.statSync(OUT).size / 1024 / 1024).toFixed(2);
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, `
-    + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, ${mb} MB`);
+    + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, `
+    + `${gameChangers.length} Game Changers, ${mb} MB`);
 }
 
 module.exports = {
   createVariantScanner, compact, bodyChunks, isRealCard,
-  reportNewTemplates,
+  reportNewTemplates, reportGameChangers, GAME_CHANGERS_EXPECTED,
 };
 
 if (require.main === module) {

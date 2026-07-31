@@ -658,6 +658,65 @@
     return out;
   }
 
+  // ---- which bracket the decklist sits in ----------------------------------
+  //
+  // Wizards' bracket system rates a Commander deck 1–5. Two of its criteria are
+  // properties of a card list and can be read straight off one; the rest are
+  // judgement calls about how a deck plays. This checks the two, and the page
+  // names the ones it did not check rather than implying they passed.
+  //
+  //   1 Exhibition / 2 Core   no Game Changers, no two-card infinite combos
+  //   3 Upgraded              up to three Game Changers, no early two-card combo
+  //   4 Optimized             no limit on either
+  //   5 cEDH                  a choice about how you play, not a fact about the list
+  //
+  // So the answer is a *floor* — the lowest bracket the list is still eligible
+  // for — and never a verdict. A deck with no Game Changers and no two-card win
+  // could be bracket 2; whether it really is depends on mass land denial, chained
+  // extra turns, how many tutors counts as "a few", and how early a combo lands.
+  // None of those is a card name, so none of them is guessed at here.
+  const GAME_CHANGER_ALLOWANCE = 3; // what bracket 3 permits
+
+  // The results of a variant as plain names, whichever shape it is in: compact
+  // from the dataset (`p`) or expanded for rendering (`produces`). Same reason
+  // comboSize() takes both — this is called on either side of expand().
+  function resultNames(variant) {
+    if (!variant) return [];
+    return variant.produces ? producedNames(variant) : (variant.p || []);
+  }
+
+  // Whether the combo itself claims to end the game — the green tier, by the same
+  // written-down inventory the chips use. "Two-card infinite combo" in Wizards'
+  // wording is a two-card line that wins, not any two cards that loop.
+  function endsTheGame(variant) {
+    return resultNames(variant).some((name) => classify(name).tier === 'win');
+  }
+
+  // dataset: the published data, for its Game Changer list.
+  // included: the combos the deck can already assemble (either shape).
+  // Returns { gameChangers, twoCardWins, floor }, or null when the data carries
+  // no list at all — half a bracket check is worse than none, because a deck full
+  // of Game Changers would read as bracket 3 on the strength of its combos alone.
+  function bracketCheck(dataset, deckNames, included) {
+    const published = (dataset && dataset.gameChangers) || null;
+    if (!Array.isArray(published) || !published.length) return null;
+
+    const gameChangers = published
+      .filter((name) => deckNames && deckNames.has(nameKey(name)))
+      .map((name) => name.split('//')[0].trim())
+      .sort((a, b) => a.localeCompare(b));
+
+    // A slot counts as a card here for the same reason it does in comboSize():
+    // something has to occupy it, and the deck is what occupies it.
+    const twoCardWins = (included || []).filter((v) => comboSize(v) <= 2 && endsTheGame(v));
+
+    let floor = 2;
+    if (gameChangers.length > GAME_CHANGER_ALLOWANCE) floor = 4;
+    else if (gameChangers.length || twoCardWins.length) floor = 3;
+
+    return { gameChangers, twoCardWins, floor };
+  }
+
   // EDHREC card page slug: "Kinnan, Bonder Prodigy" -> "kinnan-bonder-prodigy"
   function edhrecSlug(name) {
     return nameKey(name)
@@ -672,7 +731,7 @@
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
-    comboSize, sizeBreakdown,
+    comboSize, sizeBreakdown, bracketCheck,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
