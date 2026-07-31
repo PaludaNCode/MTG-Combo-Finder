@@ -60,9 +60,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   cannot be wrong about it.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
-- **Light or dark, whichever your system asks for** — one set of colour tokens with
-  a light override, so the page follows `prefers-color-scheme` instead of being dark
-  for everyone. See [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
+- **Light or dark, your call** — one set of colour tokens with a light override. Your
+  system's preference is the starting point; the **Light mode / Dark mode** button in
+  the header overrules it and the choice is remembered. See
+  [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
 - **Your decklist survives a reload** — the list is the whole input, and losing it to a
   refresh was a strange thing for this page to do. It's kept in `localStorage` (it never
   leaves the browser), **Clear** empties it in one press, and **Copy link** puts the deck
@@ -592,7 +593,7 @@ all of it — see Commands.
 
 ### Light and dark, from one set of tokens
 
-Dark is the base. A `prefers-color-scheme: light` block **restates the tokens and
+Dark is the base. A `:root[data-theme='light']` block **restates the tokens and
 nothing else** — every colour on the page is a custom property, so supporting light
 meant naming eight more (`--line`, `--decisive`, `--code-bg`, `--brass-ink` and the
 rest) rather than auditing 600 lines of rules. The only hardcoded colours left
@@ -603,10 +604,38 @@ Brass, green and red are **darkened for light rather than reused**: `#d4a24e` is
 good accent on `#12141a` and unreadable on white, which is the whole reason a theme
 is more than swapping two colours.
 
-**Worth knowing:** browsers report `light` for anyone who has not chosen, so this
-flips the default for most visitors rather than only serving people who asked for
-light. If dark should stay the default, the media query is the one place to change
-— gate it behind a toggle, or invert the condition.
+#### The reader picks, the system only suggests
+
+Light first shipped keyed on `prefers-color-scheme` alone, which meant the page
+decided for you — and browsers report `light` for everyone who has never chosen, so
+the default quietly flipped for most visitors. The **Light mode / Dark mode** button
+in the header fixes that in the honest direction: the system's answer is still what
+you get until you say otherwise, and once you do it is remembered in
+`localStorage` under `mtg-combo-finder.theme`.
+
+- **`theme.js` resolves the two inputs into one answer** — a stored choice, else what
+  the browser asks for — and writes it on `<html>` as `data-theme`. That is why the
+  CSS is keyed on the attribute and not on a media query: a media query *and* an
+  attribute selector would mean these seventeen tokens living in two places, kept in
+  sync by hand.
+- **It loads from `<head>`, synchronously, ahead of the stylesheet.** A theme applied
+  after the first paint is a white flash on a dark page. It is a file rather than an
+  inline script because the CSP here is `script-src 'self'`, which is worth more than
+  one saved request.
+- **The button is `hidden` in the markup and shown by the script**, so a control that
+  cannot work without it never appears if it did not arrive. Its label names *where
+  pressing goes*, not where you are.
+- **No choice means it keeps following the system**, including a change made while the
+  page is open. Storing a choice is what stops that.
+- **With JavaScript off the page is dark.** A real trade and a small one: this page is
+  a decklist parser and a combo search, so without JavaScript there is nothing on it
+  to read in either theme.
+
+Seven unit tests in `test/theme.test.js` cover the decision — precedence, junk in
+storage, the fallback, and the label. The layout test presses the real button and
+reads the computed colours back: it asserts the page repaints, the choice overrides
+the system, it survives a reload, pressing twice returns and is also remembered, and
+the second page opens in the same theme.
 
 **The page uses the desktop it is on, up to 1500px.** The shell was capped at
 1140px at every size, from a time when this was one column of prose. It is now a
@@ -955,7 +984,9 @@ npm test
 # what the suite currently manages (94% lines / 90% branches / 95% functions), so
 # they catch a module arriving untested rather than bickering over a line. Only
 # files the tests load are measured — app.js and tiers-page.js are the layout
-# test's job. Needs Node 22.8+ for the threshold flags.
+# test's job, and theme.js is excluded by name for the same reason: its pure
+# functions are required by the tests, its DOM half cannot run in node.
+# Needs Node 22.8+ for the threshold flags.
 npm run test:coverage
 
 # Lint. Fetched for the run rather than installed: this repo has no node_modules

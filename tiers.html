@@ -13,11 +13,17 @@
     base-uri 'none'; form-action 'none'">
   <title>Combo result tiers — MTG Combo Finder</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <!-- See index.html: ahead of the stylesheet so the theme is on <html> before the
+       first paint, rather than flashing after it. -->
+  <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="tiers-page">
   <header>
-    <h1>Combo result tiers</h1>
+    <div class="header-row">
+      <h1>Combo result tiers</h1>
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden></button>
+    </div>
     <p class="tagline">Every result Commander Spellbook publishes, and the colour it gets on
       <a href="index.html">the deck page</a>. Counted against the live data, so this is what the site
       is doing right now — not what it did when the list was written.</p>

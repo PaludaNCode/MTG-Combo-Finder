@@ -54,6 +54,9 @@ const VIEWPORTS = [
   // production looks fine while running half-stale JS. Hence asserting that the
   // search still went through the *worker* on a stamped page.
   { name: 'desktop (asset-stamped)', width: 1440, height: 900, deck: 'marked', kind: 'stamped' },
+  // Also not a layout check: the theme control overriding the system, remembering
+  // the answer, and carrying it to the second page.
+  { name: 'theme toggle', width: 1440, height: 900, kind: 'theme' },
 ];
 
 function findBrowser() {
@@ -387,6 +390,61 @@ function load(src, width) {
 // the URL by Copy link, and read back out of that URL by a page that has never
 // seen it. Every step of that is our own encoding, so none of it is safe to
 // assume — a link that silently loses the deck is worse than no link at all.
+// The theme control, end to end: the colours really change, the label really
+// follows, and the choice really survives a reload. Every one of those is a thing
+// that can be wired backwards while looking correct in the markup — and the reason
+// the button exists at all is that prefers-color-scheme alone decided for the
+// reader, so "does it override the system" is the assertion that matters most.
+//
+// Runs inside the harness page, so no backticks and no template literals in here:
+// this whole region is itself inside one.
+async function runTheme(vp) {
+  const out = { ok: true, name: vp.name, requested: vp.width, theme: {} };
+  const paint = (win, doc) => ({
+    attr: doc.documentElement.dataset.theme,
+    bg: win.getComputedStyle(doc.body).backgroundColor,
+    text: win.getComputedStyle(doc.body).color,
+    label: (doc.getElementById('theme-toggle') || {}).textContent,
+    hidden: (doc.getElementById('theme-toggle') || {}).hidden,
+  });
+  try {
+    const first = await load('/index.html', vp.width);
+    first.win.localStorage.clear();
+    // Reloaded after clearing, so this is a genuinely first visit: no stored choice,
+    // and the theme is whatever the headless browser asks for.
+    const fresh = await load('/index.html', vp.width);
+    out.theme.initial = paint(fresh.win, fresh.doc);
+
+    const button = fresh.doc.getElementById('theme-toggle');
+    if (!button) throw new Error('no theme toggle on the page');
+    button.click();
+    await new Promise((r) => setTimeout(r, 60));
+    out.theme.afterPress = paint(fresh.win, fresh.doc);
+    out.theme.stored = fresh.win.localStorage.getItem('mtg-combo-finder.theme');
+
+    // The whole point of storing it. A fresh document, no query string, and the
+    // choice has to still be in force before anything is pressed.
+    const returning = await load('/index.html', vp.width);
+    out.theme.onReturn = paint(returning.win, returning.doc);
+
+    // Pressing it again goes back, and that must also be remembered — a toggle that
+    // only sticks in one direction is a trap.
+    const back = returning.doc.getElementById('theme-toggle');
+    back.click();
+    await new Promise((r) => setTimeout(r, 60));
+    out.theme.afterSecondPress = paint(returning.win, returning.doc);
+    out.theme.storedAfterSecond = returning.win.localStorage.getItem('mtg-combo-finder.theme');
+
+    // The second page carries the same control, and it is the same choice: a theme
+    // that resets when you follow a link is not a preference.
+    const tiers = await load('/tiers.html', vp.width);
+    out.theme.tiersPage = paint(tiers.win, tiers.doc);
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+  return out;
+}
+
 async function runShare(vp) {
   const out = { ok: true, name: vp.name, requested: vp.width, share: {} };
   try {
@@ -457,6 +515,7 @@ async function runStamped(vp) {
 }
 
 function runOne(vp) {
+  if (vp.kind === 'theme') return runTheme(vp);
   if (vp.kind === 'share') return runShare(vp);
   if (vp.kind === 'stamped') return runStamped(vp);
   return new Promise((resolve) => {
@@ -792,6 +851,61 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     // The share-link run measures a round trip rather than a layout, so it is
     // judged on its own terms.
+    if (v.theme) {
+      const t = v.theme;
+      const wrong = [];
+
+      if (t.initial.hidden !== false) wrong.push('the theme toggle stayed hidden, so the script never dressed it');
+      if (!['dark', 'light'].includes(t.initial.attr)) {
+        wrong.push(`the page opened with data-theme="${t.initial.attr}"`);
+      }
+      // The control has to actually repaint the page, not just relabel itself. Read
+      // off the computed background, which is the token the whole theme hangs from.
+      if (t.afterPress.attr !== (t.initial.attr === 'dark' ? 'light' : 'dark')) {
+        wrong.push(`pressing it moved from ${t.initial.attr} to ${t.afterPress.attr}`);
+      }
+      if (t.afterPress.bg === t.initial.bg) {
+        wrong.push(`the page is still ${t.initial.bg} after switching theme`);
+      }
+      if (t.afterPress.text === t.initial.text) wrong.push('the text colour did not move with the theme');
+      // A button naming the theme you are already in sends you the wrong way.
+      if (t.afterPress.label === t.initial.label) {
+        wrong.push(`the button still reads "${t.initial.label}" after being pressed`);
+      }
+      if (t.afterPress.label !== (t.afterPress.attr === 'light' ? 'Dark mode' : 'Light mode')) {
+        wrong.push(`a ${t.afterPress.attr} page offers "${t.afterPress.label}"`);
+      }
+      if (t.stored !== t.afterPress.attr) {
+        wrong.push(`pressed to ${t.afterPress.attr} but stored ${JSON.stringify(t.stored)}`);
+      }
+      // The reason to store it at all: a fresh document with no query string, and
+      // the choice is still in force — over whatever the system asks for.
+      if (t.onReturn.attr !== t.afterPress.attr) {
+        wrong.push(`the choice of ${t.afterPress.attr} did not survive a reload (came back ${t.onReturn.attr})`);
+      }
+      if (t.onReturn.bg !== t.afterPress.bg) wrong.push('the remembered theme did not repaint on return');
+      // And back again, remembered too — a toggle that only sticks one way is a trap.
+      if (t.afterSecondPress.attr !== t.initial.attr) {
+        wrong.push(`pressing twice ended on ${t.afterSecondPress.attr}, not back at ${t.initial.attr}`);
+      }
+      if (t.storedAfterSecond !== t.afterSecondPress.attr) {
+        wrong.push(`switching back stored ${JSON.stringify(t.storedAfterSecond)}`);
+      }
+      if (t.tiersPage.attr !== t.afterSecondPress.attr) {
+        wrong.push(`the tiers page opened in ${t.tiersPage.attr} while the choice was ${t.afterSecondPress.attr}`);
+      }
+      if (t.tiersPage.hidden !== false) wrong.push('the tiers page has no working theme toggle');
+
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — opened ${t.initial.attr} (${t.initial.bg}), pressed to `
+          + `${t.afterPress.attr} (${t.afterPress.bg}), survived a reload, back again, and held on the tiers page`);
+      }
+      continue;
+    }
+
     if (v.share) {
       const s = v.share;
       const wrong = [];

@@ -21,11 +21,21 @@
     base-uri 'none'; form-action 'none'">
   <title>MTG Combo Finder</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <!-- Ahead of the stylesheet and not deferred: this writes the theme onto <html>,
+       and a theme applied after the first paint is a white flash on a dark page.
+       Small enough that the blocking request is cheaper than the flash. -->
+  <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>MTG Combo Finder</h1>
+    <div class="header-row">
+      <h1>MTG Combo Finder</h1>
+      <!-- Hidden here and shown by theme.js: a control that does nothing without
+           that script should not be on screen if it never arrived. Its label is
+           written there too, since it depends on the theme in force. -->
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden></button>
+    </div>
     <p class="tagline">Paste a decklist and find the combos hiding in it — powered by the
       <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook</a> database.</p>
   </header>

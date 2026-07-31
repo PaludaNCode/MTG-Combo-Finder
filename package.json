@@ -5,7 +5,7 @@
   "description": "Paste an MTG decklist, find the combos in it (Commander Spellbook powered)",
   "scripts": {
     "test": "node --test",
-    "test:coverage": "node --test --experimental-test-coverage --test-coverage-lines=94 --test-coverage-branches=90 --test-coverage-functions=95",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-exclude=theme.js --test-coverage-lines=94 --test-coverage-branches=90 --test-coverage-functions=95",
     "lint": "npx --yes eslint@9 .",
     "verify": "node tools/verify-layout.js"
   }
