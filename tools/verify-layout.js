@@ -400,13 +400,25 @@ function load(src, width) {
 // this whole region is itself inside one.
 async function runTheme(vp) {
   const out = { ok: true, name: vp.name, requested: vp.width, theme: {} };
-  const paint = (win, doc) => ({
-    attr: doc.documentElement.dataset.theme,
-    bg: win.getComputedStyle(doc.body).backgroundColor,
-    text: win.getComputedStyle(doc.body).color,
-    label: (doc.getElementById('theme-toggle') || {}).textContent,
-    hidden: (doc.getElementById('theme-toggle') || {}).hidden,
-  });
+  const paint = (win, doc) => {
+    const button = doc.getElementById('theme-toggle');
+    const shown = (sel) => {
+      const icon = button && button.querySelector(sel);
+      return Boolean(icon) && win.getComputedStyle(icon).display !== 'none';
+    };
+    return {
+      attr: doc.documentElement.dataset.theme,
+      bg: win.getComputedStyle(doc.body).backgroundColor,
+      text: win.getComputedStyle(doc.body).color,
+      // The button carries no text, so the accessible name is the only wording a
+      // reader gets — on hover, or read out.
+      label: button ? button.getAttribute('aria-label') : null,
+      // Exactly one icon should ever be on screen. Read from the computed style, so
+      // this is what CSS actually did rather than which classes are present.
+      icon: [shown('.icon-moon') ? 'moon' : null, shown('.icon-sun') ? 'sun' : null].filter(Boolean).join('+'),
+      hidden: button ? button.hidden : null,
+    };
+  };
   try {
     const first = await load('/index.html', vp.width);
     first.win.localStorage.clear();
@@ -868,13 +880,23 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         wrong.push(`the page is still ${t.initial.bg} after switching theme`);
       }
       if (t.afterPress.text === t.initial.text) wrong.push('the text colour did not move with the theme');
-      // A button naming the theme you are already in sends you the wrong way.
+      // A control naming the theme you are already in sends you the wrong way, and
+      // an icon-only button has nothing but its accessible name to say so.
       if (t.afterPress.label === t.initial.label) {
-        wrong.push(`the button still reads "${t.initial.label}" after being pressed`);
+        wrong.push(`the button still says "${t.initial.label}" after being pressed`);
       }
-      if (t.afterPress.label !== (t.afterPress.attr === 'light' ? 'Dark mode' : 'Light mode')) {
-        wrong.push(`a ${t.afterPress.attr} page offers "${t.afterPress.label}"`);
-      }
+      const wantedName = (theme) => (theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
+      [['initial', t.initial], ['afterPress', t.afterPress], ['onReturn', t.onReturn]].forEach(([when, state]) => {
+        if (state.label !== wantedName(state.attr)) {
+          wrong.push(`a ${state.attr} page (${when}) offers "${state.label}"`);
+        }
+        // The icon is the whole control now, so "which one is visible" is as much a
+        // correctness question as the colours are — and never both at once.
+        const wantedIcon = state.attr === 'light' ? 'sun' : 'moon';
+        if (state.icon !== wantedIcon) {
+          wrong.push(`a ${state.attr} page (${when}) shows ${state.icon || 'no icon'}, not the ${wantedIcon}`);
+        }
+      });
       if (t.stored !== t.afterPress.attr) {
         wrong.push(`pressed to ${t.afterPress.attr} but stored ${JSON.stringify(t.stored)}`);
       }
@@ -900,8 +922,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
-        console.log(`ok   ${v.name} — opened ${t.initial.attr} (${t.initial.bg}), pressed to `
-          + `${t.afterPress.attr} (${t.afterPress.bg}), survived a reload, back again, and held on the tiers page`);
+        console.log(`ok   ${v.name} — opened ${t.initial.attr} (${t.initial.bg}, ${t.initial.icon}), pressed to `
+          + `${t.afterPress.attr} (${t.afterPress.bg}, ${t.afterPress.icon}), survived a reload, back again, `
+          + `and held on the tiers page (${t.tiersPage.icon})`);
       }
       continue;
     }

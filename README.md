@@ -61,8 +61,8 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
 - **Light or dark, your call** — one set of colour tokens with a light override. Your
-  system's preference is the starting point; the **Light mode / Dark mode** button in
-  the header overrules it and the choice is remembered. See
+  system's preference is the starting point; the **sun/moon button** in the header
+  overrules it and the choice is remembered. See
   [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
 - **Your decklist survives a reload** — the list is the whole input, and losing it to a
   refresh was a strange thing for this page to do. It's kept in `localStorage` (it never
@@ -608,10 +608,10 @@ is more than swapping two colours.
 
 Light first shipped keyed on `prefers-color-scheme` alone, which meant the page
 decided for you — and browsers report `light` for everyone who has never chosen, so
-the default quietly flipped for most visitors. The **Light mode / Dark mode** button
-in the header fixes that in the honest direction: the system's answer is still what
-you get until you say otherwise, and once you do it is remembered in
-`localStorage` under `mtg-combo-finder.theme`.
+the default quietly flipped for most visitors. The **sun/moon button** in the header
+fixes that in the honest direction: the system's answer is still what you get until
+you say otherwise, and once you do it is remembered in `localStorage` under
+`mtg-combo-finder.theme`.
 
 - **`theme.js` resolves the two inputs into one answer** — a stored choice, else what
   the browser asks for — and writes it on `<html>` as `data-theme`. That is why the
@@ -623,8 +623,17 @@ you get until you say otherwise, and once you do it is remembered in
   inline script because the CSP here is `script-src 'self'`, which is worth more than
   one saved request.
 - **The button is `hidden` in the markup and shown by the script**, so a control that
-  cannot work without it never appears if it did not arrive. Its label names *where
-  pressing goes*, not where you are.
+  cannot work without it never appears if it did not arrive.
+- **Both icons ship in the markup and CSS shows one** — a moon on the dark page, a sun
+  on the light one — keyed on the same `data-theme` attribute the tokens use, so the
+  icon cannot disagree with the colours and switching costs no DOM work. Drawn inline
+  for the reason the mana pips are: a remote icon font is one more thing to load and
+  one more thing to fail. Nothing in JS touches the button's contents, because writing
+  text into it would delete the two SVGs that *are* the control — the layout test
+  fails on exactly that mistake.
+- **The icon shows the theme you are in; the accessible name says where pressing
+  goes** ("Switch to light mode"), which is the only wording an icon-only button has,
+  on hover or read aloud.
 - **No choice means it keeps following the system**, including a change made while the
   page is open. Storing a choice is what stops that.
 - **With JavaScript off the page is dark.** A real trade and a small one: this page is
@@ -633,9 +642,10 @@ you get until you say otherwise, and once you do it is remembered in
 
 Seven unit tests in `test/theme.test.js` cover the decision — precedence, junk in
 storage, the fallback, and the label. The layout test presses the real button and
-reads the computed colours back: it asserts the page repaints, the choice overrides
-the system, it survives a reload, pressing twice returns and is also remembered, and
-the second page opens in the same theme.
+reads the computed style back: it asserts the page repaints, the choice overrides the
+system, it survives a reload, pressing twice returns and is also remembered, the
+second page opens in the same theme, and **exactly one icon is visible** and it is the
+one matching the theme.
 
 **The page uses the desktop it is on, up to 1500px.** The shell was capped at
 1140px at every size, from a time when this was one column of prose. It is now a

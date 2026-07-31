@@ -74,9 +74,13 @@
 
   let current = apply(resolveTheme(storedChoice(), systemTheme()));
 
+  // The icon is chosen by CSS off the same `data-theme` attribute, so nothing here
+  // touches the button's contents — writing text into it would delete the two SVGs
+  // that are the whole control. What is left is the part CSS cannot do: saying out
+  // loud what pressing it will do, for a screen reader and on hover, since an icon
+  // on its own says neither.
   function dress(button) {
     button.hidden = false;
-    button.textContent = labelFor(current);
     const spoken = 'Switch to ' + labelFor(current).toLowerCase();
     button.title = spoken;
     button.setAttribute('aria-label', spoken);

@@ -99,21 +99,43 @@ header h1 { margin: 0 0 .25rem; font-size: 1.7rem; }
 
 /* Not the accent fill every other button gets: switching theme is a preference,
    not the thing this page is for, and it sits directly above the one action that
-   should be shouting. Full 44px target all the same. */
+   should be shouting. Square and 44px, so the icon has a full thumb target
+   without a label beside it. */
 .theme-toggle {
   flex: 0 0 auto;
-  min-height: 44px;
-  padding: .35rem .8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   background: var(--panel-2);
   color: var(--muted);
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: .85rem;
-  font-weight: 600;
-  white-space: nowrap;
 }
 .theme-toggle:hover { color: var(--text); border-color: var(--line-strong); }
 .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Stroked rather than filled, in the button's own colour, so the icon picks up the
+   hover state with the border and needs no second set of theme tokens. */
+.theme-toggle .icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Which icon you see is which theme you are in — a moon on the dark page, a sun on
+   the light one. Chosen in CSS off the same attribute the tokens key on, so there is
+   one source of truth for "what theme is this" and no way for the icon to disagree
+   with the colours. */
+.theme-toggle .icon-sun { display: none; }
+:root[data-theme='light'] .theme-toggle .icon-moon { display: none; }
+:root[data-theme='light'] .theme-toggle .icon-sun { display: block; }
 
 a { color: var(--accent); }
 
