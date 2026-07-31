@@ -158,8 +158,11 @@
       card.appendChild(filled);
     }
 
-    card.appendChild(resultChips(variant));
-
+    // Above the results, not below them. What a combo *needs* is read before what it
+    // *does*: the cards decide whether the row is worth reading at all, and a reader
+    // who wants the steps or the card images should not have to scroll past a wall of
+    // result chips to find the way out.
+    //
     // No "how it works" here on purpose. Spellbook writes one, but the fetcher
     // does not publish it (test/scanner.test.js pins that): a description for
     // every one of ~100k combos would multiply the download the page already
@@ -185,6 +188,8 @@
       }
       card.appendChild(p);
     }
+
+    card.appendChild(resultChips(variant));
 
     return card;
   }
@@ -213,8 +218,7 @@
     });
     card.appendChild(choices);
 
-    card.appendChild(resultChips(group.variants[0]));
-
+    // Same order as the rows above: what it needs, then what it does.
     // The same one-press look at the cards the other rows get. A collapsed row asks
     // for its shared cards plus one of the interchangeable ones, so the comparison
     // covers the whole set — that is what the reader is choosing between.
@@ -229,6 +233,8 @@
       p.appendChild(groupCompare);
       card.appendChild(p);
     }
+
+    card.appendChild(resultChips(group.variants[0]));
 
     const details = el('details');
     details.appendChild(el('summary', null, `All ${group.variants.length} versions`));
@@ -629,13 +635,14 @@
       }
     });
 
-    card.appendChild(resultChips(variant));
-
+    // Same order again: the slot and its candidates, the way out, then the payoff.
     if (variant.id) {
       const p = el('p', 'combo-link');
       p.appendChild(link(SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
       card.appendChild(p);
     }
+
+    card.appendChild(resultChips(variant));
 
     return card;
   }
