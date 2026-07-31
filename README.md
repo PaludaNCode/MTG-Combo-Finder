@@ -1304,6 +1304,24 @@ admins can push directly in a pinch (escape hatch — prefer PRs).
 
 ## Deploying
 
+
+**Action versions are kept on their Node 24 majors.** GitHub deprecated the Node 20
+runtime, and every run was reporting the actions it uses as forced onto 24:
+`checkout@v5`, `setup-node@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`,
+`deploy-pages@v5`. `actions/upload-artifact` is in that list too and is never named here
+— it arrives under `upload-pages-artifact`, so bumping that is what moves it.
+
+One real behaviour change came with it: **`upload-pages-artifact` v4 stopped including
+hidden files**, and this deploy uploads `path: .`. That is safe here — the only tracked
+dotfile is `.gitignore`, neither page references a dot-path, and there is no `.nojekyll`
+to lose, since an Actions-deployed site is served as-is and never sees Jekyll. It also
+stops publishing `.github/` to the live site. If a dotfile ever does need serving, v5
+added an `include-hidden-files` input.
+
+**CI cannot verify this one.** `checks` never runs the deploy workflow, so a wrong
+version here shows up only on the next push to `main`. A failed deploy leaves the
+previous deployment serving — the site goes stale rather than dark — but the first run
+after a bump is worth watching.
 `.github/workflows/deploy.yml` publishes the repo root to GitHub Pages on every push
 to `main`. Note: GitHub Pages on a **private** repo requires a paid GitHub plan —
 either make the repo public or run the page locally until then.

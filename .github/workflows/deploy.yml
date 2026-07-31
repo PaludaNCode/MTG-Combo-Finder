@@ -51,11 +51,22 @@ jobs:
             grep -q "<code id=\"build\">${GITHUB_SHA:0:7}</code>" "$page"
           done
 
-      - uses: actions/configure-pages@v5
+      # All three on their Node 24 majors. The Node 20 runtime is deprecated and every
+      # deploy was reporting these as forced onto 24 — including actions/upload-artifact,
+      # which we never name: it comes in under upload-pages-artifact.
+      #
+      # upload-pages-artifact v4 stopped including hidden files, and this uploads
+      # `path: .`, so that is a real behaviour change. Checked: the only tracked dotfile
+      # is .gitignore, nothing in either page references a dot-path, and there is no
+      # .nojekyll to lose — an Actions-deployed site is served as-is and never sees
+      # Jekyll. It also stops publishing .github/ to the live site, which was never
+      # anything but noise. If a dotfile ever does need serving, v5 added an
+      # `include-hidden-files` input for exactly that.
+      - uses: actions/configure-pages@v6
         with:
           enablement: true
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: .
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
