@@ -117,24 +117,19 @@
   // nothing. Alphabetical makes a row scannable and two rows comparable.
   const alphabetical = (names) => names.slice().sort((a, b) => a.localeCompare(b));
 
-  // `lead` names the card the reader is already looking at — the card a
-  // suggestion is about, or the one whose combos are being listed. Where there is
-  // one, it goes first and the rest follow alphabetically: a list of combos under
-  // "Scurry Oak" that buries Scurry Oak in the middle of each line makes the
-  // reader find it again on every row. With no lead, plain alphabetical.
-  function comboCardNames(variant, lead) {
-    const names = DeckCombos.variantCardNames(variant);
-    if (!lead) return alphabetical(names);
-    const key = DeckCombos.nameKey(lead);
-    const first = names.filter((n) => DeckCombos.nameKey(n) === key);
-    return first.concat(alphabetical(names.filter((n) => DeckCombos.nameKey(n) !== key)));
+  // `lead` puts the card the reader is already looking at first; `trail` sends the
+  // interchangeable cards of a collapsed group last. The rule itself lives in
+  // combos.js beside the data it orders, where it can be tested without a browser —
+  // see orderComboNames() there for why each exists.
+  function comboCardNames(variant, lead, trail) {
+    return DeckCombos.orderComboNames(DeckCombos.variantCardNames(variant), { lead, trail });
   }
 
-  function comboCard(variant, deckNames, lead) {
+  function comboCard(variant, deckNames, lead, trail) {
     const card = el('article', 'combo');
 
     const header = el('h3');
-    comboCardNames(variant, lead).forEach((name, i) => {
+    comboCardNames(variant, lead, trail).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
       const inDeck = !deckNames || deckNames.has(DeckCombos.nameKey(name));
       header.appendChild(el('span', inDeck ? 'card-name' : 'card-name missing', name));
@@ -206,7 +201,10 @@
 
     const details = el('details');
     details.appendChild(el('summary', null, `All ${group.variants.length} versions`));
-    group.variants.forEach((v) => details.appendChild(comboCard(v, null)));
+    // The interchangeable cards go last in every version, so each row reads in the
+    // same shape as the heading above them — the shared cards, then the one that
+    // makes this version this version.
+    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices)));
     card.appendChild(details);
 
     return card;

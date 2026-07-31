@@ -717,6 +717,56 @@
     return { gameChangers, twoCardWins, floor };
   }
 
+  // The order a combo's cards are named in on screen.
+  //
+  // Alphabetical is the base. Spellbook lists them in the order the combo was
+  // authored in, which means two rows sharing the same pieces can name them in
+  // different orders — and with no description shown, that order carries nothing.
+  // Alphabetical makes a row scannable and two rows comparable.
+  //
+  // Two things outrank it, both about where the reader's eye has to go:
+  //
+  // `lead` is the card the reader is already looking at — the card a suggestion is
+  // about, or the one whose combos are being listed. A list of combos under "Scurry
+  // Oak" that buries Scurry Oak mid-line makes them find it again on every row.
+  //
+  // `trail` is the same argument from the other end, for the versions of a collapsed
+  // group. Those rows are identical but for one card, and alphabetical order puts
+  // that card wherever its name happens to fall:
+  //
+  //     Chatterfang + Essence Warden + Warren Soultrader
+  //     Chatterfang + Soul Warden + Warren Soultrader
+  //
+  // so the difference moves around and the eye has to hunt for it on each line.
+  // Sending the interchangeable cards last gives every version the shape its own
+  // heading already has — "X + Y + the one that changes" — and the difference lands
+  // in the same column every time.
+  //
+  // Both are orderings, never filters: every card in the combo is still named.
+  function orderComboNames(names, opts) {
+    const list = (names || []).filter((n) => typeof n === 'string' && n.trim());
+    const sorted = (xs) => xs.slice().sort((a, b) => a.localeCompare(b));
+    const o = opts || {};
+
+    if (o.lead) {
+      const key = nameKey(o.lead);
+      // A lead not in this combo simply does not match, and the row stays
+      // alphabetical rather than losing a card or gaining one.
+      const first = list.filter((n) => nameKey(n) === key);
+      return first.concat(sorted(list.filter((n) => nameKey(n) !== key)));
+    }
+
+    if (o.trail && o.trail.length) {
+      const keys = new Set(o.trail.map((n) => nameKey(n)));
+      // Each side sorted, so a version naming two of the interchangeable cards is
+      // still ordered rather than left in whatever order the data arrived in.
+      return sorted(list.filter((n) => !keys.has(nameKey(n))))
+        .concat(sorted(list.filter((n) => keys.has(nameKey(n)))));
+    }
+
+    return sorted(list);
+  }
+
   // EDHREC card page slug: "Kinnan, Bonder Prodigy" -> "kinnan-bonder-prodigy"
   function edhrecSlug(name) {
     return nameKey(name)
@@ -766,6 +816,7 @@
 
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
+    orderComboNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,

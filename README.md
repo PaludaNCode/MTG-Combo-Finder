@@ -198,6 +198,40 @@ group's representative would put the wrong card first on most rows. It is the ca
 does not hold — which is also why it renders in the "missing" colour, so what you would be
 adding reads first and reads differently.
 
+**And where a row differs from the rows around it by one card, that card goes last.**
+The versions of a collapsed group are identical but for one piece, and alphabetical
+order puts that piece wherever its name happens to fall, so the difference moves from
+line to line and the eye has to hunt for it:
+
+```
+Chatterfang, Squirrel General + Warren Soultrader + any of 4
+  ▾ All 4 versions
+      Chatterfang, Squirrel General + Essence Warden + Warren Soultrader
+      Chatterfang, Squirrel General + Lunarch Veteran // Luminous Phantom + Warren Soultrader
+      Chatterfang, Squirrel General + Prosperous Innkeeper + Warren Soultrader
+      Chatterfang, Squirrel General + Soul Warden + Warren Soultrader
+```
+
+Sending the interchangeable cards last gives every version the shape its own heading
+already has — *the shared cards, then the one that changes* — so the difference lands
+in the same place every time:
+
+```
+Chatterfang, Squirrel General + Warren Soultrader + any of 4
+  ▾ All 4 versions
+      Chatterfang, Squirrel General + Warren Soultrader + Essence Warden
+      Chatterfang, Squirrel General + Warren Soultrader + Lunarch Veteran // Luminous Phantom
+      Chatterfang, Squirrel General + Warren Soultrader + Prosperous Innkeeper
+      Chatterfang, Squirrel General + Warren Soultrader + Soul Warden
+```
+
+All three rules are one function, `DeckCombos.orderComboNames(names, {lead, trail})`,
+kept beside the data it orders so it can be tested without a browser — ten tests in
+`test/name-order.test.js`. A lead outranks a trail, which is what the suggestion panel
+needs: the card you would be adding leads there, and it is often one of the
+interchangeable ones. Both are orderings and never filters, and a pin naming nothing
+in the combo leaves the row alphabetical rather than throwing or emptying it.
+
 Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that
 appears in four costs four — while the combos under each one are size-ordered and lead with
