@@ -102,3 +102,55 @@ test('the breakdown survives expand()', () => {
   const row = { id: 'x', c: ['Rings of Brighthearth'], p: [], fills: [{ id: 7, slot: 'Persist Creature', card: 'Kitchen Finks' }] };
   assert.equal(comboSize(expand(row)), 2);
 });
+
+// ---- the order the deck's own combos come back in -------------------------
+
+// Sorting happens on compact rows, before expand(): a size function that only
+// understood `uses` would score every one of them zero and leave the order to
+// the popularity tie-break alone.
+test('comboSize: reads the compact shape as well as the expanded one', () => {
+  assert.equal(comboSize({ c: ['A', 'B', 'C'] }), 3);
+  assert.equal(comboSize({ c: ['A'], fills: [{ id: 1, slot: 'x', card: 'B' }] }), 2);
+  assert.equal(comboSize({ uses: [{ card: { name: 'A' } }, { card: { name: 'B' } }] }), 2);
+});
+
+const DECK_ORDER = {
+  cardIdentity: { A: '', B: '', C: '', D: '', E: '' },
+  combos: [
+    // Deliberately awkward: the biggest combo is also the most played, so an
+    // order that merely looked right under popularity cannot pass by accident.
+    { id: 'big-popular', c: ['A', 'B', 'C', 'D'], p: ['Infinite mana'], i: 'C', pop: 900 },
+    { id: 'small-quiet', c: ['A', 'B'], p: ['Infinite mana'], i: 'C', pop: 2 },
+    { id: 'small-played', c: ['A', 'C'], p: ['Infinite mana'], i: 'C', pop: 400 },
+    { id: 'medium', c: ['A', 'B', 'C'], p: ['Infinite mana'], i: 'C', pop: 50 },
+  ],
+};
+
+test('the deck\'s combos start with the easiest, most played first within a size', () => {
+  const deck = ['A', 'B', 'C', 'D'].map((card) => ({ card }));
+  const { included } = matchDeck(DECK_ORDER, deckNameSet(deck), deck);
+  assert.deepStrictEqual(included.map((c) => c.id), [
+    'small-played',  // 2 cards, pop 400
+    'small-quiet',   // 2 cards, pop 2
+    'medium',        // 3 cards
+    'big-popular',   // 4 cards, however popular
+  ]);
+});
+
+test('a slot makes a combo bigger for ordering, not just for display', () => {
+  const DATA = {
+    cardIdentity: { A: '', B: '', 'Kitchen Finks': 'GW' },
+    templates: { 7: 'Persist Creature' },
+    templateCards: { 'kitchen finks': [7] },
+    combos: [
+      { id: 'two-named', c: ['A', 'B'], p: ['x'], i: 'C', pop: 1 },
+      // One named card plus a slot the deck fills: two cards on the table, so it
+      // sorts with the two-card combos rather than ahead of them.
+      { id: 'one-plus-slot', c: ['A'], t: [7], p: ['x'], i: 'C', pop: 999 },
+    ],
+  };
+  const deck = ['A', 'B', 'Kitchen Finks'].map((card) => ({ card }));
+  const { included } = matchDeck(DATA, deckNameSet(deck), deck);
+  assert.deepStrictEqual(included.map((c) => c.id), ['one-plus-slot', 'two-named']);
+  assert.deepStrictEqual(included.map(comboSize), [2, 2]);
+});

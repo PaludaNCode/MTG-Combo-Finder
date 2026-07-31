@@ -111,11 +111,18 @@
     return wrap;
   }
 
+  // The cards of a combo, alphabetically. Spellbook lists them in the order the
+  // combo was authored in, which means two rows sharing the same pieces can name
+  // them in different orders — and with no description shown, that order carries
+  // nothing. Alphabetical makes a row scannable and two rows comparable.
+  const alphabetical = (names) => names.slice().sort((a, b) => a.localeCompare(b));
+  const comboCardNames = (variant) => alphabetical(DeckCombos.variantCardNames(variant));
+
   function comboCard(variant, deckNames) {
     const card = el('article', 'combo');
 
     const header = el('h3');
-    DeckCombos.variantCardNames(variant).forEach((name, i) => {
+    comboCardNames(variant).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
       const inDeck = !deckNames || deckNames.has(DeckCombos.nameKey(name));
       header.appendChild(el('span', inDeck ? 'card-name' : 'card-name missing', name));
@@ -168,7 +175,7 @@
     const card = el('article', 'combo');
 
     const header = el('h3');
-    group.shared.forEach((name, i) => {
+    alphabetical(group.shared).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
       header.appendChild(el('span', 'card-name', name));
     });
@@ -177,7 +184,7 @@
     card.appendChild(header);
 
     const choices = el('p', 'choices');
-    group.choices.forEach((name, i) => {
+    alphabetical(group.choices).forEach((name, i) => {
       if (i > 0) choices.appendChild(document.createTextNode(' · '));
       choices.appendChild(el('span', 'card-name', name));
     });
@@ -414,7 +421,7 @@
     const card = el('article', 'combo slot-away');
 
     const header = el('h3');
-    DeckCombos.variantCardNames(variant).forEach((name, i) => {
+    comboCardNames(variant).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
       header.appendChild(el('span', 'card-name', name));
     });

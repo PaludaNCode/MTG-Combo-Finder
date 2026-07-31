@@ -122,6 +122,12 @@ const FIXTURE = {
     // Short of a slot Spellbook publishes no query for: nameable, never
     // fillable, so the row has to admit there is nothing to offer.
     { id: '12', c: ['Rings of Brighthearth'], t: [84], p: ['Infinite damage'], i: 'C', pop: 71 },
+    // Big and popular, and every card in the deck. Under the old popularity-only
+    // sort this came second; it now has to come last, after every smaller combo.
+    // Without it the fixture's biggest combo is also its least played, and the
+    // ordering would pass whichever rule were in force.
+    { id: '15', c: ['Palinchron', 'Basalt Monolith', 'Great Whale', 'Kinnan, Bonder Prodigy'],
+      p: ['Infinite mana'], i: 'GU', pop: 500 },
   ],
 };
 
@@ -216,6 +222,18 @@ function measure(win, doc) {
   };
   // The combos held up by a slot the deck cannot fill: reported, apart from the
   // ones it can assemble, and never counted among them.
+  // "Combos in your deck" leads with the easiest: 2-card rows, then 3, then 4.
+  // Card names inside a row are alphabetical, so two rows can be compared.
+  // Scoped to the row's own heading: a collapsed row keeps every version inside a
+  // <details>, each with a heading of its own, and a document-wide query pulls
+  // those in too — which reads as one row naming five cards.
+  const order = [...doc.querySelectorAll('#included .panel-body > .combo')].map((row) => {
+    const head = row.querySelector(':scope > h3');
+    const names = [...head.querySelectorAll(':scope > .card-name')].map((n) => n.textContent);
+    const slots = head.querySelectorAll(':scope > .slot').length;
+    const choices = head.querySelector(':scope > .either') ? 1 : 0; // "any of N" stands in for one card
+    return { names, size: names.length + slots + choices, label: names.join(' + ') };
+  });
   const stuck = {
     rows: doc.querySelectorAll('#slots .combo').length,
     missing: [...doc.querySelectorAll('#slots .slot-missing')].map((e) => e.textContent),
@@ -273,6 +291,7 @@ function measure(win, doc) {
     grouped,
     slots,
     stuck,
+    order,
     dataAge,
     badges,
     sizes,
@@ -863,6 +882,23 @@ function serve(dir, extra, onVerdict) {
     if (cleared.stored) problems.push('Clear left the stored decklist behind');
     if (!cleared.resultsHidden) problems.push('Clear left the results on screen');
 
+    // Easiest first, and alphabetical within a row.
+    const sizes = v.order.map((r) => r.size);
+    if (sizes.length < 3) problems.push(`only ${sizes.length} combo rows to check the ordering of`);
+    for (let i = 1; i < sizes.length; i += 1) {
+      if (sizes[i] < sizes[i - 1]) {
+        problems.push(`combo rows are not smallest-first: ${JSON.stringify(v.order.map((r) => r.size))}`);
+        break;
+      }
+    }
+    if (new Set(sizes).size < 2) problems.push('every combo row is the same size, so the ordering proves nothing');
+    for (const row of v.order) {
+      const sorted = row.names.slice().sort((a, b) => a.localeCompare(b));
+      if (row.names.join('|') !== sorted.join('|')) {
+        problems.push(`a combo row is not alphabetical: "${row.label}"`);
+        break;
+      }
+    }
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
     // Empty chips must fail: otherwise every assertion below passes vacuously.
@@ -908,7 +944,8 @@ function serve(dir, extra, onVerdict) {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
-      const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`;
+      const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`
+        + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }

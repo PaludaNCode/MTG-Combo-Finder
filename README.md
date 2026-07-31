@@ -142,6 +142,32 @@ hidden: up to eight results are listed before the rest fold behind "+N more", an
 `splitResults()` guarantees a tier that exists never disappears entirely into the
 fold.
 
+### The combos you have: easiest first, named alphabetically
+
+**Combos in your deck** leads with the ones you can actually pull off: every 2-card combo,
+then every 3-card, then every 4-card, most played within each size. Two cards on the table
+is a different proposition from four, and popularity alone buried the easy lines among the
+hard ones — a well-played four-card combo used to sit above a two-card one nobody has
+registered.
+
+Nothing is added to the rows to say so. The size is already on screen, spelled out in the
+card names: `Rosie Cotton of South Lane + Scurry Oak` is visibly a two-card combo, and a
+label repeating it would be noise. (The *suggestions* do carry pills, because there the row
+is a card to add and its combos are hidden behind a fold — see
+[What the count is made of](#what-the-count-is-made-of).)
+
+**The cards in a row are alphabetical.** Spellbook lists them in the order the combo was
+authored in, so two rows sharing pieces could name them in different orders, and with no
+description shown that order carries nothing. Sorting is done at render time only — the
+matching, grouping and slot-assignment code keeps the published order, since `groupVariants()`
+reasons about the position of a card within a combo.
+
+Both apply to **Cards carrying your combos** as well: the cards themselves stay ranked by how
+many combos each holds up — that is the panel's whole question, since cutting a card that
+appears in four costs four — while the combos listed under each one are ordered and named the
+same way as above. Measured on the fixture deck, Scurry Oak's ten combos come back as sizes
+`2,3,3,3,3,3,3,3,3,3`.
+
 ### Ranking, and what popularity is for
 
 Spellbook publishes a `popularity` per variant — how many decks in its own corpus play
@@ -255,9 +281,10 @@ is the only version worth building. `compact()` currently keeps none of it.
 Two details worth keeping:
 
 - **Grouping must not reorder.** `groupVariants()` returns groups in the order
-  their first variant arrived, because the caller sorted by popularity and the
-  most-played combo should not drift down the page. The layout test caught this
-  when the first pass sorted by group size instead.
+  their first variant arrived, because the caller has already sorted them —
+  smallest combo first, most played within a size — and neither ordering should
+  be undone on the way to the screen. The layout test caught this when the first
+  pass sorted by group size instead.
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.

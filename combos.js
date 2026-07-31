@@ -82,9 +82,21 @@
   // A slot counts as a card, because something has to occupy it: a combo of
   // "Rings of Brighthearth + a Persist Creature" needs two cards, one of which
   // your deck happens to supply.
+  //
+  // Takes either shape: a compact row straight from the dataset (`c`) or one that
+  // has been through expand() (`uses`). Sorting happens before expansion and
+  // rendering after it, and a function that silently returned 0 for one of them
+  // would sort every combo as though it were empty.
   function comboSize(variant) {
-    return variantCardNames(variant).length + (((variant && variant.fills) || []).length);
+    if (!variant) return 0;
+    const named = variant.uses ? variantCardNames(variant) : (variant.c || []);
+    return named.length + ((variant.fills || []).length);
   }
+
+  // Smallest first, most played breaking the tie. Two cards on the table is a
+  // different proposition from four, so the combos a deck can actually assemble
+  // are ordered by how hard they are before how popular they are.
+  const bySizeThenPopularity = (a, b) => comboSize(a) - comboSize(b) || popularity(b) - popularity(a);
 
   // What a set of combos is made of, smallest first:
   // [{ size, count }] — "one 2-card combo and nine 3-card ones".
@@ -508,10 +520,11 @@
       }
     }
 
-    // Most-played first, everywhere. The suggestion lists were left unsorted
-    // before, so "combos this unlocks" opened on whatever order the database
-    // happened to publish.
-    included.sort(byPopularity);
+    // The combos the deck can assemble lead with the easiest: every 2-card combo,
+    // then every 3-card one, and so on, most played first within each size. The
+    // rest stay ordered by popularity alone — a suggestion is a card to add
+    // rather than a line to look for, and its own sizes are shown on its row.
+    included.sort(bySizeThenPopularity);
     almost.sort(byPopularity);
     almostByAddingColors.sort(byPopularity);
     oneSlotAway.sort(byPopularity);
