@@ -54,6 +54,9 @@ const VIEWPORTS = [
   // production looks fine while running half-stale JS. Hence asserting that the
   // search still went through the *worker* on a stamped page.
   { name: 'desktop (asset-stamped)', width: 1440, height: 900, deck: 'marked', kind: 'stamped' },
+  // Also not a layout check: the theme control overriding the system, remembering
+  // the answer, and carrying it to the second page.
+  { name: 'theme toggle', width: 1440, height: 900, kind: 'theme' },
 ];
 
 function findBrowser() {
@@ -227,6 +230,24 @@ function measure(win, doc) {
     choiceRows: doc.querySelectorAll('#included .choices').length,
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
     altNames: doc.querySelectorAll('.alternatives .alt-list .card-name').length,
+    // The one link that covers a whole choice at once. Gathered per suggestion and
+    // alongside the names that suggestion shows, because the query inside the href
+    // is the part that can silently stop matching what the group actually offers —
+    // and a document-wide query could not tell which cards it was meant to carry.
+    compare: [...doc.querySelectorAll('.combo.suggestion')]
+      .filter((row) => row.querySelector('.alternatives'))
+      .map((row) => {
+        const a = row.querySelector('.alternatives .alt-all');
+        return {
+          headline: (row.querySelector('h3 > .card-name') || {}).textContent || '',
+          // Both lists: the spelled-out few and the folded-away remainder.
+          alts: [...row.querySelectorAll('.alternatives .alt-list .card-name')].map((n) => n.textContent),
+          label: a ? a.textContent : null,
+          href: a ? a.getAttribute('href') : null,
+          opensAway: Boolean(a) && a.getAttribute('target') === '_blank'
+            && (a.getAttribute('rel') || '').includes('noopener'),
+        };
+      }),
   };
   const slots = {
     labels: [...doc.querySelectorAll('#included .slot')].map((e) => e.textContent),
@@ -271,15 +292,39 @@ function measure(win, doc) {
   // The bracket check. Two of Wizards' criteria are readable off a card list and
   // the rest are not, so the panel has to state the floor *and* what it did not
   // look at — a bracket number on its own would be read as the whole answer.
+  const scaleButton = doc.querySelector('#bracket .bracket-scale');
+  const whyPanel = doc.querySelector('#bracket .bracket-why');
   const bracket = {
-    floor: (doc.querySelector('#bracket .bracket-floor') || {}).textContent || '',
-    why: (doc.querySelector('#bracket .bracket-why') || {}).textContent || '',
-    changers: [...doc.querySelectorAll('#bracket .gc-list .card-name')].map((e) => e.textContent),
-    twoCardCombos: doc.querySelectorAll('#bracket details > .combo').length,
-    caveat: (doc.querySelector('#bracket .bracket-note') || {}).textContent || '',
-    // The caveat must not be foldable: hidden behind a control it may as well not
-    // be written.
-    caveatFolded: Boolean(doc.querySelector('#bracket details .bracket-note')),
+    // One pip per bracket, and its state. Read as three lists rather than one
+    // string, because "which brackets are ruled out" is the claim being made.
+    pips: [...doc.querySelectorAll('#bracket .step')].map((p) => ({
+      n: p.textContent,
+      state: p.classList.contains('floor') ? 'floor' : p.classList.contains('out') ? 'out' : 'open',
+    })),
+    // The whole answer lives in the button's accessible name, since the pips are
+    // decorative — so this is also what a screen reader gets.
+    spoken: scaleButton ? scaleButton.getAttribute('aria-label') : '',
+    // Shut until asked. Read from computed style: display is what actually
+    // decides, and a panel left open would put the caveat back on the page.
+    closed: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
+    floor: (doc.querySelector('#bracket .why-floor') || {}).textContent || '',
+    why: (doc.querySelector('#bracket .why-reason') || {}).textContent || '',
+    changers: [...doc.querySelectorAll('#bracket .why-cards .card-name')].map((e) => e.textContent),
+    // The Game Changers keep their links, which is the one thing a hover cannot
+    // carry as plain text.
+    changerLinks: doc.querySelectorAll('#bracket .why-cards .card-links a').length,
+    caveat: (doc.querySelector('#bracket .why-note') || {}).textContent || '',
+    // The caveat is now behind a hover, so the ways of asking for it are what has to
+    // hold. Hover cannot be simulated here; a press is the path a phone has, and the
+    // one that would silently fail if the control were hover-only.
+    opensOnPress: (() => {
+      if (!scaleButton || !whyPanel) return false;
+      scaleButton.click();
+      const open = win.getComputedStyle(whyPanel).display !== 'none';
+      scaleButton.click(); // put it back, so nothing measured after this sees it open
+      return open;
+    })(),
+    closesOnSecondPress: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
   };
 
   const ageEl = doc.getElementById('data-age');
@@ -369,6 +414,73 @@ function load(src, width) {
 // the URL by Copy link, and read back out of that URL by a page that has never
 // seen it. Every step of that is our own encoding, so none of it is safe to
 // assume — a link that silently loses the deck is worse than no link at all.
+// The theme control, end to end: the colours really change, the label really
+// follows, and the choice really survives a reload. Every one of those is a thing
+// that can be wired backwards while looking correct in the markup — and the reason
+// the button exists at all is that prefers-color-scheme alone decided for the
+// reader, so "does it override the system" is the assertion that matters most.
+//
+// Runs inside the harness page, so no backticks and no template literals in here:
+// this whole region is itself inside one.
+async function runTheme(vp) {
+  const out = { ok: true, name: vp.name, requested: vp.width, theme: {} };
+  const paint = (win, doc) => {
+    const button = doc.getElementById('theme-toggle');
+    const shown = (sel) => {
+      const icon = button && button.querySelector(sel);
+      return Boolean(icon) && win.getComputedStyle(icon).display !== 'none';
+    };
+    return {
+      attr: doc.documentElement.dataset.theme,
+      bg: win.getComputedStyle(doc.body).backgroundColor,
+      text: win.getComputedStyle(doc.body).color,
+      // The button carries no text, so the accessible name is the only wording a
+      // reader gets — on hover, or read out.
+      label: button ? button.getAttribute('aria-label') : null,
+      // Exactly one icon should ever be on screen. Read from the computed style, so
+      // this is what CSS actually did rather than which classes are present.
+      icon: [shown('.icon-moon') ? 'moon' : null, shown('.icon-sun') ? 'sun' : null].filter(Boolean).join('+'),
+      hidden: button ? button.hidden : null,
+    };
+  };
+  try {
+    const first = await load('/index.html', vp.width);
+    first.win.localStorage.clear();
+    // Reloaded after clearing, so this is a genuinely first visit: no stored choice,
+    // and the theme is whatever the headless browser asks for.
+    const fresh = await load('/index.html', vp.width);
+    out.theme.initial = paint(fresh.win, fresh.doc);
+
+    const button = fresh.doc.getElementById('theme-toggle');
+    if (!button) throw new Error('no theme toggle on the page');
+    button.click();
+    await new Promise((r) => setTimeout(r, 60));
+    out.theme.afterPress = paint(fresh.win, fresh.doc);
+    out.theme.stored = fresh.win.localStorage.getItem('mtg-combo-finder.theme');
+
+    // The whole point of storing it. A fresh document, no query string, and the
+    // choice has to still be in force before anything is pressed.
+    const returning = await load('/index.html', vp.width);
+    out.theme.onReturn = paint(returning.win, returning.doc);
+
+    // Pressing it again goes back, and that must also be remembered — a toggle that
+    // only sticks in one direction is a trap.
+    const back = returning.doc.getElementById('theme-toggle');
+    back.click();
+    await new Promise((r) => setTimeout(r, 60));
+    out.theme.afterSecondPress = paint(returning.win, returning.doc);
+    out.theme.storedAfterSecond = returning.win.localStorage.getItem('mtg-combo-finder.theme');
+
+    // The second page carries the same control, and it is the same choice: a theme
+    // that resets when you follow a link is not a preference.
+    const tiers = await load('/tiers.html', vp.width);
+    out.theme.tiersPage = paint(tiers.win, tiers.doc);
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+  return out;
+}
+
 async function runShare(vp) {
   const out = { ok: true, name: vp.name, requested: vp.width, share: {} };
   try {
@@ -439,6 +551,7 @@ async function runStamped(vp) {
 }
 
 function runOne(vp) {
+  if (vp.kind === 'theme') return runTheme(vp);
   if (vp.kind === 'share') return runShare(vp);
   if (vp.kind === 'stamped') return runStamped(vp);
   return new Promise((resolve) => {
@@ -761,7 +874,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
         }
       }
-      if (s.panels < 5) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
+      if (s.panels < 4) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
       if (s.stuckRows < 2) wrong.push(`the one-slot-away rows did not render from a stamped page`);
       if (wrong.length) {
         failed = true;
@@ -774,6 +887,72 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     // The share-link run measures a round trip rather than a layout, so it is
     // judged on its own terms.
+    if (v.theme) {
+      const t = v.theme;
+      const wrong = [];
+
+      if (t.initial.hidden !== false) wrong.push('the theme toggle stayed hidden, so the script never dressed it');
+      if (!['dark', 'light'].includes(t.initial.attr)) {
+        wrong.push(`the page opened with data-theme="${t.initial.attr}"`);
+      }
+      // The control has to actually repaint the page, not just relabel itself. Read
+      // off the computed background, which is the token the whole theme hangs from.
+      if (t.afterPress.attr !== (t.initial.attr === 'dark' ? 'light' : 'dark')) {
+        wrong.push(`pressing it moved from ${t.initial.attr} to ${t.afterPress.attr}`);
+      }
+      if (t.afterPress.bg === t.initial.bg) {
+        wrong.push(`the page is still ${t.initial.bg} after switching theme`);
+      }
+      if (t.afterPress.text === t.initial.text) wrong.push('the text colour did not move with the theme');
+      // A control naming the theme you are already in sends you the wrong way, and
+      // an icon-only button has nothing but its accessible name to say so.
+      if (t.afterPress.label === t.initial.label) {
+        wrong.push(`the button still says "${t.initial.label}" after being pressed`);
+      }
+      const wantedName = (theme) => (theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
+      [['initial', t.initial], ['afterPress', t.afterPress], ['onReturn', t.onReturn]].forEach(([when, state]) => {
+        if (state.label !== wantedName(state.attr)) {
+          wrong.push(`a ${state.attr} page (${when}) offers "${state.label}"`);
+        }
+        // The icon is the whole control now, so "which one is visible" is as much a
+        // correctness question as the colours are — and never both at once.
+        const wantedIcon = state.attr === 'light' ? 'sun' : 'moon';
+        if (state.icon !== wantedIcon) {
+          wrong.push(`a ${state.attr} page (${when}) shows ${state.icon || 'no icon'}, not the ${wantedIcon}`);
+        }
+      });
+      if (t.stored !== t.afterPress.attr) {
+        wrong.push(`pressed to ${t.afterPress.attr} but stored ${JSON.stringify(t.stored)}`);
+      }
+      // The reason to store it at all: a fresh document with no query string, and
+      // the choice is still in force — over whatever the system asks for.
+      if (t.onReturn.attr !== t.afterPress.attr) {
+        wrong.push(`the choice of ${t.afterPress.attr} did not survive a reload (came back ${t.onReturn.attr})`);
+      }
+      if (t.onReturn.bg !== t.afterPress.bg) wrong.push('the remembered theme did not repaint on return');
+      // And back again, remembered too — a toggle that only sticks one way is a trap.
+      if (t.afterSecondPress.attr !== t.initial.attr) {
+        wrong.push(`pressing twice ended on ${t.afterSecondPress.attr}, not back at ${t.initial.attr}`);
+      }
+      if (t.storedAfterSecond !== t.afterSecondPress.attr) {
+        wrong.push(`switching back stored ${JSON.stringify(t.storedAfterSecond)}`);
+      }
+      if (t.tiersPage.attr !== t.afterSecondPress.attr) {
+        wrong.push(`the tiers page opened in ${t.tiersPage.attr} while the choice was ${t.afterSecondPress.attr}`);
+      }
+      if (t.tiersPage.hidden !== false) wrong.push('the tiers page has no working theme toggle');
+
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — opened ${t.initial.attr} (${t.initial.bg}, ${t.initial.icon}), pressed to `
+          + `${t.afterPress.attr} (${t.afterPress.bg}, ${t.afterPress.icon}), survived a reload, back again, `
+          + `and held on the tiers page (${t.tiersPage.icon})`);
+      }
+      continue;
+    }
+
     if (v.share) {
       const s = v.share;
       const wrong = [];
@@ -800,8 +979,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
     // Bracket check, combos in your deck, one slot away, cards carrying them,
     // suggested additions.
-    if (v.panels.length < 5) problems.push(`expected 5 panels, got ${v.panels.length}`);
-    if (!v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket panel did not render');
+    // Four now: the bracket check stopped being a panel and became a line beside the
+    // colour identity, so a fifth would mean it had come back.
+    if (v.panels.length !== 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
+    if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
@@ -902,6 +1083,44 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (g.altGroups.some((t) => !/or any one of these \d+/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
 
+    // Sixteen interchangeable cards is one decision, and making it means looking at
+    // all sixteen. The link that does that in one press is only worth having if the
+    // query behind it really carries every card in the choice — a query short by
+    // one is a comparison missing an option, and nothing on screen would show it.
+    if (!g.compare.length) problems.push('a suggestion offered alternatives but no way to compare them');
+    g.compare.forEach((c) => {
+      const whose = c.headline || 'a suggestion';
+      if (!c.href) { problems.push(`${whose} offered alternatives with no Scryfall comparison link`); return; }
+      if (!c.href.startsWith('https://scryfall.com/search?q=')) {
+        problems.push(`${whose}'s comparison link does not go to a Scryfall search: ${c.href}`);
+        return;
+      }
+      if (!c.opensAway) problems.push(`${whose}'s comparison link would navigate away from the deck`);
+
+      const query = decodeURIComponent(c.href.slice('https://scryfall.com/search?q='.length));
+      const terms = query.split(' or ');
+      // The recommended card is one of the options being weighed, so a comparison
+      // without it is the wrong comparison.
+      const wanted = [c.headline].concat(c.alts).filter(Boolean);
+      wanted.forEach((name) => {
+        if (!terms.includes('!"' + name + '"')) {
+          problems.push(`${whose}'s comparison link leaves out ${name}`);
+        }
+      });
+      // Anchored, or Scryfall reads the words as a substring search and returns a
+      // different set of cards than the one being offered.
+      terms.forEach((t) => {
+        if (!/^!".+"$/.test(t)) problems.push(`${whose}'s comparison query is not exact: ${t}`);
+      });
+      // What the label promises has to be what the query asks for, since the number
+      // is the only part of this a reader can check.
+      const claimed = Number((/Compare all (\d+) on Scryfall/.exec(c.label || '') || [])[1]);
+      if (!claimed) problems.push(`${whose}'s comparison link reads "${c.label}"`);
+      else if (claimed !== terms.length) {
+        problems.push(`${whose}'s link offers ${claimed} cards but asks Scryfall for ${terms.length}`);
+      }
+    });
+
     // Counting rows instead of combos under-reports a deck with interchangeable
     // versions in it — 34 combos shown as 23. The fixture collapses two combos
     // into one row on purpose, so the badge and the row count must disagree.
@@ -959,23 +1178,44 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // The bracket check. The fixture holds two of its three Game Changers and a
     // two-card combo that wins, so the floor is 3 and both reasons are on screen.
     const bracket = v.bracket;
+    // Five pips, one per bracket: 1 and 2 ruled out, 3 the floor, 4 and 5 still
+    // open. The states are the claim — a scale that dims the wrong end says the
+    // deck cannot be something it can.
+    if (bracket.pips.length !== 5) problems.push(`${bracket.pips.length} bracket pips, expected 5`);
+    const pipState = bracket.pips.map((p) => p.n + ':' + p.state).join(' ');
+    if (pipState !== '1:out 2:out 3:floor 4:open 5:open') {
+      problems.push(`the bracket scale reads "${pipState}", expected 1 and 2 out, 3 the floor, 4 and 5 open`);
+    }
+    // The pips are decorative, so this is the entire answer for anyone not looking
+    // at them.
+    if (!/Bracket 3 at the earliest/.test(bracket.spoken) || !/Upgraded/.test(bracket.spoken)) {
+      problems.push(`the bracket scale is announced as "${bracket.spoken}"`);
+    }
     if (!/Bracket 3 at the earliest/.test(bracket.floor)) {
       problems.push(`the bracket floor reads "${bracket.floor}", expected bracket 3`);
     }
     if (!/Upgraded/.test(bracket.floor)) problems.push('the bracket number is not followed by its name');
-    if (bracket.changers.length !== 2) {
-      problems.push(`${bracket.changers.length} Game Changers named, expected the 2 the deck holds`);
+    if (bracket.changers.length < 3) {
+      problems.push(`${bracket.changers.length} cards named behind the pips, expected 2 Game Changers and the two-card wins`);
     }
     if (bracket.changers.includes('Bloom Tender')) {
       problems.push('a Game Changer the deck does not play was counted');
     }
+    // Cutting the prose must not cut the links with it: a card named without one is
+    // a claim the reader cannot check.
+    if (bracket.changerLinks < 4) {
+      problems.push(`${bracket.changerLinks} card links behind the pips, expected EDHREC and Scryfall for both Game Changers`);
+    }
     if (!/2 Game Changers/.test(bracket.why)) problems.push(`the bracket reason reads "${bracket.why}"`);
     if (!/two-card combo/.test(bracket.why)) problems.push('the two-card win was not given as a reason');
-    if (!bracket.twoCardCombos) problems.push('the two-card combos behind the floor are not shown');
-    // The caveat is the reason a number on this panel is honest. It must be
-    // present, and it must not be folded away.
-    if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket panel does not say what it did not check');
-    if (bracket.caveatFolded) problems.push('the bracket caveat is hidden behind a control');
+    // The line is a number and nothing else until asked — that is the whole point of
+    // the change — and the ways of asking have to work. Hover cannot be simulated,
+    // so the press path stands in: it is the one a phone has.
+    if (!bracket.closed) problems.push('the bracket explanation is on screen without being asked for');
+    if (!bracket.opensOnPress) problems.push('pressing the bracket scale did not open the explanation');
+    if (!bracket.closesOnSecondPress) problems.push('a second press did not close the bracket explanation again');
+    // The caveat is the reason a bracket number here is honest at all.
+    if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket explanation does not say what it did not check');
 
     // Taking a suggestion: the card lands in the decklist, the list is kept, and
     // the search runs again — proved by the deck holding more combos than it did.
@@ -1101,12 +1341,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
-      const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)`;
+      const compareNote = v.grouped.compare.length
+        ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+) on Scryfall/, '$1 on Scryfall')).join(' / ')}`
+        : '';
+      const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
       const sizeNote = `sizes ${JSON.stringify((v.sizes.find((r) => r.pills.length > 1) || v.sizes[0]).pills)}`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
-      const bracketNote = `bracket ${v.bracket.floor.replace(/ — .*/, '')} `
-        + `(${v.bracket.changers.length} GC, ${v.bracket.twoCardCombos} two-card win)`;
+      const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
+        + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }

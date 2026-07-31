@@ -30,7 +30,10 @@ jobs:
       # Coverage floors, set a point under what the suite currently manages, so
       # they catch a module arriving untested rather than bickering over a line.
       # Only files the tests load are measured, which is the logic: app.js and
-      # tiers-page.js are covered by the layout test below instead.
+      # tiers-page.js are covered by the layout test below instead. theme.js is
+      # excluded explicitly for the same reason — the tests require it for the three
+      # pure functions at the top, and the browser half below them cannot run in
+      # node, so measuring it would score DOM wiring the layout test already presses.
       - name: Unit tests, with coverage floors
         run: npm run test:coverage
 

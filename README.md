@@ -20,10 +20,15 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   interchangeable alternative) carries **+ Add to deck**: the card is appended to
   the decklist, kept, and the search runs again against the database already in
   memory. See [Adding a card, and searching again](#adding-a-card-and-searching-again).
-- **Which bracket the list is in** — the Game Changers your deck plays and the
-  two-card combos it can win with, and the lowest Commander bracket that leaves it
-  eligible for. A floor, never a verdict, and it says which criteria it did not
-  check — see [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
+- **Compare a whole choice in one press** — when a suggestion is a choice between
+  interchangeable cards, **Compare all N on Scryfall** opens every one of them on a
+  single Scryfall page. See
+  [Comparing a whole choice at once](#comparing-a-whole-choice-at-once).
+- **Which bracket the list is in** — five pips under the colour identity: the brackets
+  your list has ruled itself out of, the floor it lands on, and the ones still open. A
+  floor, never a verdict; hover, focus or tap the pips for the reasoning, the Game
+  Changers behind it and the criteria it did not check — see
+  [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
 - **What each recommendation's count is made of** — `Thassa's Oracle +3` reads
   *1 × 2-card · 1 × 3-card · 1 × 4-card*, on the card's own line, smallest first. A
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
@@ -56,9 +61,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   cannot be wrong about it.
 - **Collapsible results** — every section header is a collapse control, and what
   you close stays closed (kept in `localStorage`) across searches and visits.
-- **Light or dark, whichever your system asks for** — one set of colour tokens with
-  a light override, so the page follows `prefers-color-scheme` instead of being dark
-  for everyone. See [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
+- **Light or dark, your call** — one set of colour tokens with a light override. Your
+  system's preference is the starting point; the **sun/moon button** in the header
+  overrules it and the choice is remembered. See
+  [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens).
 - **Your decklist survives a reload** — the list is the whole input, and losing it to a
   refresh was a strange thing for this page to do. It's kept in `localStorage` (it never
   leaves the browser), **Clear** empties it in one press, and **Copy link** puts the deck
@@ -193,6 +199,40 @@ group's representative would put the wrong card first on most rows. It is the ca
 does not hold — which is also why it renders in the "missing" colour, so what you would be
 adding reads first and reads differently.
 
+**And where a row differs from the rows around it by one card, that card goes last.**
+The versions of a collapsed group are identical but for one piece, and alphabetical
+order puts that piece wherever its name happens to fall, so the difference moves from
+line to line and the eye has to hunt for it:
+
+```
+Chatterfang, Squirrel General + Warren Soultrader + any of 4
+  ▾ All 4 versions
+      Chatterfang, Squirrel General + Essence Warden + Warren Soultrader
+      Chatterfang, Squirrel General + Lunarch Veteran // Luminous Phantom + Warren Soultrader
+      Chatterfang, Squirrel General + Prosperous Innkeeper + Warren Soultrader
+      Chatterfang, Squirrel General + Soul Warden + Warren Soultrader
+```
+
+Sending the interchangeable cards last gives every version the shape its own heading
+already has — *the shared cards, then the one that changes* — so the difference lands
+in the same place every time:
+
+```
+Chatterfang, Squirrel General + Warren Soultrader + any of 4
+  ▾ All 4 versions
+      Chatterfang, Squirrel General + Warren Soultrader + Essence Warden
+      Chatterfang, Squirrel General + Warren Soultrader + Lunarch Veteran // Luminous Phantom
+      Chatterfang, Squirrel General + Warren Soultrader + Prosperous Innkeeper
+      Chatterfang, Squirrel General + Warren Soultrader + Soul Warden
+```
+
+All three rules are one function, `DeckCombos.orderComboNames(names, {lead, trail})`,
+kept beside the data it orders so it can be tested without a browser — ten tests in
+`test/name-order.test.js`. A lead outranks a trail, which is what the suggestion panel
+needs: the card you would be adding leads there, and it is often one of the
+interchangeable ones. Both are orderings and never filters, and a pin naming nothing
+in the combo leaves the row alphabetical rather than throwing or emptying it.
+
 Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that
 appears in four costs four — while the combos under each one are size-ordered and lead with
@@ -319,6 +359,35 @@ Two details worth keeping:
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
+
+#### Comparing a whole choice at once
+
+Grouping sixteen cards into one decision is only half the job: **making** that
+decision means looking at sixteen cards, and the links beside each name go to one
+card each. So a choice carries one more link — **Compare all 16 on Scryfall** —
+which opens every card in the group on a single Scryfall page, images and all.
+
+- **The query is exact.** `DeckCombos.scryfallSetQuery()` builds
+  `!"Blood Artist" or !"Zulaport Cutthroat" or …`. Without the `!`, Scryfall reads
+  the words as a substring search and returns a different, larger set of cards than
+  the group being offered — which would look like a working comparison.
+- **The recommended card is included.** The link covers `group.cards`, not just the
+  folded-away alternatives: the card in the heading is one of the options being
+  weighed, and a comparison missing it is the wrong comparison.
+- **A link, not a fetch.** Scryfall serves this as a GET, so the comparison costs
+  this page no request and nothing to rate-limit, and it needs no JavaScript to
+  have run. It is styled as a button because that is what it does, and kept quieter
+  than the `+ Add` pills — adding a card is the decision, this is the reading you do
+  first.
+- **Whitespace is collapsed, which `nameKey()` does not do.** That function trims
+  and lowercases but leaves inner spacing alone, correctly, because it decides
+  whether a deck holds a card. Here the string goes into a search, where
+  `!"Blood   Artist"` matches nothing at all.
+
+Nine unit tests in `test/scryfall-query.test.js` cover the query; the layout test
+reads the real `href` out of the rendered page and checks it names every card the
+group shows, that every term is exact, and that the number in the label is the
+number the query actually asks for.
 
 ### Template slots ("a Persist Creature")
 
@@ -517,13 +586,49 @@ the page checks the two and **names the ones it did not check**:
 | 4 Optimized | no limit on either |
 | 5 cEDH | a choice about how you play, not a fact about the list |
 
-So what the panel reports is a **floor** — the lowest bracket the list is still
+So what the page reports is a **floor** — the lowest bracket the list is still
 eligible for — and never a verdict. A deck with no Game Changers and no two-card
 win *could* be bracket 2; whether it is depends on mass land denial, chained extra
 turns, how many tutors counts as "a few", and how early a combo lands. None of
-those is a card name, so none of them is guessed at. That caveat is on the page,
-next to the number, and deliberately **not** foldable: a bracket number with its
-limits hidden behind a control reads as the whole answer.
+those is a card name, so none of them is guessed at.
+
+### One line, in the shape of the colour identity
+
+The check is **a label and five pips**, sitting directly under Colour identity and
+built from the same geometry — two readings of one list, so they read as a pair:
+
+```
+COLOUR IDENTITY  {U}{G}
+BRACKET          1̶  2̶  ③  4  5
+```
+
+Brackets the list has ruled itself out of are struck through and dimmed, the floor is
+the one filled pip, and the brackets still open are outlined. Three states, because
+"could be this" is genuinely not a milder version of either "cannot" or "is". Showing
+the whole scale is what makes the number a position rather than a score from nowhere,
+and it says *floor, not verdict* without a word: the lit range runs to the right-hand
+end.
+
+**Everything else is one hover, focus or tap away** — the reasoning, the Game Changers
+**with their EDHREC and Scryfall links**, the combos behind the floor, and the list of
+criteria nobody checked.
+
+This is a deliberate reversal. The caveat used to be printed under the number and kept
+unfoldable, on the argument that a bare bracket number reads as the whole answer. That
+argument still holds, which is why the hover panel carries the full caveat rather than
+a summary of it, and why the panel is reachable three ways rather than by mouse alone:
+
+- **Hover** for a mouse, via `:hover` on the wrapper.
+- **Keyboard**, via `:focus-within` — the pips are a `<button>`, so Tab reaches them
+  and Escape closes the panel.
+- **Tap**, via `aria-expanded` toggled on click, because a phone has no hover at all.
+  A `title` tooltip alone would have left phones with a number and no way to ask why.
+
+The pips are `aria-hidden`: five numbered circles read out as "1 2 3 4 5", which is
+worse than nothing. The button carries the whole answer as its accessible name —
+*"Bracket 3 at the earliest — Upgraded. Why this bracket?"* — which the layout test
+asserts, along with the pip states, that the panel starts closed, that a press opens
+it and a second press closes it, and that the card links survived the move.
 
 **"Two-card infinite combo" means a two-card line that wins**, which the page
 already knows: green tier, by the same written-down inventory the result chips use.
@@ -559,7 +664,7 @@ all of it — see Commands.
 
 ### Light and dark, from one set of tokens
 
-Dark is the base. A `prefers-color-scheme: light` block **restates the tokens and
+Dark is the base. A `:root[data-theme='light']` block **restates the tokens and
 nothing else** — every colour on the page is a custom property, so supporting light
 meant naming eight more (`--line`, `--decisive`, `--code-bg`, `--brass-ink` and the
 rest) rather than auditing 600 lines of rules. The only hardcoded colours left
@@ -570,10 +675,48 @@ Brass, green and red are **darkened for light rather than reused**: `#d4a24e` is
 good accent on `#12141a` and unreadable on white, which is the whole reason a theme
 is more than swapping two colours.
 
-**Worth knowing:** browsers report `light` for anyone who has not chosen, so this
-flips the default for most visitors rather than only serving people who asked for
-light. If dark should stay the default, the media query is the one place to change
-— gate it behind a toggle, or invert the condition.
+#### The reader picks, the system only suggests
+
+Light first shipped keyed on `prefers-color-scheme` alone, which meant the page
+decided for you — and browsers report `light` for everyone who has never chosen, so
+the default quietly flipped for most visitors. The **sun/moon button** in the header
+fixes that in the honest direction: the system's answer is still what you get until
+you say otherwise, and once you do it is remembered in `localStorage` under
+`mtg-combo-finder.theme`.
+
+- **`theme.js` resolves the two inputs into one answer** — a stored choice, else what
+  the browser asks for — and writes it on `<html>` as `data-theme`. That is why the
+  CSS is keyed on the attribute and not on a media query: a media query *and* an
+  attribute selector would mean these seventeen tokens living in two places, kept in
+  sync by hand.
+- **It loads from `<head>`, synchronously, ahead of the stylesheet.** A theme applied
+  after the first paint is a white flash on a dark page. It is a file rather than an
+  inline script because the CSP here is `script-src 'self'`, which is worth more than
+  one saved request.
+- **The button is `hidden` in the markup and shown by the script**, so a control that
+  cannot work without it never appears if it did not arrive.
+- **Both icons ship in the markup and CSS shows one** — a moon on the dark page, a sun
+  on the light one — keyed on the same `data-theme` attribute the tokens use, so the
+  icon cannot disagree with the colours and switching costs no DOM work. Drawn inline
+  for the reason the mana pips are: a remote icon font is one more thing to load and
+  one more thing to fail. Nothing in JS touches the button's contents, because writing
+  text into it would delete the two SVGs that *are* the control — the layout test
+  fails on exactly that mistake.
+- **The icon shows the theme you are in; the accessible name says where pressing
+  goes** ("Switch to light mode"), which is the only wording an icon-only button has,
+  on hover or read aloud.
+- **No choice means it keeps following the system**, including a change made while the
+  page is open. Storing a choice is what stops that.
+- **With JavaScript off the page is dark.** A real trade and a small one: this page is
+  a decklist parser and a combo search, so without JavaScript there is nothing on it
+  to read in either theme.
+
+Seven unit tests in `test/theme.test.js` cover the decision — precedence, junk in
+storage, the fallback, and the label. The layout test presses the real button and
+reads the computed style back: it asserts the page repaints, the choice overrides the
+system, it survives a reload, pressing twice returns and is also remembered, the
+second page opens in the same theme, and **exactly one icon is visible** and it is the
+one matching the theme.
 
 **The page uses the desktop it is on, up to 1500px.** The shell was capped at
 1140px at every size, from a time when this was one column of prose. It is now a
@@ -922,7 +1065,9 @@ npm test
 # what the suite currently manages (94% lines / 90% branches / 95% functions), so
 # they catch a module arriving untested rather than bickering over a line. Only
 # files the tests load are measured — app.js and tiers-page.js are the layout
-# test's job. Needs Node 22.8+ for the threshold flags.
+# test's job, and theme.js is excluded by name for the same reason: its pure
+# functions are required by the tests, its DOM half cannot run in node.
+# Needs Node 22.8+ for the threshold flags.
 npm run test:coverage
 
 # Lint. Fetched for the run rather than installed: this repo has no node_modules

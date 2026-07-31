@@ -717,6 +717,56 @@
     return { gameChangers, twoCardWins, floor };
   }
 
+  // The order a combo's cards are named in on screen.
+  //
+  // Alphabetical is the base. Spellbook lists them in the order the combo was
+  // authored in, which means two rows sharing the same pieces can name them in
+  // different orders — and with no description shown, that order carries nothing.
+  // Alphabetical makes a row scannable and two rows comparable.
+  //
+  // Two things outrank it, both about where the reader's eye has to go:
+  //
+  // `lead` is the card the reader is already looking at — the card a suggestion is
+  // about, or the one whose combos are being listed. A list of combos under "Scurry
+  // Oak" that buries Scurry Oak mid-line makes them find it again on every row.
+  //
+  // `trail` is the same argument from the other end, for the versions of a collapsed
+  // group. Those rows are identical but for one card, and alphabetical order puts
+  // that card wherever its name happens to fall:
+  //
+  //     Chatterfang + Essence Warden + Warren Soultrader
+  //     Chatterfang + Soul Warden + Warren Soultrader
+  //
+  // so the difference moves around and the eye has to hunt for it on each line.
+  // Sending the interchangeable cards last gives every version the shape its own
+  // heading already has — "X + Y + the one that changes" — and the difference lands
+  // in the same column every time.
+  //
+  // Both are orderings, never filters: every card in the combo is still named.
+  function orderComboNames(names, opts) {
+    const list = (names || []).filter((n) => typeof n === 'string' && n.trim());
+    const sorted = (xs) => xs.slice().sort((a, b) => a.localeCompare(b));
+    const o = opts || {};
+
+    if (o.lead) {
+      const key = nameKey(o.lead);
+      // A lead not in this combo simply does not match, and the row stays
+      // alphabetical rather than losing a card or gaining one.
+      const first = list.filter((n) => nameKey(n) === key);
+      return first.concat(sorted(list.filter((n) => nameKey(n) !== key)));
+    }
+
+    if (o.trail && o.trail.length) {
+      const keys = new Set(o.trail.map((n) => nameKey(n)));
+      // Each side sorted, so a version naming two of the interchangeable cards is
+      // still ordered rather than left in whatever order the data arrived in.
+      return sorted(list.filter((n) => !keys.has(nameKey(n))))
+        .concat(sorted(list.filter((n) => keys.has(nameKey(n)))));
+    }
+
+    return sorted(list);
+  }
+
   // EDHREC card page slug: "Kinnan, Bonder Prodigy" -> "kinnan-bonder-prodigy"
   function edhrecSlug(name) {
     return nameKey(name)
@@ -726,8 +776,47 @@
       .replace(/^-+|-+$/g, '');
   }
 
+  // A Scryfall query matching a whole set of cards at once: `!"A" or !"B"`. Its
+  // point is comparison — sixteen interchangeable cards are one decision, and
+  // making it means looking at sixteen cards, which is one page on Scryfall and
+  // sixteen middle-clicks without this.
+  //
+  // `!"..."` is Scryfall's exact-name form, so a card is never confused for
+  // another that merely contains its name (there is a real "Blood Artist" and a
+  // real "Blood Artist Avatar" problem here). A repeated name is dropped, because
+  // it costs ~25 characters of a URL already carrying sixteen and Scryfall shows
+  // the card once either way.
+  //
+  // Runs of whitespace are collapsed rather than passed through, which is where
+  // this parts company with nameKey(): that trims and lowercases but leaves inner
+  // spacing alone, and it is right to, since it decides whether a deck holds a
+  // card. Here the string goes into a search — `!"Blood   Artist"` matches nothing
+  // at all — so the spacing has to be fixed rather than preserved, and fixing it
+  // is also what makes the two spellings dedupe to one term.
+  //
+  // Returns the query, not the URL: the caller already builds
+  // `scryfall.com/search?q=` for single cards and there is no reason for a second
+  // place that knows the host.
+  function scryfallSetQuery(names) {
+    const seen = new Set();
+    const exact = [];
+    (names || []).forEach((name) => {
+      if (typeof name !== 'string' || !name.trim()) return;
+      // No Magic card name contains a double quote, and one arriving here would
+      // end the quoted term early and change what the query matches.
+      const tidy = name.trim().replace(/\s+/g, ' ').replace(/"/g, '');
+      if (!tidy) return;
+      const key = nameKey(tidy);
+      if (seen.has(key)) return;
+      seen.add(key);
+      exact.push('!"' + tidy + '"');
+    });
+    return exact.join(' or ');
+  }
+
   const api = {
-    computeSuggestions, deckNameSet, nameKey, edhrecSlug, variantCardNames,
+    computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
+    orderComboNames,
     matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,

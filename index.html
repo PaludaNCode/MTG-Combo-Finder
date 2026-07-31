@@ -21,11 +21,35 @@
     base-uri 'none'; form-action 'none'">
   <title>MTG Combo Finder</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <!-- Ahead of the stylesheet and not deferred: this writes the theme onto <html>,
+       and a theme applied after the first paint is a white flash on a dark page.
+       Small enough that the blocking request is cheaper than the flash. -->
+  <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>MTG Combo Finder</h1>
+    <div class="header-row">
+      <h1>MTG Combo Finder</h1>
+      <!-- Hidden here and shown by theme.js: a control that does nothing without
+           that script should not be on screen if it never arrived. Its accessible
+           name is written there too, since it depends on the theme in force.
+
+           Both icons ship in the markup and CSS shows one — a moon on the dark
+           page, a sun on the light one — so switching theme costs no DOM work and
+           no request. Drawn inline for the same reason the mana pips are: a remote
+           icon font is one more thing to load and one more thing to fail. They are
+           aria-hidden because the button already says what it does. -->
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+        <svg class="icon icon-moon" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+          <path d="M14.3 11.1A5.8 5.8 0 0 1 6.9 3.7a5.8 5.8 0 1 0 7.4 7.4z"/>
+        </svg>
+        <svg class="icon icon-sun" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+          <circle cx="9" cy="9" r="3.4"/>
+          <path d="M9 1.4v1.8M9 14.8v1.8M1.4 9h1.8M14.8 9h1.8M3.6 3.6l1.3 1.3M13.1 13.1l1.3 1.3M14.4 3.6l-1.3 1.3M4.9 13.1l-1.3 1.3"/>
+        </svg>
+      </button>
+    </div>
     <p class="tagline">Paste a decklist and find the combos hiding in it — powered by the
       <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook</a> database.</p>
   </header>
