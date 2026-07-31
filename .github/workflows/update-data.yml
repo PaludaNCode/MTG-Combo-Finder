@@ -21,10 +21,13 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          # 22, like every other workflow here. This ran on 20 while ci.yml's own
+          # comment claimed everything was already on 22 — and 20 is end-of-life, so
+          # the daily refresh was the one job still on an unsupported runtime.
+          node-version: '22'
 
       - name: Fetch the combo database
         run: node tools/fetch-combos.js "$RUNNER_TEMP/combos.json"

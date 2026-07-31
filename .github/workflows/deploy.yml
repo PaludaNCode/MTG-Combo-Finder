@@ -21,7 +21,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Stamp asset URLs with the commit SHA so fresh HTML always pulls fresh
       # JS/CSS. Pages' CDN caches by full URL and a deploy purges nothing, so

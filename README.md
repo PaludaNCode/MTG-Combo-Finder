@@ -671,6 +671,14 @@ the page checks the two and **names the ones it did not check**:
 | 4 Optimized | no limit on either |
 | 5 cEDH | a choice about how you play, not a fact about the list |
 
+**Checked against Wizards' own Commander Brackets Beta chart**, not just against
+write-ups of it. Every line above matches it, including the one that matters most here:
+bracket 3 permits *late-game* two-card infinite combos, which is why a two-card win puts
+a list at 3 rather than 4 — how early it lands is a judgement about play, and that is
+one of the criteria this page does not make. The chart also lists *few tutors* for
+brackets 1 and 2, and mass land denial and chained extra turns throughout; none of those
+is a card name, so none is checked.
+
 So what the page reports is a **floor** — the lowest bracket the list is still
 eligible for — and never a verdict. A deck with no Game Changers and no two-card
 win *could* be bracket 2; whether it is depends on mass land denial, chained extra
@@ -730,11 +738,24 @@ each bracket update, and a copy here would go stale silently — the exact failu
 mode `templates.json` has to work to avoid.
 
 The one way that can break is the flag being renamed, and the consequence is
-nothing: `bracketCheck()` returns null, the panel is not drawn, and that looks
+nothing: `bracketCheck()` returns null, the line is not drawn, and that looks
 exactly like a deck with nothing to report. So the refresh **says so, loudly** —
-under 20 flagged cards prints a warning naming the field and linking their card
-object docs. It is not fatal, unlike missing colour data: the combo results are all
-still correct without it.
+fewer than **30** flagged cards prints a warning naming the field and linking their
+card object docs. It is not fatal, unlike missing colour data: the combo results are
+all still correct without it.
+
+**How long the list is has two answers, and 30 is safe under both.** Wizards' own
+Commander Brackets Beta infographic lists **40** cards. Secondary sources report **53**
+as of the 9 February 2026 update, which would make the infographic the launch version —
+plausible, since the list is revised with every update, but unconfirmed here: Scryfall
+and Wizards are both unreachable from the sandbox this was written in.
+
+30 keeps ten cards of headroom under 40, and against 53 still catches a flag that had
+half stopped working. It replaces the 20 this started at, which predates either figure
+and would have called 21 of 53 healthy. Both numbers are asserted in
+`test/bracket.test.js` — one test for the headroom, one for the half-broken case — so 40
+fails on the first and 20 on the second. If the list is ever confirmed at 53, 30 can go
+up.
 
 Half a check is worse than none, which is why a missing list draws nothing rather
 than a bracket based on combos alone — a deck full of Game Changers would otherwise
@@ -1119,6 +1140,39 @@ Verified against [the backend source](https://github.com/SpaceCowMedia/commander
   `CamelCaseJSONRenderer` is the default renderer, and the bulk export camelizes too.
   Reading the Python source alone is misleading here. The fetcher accepts either spelling.
 - A variant's cards are `uses[].card.name`; results are `produces[].feature.name`.
+
+### Known gaps in the published data
+
+Spellbook authors a combo and generates variants from it, and that generation is
+uneven: a combo published for one card is sometimes missing for a functionally
+identical one. The page reports the data faithfully, so the gap shows up as a card
+appearing in fewer combos than its twin — which reads as a bug here and is not one.
+
+Coverage per card is the visible symptom. Measured on the 2026-07-31 snapshot: Soul
+Warden appears in **149** combos, Daxos, Blessed by the Sun **132**, Essence Warden
+**121**, Lunarch Veteran **90** — four cards that do the same thing, ordered by how
+long they have existed.
+
+Three specific gaps were found by taking each combo of one card, substituting a
+functional twin, and checking whether that variant exists:
+
+| Missing variant | Published sibling to cite | Confidence |
+|---|---|---|
+| Quina, Qu Gourmet + Academy Manufactor + Warren Soultrader | `3000-4231-5670` (Chatterfang version) | **Verified against the cards.** Quina adds a 1/1 Frog to any token creation, so it refuels the sacrifice loop exactly as Chatterfang does |
+| Lunarch Veteran + Heroic Feast + Scurry Oak | `360-4186-7743` (Soul Warden version) | High — Lunarch Veteran's front face is Soul Warden's text, and every other card with that text has the variant |
+| Essence Warden + Hapatra, Vizier of Poisons + Yawgmoth, Thran Physician (×3, with Anointed Procession / Parallel Lives / Doubling Season) | the Soul Warden versions | High — Soul Warden and Essence Warden are functional duplicates |
+
+**A high substitution score is not a verdict.** Two cards filling the same slot in
+1,384 other contexts says they are interchangeable *somewhere*, not here. A worked
+example: Camellia, the Seedmiser + Peregrin Took looks like it should combo with any
+sacrifice outlet, and does not — that loop pays `{2}` for Camellia's ability, so the
+outlet has to produce mana (Ashnod's Altar) or eat the Food itself. Viscera Seer and
+Carrion Feeder do neither, and 20 candidate gaps died on that one reading of the cards.
+Whether a substitution holds is a question about the cards, and this database cannot
+answer it either way.
+
+**Nothing here needs a code change.** When Spellbook adds a variant, the next daily
+snapshot picks it up.
 
 ## Data-source research (why Commander Spellbook only)
 
