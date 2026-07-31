@@ -165,3 +165,40 @@ test('a suspiciously short list is treated the same as an empty one', () => {
   const out = captureGameChangers(['Rhystic Study', 'Smothering Tithe']);
   assert.match(out, /expected at least/);
 });
+
+// The boundary itself, so "at least N" means N and not N-1.
+test('the threshold warns one short and stays quiet on the number', () => {
+  const short = captureGameChangers(new Array(GAME_CHANGERS_EXPECTED - 1).fill('Rhystic Study'));
+  assert.match(short, /expected at least/);
+  const exact = captureGameChangers(new Array(GAME_CHANGERS_EXPECTED).fill('Rhystic Study'));
+  assert.doesNotMatch(exact, /expected at least/);
+});
+
+// The tests above all derive from the constant, so they pass at any value it takes —
+// including the 20 this started at, which was set before the real size of Wizards' list
+// was known and would have let a flag that had half stopped working through: 21 of 53
+// flagged cards would have been reported as fine.
+//
+// So the value gets pinned, not just the comparison. The band is deliberate rather than
+// exact: 53 is the count as of the 9 February 2026 bracket update and Wizards revise the
+// list with every one, so a threshold equal to it would fail the first time they trim a
+// card, and one below ~two-thirds of it stops being a check at all.
+const OFFICIAL_GAME_CHANGERS_2026_02_09 = 53;
+test('the threshold is a real check against the size of the published list', () => {
+  assert.ok(
+    GAME_CHANGERS_EXPECTED >= Math.floor(OFFICIAL_GAME_CHANGERS_2026_02_09 * 0.66),
+    `${GAME_CHANGERS_EXPECTED} is too low to catch a half-broken flag against a list of `
+      + `${OFFICIAL_GAME_CHANGERS_2026_02_09}`
+  );
+  assert.ok(
+    GAME_CHANGERS_EXPECTED < OFFICIAL_GAME_CHANGERS_2026_02_09,
+    `${GAME_CHANGERS_EXPECTED} leaves no headroom for Wizards trimming the list`
+  );
+});
+
+// The log has to be actionable on its own: whoever reads a failed refresh should not
+// have to come back here to learn what the number ought to be.
+test('the warning says how long the official list is', () => {
+  const out = captureGameChangers([]);
+  assert.match(out, new RegExp(String(OFFICIAL_GAME_CHANGERS_2026_02_09)));
+});
