@@ -6,12 +6,20 @@
 // combos, so a deck holding one of them is told about a line while a deck holding
 // the other is told nothing.
 //
-// The holes are found by substitution. Take two cards that appear interchangeably
-// across many published combos — Soul Warden and Essence Warden share 97.5% of
-// theirs — and any combo that names one but not the other is a candidate. Most
-// candidates are not gaps: the cards turn out to differ in a way that matters to
-// that particular loop, and the audit in the README lists the 35 of 44 that were
-// ruled out and why. What survives is here — the nine below.
+// The holes are found two ways.
+//
+// Most of them by substitution. Take two cards that appear interchangeably across
+// many published combos — Soul Warden and Essence Warden share 97.5% of theirs —
+// and any combo that names one but not the other is a candidate. Most candidates
+// are not gaps: the cards turn out to differ in a way that matters to that
+// particular loop, and the audit in the README lists the 35 of 44 that were ruled
+// out and why.
+//
+// The rest by reading a card that substitution could never have proposed. A card
+// Spellbook has never used in a single combo has nothing to be measured against,
+// so no amount of comparing the data will suggest it — the last four rows below
+// are one such card, and they exist because its text was read against loops that
+// are published with a card whose ability is worded the same way.
 //
 // Each row therefore carries its own evidence rather than asking to be taken on
 // trust, and the page shows it: the published combo it was derived from, which card
@@ -175,6 +183,98 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',
+      ],
+    },
+    // ---- Hammerhead, Maggia Boss: a card Spellbook has never used ------------
+    //
+    // Different in kind from every row above, and worth saying so. The rows above
+    // are gaps *between* published combos — both cards in the swap appear in the
+    // data, and only the pairing is missing. Hammerhead appears in none of the
+    // 103,675 combos at all, so no amount of measuring the data would ever have
+    // proposed him: there is nothing to compare him to. He is here because his
+    // text was read.
+    //
+    // What the text says is that he is Umbral Collar Zealot's ability with a
+    // different rider:
+    //
+    //   Umbral Collar Zealot   Sacrifice another creature or artifact: Surveil 1.
+    //   Hammerhead             Sacrifice another creature or artifact: Put a
+    //                          +1/+1 counter on Hammerhead.
+    //
+    // Word for word the same cost, free and repeatable, and in each loop below the
+    // rider is not part of the loop. So every row cites the Zealot version as its
+    // source and drops "Infinite surveil" from what it produces, replacing it with
+    // the counters Hammerhead accrues — which is exactly the difference Spellbook
+    // itself publishes between the Zealot and Carrion Feeder versions of the same
+    // combos (856-5270-6798 against 856-2438-5270).
+    //
+    // "Sacrifice another creature **or artifact**" is why the fourth row exists.
+    // Camellia's loop eats Foods rather than creatures, and Spellbook publishes it
+    // with the Zealot and with no creature-only outlet — no Carrion Feeder version,
+    // no Viscera Seer version. Hammerhead eats artifacts, so he belongs to that
+    // loop and Carrion Feeder does not. The same reading that rules a card out of
+    // one loop rules this one in.
+    //
+    // Not included: the Necrosynthesis versions of the first two. Those would be
+    // two swaps deep — our own row with another swap on top — and every row here
+    // is one swap from something published.
+    {
+      cards: ['Scurry Oak', 'Sadistic Glee', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: { id: '2082-4186-6798', cards: ['Scurry Oak', 'Sadistic Glee', 'Umbral Collar Zealot'] },
+      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
+      why: 'Sadistic Glee on Scurry Oak. Sacrifice the Squirrel to Hammerhead, the death '
+        + 'puts a +1/+1 counter on Scurry Oak, and the counter makes the next Squirrel. '
+        + 'Hammerhead\'s cost is the Zealot\'s cost word for word — free, repeatable, and '
+        + 'a creature is what is being eaten either way.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Herd Baloth', 'Sadistic Glee', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: { id: '2082-3197-6798', cards: ['Herd Baloth', 'Sadistic Glee', 'Umbral Collar Zealot'] },
+      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
+      why: 'The same loop as the Scurry Oak row, with 4/4 Beasts instead of Squirrels: '
+        + 'the counter makes a token, Hammerhead eats it, the death puts on the next '
+        + 'counter.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: { id: '856-5270-6798', cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Umbral Collar Zealot'] },
+      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
+      why: 'The Cat enters and drains, Samwise makes a Food off it, Hammerhead eats the '
+        + 'Cat, and the Food brings it back. The outlet only has to eat a creature for '
+        + 'free, which is the half of Hammerhead that is identical to the Zealot.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: { id: '4321-5777-6798', cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'] },
+      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
+      why: 'Hammerhead eats a Food, Camellia makes a Squirrel for it, and Peregrin Took '
+        + 'adds a Food to that creation — so the Food comes back and the Squirrels pile '
+        + 'up. This is the loop that needs an outlet which eats *artifacts*: Spellbook '
+        + 'publishes it with the Zealot and with no creature-only outlet at all, which '
+        + 'is why Carrion Feeder and Viscera Seer are absent from it and Hammerhead is '
+        + 'not.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite creature tokens', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Food tokens',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
   ];

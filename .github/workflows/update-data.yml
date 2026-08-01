@@ -51,3 +51,15 @@ jobs:
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
             data
           echo "Published $(du -h combos.json | cut -f1) to the data branch"
+
+      # After publishing, not before: a broken citation is a problem with our own
+      # file rather than with the data, and holding today's combos back over it
+      # would be the wrong end of the stick. It still fails the job, because the
+      # unofficial panel's whole claim is that each row shows the published combo
+      # it came from — an id that has stopped resolving is a citation to nothing.
+      #
+      # Also reports rows Spellbook has *published* since we wrote them. That is
+      # not a failure: it is what a row is for, the page already drops it, and
+      # this is how anyone finds out it can come out of the file.
+      - name: Check the unofficial rows still cite something real
+        run: node tools/verify-unofficial.js "$RUNNER_TEMP/combos.json" >> "$GITHUB_STEP_SUMMARY"

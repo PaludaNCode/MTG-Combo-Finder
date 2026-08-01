@@ -112,3 +112,60 @@ test('identityString: colourless is C, and the order is WUBRG', () => {
   assert.strictEqual(identityString(new Set(['G', 'W', 'B'])), 'WBG');
   assert.strictEqual(identityString(new Set(['R', 'U'])), 'UR');
 });
+
+// ---- the citations, checked against the data -------------------------------
+//
+// The rows carry the published combo each was derived from, by id, and that
+// citation is the whole basis on which the panel asks to be believed. Nothing in
+// this file can check an id against the real data — the tests do not have 28 MB
+// of it — so tools/verify-unofficial.js does, against the live snapshot, on
+// every daily refresh. What *is* checkable here is that the checker works: that
+// a broken citation is caught rather than that today's data happens to be fine.
+
+const { check } = require('../tools/verify-unofficial.js');
+
+const PUBLISHED = {
+  combos: [
+    { id: '1-2-3', c: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
+    { id: '4-5-6', c: ['Basalt Monolith', 'Rings of Brighthearth'] },
+  ],
+};
+const row = (over) => Object.assign({
+  cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
+  from: { id: '1-2-3', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
+  swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+}, over);
+
+test('citations: a row citing a real combo with the right cards is fine', () => {
+  const out = check(PUBLISHED, [row()]);
+  assert.deepStrictEqual(out.problems, []);
+  assert.deepStrictEqual(out.graduated, []);
+});
+
+test('citations: an id that does not resolve is caught', () => {
+  const out = check(PUBLISHED, [row({ from: { id: '9-9-9', cards: ['Scurry Oak'] } })]);
+  assert.strictEqual(out.problems.length, 1);
+  assert.match(out.problems[0], /not in the published data/);
+});
+
+// The quieter half: a transposed digit can land on a combo that exists and is
+// about something else entirely, and the page would print that as the evidence.
+test('citations: an id resolving to different cards is caught', () => {
+  const out = check(PUBLISHED, [row({
+    from: { id: '4-5-6', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
+  })]);
+  assert.strictEqual(out.problems.length, 1);
+  assert.match(out.problems[0], /Basalt Monolith/);
+});
+
+// Not a failure — it is what a row is for. The page already drops it; this is
+// how anyone finds out the file can lose an entry.
+test('citations: a row Spellbook has published is reported as graduated', () => {
+  const out = check(PUBLISHED, [row({ cards: ['Basalt Monolith', 'Rings of Brighthearth'] })]);
+  assert.deepStrictEqual(out.problems, []);
+  assert.deepStrictEqual(out.graduated, ['Basalt Monolith + Rings of Brighthearth']);
+});
+
+test('citations: no data and no rows are not an error', () => {
+  assert.deepStrictEqual(check(null, null), { problems: [], graduated: [], counted: 0 });
+});

@@ -1554,6 +1554,7 @@ functional twin, and checking whether that variant exists:
 | Quina, Qu Gourmet + Academy Manufactor + Warren Soultrader | `3000-4231-5670` (Chatterfang version) | **Verified against the cards.** Quina adds a 1/1 Frog to any token creation, so it refuels the sacrifice loop exactly as Chatterfang does |
 | Lunarch Veteran + Heroic Feast + Scurry Oak | `360-4186-7743` (Soul Warden version) | High — Lunarch Veteran's front face is Soul Warden's text, and every other card with that text has the variant |
 | Essence Warden + Hapatra, Vizier of Poisons + Yawgmoth, Thran Physician (×3, with Anointed Procession / Parallel Lives / Doubling Season) | the Soul Warden versions | High — Soul Warden and Essence Warden are functional duplicates |
+| Hammerhead, Maggia Boss in four loops (Scurry Oak or Herd Baloth + Sadistic Glee; Samwise Gamgee + Cauldron Familiar; Camellia, the Seedmiser + Peregrin Took) | the Umbral Collar Zealot versions | **Verified against the cards.** Hammerhead's ability is the Zealot's cost word for word — *sacrifice another creature or artifact*, free and repeatable — with a different rider that no loop uses |
 
 **A high substitution score is not a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. A worked
@@ -1600,17 +1601,48 @@ identity for him is there, so the page knows the card — and he is named by
    are *Dragon Creature* and *Villain Creature*, between them used by 19 combos,
    none of which are about sacrificing anything.
 
-**What it would take.** A row in `unofficial.js` per loop, hand-written and read
-against the card, exactly as the nine already there were. On the deck in
-`test/fixtures/deck.txt` that is up to ten candidates — three off Samwise Gamgee
-+ Cauldron Familiar, six off Scurry Oak or Herd Baloth + Sadistic Glee, and one
-off Camellia, the Seedmiser + Peregrin Took.
+**So the only way in is to read the card**, which is what `tools/lookup-card.js`
+and the *Look up card text* workflow are for — Scryfall answers, Actions has the
+network, and the text lands in the run summary. Hammerhead says:
 
-That last one is why this is per-row work and not "add the card". Camellia's
-ability costs `{2}`, so the outlet in that loop has to produce mana or eat the
-Food itself — which is why the published version of it names Umbral Collar Zealot
-and why Viscera Seer and Carrion Feeder are absent from it. Nine of the ten
-candidates might hold and the tenth not, and only reading the card says which.
+> Sacrifice another creature or artifact: Put a +1/+1 counter on Hammerhead.
+
+Which is Umbral Collar Zealot's ability with a different rider:
+
+> Sacrifice another creature or artifact: Surveil 1.
+
+Word for word the same cost — free, repeatable, and in every loop below the rider
+is not part of the loop. So `unofficial.js` now carries four Hammerhead rows,
+each citing the Zealot version of its combo as the source and dropping *Infinite
+surveil* from the results in favour of the counters he accrues instead. That is
+the same difference Spellbook itself publishes between the Zealot and Carrion
+Feeder versions of the same combo (`856-5270-6798` against `856-2438-5270`).
+
+**Ten candidates, four rows.** The ten collapse: three published combos differing
+only in which outlet they name all produce the same Hammerhead row. What is left
+is Scurry Oak + Sadistic Glee, Herd Baloth + Sadistic Glee, Samwise Gamgee +
+Cauldron Familiar, and Camellia, the Seedmiser + Peregrin Took.
+
+**The Camellia row is the interesting one**, and the reason "kinda does the same
+thing" is not a standard this file can use. That loop eats *Foods*, not creatures
+— Camellia triggers on sacrificing a Food and Peregrin Took hands the Food back —
+so the outlet has to be able to eat an artifact. Spellbook publishes it with the
+Zealot and with no creature-only outlet at all: no Carrion Feeder version, no
+Viscera Seer version. Hammerhead's ability says *creature **or artifact***, so he
+belongs to that loop and Carrion Feeder does not. The same reading that keeps two
+cards out puts this one in.
+
+**Not included: the Necrosynthesis versions.** Six of the rows above are Sadistic
+Glee combos with Necrosynthesis swapped in; a Hammerhead version of those would be
+two swaps deep — our own row with another swap on top of it — and every row in the
+file is one swap from something Spellbook published.
+
+**And the citations are checked.** `tools/verify-unofficial.js` reads every row's
+`from.id` against the live data and fails if it does not resolve, or resolves to a
+combo naming different cards; the daily data refresh runs it. Four of the thirteen
+ids were looked up by hand, which is exactly how a digit gets transposed. It also
+reports any row Spellbook has since published — not an error, but the outcome a
+row is supposed to reach, and how anyone finds out it can come out of the file.
 
 ### Why it is a separate panel and not a badge
 
@@ -1756,6 +1788,12 @@ npm run test:coverage
 # node --check cannot — a misspelled global, a variable a refactor left behind,
 # a duplicate object key.
 npm run lint
+
+# Check every unofficial row still cites a real published combo — and report any
+# that Spellbook has published since, which is a row that can come out of the
+# file. Fetches the data branch; pass a path to read a local copy instead. The
+# daily data refresh runs this too.
+npm run verify:unofficial
 
 # Layout smoke test — REQUIRED after any UI change. Renders the real page at
 # 390/768/1440/1920 px and fails on horizontal overflow, a collapse control that
