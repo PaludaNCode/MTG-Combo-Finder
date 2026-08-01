@@ -373,3 +373,59 @@ test('add: an MTGO list takes the card above its SB: lines', () => {
   assert.deepStrictEqual(mainNames(out), ['Arcane Signet', 'Scurry Oak', 'Heliod, Sun-Crowned']);
   assert.strictEqual(out.split('\n')[2], '1 Heliod, Sun-Crowned');
 });
+
+// The same rule from the other side: a heading we ignore swallowing the deck. An
+// export whose sideboard is followed by a heading the parser does not know keeps
+// every card after it on the ignored board, so a search finds nothing in a deck that
+// is plainly there. Fifteen cards is all a sideboard is allowed to hold.
+
+// The realistic shape, heading and all. "Squirrel Tribal" is not a heading the parser
+// knows, so it stays on the ignored board — and, having no count in front of it,
+// parses as a 1-of, which is why these hold n + 2 cards rather than n.
+const staleBoard = (n) => ['Sideboard', '1 Pithing Needle', '', 'Squirrel Tribal']
+  .concat(Array.from({ length: n }, (_, i) => '1 Card ' + (i + 1)))
+  .join('\n');
+
+// Exactly n cards under the heading, for pinning the threshold where counting the
+// fixture's own furniture would only obscure it.
+const sideboardOf = (n) => 'Sideboard\n'
+  + Array.from({ length: n }, (_, i) => '1 Card ' + (i + 1)).join('\n');
+
+test('board: an oversized sideboard is taken back as the deck', () => {
+  const parsed = parseDecklist(staleBoard(20));
+  assert.strictEqual(parsed.main.length, 22);
+  // Including the one card that really was a sideboard card. Once the heading has
+  // gone stale there is nothing left to tell the twenty-one apart, and losing the
+  // deck is much the worse of the two failures.
+  assert.deepStrictEqual(parsed.skipped, []);
+});
+
+test('board: a real sideboard beside a real deck is left alone', () => {
+  const text = 'Deck\n1 Sol Ring\n\nSideboard\n'
+    + Array.from({ length: 20 }, (_, i) => '1 SB ' + (i + 1)).join('\n');
+  const parsed = parseDecklist(text);
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring']);
+  assert.strictEqual(parsed.skipped.length, 20, 'the sideboard was folded into a deck that exists');
+});
+
+test('board: a maybeboard has no size limit and is never taken back', () => {
+  const text = 'Maybeboard\n' + Array.from({ length: 40 }, (_, i) => '1 Maybe ' + (i + 1)).join('\n');
+  const parsed = parseDecklist(text);
+  assert.strictEqual(parsed.main.length, 0);
+  assert.strictEqual(parsed.skipped.length, 40);
+});
+
+// Fifteen is the constructed sideboard limit, so the line sits exactly there rather
+// than at a round number someone picked.
+test('board: the threshold is pinned either side of the legal sideboard limit', () => {
+  assert.strictEqual(parseDecklist(sideboardOf(15)).main.length, 0, 'fifteen is a legal sideboard');
+  assert.strictEqual(parseDecklist(sideboardOf(15)).skipped.length, 15);
+  assert.strictEqual(parseDecklist(sideboardOf(16)).main.length, 16, 'sixteen is not');
+  assert.deepStrictEqual(parseDecklist(sideboardOf(16)).skipped, []);
+});
+
+test('board: a card added to one lands in the block, not above the list', () => {
+  const out = addMainDeckCard(staleBoard(20), 'Heliod, Sun-Crowned', 1);
+  assert.strictEqual(out.split('\n').pop(), '1 Heliod, Sun-Crowned');
+  assert.strictEqual(parseDecklist(out).main.length, 23);
+});

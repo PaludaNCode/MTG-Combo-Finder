@@ -668,14 +668,33 @@ commander, which is the original bug wearing a different hat.
 
 So one rule in the parser overrules the exporter: a command zone holding more than
 `DECK_SIZED_RUN = 15` cards is not a command zone, and its cards are folded into the main
-deck. Fifteen is far above anything legal — a command zone is one card, or two with
-partners — and far below a deck, so there is no real list in between. `parseDecklist()`
-and the insertion walk apply the same rule, so a card added to such a list joins the deck
-under the block rather than the command zone above it.
+deck. `parseDecklist()` and the insertion walk apply the same rule, so a card added to
+such a list joins the deck under the block rather than the command zone above it.
 
-`test/parser.test.js` pins the threshold from both sides (15 believed, 16 not) rather
-than deriving it from the constant, so moving it has to be a deliberate edit in two
-places.
+**The same thing happens from the other side.** An export whose `Sideboard` is followed
+by a heading the parser does not know keeps every card after it on the ignored board, so
+a search reports nothing found in a deck that is plainly there. A bounded section over
+the threshold is therefore taken back as the deck too — and it takes the whole section,
+including the card that really was a sideboard card, because once the heading has gone
+stale there is nothing left to tell them apart. Losing the deck is much the worse of the
+two failures.
+
+Three things keep that from firing where it shouldn't:
+
+- **Only when nothing else is the deck.** An oversized sideboard next to a real main deck
+  is a binder or a list of cuts; folding it in would quietly analyse a deck its owner
+  never built.
+- **Only bounded sections.** `maybeboard`, `considering` and `wishlist` have no size limit
+  — a Moxfield maybeboard runs to hundreds of cards — so they are never eligible, however
+  large they get. `IGNORED_BUT_BOUNDED` is the list.
+- **The threshold is the actual rule, not a round number.** Fifteen is the constructed
+  sideboard limit, and Commander has no sideboard at all; a command zone is one card, or
+  two with partners. So fifteen is the largest legal anything-but-a-deck, and a sixteenth
+  card says the heading has gone stale.
+
+`test/parser.test.js` pins it from both sides at both ends — 15 believed and 16 not, for
+each of the two boards — rather than deriving the numbers from the constant, so moving it
+has to be a deliberate edit in two places.
 
 It is a button rather than a note telling you to type the card in because of where
 the database already is: parsed, in the worker, from the search you just ran.
