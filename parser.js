@@ -118,22 +118,21 @@
     return { name, quantity, sideboardPrefix, commander };
   }
 
-  // How many cards a section has to hold before we stop believing its heading.
+  // How many cards a command zone has to claim before we stop believing the heading
+  // that says so. A command zone is one card, or two with partners; fifteen is far
+  // above anything legal and far below a deck, so no real list sits in between. See
+  // the fold at the end of parseDecklist().
   //
-  // Fifteen is the largest legal anything-but-a-deck: a constructed sideboard is
-  // capped at fifteen cards and a Commander deck has none at all, while a command
-  // zone is one card, or two with partners. A section claiming sixteen is a deck
-  // pasted under whichever heading its export happened to leave behind, and both
-  // boards below are read that way — see parseDecklist().
-  //
-  // Unbounded sections are exempt, because a maybeboard really can run to hundreds
-  // of cards; see IGNORED_BUT_BOUNDED.
+  // This applies to the command zone and nothing else. An earlier version applied it
+  // to the sideboard too, on the reasoning that a constructed sideboard is capped at
+  // fifteen cards and Commander has none — so a sixteenth meant the heading had gone
+  // stale and swallowed the deck. That reasoning is about the rules of the game, and
+  // the sideboard is not used by the rules of the game here: on Moxfield it is where
+  // people park cards they are considering, and such a list has no size at all. A
+  // stash of forty saved cards folded into the deck would invent combos the deck
+  // cannot make, which is a worse failure than the one it was fixing, and quieter.
+  // Sideboard cards stay out of the deck at every size.
   const DECK_SIZED_RUN = 15;
-
-  // Sections we ignore that are nonetheless small by rule, so an oversized one is
-  // evidence rather than someone's binder. Only these are eligible to be re-read as
-  // the deck; `maybeboard`, `considering` and `wishlist` have no size limit at all.
-  const IGNORED_BUT_BOUNDED = { sideboard: true, companion: true };
 
   // Where a new main-deck card should be written into a decklist someone is
   // already holding.
@@ -164,7 +163,6 @@
   function mainDeckInsertIndex(text) {
     const lines = String(text || '').split(/\r?\n/);
     let target = 'main';
-    let section = ''; // the heading that put us on this board, for the size rules
 
     // Every contiguous run of card lines with the board it was read under, plus a
     // zero-card marker at each main heading so a heading with nothing under it yet
@@ -181,14 +179,12 @@
       const heading = normalizeHeading(trimmed);
       if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
         target = SECTION_TARGET[heading];
-        section = heading;
         closeRun();
-        if (target === 'main') runs.push({ target, section, cards: 0, end: i + 1 });
+        if (target === 'main') runs.push({ target, cards: 0, end: i + 1 });
         continue;
       }
       if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) {
         target = 'ignore';
-        section = /maybe/i.test(trimmed) ? 'maybeboard' : 'sideboard';
         closeRun();
         continue;
       }
@@ -198,34 +194,24 @@
       // goes above them rather than into the middle of the sideboard.
       if (/^sb:/i.test(trimmed)) continue;
 
-      if (!run || run.target !== target) { closeRun(); run = { target, section, cards: 0, end: 0 }; }
+      if (!run || run.target !== target) { closeRun(); run = { target, cards: 0, end: 0 }; }
       run.cards += 1;
       run.end = i + 1;
     }
     closeRun();
 
-    // Both of parseDecklist()'s size rules, applied to the same runs, so the card is
-    // written into whatever that function will read as the deck.
-    const held = (t) => runs.reduce((n, r) => (r.target === t ? n + r.cards : n), 0);
-    const zone = held('commanders');
+    // parseDecklist()'s size rule, applied to the same runs, so the card is written
+    // into whatever that function will read as the deck.
+    const zone = runs.reduce((n, r) => (r.target === 'commanders' ? n + r.cards : n), 0);
     const deck = runs.filter((r) => r.target === 'main'
       || (r.target === 'commanders' && zone > DECK_SIZED_RUN));
 
     // The end of the last run that is deck. Not the first heading that leaves the
     // deck: on an export that opens with its command zone that would be line 0,
     // above everything, which parses correctly but reads as though the button
-    // misfired.
-    if (deck.length) return deck[deck.length - 1].end;
-
-    // Nothing is the deck by heading. If a bounded section is carrying more cards
-    // than it is allowed to hold, that is the deck, and the card belongs at the end
-    // of it — matching the fold parseDecklist() is about to do.
-    const bounded = runs.filter((r) => r.target === 'ignore' && IGNORED_BUT_BOUNDED[r.section]);
-    const cards = bounded.reduce((n, r) => n + r.cards, 0);
-    if (cards > DECK_SIZED_RUN) return bounded[bounded.length - 1].end;
-
-    // An empty box, and a list with no deck in it anywhere, take the top.
-    return 0;
+    // misfired. An empty box, and a list with no deck in it anywhere, take the top —
+    // never a sideboard, however many cards someone has parked in it.
+    return deck.length ? deck[deck.length - 1].end : 0;
   }
 
   // The decklist someone is holding, with one more card in its main deck. Trailing
@@ -256,12 +242,6 @@
     const skipped = [];
     const byName = { commanders: new Map(), main: new Map() };
     let target = 'main';
-    let section = '';
-
-    // Cards dropped for sitting in an ignored section, each still pointing at the
-    // `skipped` record it produced, so the section can be taken back below without
-    // disturbing the order of everything else reported.
-    const ignored = [];
 
     for (const rawLine of String(text || '').split(/\r?\n/)) {
       const trimmed = rawLine.trim();
@@ -271,23 +251,16 @@
       const heading = normalizeHeading(trimmed);
       if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
         target = SECTION_TARGET[heading];
-        section = heading;
         continue;
       }
       // Anything else that mentions a board we ignore — "Sideboard cards",
       // "// sideboard" with trailing text — switches too rather than becoming a card.
       if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) {
         target = 'ignore';
-        section = /maybe/i.test(trimmed) ? 'maybeboard' : 'sideboard';
         continue;
       }
       if (target === 'ignore') {
-        const record = { line: trimmed, reason: 'sideboard / ignored section' };
-        skipped.push(record);
-        const card = parseLine(rawLine);
-        if (IGNORED_BUT_BOUNDED[section] && card && card.name && card.quantity >= 1) {
-          ignored.push({ record, card });
-        }
+        skipped.push({ line: trimmed, reason: 'sideboard / ignored section' });
         continue;
       }
       if (isCategoryHeading(trimmed)) {
@@ -342,24 +315,6 @@
 
     if (commanders.length > DECK_SIZED_RUN) {
       for (const entry of commanders.splice(0)) intoMain(entry.card, entry.quantity);
-    }
-
-    // The same rule from the other side. A heading we ignore can swallow the deck
-    // just as thoroughly: an export whose sideboard is followed by a heading we do
-    // not know keeps every card after it on the ignored board, and the search comes
-    // back with nothing found in a deck that is plainly there. Fifteen cards is all
-    // a sideboard is allowed, so a sixteenth says the heading has gone stale.
-    //
-    // Only when nothing else in the list is the deck. An oversized sideboard sitting
-    // next to a real main deck is a binder, or a list of cuts, and folding that in
-    // would quietly analyse a deck its owner never built.
-    if (!main.length && ignored.length > DECK_SIZED_RUN) {
-      const taken = new Set();
-      for (const { record, card } of ignored) {
-        taken.add(record);
-        intoMain(card.name, card.quantity);
-      }
-      return { commanders, main, skipped: skipped.filter((s) => !taken.has(s)) };
     }
 
     return { commanders, main, skipped };
