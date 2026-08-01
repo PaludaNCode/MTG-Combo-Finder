@@ -671,30 +671,32 @@ So one rule in the parser overrules the exporter: a command zone holding more th
 deck. `parseDecklist()` and the insertion walk apply the same rule, so a card added to
 such a list joins the deck under the block rather than the command zone above it.
 
-**The same thing happens from the other side.** An export whose `Sideboard` is followed
-by a heading the parser does not know keeps every card after it on the ignored board, so
-a search reports nothing found in a deck that is plainly there. A bounded section over
-the threshold is therefore taken back as the deck too — and it takes the whole section,
-including the card that really was a sideboard card, because once the heading has gone
-stale there is nothing left to tell them apart. Losing the deck is much the worse of the
-two failures.
+`test/parser.test.js` pins the threshold from both sides (15 believed, 16 not) rather
+than deriving it from the constant, so moving it has to be a deliberate edit in two
+places.
 
-Three things keep that from firing where it shouldn't:
+### Why the same argument does not extend to the sideboard
 
-- **Only when nothing else is the deck.** An oversized sideboard next to a real main deck
-  is a binder or a list of cuts; folding it in would quietly analyse a deck its owner
-  never built.
-- **Only bounded sections.** `maybeboard`, `considering` and `wishlist` have no size limit
-  — a Moxfield maybeboard runs to hundreds of cards — so they are never eligible, however
-  large they get. `IGNORED_BUT_BOUNDED` is the list.
-- **The threshold is the actual rule, not a round number.** Fifteen is the constructed
-  sideboard limit, and Commander has no sideboard at all; a command zone is one card, or
-  two with partners. So fifteen is the largest legal anything-but-a-deck, and a sixteenth
-  card says the heading has gone stale.
+It is tempting to run the rule again on the other board, and an earlier version did. A
+constructed sideboard is capped at fifteen cards and Commander has no sideboard at all,
+so a sixteenth looks like the same kind of evidence — and it would fix a real failure. An
+export whose `Sideboard` is followed by a heading the parser does not know keeps every
+card after it on the ignored board, so a twenty-card deck parses to nothing and the
+search reports no combos in a deck that is plainly there.
 
-`test/parser.test.js` pins it from both sides at both ends — 15 believed and 16 not, for
-each of the two boards — rather than deriving the numbers from the constant, so moving it
-has to be a deliberate edit in two places.
+**It does not hold, because this sideboard is not the game's sideboard.** On Moxfield it
+is where people park cards they are considering — saved to hand, not played — and such a
+list has no size limit at all. Folding a stash of forty into the deck would invent combos
+the deck cannot make. That is a worse failure than the one it fixes, and a much quieter
+one: a deck that finds nothing is obviously wrong, while a deck that finds four combos it
+cannot assemble looks exactly like a good result.
+
+So sideboard cards stay out of the deck at every size, and `+ Add to deck` never writes
+into a sideboard however large it is. The cost is that a deck lost behind a stale heading
+is not recovered — but it is *reported*, in the `skipped` list the page shows under the
+lines it could not use, which is the difference that matters. `test/parser.test.js` pins
+this deliberately, at 1, 15, 16, 40 and 120 cards, so the argument has to be re-made
+rather than re-discovered.
 
 It is a button rather than a note telling you to type the card in because of where
 the database already is: parsed, in the worker, from the search you just ran.
