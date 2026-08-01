@@ -883,14 +883,22 @@
       return;
     }
     const graph = ComboGraph.build(included);
-    // The canvas grows with the deck: 28 cards in the box that suits 8 is a knot.
-    // It is scaled to the column either way, so a bigger one is a taller panel
-    // rather than a smaller picture.
-    const size = ComboGraph.sizeFor(graph.nodes.length);
-    ComboGraph.layout(graph, size);
-
     const swaps = graph.links.filter((l) => l.kind === 'swap').length;
+    // The panel comes first because the canvas depends on it: the SVG is scaled
+    // into this column, and everything drawn on it is a fixed size in canvas
+    // units, so how wide the column is decides how big a dot ends up. Measured
+    // rather than assumed from the window — at 1000px the page is two columns
+    // and this one is not the window.
     const body = panel(container, 'graph', 'How your combos connect', graph.nodes.length);
+    // The canvas grows with the deck — 28 cards in the box that suits 8 is a knot
+    // — and turns portrait on a phone, where a landscape one wastes the screen
+    // twice over.
+    ComboGraph.layout(graph, ComboGraph.sizeFor(graph.nodes.length, body.clientWidth));
+    // The layout hands back the box it actually used, which is the one to draw
+    // in: the canvas it was given is working space, and whatever it did not need
+    // would otherwise be empty screen around the picture.
+    const size = { width: graph.width, height: graph.height };
+
     body.appendChild(el('p', 'empty',
       'Two cards are joined when a combo needs both of them — a solid line, in the colour of the best '
       + 'result those combos produce — or when they do the same job: a dashed line, meaning one can be '
@@ -901,6 +909,11 @@
 
     const svg = svgEl('svg', 'combo-map');
     svg.setAttribute('viewBox', '0 0 ' + size.width + ' ' + size.height);
+    // The type size the layout reserved room for, handed to the stylesheet so
+    // the text drawn is the text that was measured. On a narrow column both are
+    // larger — see sizeFor() — and if only one of them were, the names would
+    // overlap or the map would waste the space it saved for them.
+    svg.style.setProperty('--map-type', graph.fontSize + 'px');
     // A group of controls, not a picture: every card on it can be pressed to pin
     // it, and a press changes what the page says. The label below is what a
     // screen reader hears on the way in; the cards themselves are buttons, and

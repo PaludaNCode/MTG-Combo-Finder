@@ -134,8 +134,11 @@ test('the map can be driven from the keyboard alone', async ({ page }) => {
   await expect(page.locator('#graph .map-picked')).not.toHaveClass(/is-empty/);
 
   // Space is the other way to press a button, and must not scroll the page.
-  const scrolled = await page.evaluate(() => window.scrollY);
+  // Measured across the keypress alone: focusing a card is *allowed* to scroll,
+  // because bringing the focused thing into view is what a browser should do,
+  // and on a tall map it does. What Space must not do is page down.
   await map.locator('.node').nth(1).focus();
+  const scrolled = await page.evaluate(() => window.scrollY);
   await page.keyboard.press(' ');
   await expect(map.locator('.node.is-picked')).toHaveCount(2);
   expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
@@ -198,4 +201,49 @@ test('nothing on the page scrolls sideways', async ({ page }) => {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+// The map is drawn in canvas units and scaled into whatever column it lands in,
+// so "is it readable" is a question about the ratio between the two — and the
+// only place to ask it is in a browser at a real width, with the real
+// stylesheet. On a phone it was 4px type in a letterbox; this is the check that
+// it stays a map rather than a decoration.
+test('the map is legible at this width', async ({ page }) => {
+  const map = page.locator('#graph .combo-map');
+  const drawn = await map.evaluate((svg) => {
+    const box = svg.getBoundingClientRect();
+    const view = svg.viewBox.baseVal;
+    const scale = box.width / view.width;
+    const label = svg.querySelector('.label');
+    const dot = svg.querySelector('.dot');
+    return {
+      scale,
+      // The type size the stylesheet is using, in canvas units, times the scale
+      // — which is what the eye gets.
+      type: parseFloat(getComputedStyle(label).fontSize) * scale,
+      smallestDot: Math.min(...[...svg.querySelectorAll('.dot')].map((d) => d.r.baseVal.value)) * scale,
+      height: box.height,
+      // Nothing may hang outside the viewBox: the box is trimmed to the drawing,
+      // and a name past the edge is a name cut in half.
+      clipped: [...svg.querySelectorAll('.label')].filter((t) => {
+        const b = t.getBBox();
+        return b.x < -1 || b.x + b.width > view.width + 1;
+      }).length,
+      // ...and no band of empty canvas either, which is what the trim is for.
+      waste: (() => {
+        const dots = [...svg.querySelectorAll('.dot')];
+        const bottom = Math.max(...dots.map((d) => d.cy.baseVal.value + d.r.baseVal.value));
+        return view.height - bottom;
+      })(),
+      dotPresent: Boolean(dot),
+    };
+  });
+
+  expect(drawn.dotPresent).toBe(true);
+  expect(drawn.clipped, 'card names are being cut off at the edge of the map').toBe(0);
+  expect(drawn.type, `card names render at ${drawn.type.toFixed(1)}px`).toBeGreaterThan(9.5);
+  expect(drawn.smallestDot, 'the smallest card is smaller than 3px').toBeGreaterThan(3);
+  expect(drawn.waste, `${Math.round(drawn.waste)} units of empty canvas below the map`).toBeLessThan(150);
+  // A map worth scrolling to is a map worth some height.
+  expect(drawn.height).toBeGreaterThan(220);
 });

@@ -773,7 +773,8 @@ button:disabled { opacity: .6; cursor: wait; }
    the line it belongs to. */
 .combo-map .count {
   fill: var(--muted);
-  font-size: 10px;
+  /* A shade smaller than a name, the same ratio graph.js reckons its boxes at. */
+  font-size: calc(var(--map-type, 11px) * 0.9);
   text-anchor: middle;
   paint-order: stroke;
   stroke: var(--code-bg);
@@ -795,7 +796,10 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .combo-map .label {
   fill: var(--muted);
-  font-size: 11px;
+  /* Set on the element by app.js, from the size the layout reserved room for.
+     The fallback is the layout's own default, so a map rendered without it is
+     merely the desktop size rather than unreadable. */
+  font-size: var(--map-type, 11px);
   text-anchor: middle;
   /* A halo in the map's own background, drawn under the glyphs rather than over
      them. Labels sit below their dot and there is no arrangement of a graph this
@@ -1143,12 +1147,6 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   .why { margin-left: 0; }
   ul.why { padding-left: .9rem; }
   .sug-head { row-gap: .2rem; }
-  /* The map is scaled to the column, and a 900-unit canvas in a 330px one is a
-     third of full size — 11px type lands at 4px. Bumping it in the SVG's own
-     units buys back most of that. It is still a picture of the deck's shape
-     rather than something to read here; the panels above are the readable
-     version, and the labels come back at any real width. */
-  .combo-map .label { font-size: 20px; }
   h1 { font-size: 1.45rem; }
   #find-combos { padding: .8rem; } /* easier to hit with a thumb */
 }

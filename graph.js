@@ -64,6 +64,7 @@
   // and its Viscera Seer version into one row. A looser measure — how many
   // partners two cards happen to share — was tried on a real deck and produced
   // 302 pairs against this one's 48, most of them saying nothing.
+
   // What a combo is besides one of its cards. Two cards under the same signature
   // are the same combo with one card exchanged.
   const signatureOf = (keys, key) => keys.filter((other) => other !== key).sort().join('+');
@@ -86,6 +87,7 @@
     return bySignature;
   }
 
+  // How many combos each pair of cards can be exchanged in.
   function swapCounts(comboCards) {
     const bySignature = signatureIndex(comboCards);
     const counts = new Map();
@@ -431,12 +433,52 @@
       left: node.x - node.r, right: node.x + node.r,
       top: node.y - node.r, bottom: node.y + node.r,
     }));
-    const first = placeCounts(links.slice(0, COUNTS_FIRST), index, nodes, taken, COUNTS_FIRST);
+    const first = placeCounts(links.slice(0, COUNTS_FIRST), index, nodes, taken, COUNTS_FIRST, o);
     placeLabels(nodes, o, taken);
-    placeCounts(links.slice(COUNTS_FIRST), index, nodes, taken, COUNTS_SHOWN - first);
+    placeCounts(links.slice(COUNTS_FIRST), index, nodes, taken, COUNTS_SHOWN - first, o);
+
+    // And the canvas comes down to what was actually drawn on it. `taken` holds
+    // every dot, name and number in their final places, so the empty band the
+    // fit left over — a graph is rarely the shape of its box, and fitting one to
+    // the other wastes the difference — is measured and cut off rather than
+    // shipped as blank screen. It matters most on a phone, where the box is
+    // portrait, the picture is not, and the waste was 40% of the panel.
+    const size = trim(nodes, links, taken, padding);
+    graph.width = size.width;
+    graph.height = size.height;
+    // The renderer needs the same number the placement used, or the two disagree
+    // again — see FONT_SIZE.
+    graph.fontSize = metrics(o).fontSize;
 
     for (const node of nodes) { delete node.vx; delete node.vy; }
     return graph;
+  }
+
+  // Slides the drawing into the corner and reports the box it needs. Everything
+  // moves together, so nothing about the picture changes — only how much empty
+  // canvas is around it.
+  function trim(nodes, links, taken, padding) {
+    if (!taken.length) return { width: 0, height: 0 };
+    const left = Math.min(...taken.map((b) => b.left));
+    const top = Math.min(...taken.map((b) => b.top));
+    const right = Math.max(...taken.map((b) => b.right));
+    const bottom = Math.max(...taken.map((b) => b.bottom));
+    const dx = padding - left;
+    const dy = padding - top;
+    const round = (n) => Math.round(n * 100) / 100;
+    for (const node of nodes) {
+      node.x = round(node.x + dx);
+      node.y = round(node.y + dy);
+    }
+    for (const link of links) {
+      if (link.countX == null) continue;
+      link.countX = round(link.countX + dx);
+      link.countY = round(link.countY + dy);
+    }
+    return {
+      width: Math.round(right - left + padding * 2),
+      height: Math.round(bottom - top + padding * 2),
+    };
   }
 
   // What a canvas has to be for this many cards. A real Commander deck produced
@@ -451,12 +493,48 @@
   // against — 28 cards, 114 lines — going from 760×440 to 888×648 took the
   // labels that could not be placed from 10 to 6. Past about there it stops
   // paying: the picture is bound by its own proportions, not by the box.
-  function sizeFor(count) {
+  // ...and it has to know how wide the column is, because the canvas is scaled
+  // into that column and everything on it is a fixed size in canvas units. The
+  // same 900-unit picture is a comfortable 900px on a desktop and 330px on a
+  // phone, where 11px type lands at 4px and a 5-unit dot is under two physical
+  // pixels. Shrinking the *canvas* is the only lever that makes the contents
+  // bigger, because it is the ratio that decides everything.
+  //
+  // A phone also has the opposite shape to a desktop, so the canvas turns with
+  // it: portrait, where a landscape one wastes the screen twice over — narrow
+  // enough that the scale is brutal, and short enough that the picture occupies
+  // a letterbox in the middle of a tall display.
+  const NARROW = 520;
+
+  function sizeFor(count, available) {
     const n = Math.max(1, count || 0);
     const over = Math.max(0, n - 12);
+    // No width given is the desktop assumption; a caller that cannot measure its
+    // column gets what the map has always been.
+    if (available && available < NARROW) {
+      // Bigger type against a smaller canvas, which is the only way to make
+      // anything on this map bigger: every length here is in canvas units and
+      // the whole canvas is scaled into the column, so what a reader sees is the
+      // *ratio*. Type at 15 units in a ~430-unit picture on a 370px column comes
+      // out near 13px, against 4px for the same map drawn desktop-sized.
+      //
+      // Names are cut shorter to pay for it. A label is far wider than the dot
+      // it belongs to, so at this type size the full 18 characters would set the
+      // width of the whole picture from two labels at opposite edges — and the
+      // scale is the width. Twelve characters still names the card; a tap gives
+      // the rest.
+      return {
+        width: Math.round(Math.min(430, 360 + over * 5)),
+        height: Math.round(Math.min(900, 520 + over * 12)),
+        fontSize: 15,
+        labelMaxChars: 12,
+      };
+    }
     return {
       width: Math.round(Math.min(900, DEFAULT_WIDTH + over * 8)),
       height: Math.round(Math.min(760, DEFAULT_HEIGHT + over * 13)),
+      fontSize: FONT_SIZE,
+      labelMaxChars: LABEL_MAX_CHARS,
     };
   }
 
@@ -515,21 +593,40 @@
   // on sight are the ones the deck is built around, and a dropped label is still
   // there on hover, where it is one card rather than forty.
   const LABEL_MAX_CHARS = 18;
-  // 11px system-ui, measured across the card names this draws. Approximate on
-  // purpose: the alternative is measuring text, which needs a DOM, which is the
-  // one thing this file does not have.
-  const CHAR_WIDTH = 5.6;
-  // A label's box around its baseline: how far the glyphs reach up, and how far
-  // the tails of a "g" reach down.
-  const LABEL_ASCENT = 9;
-  const LABEL_DESCENT = 3;
+
+  // The type size everything below is reckoned from, in canvas units. It is a
+  // *decision*, not an observation: the layout works out where a name fits by
+  // measuring a box, and the page draws that name at whatever the stylesheet
+  // says — so the two have to be told once, together. They were not, briefly:
+  // a media query bumped mobile labels to 13 units while this file went on
+  // reserving room for 11, and every box on a phone was 18% narrower than the
+  // text put in it.
+  const FONT_SIZE = 11;
+  // Measured across the card names this draws, as a fraction of the type size.
+  // Approximate on purpose: the alternative is measuring text, which needs a
+  // DOM, which is the one thing this file does not have.
+  const CHAR_RATIO = 0.51;
+  // How far the glyphs reach above the baseline and how far a "g" hangs below.
+  const ASCENT_RATIO = 0.82;
+  const DESCENT_RATIO = 0.27;
+
+  // Every length the placement needs, for one type size.
+  function metrics(o) {
+    const fontSize = o.fontSize || FONT_SIZE;
+    return {
+      fontSize,
+      maxChars: o.labelMaxChars || LABEL_MAX_CHARS,
+      charWidth: fontSize * CHAR_RATIO,
+      ascent: Math.round(fontSize * ASCENT_RATIO * 10) / 10,
+      descent: Math.round(fontSize * DESCENT_RATIO * 10) / 10,
+    };
+  }
 
   // taken: the space already spoken for — every dot, and the numbers placed
   // before the names. A name drawn across a dot belongs, to the eye, to that dot,
   // which on a dense deck was most of them.
   function placeLabels(nodes, o, taken) {
-    const maxChars = o.labelMaxChars || LABEL_MAX_CHARS;
-    const charWidth = o.charWidth || CHAR_WIDTH;
+    const { maxChars, charWidth, ascent: LABEL_ASCENT, descent: LABEL_DESCENT } = metrics(o);
     // Biggest dot first, so a crowd of one-combo cards cannot crowd out the card
     // holding six of them.
     for (const node of [...nodes].sort((a, b) => b.r - a.r || a.name.localeCompare(b.name))) {
@@ -589,8 +686,8 @@
   // are offered a place strongest-first, in the same occupied space the dots and
   // the card names hold, and a number with nowhere to go is dropped — the line is
   // still there, still weighted, and hovering either end still names the pair.
-  const COUNT_HEIGHT = 12;
-  const COUNT_CHAR = 5.4;
+  // A number is a shade smaller than a name and reckoned the same way.
+  const COUNT_RATIO = 0.9;
   // Room around a number so two of them side by side read as two numbers and not
   // as one longer one — "16" and "15" touching drew a convincing "1615".
   const COUNT_PAD = 3.5;
@@ -616,7 +713,11 @@
   ];
 
   // budget: how many of these may stay on screen. Returns how many did.
-  function placeCounts(links, index, nodes, taken, budget) {
+  function placeCounts(links, index, nodes, taken, budget, o) {
+    const type = metrics(o || {});
+    const countSize = type.fontSize * COUNT_RATIO;
+    const COUNT_CHAR = countSize * CHAR_RATIO;
+    const COUNT_HEIGHT = Math.round(countSize * 1.1 * 10) / 10;
     let shown = 0;
     for (const link of links) {
       link.count = link.kind === 'swap' ? link.swap : link.together;

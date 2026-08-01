@@ -852,14 +852,40 @@ this can separate them, and the repulsion pass is O(n²) per iteration. The
 busiest cards are kept and the panel says how many were left out, rather than
 quietly drawing a smaller deck than the one it was given.
 
+### A phone gets a different map, not a smaller one
+
+Every length on this canvas is in canvas units, and the whole canvas is scaled
+into whatever column it lands in — so what a reader actually sees is the *ratio*
+between the two, and the only way to make anything bigger is to make the canvas
+smaller relative to what is drawn on it. A narrow column therefore gets its own
+preset: a canvas around 430 units instead of 900, type at 15 units instead of 11,
+and names cut to 12 characters instead of 18. On a 370px column that puts card
+names near 13px, against 4px for the same map drawn desktop-sized.
+
+The names are cut shorter to pay for the type. A label is far wider than the dot
+it belongs to, so at 15 units two full-length ones at opposite edges would set
+the width of the whole picture — and the width of the picture *is* the scale. A
+tap gives the rest of the name.
+
+**One decision, not two.** The type size lives in `sizeFor()` and reaches the
+stylesheet as a custom property, because the layout reserves room for a name by
+measuring a box and the page draws that name at whatever CSS says. Those two were
+briefly different numbers — a media query bumped mobile labels to 13 units while
+the layout went on reserving room for 11, so every box on a phone was 18%
+narrower than the text put in it.
+
+**The canvas is trimmed to the drawing.** A graph is rarely the shape of the box
+it is fitted into, and the fit scales to whichever axis binds — so the other one
+comes back short and the difference is empty screen. On a phone that was 40% of
+the panel. The layout now reports the box it actually used, which is also what
+stopped names being clipped at the edges: the fit sizes the *dots*, and the names
+hang off them, so the box has to be measured after they are placed.
+
 **What it does not do yet.** There is no dragging, no zoom, and no click-through
-to a card. On a phone the map is a shape rather than something to read: a
-900-unit canvas scaled into a 330px column puts 11px type at 4px, and while the
-labels are drawn larger at that width, the honest answer is that the panels above
-are the readable version there. The map is also one image to a screen reader,
-with a one-line description — everything on it is written out in words above,
-which is the better read anyway, so the alternative was forty unlabelled shapes
-in the tab order.
+to a card, and the layout is worked out once per search — rotating a phone
+rescales the same picture rather than re-laying it out for the new shape. The map
+is also one image to a screen reader, with a one-line description; everything on
+it is written out in words in the panels above, which is the better read anyway.
 
 ## Adding a card, and searching again
 
@@ -1543,6 +1569,48 @@ answer it either way.
 Everything above comes from Spellbook and is shown on their authority. `unofficial.js`
 is the one exception — the surviving output of that substitution audit, rendered in its
 own panel below **Combos in your deck** and never counted among them.
+
+### What this cannot find: a card Spellbook has never used
+
+The audit works by substitution *between two published cards*: it takes a combo
+naming one and asks whether the variant naming the other exists. Both halves have
+to be in the data — the evidence that two cards are interchangeable is that
+Spellbook already treats them that way somewhere else.
+
+So a card the database has **never used at all** is invisible to it, and not by
+accident. Worked example, and the question that keeps coming back:
+
+> *Hammerhead, Maggia Boss is a sacrifice outlet in my deck. Why does he have no
+> combos, official or unofficial?*
+
+Measured on the 2026-08-01 snapshot, he is in the data — Scryfall's colour
+identity for him is there, so the page knows the card — and he is named by
+**zero** of its 103,675 combos. That closes all three doors at once:
+
+1. **Nothing to list.** No published combo names him, so "Combos in your deck"
+   has nothing to say about him, correctly.
+2. **Nothing to substitute.** With no published appearances there is no pair to
+   measure, so he can never become a candidate row here. The method has no
+   opinion about him rather than a negative one.
+3. **No slot to arrive through.** Spellbook enumerates sacrifice outlets by name
+   — Carrion Feeder appears in 1,769 combos — rather than templating them, so
+   there is no "a Sacrifice Outlet" slot for a new outlet to fill.
+   `tools/research-coverage.js` checks this against the live data and reports it:
+   not one template name mentions sacrificing. The two templates he *does* fill
+   are *Dragon Creature* and *Villain Creature*, between them used by 19 combos,
+   none of which are about sacrificing anything.
+
+**What it would take.** A row in `unofficial.js` per loop, hand-written and read
+against the card, exactly as the nine already there were. On the deck in
+`test/fixtures/deck.txt` that is up to ten candidates — three off Samwise Gamgee
++ Cauldron Familiar, six off Scurry Oak or Herd Baloth + Sadistic Glee, and one
+off Camellia, the Seedmiser + Peregrin Took.
+
+That last one is why this is per-row work and not "add the card". Camellia's
+ability costs `{2}`, so the outlet in that loop has to produce mana or eat the
+Food itself — which is why the published version of it names Umbral Collar Zealot
+and why Viscera Seer and Carrion Feeder are absent from it. Nine of the ten
+candidates might hold and the tenth not, and only reading the card says which.
 
 ### Why it is a separate panel and not a badge
 

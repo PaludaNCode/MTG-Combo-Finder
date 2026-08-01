@@ -271,10 +271,16 @@ test('layout: the card nearest each one is a card it combos with', () => {
   }
 });
 
-test('layout: a single card sits in the middle', () => {
+// One card is placed in the middle of the canvas it was given — and then the
+// canvas is trimmed to it, so what comes back is a small box with the card in
+// the middle of *that*. Both halves matter: the second is what stops a one-card
+// map being a dot in an acre of empty panel.
+test('layout: a single card sits in the middle of what is drawn', () => {
   const graph = layout(build([combo(['Rings of Brighthearth'], ['Infinite damage'])]),
     { width: 400, height: 200 });
-  assert.deepStrictEqual([graph.nodes[0].x, graph.nodes[0].y], [200, 100]);
+  assert.ok(Math.abs(graph.nodes[0].x - graph.width / 2) < 1,
+    `the card is at ${graph.nodes[0].x} on a ${graph.width}-wide canvas`);
+  assert.ok(graph.width < 400 && graph.height < 200, 'the canvas was not trimmed to the card');
 });
 
 test('layout: an empty graph is left alone', () => {
@@ -311,22 +317,51 @@ test('sizeFor: the canvas grows with the deck and then stops', () => {
   const small = sizeFor(8);
   const mid = sizeFor(28);
   const huge = sizeFor(200);
-  assert.deepStrictEqual(small, { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+  assert.strictEqual(small.width, DEFAULT_WIDTH);
+  assert.strictEqual(small.height, DEFAULT_HEIGHT);
   assert.ok(mid.width > small.width && mid.height > small.height);
   assert.ok(huge.width <= 900 && huge.height <= 760);
   assert.deepStrictEqual(sizeFor(0), small); // nothing to draw is still a canvas
+});
+
+// What a phone gets, and why it is not simply the same map smaller. Every length
+// on this canvas is in canvas units and the whole thing is scaled into the
+// column, so the only way to make anything bigger is to make the canvas smaller
+// relative to what is drawn on it.
+test('sizeFor: a narrow column gets a smaller canvas and bigger type', () => {
+  const wide = sizeFor(20, 900);
+  const narrow = sizeFor(20, 370);
+  assert.ok(narrow.width < wide.width * 0.6,
+    `narrow canvas is ${narrow.width} against ${wide.width}`);
+  assert.ok(narrow.fontSize > wide.fontSize, 'the type did not grow');
+  // Names are cut shorter to pay for the type: a label is much wider than its
+  // dot, and at this size two long ones at opposite edges would set the width of
+  // the whole picture — which is the scale.
+  assert.ok(narrow.labelMaxChars < wide.labelMaxChars, 'the names did not get shorter');
+});
+
+test('sizeFor: the column only matters when it is narrow', () => {
+  assert.deepStrictEqual(sizeFor(20, 1200), sizeFor(20));
 });
 
 // ---- labels ------------------------------------------------------------------
 
 // The box a placed label occupies, reconstructed the way graph.js reckons it:
 // 5.6px a character at 11px, 9px of it above the baseline and 3px below.
-const labelBox = (node) => {
-  const width = node.label.length * 5.6;
+// The same reckoning graph.js does, at its default type size: 0.51 of the size
+// per character, 0.82 above the baseline and 0.27 below.
+const labelBox = (node, fontSize) => {
+  const size = fontSize || 11;
+  const width = node.label.length * size * 0.51;
   const x = node.x + node.labelDx;
   const left = node.labelAnchor === 'start' ? x
     : (node.labelAnchor === 'end' ? x - width : x - width / 2);
-  return { left, right: left + width, top: node.y + node.labelDy - 9, bottom: node.y + node.labelDy + 3 };
+  return {
+    left,
+    right: left + width,
+    top: node.y + node.labelDy - Math.round(size * 0.82 * 10) / 10,
+    bottom: node.y + node.labelDy + Math.round(size * 0.27 * 10) / 10,
+  };
 };
 const hits = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
@@ -357,7 +392,7 @@ test('layout: no label is drawn over a dot', () => {
 
 test('layout: no two labels are drawn on top of each other', () => {
   const graph = placedDense();
-  const shown = graph.nodes.filter((n) => n.labelDy != null).map(labelBox);
+  const shown = graph.nodes.filter((n) => n.labelDy != null).map((n) => labelBox(n));
   for (let i = 0; i < shown.length; i++) {
     for (let j = i + 1; j < shown.length; j++) {
       assert.ok(!hits(shown[i], shown[j]), 'two labels overlap');
@@ -377,7 +412,7 @@ test('layout: with no room, names are dropped rather than piled up', () => {
   // Every dropped one still carries its text, for the hover to show.
   assert.ok(dropped.every((n) => n.label));
   // And whatever did survive is still placed cleanly.
-  const shown = graph.nodes.filter((n) => n.labelDy != null).map(labelBox);
+  const shown = graph.nodes.filter((n) => n.labelDy != null).map((n) => labelBox(n));
   for (let i = 0; i < shown.length; i++) {
     for (let j = i + 1; j < shown.length; j++) {
       assert.ok(!hits(shown[i], shown[j]), 'two labels overlap on the crowded canvas');
@@ -578,9 +613,9 @@ test('layout: a number never lands on a dot or a name', () => {
   const graph = placedDense();
   const boxes = graph.nodes.map((n) => ({
     left: n.x - n.r, right: n.x + n.r, top: n.y - n.r, bottom: n.y + n.r,
-  })).concat(graph.nodes.filter((n) => n.labelDy != null).map(labelBox));
+  })).concat(graph.nodes.filter((n) => n.labelDy != null).map((n) => labelBox(n)));
   for (const link of graph.links.filter((l) => l.countShown)) {
-    const half = (String(link.count).length * 5.4) / 2 + 3.5;
+    const half = (String(link.count).length * 11 * 0.9 * 0.51) / 2 + 3.5;
     const box = {
       left: link.countX - half, right: link.countX + half,
       top: link.countY - 6, bottom: link.countY + 6,
@@ -682,4 +717,79 @@ test('compare: a card filling a template slot counts like any other', () => {
   const found = compare(graph, ['walking ballista', 'basalt monolith']);
   assert.strictEqual(found.interchangeable, 1, 'either completes a Rings combo');
   assert.deepStrictEqual(found.shared, ['Rings of Brighthearth']);
+});
+
+// ---- the canvas the map is actually drawn in --------------------------------
+//
+// A graph is rarely the shape of the box it is fitted into, and the difference
+// is empty canvas: the fit scales to whichever axis binds and leaves the other
+// short. On a phone that was 40% of the panel, so the box comes back trimmed to
+// what was drawn on it.
+
+const spanOf = (graph) => {
+  const xs = graph.nodes.flatMap((n) => [n.x - n.r, n.x + n.r]);
+  const ys = graph.nodes.flatMap((n) => [n.y - n.r, n.y + n.r]);
+  return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
+};
+
+test('layout: the canvas comes back trimmed to the drawing', () => {
+  const graph = placed(dense(), { width: 900, height: 900, padding: 30 });
+  const span = spanOf(graph);
+  // Labels stick out past the dots, so the margin is measured against the dots
+  // and only has to be *bounded* — what matters is that there is no band of
+  // empty canvas, not that the fit is to the pixel.
+  assert.ok(span.left >= 0 && span.top >= 0, 'the drawing starts outside its own canvas');
+  assert.ok(graph.width - span.right < 140, `${graph.width - span.right}px of empty canvas on the right`);
+  assert.ok(graph.height - span.bottom < 140, `${graph.height - span.bottom}px of empty canvas below`);
+  // It can come back a little *wider* than the box it was given: the fit sizes
+  // the dots, and the names hang off them. That is the trade — a canvas that
+  // stayed exactly the size asked for would be one that clipped the names, which
+  // is what a phone used to do.
+  assert.ok(graph.width < 900 + 250 && graph.height < 900 + 250,
+    `the canvas came back at ${graph.width}x${graph.height}`);
+});
+
+test('layout: everything drawn is inside the canvas it reports', () => {
+  const graph = placed(dense(), sizeFor(20, 370));
+  for (const node of graph.nodes) {
+    assert.ok(node.x - node.r >= 0 && node.x + node.r <= graph.width, `${node.name} is off the side`);
+    assert.ok(node.y - node.r >= 0 && node.y + node.r <= graph.height, `${node.name} is off the end`);
+  }
+  // Including the names, which the old fit did not account for at all — they
+  // overhang the dots, and on a phone they were being clipped by the viewBox.
+  for (const node of graph.nodes.filter((n) => n.labelDy != null)) {
+    const box = labelBox(node, graph.fontSize);
+    assert.ok(box.left >= -1 && box.right <= graph.width + 1, `${node.name}'s name is clipped`);
+  }
+});
+
+// The layout reserves room for text by measuring a box; the page draws that text
+// at whatever the stylesheet says. If the two numbers disagree the names overlap,
+// which is exactly what a media query bumping mobile type to 13 units did while
+// this file went on reserving room for 11.
+test('layout: the type size it reserved for is the one it reports', () => {
+  const wide = placed(dense(), sizeFor(20, 900));
+  const narrow = placed(dense(), sizeFor(20, 370));
+  assert.strictEqual(wide.fontSize, 11);
+  assert.strictEqual(narrow.fontSize, sizeFor(20, 370).fontSize);
+  assert.ok(narrow.fontSize > wide.fontSize);
+});
+
+test('layout: bigger type reserves a bigger box', () => {
+  const one = placed(build([combo(['Basalt Monolith', 'Rings of Brighthearth'])]),
+    { width: 400, height: 300, fontSize: 11 });
+  const two = placed(build([combo(['Basalt Monolith', 'Rings of Brighthearth'])]),
+    { width: 400, height: 300, fontSize: 22 });
+  const widthOf = (g) => labelBox(g.nodes[0], g.fontSize).right - labelBox(g.nodes[0], g.fontSize).left;
+  assert.ok(widthOf(two) > widthOf(one) * 1.8, 'doubling the type did not double the box');
+});
+
+// The whole point of the narrow preset: a phone reads the map at something near
+// the size a desktop does. Measured as the ratio the browser will apply — the
+// column divided by the canvas — times the type size in canvas units.
+test('layout: a phone renders type at a legible size', () => {
+  const column = 370;
+  const graph = placed(dense(), sizeFor(20, column));
+  const onScreen = (column / graph.width) * graph.fontSize;
+  assert.ok(onScreen >= 10, `card names would render at ${onScreen.toFixed(1)}px on a phone`);
 });
