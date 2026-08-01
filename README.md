@@ -1554,7 +1554,7 @@ functional twin, and checking whether that variant exists:
 | Quina, Qu Gourmet + Academy Manufactor + Warren Soultrader | `3000-4231-5670` (Chatterfang version) | **Verified against the cards.** Quina adds a 1/1 Frog to any token creation, so it refuels the sacrifice loop exactly as Chatterfang does |
 | Lunarch Veteran + Heroic Feast + Scurry Oak | `360-4186-7743` (Soul Warden version) | High — Lunarch Veteran's front face is Soul Warden's text, and every other card with that text has the variant |
 | Essence Warden + Hapatra, Vizier of Poisons + Yawgmoth, Thran Physician (×3, with Anointed Procession / Parallel Lives / Doubling Season) | the Soul Warden versions | High — Soul Warden and Essence Warden are functional duplicates |
-| Hammerhead, Maggia Boss in 1,730 loops | the Bartolomé del Presidio versions, and the Carrion Feeder ones where Bartolomé has none | **Verified against the cards.** Hammerhead and Bartolomé have one ability each and it is the same sentence. Declared once as a stand-in rule rather than written out — see below |
+| Hammerhead, Maggia Boss in 1,889 loops | the Bartolomé del Presidio versions, and the Carrion Feeder ones where Bartolomé has none | **Verified against the cards.** Hammerhead and Bartolomé have one ability each and it is the same sentence. Declared once as a stand-in rule rather than written out — see below |
 
 **A high substitution score is not a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. A worked
@@ -1625,11 +1625,11 @@ The colour is the part that earns its keep. Hammerhead is mono-black where
 Bartolomé is white-black, so every one of those lines is an Orzhov combo that a
 Golgari deck can actually run, and had no way of being told about.
 
-### One card, 1,730 combos: why this one is a rule and not rows
+### One card, 1,889 combos: why this one is a rule and not rows
 
-Four rows can be written by hand. Seventeen hundred cannot, and a file with 1,730
-copies of a published combo with one word changed is not evidence anybody can
-check. So `unofficial.js` has a second export, `STAND_INS`, which declares the
+Four rows can be written by hand. Nearly nineteen hundred cannot, and a file with
+1,889 copies of a published combo with one word changed is not evidence anybody
+can check. So `unofficial.js` has a second export, `STAND_INS`, which declares the
 finding once:
 
 ```js
@@ -1657,16 +1657,21 @@ listed second rather than first:
 Free and repeatable the same way, but creatures only where Hammerhead also eats
 artifacts, and able to eat *itself* where Hammerhead cannot. Every Carrion Feeder
 loop is therefore a Hammerhead loop and the reverse is not true — the swap runs
-one way. A row cites Bartolomé wherever Spellbook published that version (1,515 of
+one way. A row cites Bartolomé wherever Spellbook published that version (1,674 of
 them) and falls back to the Feeder for the **215** lines the Feeder has and
 Bartolomé does not. Order in `for` is preference, not membership.
+
+**159 of the 1,889 have a template slot** — "any Persist Creature" — and those are
+included on the same terms a published combo with a slot is: your deck has to fill
+it, and the row names the card credited with doing so. The slot is resolved against
+your deck *minus Hammerhead himself*, because a card cannot both be the swap and
+fill a slot beside itself. 26 of those 159 ask for a slot Spellbook has named but
+published no card list for — *Creature that earthbends on entering* — and nothing,
+official or ours, can ever include those.
 
 **What the rule deliberately does not reach**, reported by
 `tools/verify-unofficial.js` on every refresh rather than left to be discovered:
 
-- **273 combos with a template slot.** A combo reading "any Dragon creature" is
-  filled from your deck by `matchDeck()`; nothing in the generator knows how, so
-  those are skipped rather than half-built.
 - **Loops that sacrifice the Feeder itself.** Hammerhead cannot — his ability says
   *another*. An outlet that eats itself has no outlet afterwards, so nothing in the
   data appears to do this on purpose, but the rule cannot prove that and this is
@@ -1766,7 +1771,7 @@ survivors, because each is a way a "functionally identical" card turns out not t
 
 **Nothing remains open.** The nine that survived are in `unofficial.js`, and seven of
 them were only settled by reading the cards — which is why the panel prints how far the
-checking went rather than asking to be believed. The 1,730 Hammerhead rows are not
+checking went rather than asking to be believed. The 1,889 Hammerhead rows are not
 part of that count and never were: the audit could not have proposed a single one of
 them, because it works by comparing two published cards and Hammerhead is not one.
 

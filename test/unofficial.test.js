@@ -80,14 +80,18 @@ const OUTLET = {
     { id: '1-2-3', c: ['Scurry Oak', 'Sadistic Glee', 'Twin A'], p: ['Infinite ETB'] },
     { id: '4-5-6', c: ['Scurry Oak', 'Sadistic Glee', 'Twin B'], p: ['Infinite ETB'] },
     { id: '7-8-9', c: ['Gravecrawler', 'Twin B'], p: ['Infinite death triggers'] },
-    // A template slot is "any card that does X", filled from the deck elsewhere.
-    { id: '10-11-12', c: ['Scurry Oak', 'Twin A'], t: ['Sacrifice outlet'], p: ['Infinite ETB'] },
+    // A template slot is "any card that does X", filled from the deck.
+    { id: '10-11-12', c: ['Basalt Monolith', 'Twin A'], t: [5], p: ['Infinite mana'] },
     // Nothing to swap: no source card in it at all.
     { id: '13-14-15', c: ['Basalt Monolith', 'Rings of Brighthearth'], p: ['Infinite mana'] },
   ],
+  templates: { 5: 'Persist Creature' },
+  // Both the stand-in and an ordinary card fill the slot, which is how "the
+  // stand-in must not fill a slot beside itself" gets to be a real question.
+  templateCards: { 'kitchen finks': [5], copycat: [5] },
   cardIdentity: {
     'Scurry Oak': 'G', 'Sadistic Glee': 'B', 'Twin A': 'WB', 'Twin B': 'B',
-    Gravecrawler: 'B', Copycat: 'B',
+    Gravecrawler: 'B', Copycat: 'B', 'Basalt Monolith': '', 'Kitchen Finks': 'GW',
   },
 };
 const RULE = {
@@ -137,10 +141,22 @@ test('stand-in: a combo the deck is short of is not generated', () => {
   assert.deepStrictEqual(rows.map((r) => r.from.id), ['7-8-9']);
 });
 
-// Skipped rather than half-built: filling a template slot is matchDeck()'s job and
-// this does not know how, so a combo with one is left where it is.
-test('stand-in: a combo with a template slot is left alone', () => {
-  const rows = standInRows(OUTLET, [RULE], deck('Copycat', 'Scurry Oak'));
+// A slot is included on the same terms a published combo's slot is: the deck has
+// to fill it, and the row says which card was credited.
+test('stand-in: a combo with a template slot comes through once the deck fills it', () => {
+  const names = ['Copycat', 'Basalt Monolith', 'Kitchen Finks'];
+  const rows = standInRows(OUTLET, [RULE], deck(...names), names.map((card) => ({ card, quantity: 1 })));
+  const row = rowFor(rows, 'Copycat', 'Basalt Monolith');
+  assert.ok(row, 'the templated combo was not generated');
+  assert.strictEqual(row.from.id, '10-11-12');
+  assert.deepStrictEqual(row.fills, [{ id: 5, slot: 'Persist Creature', card: 'Kitchen Finks' }]);
+});
+
+test('stand-in: a slot the deck cannot fill keeps the combo out', () => {
+  const names = ['Copycat', 'Basalt Monolith'];
+  const rows = standInRows(OUTLET, [RULE], deck(...names), names.map((card) => ({ card, quantity: 1 })));
+  // Copycat fills a Persist Creature slot, and is the card being swapped *in* —
+  // crediting it would be the same card twice in one combo.
   assert.deepStrictEqual(rows, []);
 });
 
@@ -324,12 +340,14 @@ test('rules: a source card no combo names is caught', () => {
 
 test('rules: the summary counts what the rule actually reached', () => {
   const [summary] = checkStandIns(OUTLET, [RULE]).summaries;
-  // Two published lines reachable: the Scurry Oak one (both twins have it, so it
-  // is one row) and the Gravecrawler one. The templated one is not counted.
-  assert.strictEqual(summary.rows, 2);
-  assert.strictEqual(summary.templated, 1);
+  // Three published lines reachable: the Scurry Oak one (both twins have it, so
+  // it is one row), the Gravecrawler one, and the one with a slot in it — which
+  // is reported separately, because whether it reaches anybody depends on their
+  // deck rather than on the rule.
+  assert.strictEqual(summary.rows, 3);
+  assert.strictEqual(summary.slotted, 1);
   assert.strictEqual(summary.alreadyPublished, 0);
-  assert.deepStrictEqual(summary.cited.map((c) => c.rows), [1, 1]);
+  assert.deepStrictEqual(summary.cited.map((c) => c.rows), [2, 1]);
 });
 
 // Not an error either — it is the outcome the rule wants. Every row it makes

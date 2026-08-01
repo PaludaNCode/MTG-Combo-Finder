@@ -94,11 +94,11 @@ function checkStandIns(data, rules) {
       const hits = keys.filter((k) => sources.has(k));
       if (hits.length !== 1) continue;
       counts.set(hits[0], counts.get(hits[0]) + 1);
-      if (combo.t && combo.t.length) { templated += 1; continue; }
       const key = keys.filter((k) => k !== hits[0]).concat(inKey).sort().join('|');
       const rank = sources.get(hits[0]).rank;
       const held = best.get(key);
-      if (!held || rank < held.rank) best.set(key, { rank, from: hits[0] });
+      if (!held || rank < held.rank) best.set(key, { rank, from: hits[0], t: !!(combo.t && combo.t.length) });
+      if (combo.t && combo.t.length) templated += 1;
     }
 
     for (const [key, seen] of counts) {
@@ -106,10 +106,15 @@ function checkStandIns(data, rules) {
     }
 
     const cited = new Map();
-    for (const { from } of best.values()) cited.set(from, (cited.get(from) || 0) + 1);
+    let slotted = 0;
+    for (const { from, t } of best.values()) {
+      cited.set(from, (cited.get(from) || 0) + 1);
+      if (t) slotted += 1;
+    }
     summaries.push({
       card: rule.card,
       rows: best.size,
+      slotted,
       templated,
       alreadyPublished,
       cited: [...sources.keys()].map((k) => ({ card: k, rows: cited.get(k) || 0, combos: counts.get(k) })),
@@ -145,9 +150,10 @@ async function main() {
     s.cited.forEach((c) => say(`- ${c.card}: ${c.combos.toLocaleString()} published combos, `
       + `${c.rows.toLocaleString()} rows cited to it`));
     say();
-    if (s.templated) {
-      say(`${s.templated.toLocaleString()} more were skipped for having a template slot, `
-        + 'which nothing here knows how to fill.');
+    if (s.slotted) {
+      say(`${s.slotted.toLocaleString()} of those have a template slot — "any Persist `
+        + 'Creature" — and reach a deck only once that deck fills it, exactly as a '
+        + 'published combo with a slot does.');
       say();
     }
     if (s.alreadyPublished) {

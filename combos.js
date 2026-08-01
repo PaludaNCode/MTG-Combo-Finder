@@ -598,6 +598,10 @@
         // Worked out from the cards rather than stored, so it cannot drift from the
         // identity data the rest of the page filters by.
         i: identityString(deckIdentity(dataset && dataset.cardIdentity, new Set(cards.map(nameKey)))),
+        // Present only on a row generated from a combo with a template slot: which
+        // of the deck's cards filled it. Carried through for the same reason the
+        // published rows carry it — the page names the card it credited.
+        fills: (row.fills && row.fills.length) ? row.fills : undefined,
         unofficial: row,
       });
     }
@@ -627,19 +631,24 @@
   // would discard the rest anyway, and a deck without the stand-in card in it
   // never walks the combo list at all.
   //
-  // Two things are deliberately left out, and both are visible rather than
-  // silent — see tools/verify-unofficial.js, which reports the counts:
+  // A combo with a template slot — "any Persist Creature" — is included the same
+  // way matchDeck() includes one: the deck has to fill every slot, and the row
+  // says which of your cards was credited with each. The slot is resolved against
+  // the deck *minus the stand-in*, because a card cannot both be the swap and fill
+  // a slot beside itself.
   //
-  //   template slots  a combo reading "any Dragon creature" is filled from the
-  //                   deck by matchDeck(); nothing here knows how to fill one,
-  //                   so those combos are skipped rather than half-built.
-  //   our own rows    a rule reads published combos only. Generating from an
-  //                   unofficial row would put a swap on top of a swap, and
-  //                   every row on this page is one step from something
-  //                   Spellbook published.
-  function standInRows(dataset, standIns, deckNames) {
+  // One thing is deliberately left out, and visibly rather than silently — see
+  // tools/verify-unofficial.js: a rule reads published combos only. Generating
+  // from an unofficial row would put a swap on top of a swap, and every row on
+  // this page is one step from something Spellbook published.
+  function standInRows(dataset, standIns, deckNames, deckEntries) {
     const combos = (dataset && dataset.combos) || [];
     if (!Array.isArray(standIns) || !deckNames || !combos.length) return [];
+    const templateNames = Object.assign(
+      {},
+      (dataset && dataset.unresolvable) || {},
+      (dataset && dataset.templates) || {}
+    );
     const best = new Map();
 
     for (const rule of standIns || []) {
@@ -647,6 +656,12 @@
       // The whole rule is about a card being in the deck. Checked before the
       // combo list is walked, so a deck that does not run it pays nothing.
       if (!inKey || !deckNames.has(inKey)) continue;
+
+      // The stand-in is going into the combo by name, so it is not also available
+      // to fill one of that combo's slots — that would be the same card twice.
+      const others = new Set(deckNames);
+      others.delete(inKey);
+      const byTemplate = deckTemplateIndex(dataset, others, deckEntries);
 
       // Order is preference, not just membership: the first source listed is the
       // one whose text matches most closely, and a row cites the best source it
@@ -663,7 +678,6 @@
       // map/filter/every: almost every combo fails on its first or second name,
       // and the arrays those would allocate are the whole cost.
       for (const combo of combos) {
-        if (combo.t && combo.t.length) continue;
         const names = combo.c || [];
         let outKey = null;
         let hits = 0;
@@ -675,6 +689,11 @@
           if (!deckNames.has(key)) { ok = false; break; }
         }
         if (!ok || hits !== 1) continue;
+
+        // Left until last: the cheap name checks throw out all but a handful of
+        // combos, and this is the only part that allocates.
+        const fills = combo.t ? fillTemplates(combo, byTemplate, templateNames) : [];
+        if (!fills) continue;
 
         const cards = names.filter((name) => nameKey(name) !== outKey).concat(rule.card);
         const key = cards.map(nameKey).sort().join('|');
@@ -695,6 +714,9 @@
             // of them produces the same list with the other; inventing an extra
             // line here would be a claim the source combo never made.
             produces: (combo.p || []).slice(),
+            // Which of your cards was credited with each of the source combo's
+            // slots, so the page can show it rather than asking for trust.
+            fills: fills.length ? fills : undefined,
             // So the page, the tests and the audit can all tell a row that was
             // reasoned about from a row that was worked out.
             standIn: true,

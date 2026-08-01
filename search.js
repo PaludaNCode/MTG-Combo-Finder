@@ -218,7 +218,7 @@
       unofficial: DeckCombos.matchUnofficial(
         data,
         ((Unofficial && Unofficial.COMBOS) || []).concat(
-          DeckCombos.standInRows(data, (Unofficial && Unofficial.STAND_INS) || [], deckNames)
+          DeckCombos.standInRows(data, (Unofficial && Unofficial.STAND_INS) || [], deckNames, entries)
         ),
         deckNames,
         matched.included
