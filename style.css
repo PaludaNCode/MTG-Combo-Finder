@@ -765,6 +765,13 @@ button:disabled { opacity: .6; cursor: wait; }
 .combo-map .node { cursor: pointer; }
 .combo-map .node:hover .dot { fill: var(--text); }
 
+/* A label the layout could find no room for. Hidden rather than shrunk or moved
+   somewhere misleading — a name drawn nearer another dot than its own is worse
+   than no name — and shown again the moment its card is picked out. */
+.combo-map .label.is-crowded { opacity: 0; }
+.combo-map .node:hover .label.is-crowded,
+.combo-map .node.is-lit .label.is-crowded { opacity: 1; }
+
 /* One card picked out, and everything it does not touch pushed back. Dimming the
    rest rather than hiding it keeps the shape of the map while you read a corner
    of it. */
@@ -971,6 +978,12 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   .why { margin-left: 0; }
   ul.why { padding-left: .9rem; }
   .sug-head { row-gap: .2rem; }
+  /* The map is scaled to the column, and a 900-unit canvas in a 330px one is a
+     third of full size — 11px type lands at 4px. Bumping it in the SVG's own
+     units buys back most of that. It is still a picture of the deck's shape
+     rather than something to read here; the panels above are the readable
+     version, and the labels come back at any real width. */
+  .combo-map .label { font-size: 20px; }
   h1 { font-size: 1.45rem; }
   #find-combos { padding: .8rem; } /* easier to hit with a thumb */
 }

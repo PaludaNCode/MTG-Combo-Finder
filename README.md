@@ -691,26 +691,65 @@ two unconnected clusters does not simply push them off the canvas.
 turns combos into `{nodes, links}` and `layout()` places them; neither knows what
 SVG is. That is what makes the interesting half testable in node, where there is
 nothing to look at: `test/graph.test.js` asserts that nodes land inside the
-canvas, that nothing is drawn on top of anything else, that an unconnected
-cluster is still on screen, that the card nearest each one is a card it combos
-with, and that two identical searches draw identical pictures. The layout test
+canvas, that no two dots overlap *given how big they are drawn*, that no label is
+drawn over a dot or another label, that a crowded map drops names rather than
+piling them up and keeps the busiest card's, that an unconnected cluster is still
+on screen, that the card nearest each one is a card it combos with, and that two
+identical searches draw identical pictures. The layout test
 then presses the real page: the map renders at every viewport, in three colours,
 scales with its column, dims on hover, and **grows a card when + Add to deck is
 pressed** — a picture one search behind the list beside it would be worse than no
 picture at all.
 
-**Sixty cards, then it stops.** Past that the labels collide faster than the
-layout can separate them, and the repulsion pass is O(n²) per iteration. The
+### What a real deck does to it
+
+The first list this was tried against was a 91-card Abzan aristocrats deck, and
+it drew **28 cards and 114 lines** — four times the density the first version had
+been built against, and it broke three things at once. All three fixes are about
+crowding, and none of them is visible on a small deck:
+
+**Dots landed on top of each other.** The force run is about structure and knows
+nothing about how big anything is drawn, so it happily settled two 20px dots 6px
+apart — one blob, reading as one card. A separation pass now pushes overlapping
+dots apart along the line between them, a few rounds until nothing overlaps, and
+because that pulls the picture in from the edges it was scaled out to, the fit is
+run once more afterwards. That second fit can only ever scale *up*, so it cannot
+reintroduce an overlap.
+
+**The canvas is sized for the deck**, from 760×440 up to 900×760. The dots and the
+type are a fixed size in those coordinates, so a bigger canvas is a relatively
+smaller dot and more room for names — on that deck it took the labels that could
+not be placed from 10 to 6. It costs nothing on screen, because the SVG is scaled
+to its column either way: a bigger canvas is a taller panel, not a smaller
+picture.
+
+**Labels were drawn across other cards' dots**, which is worse than no label —
+a name over a dot belongs, to the eye, to that dot. Every dot is now occupied
+ground before a single label is placed, each name is tried in six positions
+(under, over, either side, then a line further out), taken in order of dot size,
+and dropped if none of them is free. A dropped name is still there on hover,
+which is one label rather than forty.
+
+That last one had a wrong first version worth recording: with only *two*
+positions to try — under and over — the cards losing their names were the ones in
+the middle of the deck's engine, because a central dot is ringed by other dots.
+Measured on the same deck, the dropped labels had a *larger* average dot than the
+kept ones: precisely backwards. Sideways is where the room is in a crowd, and
+with six positions the deck drew 22 of its 28 names, the busiest included.
+
+**Sixty cards, then it stops.** Past that the labels collide faster than any of
+this can separate them, and the repulsion pass is O(n²) per iteration. The
 busiest cards are kept and the panel says how many were left out, rather than
 quietly drawing a smaller deck than the one it was given.
 
-**What it does not do yet.** Labels on adjacent dots can still overlap — the halo
-behind them keeps each readable over the lines, but not over each other, and
-nothing here does label collision avoidance. There is no dragging, no zoom, and
-no click-through to a card. And the map is one image to a screen reader, with a
-one-line description: everything on it is written out in words in the panels
-above, which is the better read anyway, so the alternative was forty unlabelled
-shapes in the tab order.
+**What it does not do yet.** There is no dragging, no zoom, and no click-through
+to a card. On a phone the map is a shape rather than something to read: a
+900-unit canvas scaled into a 330px column puts 11px type at 4px, and while the
+labels are drawn larger at that width, the honest answer is that the panels above
+are the readable version there. The map is also one image to a screen reader,
+with a one-line description — everything on it is written out in words above,
+which is the better read anyway, so the alternative was forty unlabelled shapes
+in the tab order.
 
 ## Adding a card, and searching again
 

@@ -1,7 +1,9 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { build, layout, DEFAULT_WIDTH, DEFAULT_HEIGHT } = require('../graph.js');
+const {
+  build, layout, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+} = require('../graph.js');
 const { comboPieces } = require('../combos.js');
 
 // The combo map. Two halves worth pinning separately: what the graph *says* —
@@ -163,7 +165,32 @@ const grid = () => {
   return build(variants);
 };
 
-const placed = (graph) => layout(graph, { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+// A knot, in the shape a real Commander deck produces: a core of cards that all
+// combo with each other, a fringe hanging off it, and far more lines than cards.
+// The first real list this was tried against drew 28 cards and 114 lines, and
+// everything about crowding — dots on dots, labels on labels — only shows up at
+// that density.
+const dense = () => {
+  const core = ['Scurry Oak', 'Heliod, Sun-Crowned', 'Archangel of Thune', 'Basking Broodscale',
+    'Ashnod\'s Altar', 'Herd Baloth', 'Essence Warden', 'Soul Warden'];
+  const variants = [];
+  for (let i = 0; i < core.length; i++) {
+    for (let j = i + 1; j < core.length; j++) {
+      variants.push(combo([core[i], core[j]], i % 3 ? ['Infinite damage'] : ['Win the game']));
+    }
+  }
+  // Named the length real cards are named: a label is much wider than the dot it
+  // belongs to, so "Fringe 3" would prove nothing about crowding.
+  for (let i = 0; i < 12; i++) variants.push(combo([core[i % core.length], 'Prosperous Innkeeper ' + i]));
+  return build(variants);
+};
+
+const placed = (graph, size) => layout(graph, size || { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+// The dense fixture on the canvas the page would give it.
+const placedDense = () => {
+  const graph = dense();
+  return placed(graph, sizeFor(graph.nodes.length));
+};
 
 test('layout: every node lands inside the canvas', () => {
   const graph = placed(grid());
@@ -184,13 +211,17 @@ test('layout: an unconnected cluster is still on the canvas', () => {
   }
 });
 
-test('layout: nothing lands on top of anything else', () => {
-  const graph = placed(grid());
+// Measured against how big the dots actually are, not against a flat distance:
+// the force run knows about structure and nothing about size, so on a dense deck
+// it will happily settle two 20px dots 6px apart and draw them as one blob.
+test('layout: no two dots overlap, however dense the deck', () => {
+  const graph = placedDense();
   for (let i = 0; i < graph.nodes.length; i++) {
     for (let j = i + 1; j < graph.nodes.length; j++) {
       const a = graph.nodes[i];
       const b = graph.nodes[j];
-      assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 8, `${a.name} sits on ${b.name}`);
+      const gap = Math.hypot(a.x - b.x, a.y - b.y) - a.r - b.r;
+      assert.ok(gap > 0, `${a.name} and ${b.name} overlap by ${(-gap).toFixed(1)}px`);
     }
   }
 });
@@ -240,6 +271,123 @@ test('layout: an empty graph is left alone', () => {
 // renderer reading them back would be reading someone else's scratch paper.
 test('layout: no working state is left on the nodes', () => {
   for (const node of placed(grid()).nodes) {
-    assert.deepStrictEqual(Object.keys(node).sort(), ['combos', 'id', 'name', 'x', 'y']);
+    assert.deepStrictEqual(Object.keys(node).sort(),
+      ['combos', 'id', 'label', 'labelAnchor', 'labelDx', 'labelDy', 'name', 'r', 'x', 'y']);
+  }
+});
+
+// ---- how big a card is drawn ------------------------------------------------
+
+test('build: a card in more combos is drawn bigger, by area', () => {
+  const graph = build([
+    combo(['Hub', 'A']), combo(['Hub', 'B']), combo(['Hub', 'C']), combo(['Hub', 'D']),
+  ]);
+  const hub = graph.nodes[0];
+  const spoke = graph.nodes[1];
+  assert.strictEqual(hub.combos, 4);
+  assert.ok(hub.r > spoke.r, 'the busiest card is not drawn bigger');
+  // Four combos against one is twice the radius at most, not four times: the
+  // count is an area, or one card swamps the picture.
+  assert.ok(hub.r < spoke.r * 2.5, `a 4-combo dot is ${(hub.r / spoke.r).toFixed(1)}× a 1-combo one`);
+});
+
+test('sizeFor: the canvas grows with the deck and then stops', () => {
+  const small = sizeFor(8);
+  const mid = sizeFor(28);
+  const huge = sizeFor(200);
+  assert.deepStrictEqual(small, { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+  assert.ok(mid.width > small.width && mid.height > small.height);
+  assert.ok(huge.width <= 900 && huge.height <= 760);
+  assert.deepStrictEqual(sizeFor(0), small); // nothing to draw is still a canvas
+});
+
+// ---- labels ------------------------------------------------------------------
+
+// The box a placed label occupies, reconstructed the way graph.js reckons it:
+// 5.6px a character at 11px, 9px of it above the baseline and 3px below.
+const labelBox = (node) => {
+  const width = node.label.length * 5.6;
+  const x = node.x + node.labelDx;
+  const left = node.labelAnchor === 'start' ? x
+    : (node.labelAnchor === 'end' ? x - width : x - width / 2);
+  return { left, right: left + width, top: node.y + node.labelDy - 9, bottom: node.y + node.labelDy + 3 };
+};
+const hits = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+test('layout: a long card name is clipped, and keeps its full name to hand', () => {
+  const graph = placed(build([combo(['Chatterfang, Squirrel General', 'Ashnod\'s Altar'])]));
+  const long = graph.nodes.find((n) => n.name.startsWith('Chatterfang'));
+  assert.ok(long.label.length <= 18, `label is ${long.label.length} characters`);
+  assert.ok(long.label.endsWith('…'));
+  assert.strictEqual(long.name, 'Chatterfang, Squirrel General');
+});
+
+// The failure this was written against: names drawn across dots that are not
+// theirs. A label over another card's dot belongs, to the eye, to that card.
+test('layout: no label is drawn over a dot', () => {
+  const graph = placedDense();
+  const shown = graph.nodes.filter((n) => n.labelDy != null);
+  for (const node of shown) {
+    const box = labelBox(node);
+    for (const other of graph.nodes) {
+      const dot = {
+        left: other.x - other.r, right: other.x + other.r,
+        top: other.y - other.r, bottom: other.y + other.r,
+      };
+      assert.ok(!hits(box, dot), `"${node.label}" is drawn across ${other.name}'s dot`);
+    }
+  }
+});
+
+test('layout: no two labels are drawn on top of each other', () => {
+  const graph = placedDense();
+  const shown = graph.nodes.filter((n) => n.labelDy != null).map(labelBox);
+  for (let i = 0; i < shown.length; i++) {
+    for (let j = i + 1; j < shown.length; j++) {
+      assert.ok(!hits(shown[i], shown[j]), 'two labels overlap');
+    }
+  }
+});
+
+// The trade that makes the two assertions above possible: where there is
+// genuinely no room a name is dropped rather than drawn somewhere it would be
+// read as another card's. Forced with a canvas far too small for the graph,
+// which is the same crowding a real 28-card map produces at full size — and
+// deterministic, where waiting for a fixture to happen to collide is not.
+test('layout: with no room the quiet cards lose their labels, not the busy ones', () => {
+  const graph = placed(dense(), { width: 400, height: 300 });
+  const dropped = graph.nodes.filter((n) => n.labelDy == null);
+  assert.ok(dropped.length, 'nothing was dropped on a canvas with no room, so the fallback is untested');
+  // The busiest card keeps its name: those are the ones worth reading without
+  // being asked for.
+  assert.notStrictEqual(graph.nodes[0].labelDy, null, `${graph.nodes[0].name} lost its label`);
+  // And every dropped one still carries the text, for the hover to show.
+  assert.ok(dropped.every((n) => n.label));
+  // Whatever did survive is still placed cleanly.
+  const shown = graph.nodes.filter((n) => n.labelDy != null).map(labelBox);
+  for (let i = 0; i < shown.length; i++) {
+    for (let j = i + 1; j < shown.length; j++) {
+      assert.ok(!hits(shown[i], shown[j]), 'two labels overlap on the crowded canvas');
+    }
+  }
+});
+
+test('layout: a card with room keeps its label centred below the dot', () => {
+  const graph = placed(build([combo(['A', 'B'])]));
+  assert.ok(graph.nodes.every((n) => n.labelDy > 0), 'a label went above a dot with room below it');
+  assert.ok(graph.nodes.every((n) => n.labelDx === 0 && n.labelAnchor === 'middle'));
+});
+
+// Sideways is where the room is in a crowd, and it is the placement that keeps
+// the cards in the middle of a busy deck named — those being the ones a reader
+// most wants named.
+test('layout: a crowded label goes beside its dot rather than being dropped', () => {
+  const graph = placed(dense(), { width: 400, height: 300 });
+  const beside = graph.nodes.filter((n) => n.labelAnchor !== 'middle');
+  assert.ok(beside.length, 'nothing was placed beside a dot, so the sideways options are untested');
+  for (const node of beside) {
+    // Growing away from the dot, not back through it.
+    if (node.labelAnchor === 'start') assert.ok(node.labelDx > 0);
+    else assert.ok(node.labelDx < 0);
   }
 });

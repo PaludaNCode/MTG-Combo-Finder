@@ -687,10 +687,6 @@
   // from nowhere but itself, so a library would have to be vendored into the
   // repository, and this is ~60 lines.
   const SVG_NS = 'http://www.w3.org/2000/svg';
-  const MAP_SIZE = { width: ComboGraph.DEFAULT_WIDTH, height: ComboGraph.DEFAULT_HEIGHT };
-  // Long names are clipped rather than wrapped — a second line per label turns a
-  // busy map into a wall of text — and the whole name stays in the node's title.
-  const LABEL_MAX = 18;
 
   function svgEl(tag, className) {
     const node = document.createElementNS(SVG_NS, tag);
@@ -704,16 +700,21 @@
       return;
     }
     const graph = ComboGraph.build(included);
-    ComboGraph.layout(graph, MAP_SIZE);
+    // The canvas grows with the deck: 28 cards in the box that suits 8 is a knot.
+    // It is scaled to the column either way, so a bigger one is a taller panel
+    // rather than a smaller picture.
+    const size = ComboGraph.sizeFor(graph.nodes.length);
+    ComboGraph.layout(graph, size);
 
     const body = panel(container, 'graph', 'How your combos connect', graph.nodes.length);
     body.appendChild(el('p', 'empty',
       'A line joins two cards whenever one of your combos needs both, and takes the colour of the '
       + 'best result those combos produce. The bigger a dot, the more of your combos that card is in. '
-      + 'Hover a card to pick out what it touches — everything here is also written out in the panels above.'));
+      + 'Hover a card to name it and pick out what it touches — everything here is also written out '
+      + 'in the panels above.'));
 
     const svg = svgEl('svg', 'combo-map');
-    svg.setAttribute('viewBox', '0 0 ' + MAP_SIZE.width + ' ' + MAP_SIZE.height);
+    svg.setAttribute('viewBox', '0 0 ' + size.width + ' ' + size.height);
     // One image with one description, rather than 40 unlabelled shapes: a screen
     // reader gets the summary and then the panels above, which say all of this in
     // words and are the better read anyway.
@@ -756,19 +757,21 @@
     const groups = new Map();
     graph.nodes.forEach((node) => {
       const g = svgEl('g', 'node');
-      // Area with the count rather than radius, so a card in nine combos does not
-      // draw a blob eighty times the size of one in a single combo.
-      const r = 5 + 3 * Math.sqrt(node.combos - 1);
       const dot = svgEl('circle', 'dot');
       dot.setAttribute('cx', node.x);
       dot.setAttribute('cy', node.y);
-      dot.setAttribute('r', String(Math.round(r * 10) / 10));
-      const label = svgEl('text', 'label');
-      label.setAttribute('x', node.x);
-      label.setAttribute('y', node.y + r + 11);
-      label.textContent = node.name.length > LABEL_MAX
-        ? node.name.slice(0, LABEL_MAX - 1).trimEnd() + '…'
-        : node.name;
+      dot.setAttribute('r', String(node.r));
+      // Where the label goes — and whether there was room for one at all — is the
+      // layout's decision, since it is the half that knows what is next to what.
+      // A card whose label was dropped still names itself on hover, which is one
+      // label rather than forty.
+      const label = svgEl('text', node.labelDy == null ? 'label is-crowded' : 'label');
+      label.setAttribute('x', node.x + node.labelDx);
+      label.setAttribute('y', node.y + (node.labelDy == null ? node.r + 11 : node.labelDy));
+      // Centred is the stylesheet's default; a label placed beside its dot has to
+      // grow away from it rather than through it.
+      if (node.labelAnchor !== 'middle') label.setAttribute('text-anchor', node.labelAnchor);
+      label.textContent = node.label;
       const hint = svgEl('title');
       hint.textContent = node.name + ' — in ' + node.combos
         + ' combo' + (node.combos === 1 ? '' : 's');

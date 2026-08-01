@@ -31,6 +31,11 @@
   // quietly showing a smaller deck than the one it was given.
   const DEFAULT_LIMIT = 60;
 
+  // How big a dot is: the smallest one, and how fast it grows with the number of
+  // combos behind it.
+  const MIN_RADIUS = 5;
+  const RADIUS_SCALE = 3;
+
   function comboTier(variant) {
     const names = variant && variant.produces
       ? variant.produces.map((p) => (p.feature && p.feature.name) || p.name)
@@ -65,7 +70,7 @@
       for (const [key, name] of held) {
         let node = cards.get(key);
         if (!node) {
-          node = { id: key, name, combos: 0 };
+          node = { id: key, name, combos: 0, r: 0 };
           cards.set(key, node);
         }
         node.combos++;
@@ -89,6 +94,15 @@
           if (TIER_RANK[tier] < TIER_RANK[edge.tier]) edge.tier = tier;
         }
       }
+    }
+
+    // How big each card is drawn. Here rather than in the renderer because the
+    // layout has to know: two dots whose radii overlap are drawn as one blob,
+    // and the run that separates them cannot separate what it cannot measure.
+    // By area, not radius, so a card in nine combos is not eighty times the size
+    // of one in a single combo.
+    for (const node of cards.values()) {
+      node.r = Math.round((MIN_RADIUS + RADIUS_SCALE * Math.sqrt(node.combos - 1)) * 10) / 10;
     }
 
     // Busiest first, so the limit keeps the cards the deck is actually built
@@ -209,8 +223,159 @@
     }
 
     fit(nodes, width, height, padding);
+    separate(nodes, width, height, padding);
+    // Once more, because pushing overlapping dots apart pulls the picture in from
+    // the edges it was just scaled out to — and the second pass can only ever
+    // scale *up*: separate() clamps everything inside the box, so what comes back
+    // is never bigger than the box, and scaling up cannot make two dots overlap
+    // that did not already.
+    fit(nodes, width, height, padding);
+    placeLabels(nodes, o);
     for (const node of nodes) { delete node.vx; delete node.vy; }
     return graph;
+  }
+
+  // What a canvas has to be for this many cards. A real Commander deck produced
+  // 28 cards and 114 lines on the first list it was tried against, and 28 nodes
+  // in the box that suits 8 is a hairball: the force run settles into a knot in
+  // the middle and every label lands on another. Growing the box with the deck
+  // costs nothing on screen, because the SVG is scaled to the column either way
+  // — a taller viewBox is a taller panel, not a smaller picture.
+  // Growing it also buys labels: the dots and the type are a fixed size in these
+  // coordinates, so a bigger canvas is a *relatively* smaller dot, and fewer
+  // names have to be dropped for want of room. On the deck this was tuned
+  // against — 28 cards, 114 lines — going from 760×440 to 888×648 took the
+  // labels that could not be placed from 10 to 6. Past about there it stops
+  // paying: the picture is bound by its own proportions, not by the box.
+  function sizeFor(count) {
+    const n = Math.max(1, count || 0);
+    const over = Math.max(0, n - 12);
+    return {
+      width: Math.round(Math.min(900, DEFAULT_WIDTH + over * 8)),
+      height: Math.round(Math.min(760, DEFAULT_HEIGHT + over * 13)),
+    };
+  }
+
+  // Pushes overlapping dots apart. The force run above is about structure — what
+  // sits near what — and it has no notion of how big anything is drawn, so on a
+  // dense deck it happily settles two 14px dots 6px apart. A few rounds of "if
+  // these two are closer than they are wide, move both along the line between
+  // them" fixes that without disturbing the shape it worked out.
+  const SEPARATION_ROUNDS = 60;
+  // Breathing room between two dots, over and above their radii.
+  const NODE_GAP = 7;
+
+  function separate(nodes, width, height, padding) {
+    const n = nodes.length;
+    for (let round = 0; round < SEPARATION_ROUNDS; round++) {
+      let moved = false;
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const a = nodes[i];
+          const b = nodes[j];
+          const want = a.r + b.r + NODE_GAP;
+          let ox = a.x - b.x;
+          let oy = a.y - b.y;
+          let d = Math.sqrt(ox * ox + oy * oy);
+          if (d >= want) continue;
+          if (d < 0.01) { ox = 0.01; oy = (i % 2 ? 0.01 : -0.01); d = Math.sqrt(ox * ox + oy * oy); }
+          // Half the shortfall each, so neither card is privileged over the other.
+          const push = ((want - d) / d) * 0.5;
+          a.x += ox * push;
+          a.y += oy * push;
+          b.x -= ox * push;
+          b.y -= oy * push;
+          moved = true;
+        }
+      }
+      // Back inside the box afterwards rather than during: clamping a node mid-
+      // round can push it straight back into the one it was just moved off.
+      for (const node of nodes) {
+        node.x = Math.min(width - padding, Math.max(padding, node.x));
+        node.y = Math.min(height - padding, Math.max(padding, node.y));
+      }
+      if (!moved) break;
+    }
+    for (const node of nodes) {
+      node.x = Math.round(node.x * 100) / 100;
+      node.y = Math.round(node.y * 100) / 100;
+    }
+  }
+
+  // ---- labels --------------------------------------------------------------
+  //
+  // A label per dot is unreadable past about a dozen cards: they are wider than
+  // the dots they belong to, so on the deck this was tuned against half of them
+  // landed on each other and neither could be read. So each is placed if it
+  // fits and dropped if it does not, busiest card first — the cards worth naming
+  // on sight are the ones the deck is built around, and a dropped label is still
+  // there on hover, where it is one card rather than forty.
+  const LABEL_MAX_CHARS = 18;
+  // 11px system-ui, measured across the card names this draws. Approximate on
+  // purpose: the alternative is measuring text, which needs a DOM, which is the
+  // one thing this file does not have.
+  const CHAR_WIDTH = 5.6;
+  // A label's box around its baseline: how far the glyphs reach up, and how far
+  // the tails of a "g" reach down.
+  const LABEL_ASCENT = 9;
+  const LABEL_DESCENT = 3;
+
+  function placeLabels(nodes, o) {
+    const maxChars = o.labelMaxChars || LABEL_MAX_CHARS;
+    const charWidth = o.charWidth || CHAR_WIDTH;
+    // The dots are in the way too, and a name drawn across one belongs to
+    // whichever card the eye picks — which on a dense deck was most of them. So
+    // every dot is occupied ground before a single label is placed.
+    const taken = nodes.map((node) => ({
+      left: node.x - node.r, right: node.x + node.r,
+      top: node.y - node.r, bottom: node.y + node.r,
+    }));
+    // Biggest dot first, so a crowd of one-combo cards cannot crowd out the card
+    // holding six of them.
+    for (const node of [...nodes].sort((a, b) => b.r - a.r || a.name.localeCompare(b.name))) {
+      node.label = node.name.length > maxChars
+        ? node.name.slice(0, maxChars - 1).trimEnd() + '…'
+        : node.name;
+      const width = node.label.length * charWidth;
+      // Six places to try, in order of preference: under the dot, over it, out
+      // to either side, then a line further out top and bottom. Every offset
+      // clears the dot itself, or a label would always collide with the card it
+      // belongs to and none would ever be placed.
+      //
+      // Two positions were not enough. A card in the middle of a busy deck is
+      // ringed by other dots, so the cards whose names matter most were the ones
+      // most likely to lose them — measured on the tuning deck, the labels being
+      // dropped had a *larger* average dot than the ones being kept. Sideways is
+      // where the room is in a crowd.
+      const line = LABEL_ASCENT + LABEL_DESCENT + 2;
+      const options = [
+        { dx: 0, dy: node.r + LABEL_ASCENT + 2, anchor: 'middle' },
+        { dx: 0, dy: -(node.r + LABEL_DESCENT + 2), anchor: 'middle' },
+        { dx: node.r + 4, dy: LABEL_DESCENT, anchor: 'start' },
+        { dx: -(node.r + 4), dy: LABEL_DESCENT, anchor: 'end' },
+        { dx: 0, dy: node.r + LABEL_ASCENT + 2 + line, anchor: 'middle' },
+        { dx: 0, dy: -(node.r + LABEL_DESCENT + 2 + line), anchor: 'middle' },
+      ];
+      node.labelDx = 0;
+      node.labelDy = null;
+      node.labelAnchor = 'middle';
+      for (const at of options) {
+        const x = node.x + at.dx;
+        const left = at.anchor === 'start' ? x : (at.anchor === 'end' ? x - width : x - width / 2);
+        const box = {
+          left, right: left + width,
+          top: node.y + at.dy - LABEL_ASCENT, bottom: node.y + at.dy + LABEL_DESCENT,
+        };
+        const clash = taken.some((other) => box.left < other.right && box.right > other.left
+          && box.top < other.bottom && box.bottom > other.top);
+        if (clash) continue;
+        node.labelDx = at.dx;
+        node.labelDy = at.dy;
+        node.labelAnchor = at.anchor;
+        taken.push(box);
+        break;
+      }
+    }
   }
 
   // Scale and centre whatever the run settled on into the box, so a graph of
@@ -236,7 +401,7 @@
     }
   }
 
-  const api = { build, layout, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LIMIT };
+  const api = { build, layout, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LIMIT };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
