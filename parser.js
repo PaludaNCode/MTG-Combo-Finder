@@ -122,6 +122,58 @@
   // each card entry is { card, quantity } (the shape Commander Spellbook's
   // find-my-combos endpoint expects) and `skipped` lists what was dropped and
   // why, so the page can show it rather than silently losing lines.
+  // Where a new main-deck card should be written into a decklist someone is
+  // already holding.
+  //
+  // "+ Add to deck" used to append to the end of the box, which is right until the
+  // list ends in a section — and plenty do, because that is how the sites export
+  // them. A card appended after "Sideboard:" is parsed as a sideboard card, never
+  // enters the deck, and so comes straight back as a suggestion on the next search:
+  // the button looks like it did nothing. Appending after "Commander:" is quieter
+  // and worse, silently promoting whatever you added to the command zone.
+  //
+  // Returns the line index to insert before — the first line that switches the board
+  // away from the main deck, or the end if none does. Lives here rather than in the
+  // page because this is the same walk parseDecklist() does, and two notions of
+  // "where the main deck ends" would drift apart the first time a site invented a
+  // new heading.
+  function mainDeckInsertIndex(text) {
+    const lines = String(text || '').split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+      const trimmed = lines[i].trim();
+      if (!trimmed) continue;
+      const heading = normalizeHeading(trimmed);
+      if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
+        if (SECTION_TARGET[heading] !== 'main') return i;
+        continue;
+      }
+      if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) return i;
+    }
+    return lines.length;
+  }
+
+  // The decklist someone is holding, with one more card in its main deck. Trailing
+  // blank lines before a section are kept below the new card, so a list keeps the
+  // shape its owner gave it.
+  function addMainDeckCard(text, name, quantity) {
+    const lines = String(text || '').split(/\r?\n/);
+    const at = mainDeckInsertIndex(text);
+    const line = String(quantity || 1) + ' ' + name;
+
+    // Nothing but blank lines below the main deck — including an empty box — is an
+    // append, and appending must not leave the trailing newline the insert path would.
+    if (!lines.slice(at).some((l) => l.trim())) {
+      const body = lines.slice(0, at).join('\n').replace(/\s+$/, '');
+      return body ? body + '\n' + line : line;
+    }
+
+    // Otherwise the card goes above the section, and above the blank run separating
+    // them, so the list keeps the shape its owner gave it.
+    let end = at;
+    while (end > 0 && !lines[end - 1].trim()) end -= 1;
+    return lines.slice(0, end).concat(line, lines.slice(end)).join('\n');
+  }
+
   function parseDecklist(text) {
     const commanders = [];
     const main = [];
@@ -298,6 +350,7 @@
     parseDecklist, parseLine, fromMoxfield, fromArchidekt,
     parseDeckUrl, describeLoadFailure, SITES,
     normalizeHeading, isCategoryHeading, API_LIMITS,
+    mainDeckInsertIndex, addMainDeckCard,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

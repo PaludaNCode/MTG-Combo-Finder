@@ -283,9 +283,12 @@
     }
 
     // Written with a quantity, so the line reads like every other line in the box
-    // and survives being copied out of it.
-    const text = box.value.replace(/\s+$/, '');
-    box.value = (text ? text + '\n' : '') + '1 ' + name;
+    // and survives being copied out of it — and written into the *main deck*, which
+    // is not always the end of the box. A list ending in "Sideboard:" is how several
+    // sites export, and a card appended below that heading is parsed as a sideboard
+    // card: it never enters the deck, so the next search still suggests it and the
+    // button looks like it did nothing. DeckParser knows where the sections are.
+    box.value = DeckParser.addMainDeckCard(box.value, name, 1);
     saveDeck();
     addedNote = name;
     setStatus('Added ' + name + ' — searching again…');

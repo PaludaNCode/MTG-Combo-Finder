@@ -57,6 +57,8 @@ const VIEWPORTS = [
   // Also not a layout check: the theme control overriding the system, remembering
   // the answer, and carrying it to the second page.
   { name: 'theme toggle', width: 1440, height: 900, kind: 'theme' },
+  // Same page, same press, a decklist that ends in a section.
+  { name: 'desktop (sideboarded deck)', width: 1440, height: 900, deck: 'sideboarded' },
 ];
 
 function findBrowser() {
@@ -180,6 +182,12 @@ const TIERS_FIXTURE = {
 const DECKS = {
   marked: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*'].concat(REST).join('\n'),
   plain: ['1 Kinnan, Bonder Prodigy'].concat(REST).join('\n'),
+  // Ends in a sideboard, which is how several sites export a list — and the shape
+  // that broke "+ Add to deck": a card appended to the end of the box landed under
+  // the heading, parsed as a sideboard card, never entered the deck, and came back
+  // as a suggestion on the next search. The button appeared to do nothing.
+  sideboarded: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
+    .concat(REST, ['', 'Sideboard:', '1 Pithing Needle']).join('\n'),
 };
 
 // The page under test is loaded inside an iframe sized to each viewport.
@@ -768,7 +776,15 @@ function runOne(vp) {
           // The escape is doubled because this whole harness is a template literal
           // in tools/verify-layout.js: a lone \\n would become a real newline here
           // and break the string it sits in.
-          afterAdd.lastLine = doc.getElementById('decklist').value.trim().split('\\n').pop();
+          // Where the card actually landed, not merely that the box grew. "the last
+          // line" was the old check and it encoded the bug: a list ending in a
+          // sideboard section put the card under the heading, where it parses as a
+          // sideboard card and never enters the deck.
+          const box = doc.getElementById('decklist').value;
+          const lines = box.split('\\n').map(function (l) { return l.trim(); });
+          afterAdd.lastLine = lines.filter(Boolean).pop();
+          afterAdd.cardLine = lines.indexOf('1 ' + afterAdd.card);
+          afterAdd.sectionLine = lines.findIndex(function (l) { return /^side\\s*board/i.test(l); });
           afterAdd.status = doc.getElementById('status').textContent;
           afterAdd.combosAfter = now.included.badge;
           afterAdd.suggestionsAfter = now.tabs.length ? now.tabs[0].count : null;
@@ -1472,8 +1488,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!added.present) {
       problems.push('no suggestion offered a way to add the card');
     } else {
-      if (added.lastLine !== `1 ${added.card}`) {
-        problems.push(`Add to deck appended "${added.lastLine}", expected "1 ${added.card}"`);
+      if (added.cardLine === -1) {
+        problems.push(`Add to deck did not write "1 ${added.card}" into the box (last line "${added.lastLine}")`);
+      } else if (added.sectionLine !== -1 && added.cardLine > added.sectionLine) {
+        problems.push(`Add to deck put "${added.card}" below the sideboard heading, where it is not in the deck`);
       }
       if (!added.kept || !added.kept.includes(added.card)) {
         problems.push('an added card was not kept for the next visit');
