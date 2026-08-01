@@ -744,6 +744,60 @@
     return row;
   }
 
+  // How many of the cards they all combo with to name before the number speaks
+  // for itself.
+  const SHARED_NAMED = 3;
+
+  // What picking these cards out found, in a sentence. Every number in it is
+  // counted rather than estimated — see compare() in graph.js — and the last one
+  // is the one worth the feature: what cutting the lot would actually cost, which
+  // is not the sum of their combo counts, because a combo whose slot another of
+  // your cards can fill survives losing this one.
+  function pickedSentence(found) {
+    const names = found.cards;
+    const list = names.length === 1 ? names[0]
+      : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+    const plural = names.length > 2 ? 'all three' : 'both';
+
+    if (names.length === 1) {
+      const parts = [list + ' is in ' + found.inAll + ' of your combos'];
+      if (found.shared.length) {
+        parts.push('with ' + found.shared.length + ' other '
+          + (found.shared.length === 1 ? 'card' : 'cards'));
+      }
+      let text = parts.join(', ') + '. ';
+      text += found.lost
+        ? 'Cutting it would cost ' + found.lost + ' of them'
+          + (found.saved ? '; the other ' + found.saved + ' have a stand-in' : '')
+        : 'Cutting it costs nothing — every one of them has a stand-in in your deck';
+      return text + '. Pick another card to compare the two.';
+    }
+
+    const relation = [];
+    if (found.inAll) relation.push(found.inAll + ' need ' + plural);
+    if (found.interchangeable) {
+      relation.push(found.interchangeable + ' take any one of them in the same slot');
+    }
+    if (!relation.length) relation.push('no combo of yours needs them together or takes one for another');
+
+    // "3 of your combos need both, 4 take any one of them" — what the numbers
+    // count is said once, on the first of them, whichever that turns out to be.
+    let text = list + ': ' + relation.join(', ').replace(/^(\d+)/, '$1 of your combos') + '. ';
+    if (found.shared.length) {
+      const named = found.shared.slice(0, SHARED_NAMED).join(', ');
+      const more = found.shared.length - SHARED_NAMED;
+      text += (names.length > 2 ? 'All three' : 'Both') + ' combo with ' + named
+        + (more > 0 ? ' and ' + more + ' more' : '') + '. ';
+    }
+    text += found.lost
+      ? 'Cut ' + plural + ' and ' + found.lost + ' of the ' + found.atRisk
+        + ' combos they appear in would go'
+        + (found.saved ? '; the other ' + found.saved + ' have a stand-in' : '')
+      : 'Cut ' + plural + ' and none of the ' + found.atRisk
+        + ' combos they appear in would go — each has a stand-in in your deck';
+    return text + '.';
+  }
+
   function mapLegend() {
     const list = el('ul', 'map-legend');
     LEGEND.forEach((item) => {
@@ -788,18 +842,22 @@
       + 'result those combos produce — or when they do the same job: a dashed line, meaning one can be '
       + 'swapped for the other and you still have a combo. Both carry the count, so cards that overlap '
       + 'a lot are drawn heavier and say by how much, and cards that stand in for each other end up '
-      + 'side by side. Hover one to name it and pick out what it touches.'));
+      + 'side by side. Hover a card to name it and pick out what it touches; press two or three to '
+      + 'compare them, and the line under the map says what they share and what cutting them costs.'));
 
     const svg = svgEl('svg', 'combo-map');
     svg.setAttribute('viewBox', '0 0 ' + size.width + ' ' + size.height);
-    // One image with one description, rather than 40 unlabelled shapes: a screen
-    // reader gets the summary and then the panels above, which say all of this in
-    // words and are the better read anyway.
-    svg.setAttribute('role', 'img');
-    const title = svgEl('title');
-    title.textContent = 'Combo map: ' + graph.nodes.length + ' cards, '
+    // A group of controls, not a picture: every card on it can be pressed to pin
+    // it, and a press changes what the page says. The label below is what a
+    // screen reader hears on the way in; the cards themselves are buttons, and
+    // the comparison they produce is announced.
+    svg.setAttribute('role', 'group');
+    const described = 'Combo map: ' + graph.nodes.length + ' cards, '
       + (graph.links.length - swaps) + ' pairs a combo needs together and '
       + swaps + ' pairs that can stand in for each other.';
+    svg.setAttribute('aria-label', described);
+    const title = svgEl('title');
+    title.textContent = described;
     svg.appendChild(title);
 
     // Interchangeable lines go in their own layer *above* the combo lines. They
@@ -816,9 +874,11 @@
     svg.appendChild(nodeLayer);
 
     const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-    // What each card touches, so hovering one can pick out its own corner of the
-    // map. Built once here rather than searched for on every pointer move.
-    const touching = new Map(graph.nodes.map((n) => [n.id, { nodes: new Set([n.id]), edges: [] }]));
+    // What each card touches, so picking one out is a lookup rather than a search
+    // of the DOM on every pointer move — and every line with both its ends, for
+    // the same reason.
+    const touching = new Map(graph.nodes.map((n) => [n.id, { nodes: new Set([n.id]) }]));
+    const drawn = [];
 
     graph.links.forEach((linkData) => {
       const a = byId.get(linkData.source);
@@ -860,17 +920,28 @@
         countLayer.appendChild(count);
       }
 
+      // Both ends kept on the line itself, so lighting a comparison can ask "is
+      // this line between two of the picked cards" without searching the DOM.
+      drawn.push({ a: a.id, b: b.id, parts: count ? [line, count] : [line] });
+
       [[a, b], [b, a]].forEach(([from, to]) => {
         const near = touching.get(from.id);
         near.nodes.add(to.id);
-        near.edges.push(line);
-        if (count) near.edges.push(count);
       });
     });
 
     const groups = new Map();
     graph.nodes.forEach((node) => {
       const g = svgEl('g', 'node');
+      // A card on this map is something you press: pressing it pins the card so
+      // two or three can be compared, which is a button whatever it is drawn as.
+      // So it is one — focusable, named, and reporting whether it is pinned —
+      // rather than a shape a mouse happens to be able to hit.
+      g.setAttribute('role', 'button');
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('aria-pressed', 'false');
+      g.setAttribute('aria-label', node.name + ', in ' + node.combos
+        + ' combo' + (node.combos === 1 ? '' : 's') + '. Pick to compare.');
       const dot = svgEl('circle', 'dot');
       dot.setAttribute('cx', node.x);
       dot.setAttribute('cy', node.y);
@@ -896,40 +967,116 @@
       groups.set(node.id, g);
     });
 
+    // ---- picking cards out ----
+    //
     // Lighting up one card dims the rest, which is the only way to read a map
     // this dense: "what is Basalt Monolith actually in" is a question the picture
     // cannot answer while every line is drawn at the same weight.
+    //
+    // Hovering asks that about one card. Pressing cards *pins* two or three, and
+    // then the question is a different one — these look like the same effect,
+    // which do I keep? — so what lights is what they have in common: the lines
+    // between them, and the cards every one of them combos with. Everything else
+    // goes quiet, and the line under the map counts it out.
+    const picked = [];
     const lit = [];
+    const summary = el('p', 'map-picked');
+    // The comparison is the answer to a press, and a press has to say what it did
+    // to someone who cannot see the map light up.
+    summary.setAttribute('role', 'status');
+
     const clear = () => {
       svg.classList.remove('is-lit');
       lit.forEach((node) => node.classList.remove('is-lit'));
       lit.length = 0;
     };
-    const light = (id) => {
+
+    // ids: the cards to light. One of them lights everything it touches; several
+    // light only what they have in common.
+    const light = (ids) => {
       clear();
-      const near = touching.get(id);
-      if (!near) return;
+      if (!ids.length) return;
+      const chosen = new Set(ids);
+      const near = ids.map((id) => (touching.get(id) || { nodes: new Set() }).nodes);
+      const shared = ids.length === 1
+        ? [...near[0]]
+        : [...near[0]].filter((id) => !chosen.has(id) && near.every((set) => set.has(id)));
+      const on = new Set([...ids, ...shared]);
       svg.classList.add('is-lit');
-      near.nodes.forEach((other) => {
-        const g = groups.get(other);
+      on.forEach((id) => {
+        const g = groups.get(id);
         if (g) { g.classList.add('is-lit'); lit.push(g); }
       });
-      near.edges.forEach((line) => { line.classList.add('is-lit'); lit.push(line); });
+      // A line counts when it joins two lit cards and at least one of them was
+      // picked: between two shared partners is a relation of theirs, not of the
+      // comparison.
+      drawn.forEach((line) => {
+        if (!on.has(line.a) || !on.has(line.b)) return;
+        if (!chosen.has(line.a) && !chosen.has(line.b)) return;
+        line.parts.forEach((part) => { part.classList.add('is-lit'); lit.push(part); });
+      });
     };
-    groups.forEach((g, id) => {
-      g.addEventListener('pointerenter', () => light(id));
-      // Touch has no hover, so a tap lights a card and a tap anywhere else on the
-      // map puts it out again.
-      g.addEventListener('click', () => light(id));
-    });
-    svg.addEventListener('pointerleave', clear);
 
-    // Built after the SVG because both of these describe it — the filter drives
-    // it, and the legend is drawn with the same classes the map is, so it cannot
-    // describe a line the map no longer has. Inserted above it all the same.
+    const describe = () => {
+      summary.textContent = picked.length ? pickedSentence(ComboGraph.compare(graph, picked)) : '';
+      summary.classList.toggle('is-empty', !picked.length);
+      groups.forEach((g, id) => g.setAttribute('aria-pressed', String(picked.includes(id))));
+    };
+
+    // What is on screen when nothing is being hovered: the pinned cards, or
+    // nothing at all.
+    const rest = () => light(picked);
+
+    const toggle = (id) => {
+      const at = picked.indexOf(id);
+      if (at === -1) picked.push(id);
+      else picked.splice(at, 1);
+      groups.forEach((g, other) => g.classList.toggle('is-picked', picked.includes(other)));
+      describe();
+      rest();
+    };
+
+    groups.forEach((g, id) => {
+      // Hovering is a look, pressing is a decision: a hover previews one card and
+      // is undone the moment the pointer leaves, and it leaves the pinned
+      // selection alone underneath.
+      g.addEventListener('pointerenter', () => light([id]));
+      g.addEventListener('click', () => toggle(id));
+      g.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault(); // Space scrolls the page otherwise
+        toggle(id);
+      });
+      g.addEventListener('focus', () => light(picked.includes(id) ? picked : [id]));
+      g.addEventListener('blur', rest);
+    });
+    svg.addEventListener('pointerleave', rest);
+
+    const clearPicked = () => {
+      if (!picked.length) return;
+      picked.length = 0;
+      groups.forEach((g) => g.classList.remove('is-picked'));
+      describe();
+      rest();
+    };
+    // A press on the background is how every other selection on a screen is
+    // undone, and Escape is how a keyboard does it.
+    svg.addEventListener('click', (e) => {
+      if (!e.target.closest('.node')) clearPicked();
+    });
+    svg.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') clearPicked();
+    });
+
+    // Built after the SVG because all three describe it — the filter drives it,
+    // the legend is drawn with the same classes the map is so it cannot describe
+    // a line the map no longer has, and the summary answers a press. Inserted
+    // around it all the same.
     body.appendChild(mapFilter(svg));
     body.appendChild(mapLegend());
     body.appendChild(svg);
+    describe();
+    body.appendChild(summary);
 
     if (graph.omitted) {
       body.appendChild(el('p', 'note',

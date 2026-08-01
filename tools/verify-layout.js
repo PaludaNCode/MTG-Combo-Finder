@@ -526,7 +526,43 @@ function measure(win, doc) {
     }
     if (chip('all')) chip('all').click();
 
+    // Picking two cards out. The whole feature is that the answer is about the
+    // *pair* — what they share and what cutting them costs — so what is read back
+    // is the sentence under the map and which cards are left lit.
+    const picked = (() => {
+      const line = doc.querySelector('#graph .map-picked');
+      const empty = line ? line.textContent : null;
+      const cards = [...svg.querySelectorAll('.node')];
+      if (!line || cards.length < 2) return null;
+      cards[0].dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+      const one = line.textContent;
+      cards[1].dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+      const two = line.textContent;
+      const state = {
+        empty,
+        one,
+        two,
+        // Pinned cards stay lit with the pointer elsewhere — a selection is a
+        // decision and a hover is a look.
+        ringed: svg.querySelectorAll('.node.is-picked').length,
+        pressed: cards[0].getAttribute('aria-pressed'),
+        litNodes: svg.querySelectorAll('.node.is-lit').length,
+        focusable: cards[0].getAttribute('tabindex'),
+        named: cards[0].getAttribute('aria-label') || '',
+        role: cards[0].getAttribute('role'),
+        live: line.getAttribute('role'),
+      };
+      // Pressing the same card again unpicks it, and the background clears.
+      cards[1].dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+      state.afterSecondPress = svg.querySelectorAll('.node.is-picked').length;
+      svg.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+      state.afterBackground = svg.querySelectorAll('.node.is-picked').length;
+      state.cleared = line.textContent;
+      return state;
+    })();
+
     return {
+      picked,
       dots,
       width: Math.round(svg.getBoundingClientRect().width),
       viewBox: [box.width, box.height],
@@ -1709,7 +1745,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       problems.push('the combo map did not render');
     } else {
       const m = v.map;
-      if (m.role !== 'img' || !/\d+ cards, \d+ pairs .* and \d+ pairs /.test(m.described)) {
+      if (m.role !== 'group' || !/\d+ cards, \d+ pairs .* and \d+ pairs /.test(m.described)) {
         problems.push(`the map is not described to a screen reader: "${m.described}"`);
       }
       if (m.dots.length < 5) problems.push(`the map drew only ${m.dots.length} cards`);
@@ -1744,6 +1780,42 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (m.filtered.swap.pressed !== 'true') problems.push('the filter does not report which view is on');
       if (m.filtered.swap.moved || m.filtered.combo.moved) {
         problems.push('filtering the lines moved the cards');
+      }
+      // Picking two cards out and comparing them. Every number in that sentence
+      // is counted from the combos, and the sentence is the only place they are
+      // said — so a press that changes nothing, or says nothing, is the failure.
+      if (!m.picked) {
+        problems.push('the map has nothing to pick out, or nowhere to say what was picked');
+      } else {
+        const p = m.picked;
+        if (p.role !== 'button' || p.focusable !== '0') {
+          problems.push(`a card on the map is a ${p.role || 'shape'}, not a button`);
+        }
+        if (!/in \d+ combos?\. Pick to compare\.$/.test(p.named)) {
+          problems.push(`a card's spoken name reads "${p.named}"`);
+        }
+        if (p.live !== 'status') problems.push('the comparison is not announced when it changes');
+        if (!/Press a card/i.test(p.empty || '') && p.empty) {
+          problems.push(`the comparison line starts with "${p.empty}"`);
+        }
+        if (!/is in \d+ of your combos/.test(p.one)) {
+          problems.push(`picking one card said "${p.one}"`);
+        }
+        // The two-card sentence has to be about the pair, and has to carry the
+        // cost of cutting them — the number nothing else on the page says.
+        if (!/\+|,| and /.test(p.two) || !/combos they appear in/.test(p.two)) {
+          problems.push(`picking two cards said "${p.two}"`);
+        }
+        if (p.ringed !== 2) problems.push(`${p.ringed} cards are ringed after picking two`);
+        if (p.pressed !== 'true') problems.push('a picked card does not report itself as pressed');
+        if (p.litNodes < 2) problems.push(`only ${p.litNodes} cards stayed lit for the comparison`);
+        if (p.afterSecondPress !== 1) {
+          problems.push(`pressing a picked card again left ${p.afterSecondPress} picked`);
+        }
+        if (p.afterBackground !== 0) problems.push('pressing the background did not clear the picks');
+        if (!/Press a card/i.test(p.cleared) && p.cleared) {
+          problems.push(`the comparison line was left reading "${p.cleared}"`);
+        }
       }
       // The fixture has a game-winning combo, a mana one and a plumbing one, so
       // all three tiers must be on the map and in three different colours — a
@@ -1851,7 +1923,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
         + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
-        + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}`;
+        + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
+        + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }

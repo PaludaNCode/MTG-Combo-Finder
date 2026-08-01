@@ -62,8 +62,12 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   still have a combo — so your four sacrifice outlets end up in one cluster
   instead of four corners. Both are drawn heavier the more they overlap and
   carry the count as a number, and three chips let you read either relation on
-  its own. Redrawn from scratch by every search, so **+ Add to deck** moves the
-  map too. See [The combo map](#the-combo-map).
+  its own. **Press two or three cards** and the map shows what they have in
+  common, with a line under it saying what cutting them would actually cost —
+  which is not the sum of their combo counts, because a combo whose slot another
+  of your cards can fill survives losing this one. Redrawn from scratch by every
+  search, so **+ Add to deck** moves the map too. See
+  [The combo map](#the-combo-map).
 - **Suggestions split by colour** — two tabs, *In your colours* and *Other
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
   tab rather than into the list. **Colours are read off the cards** — every card
@@ -670,7 +674,41 @@ and it is usually the thing you wanted to know before cutting anything.
 Hovering a card lights it, everything it touches and the lines between them, and
 pushes the rest back. On a deck with thirty combos in it that is the only way to
 read the thing — every line is drawn at the same weight until you ask about one
-card. On touch, where there is no hover, a tap does the same.
+card.
+
+### Picking two or three cards out
+
+Hovering asks *what is this card tangled up with*. The question after it is
+always about two or three at once — **these look like the same effect, which do I
+keep?** — and that one is not about any single line on the map.
+
+Pressing cards pins them. What lights is then what they have **in common**: the
+lines between them, and the cards every one of them combos with. Everything else
+goes quiet, and a line under the map counts it out:
+
+> **Carrion Feeder, Viscera Seer and Ashnod's Altar**: 3 of your combos take any
+> one of them in the same slot. All three combo with Cauldron Familiar, Herd
+> Baloth, Sadistic Glee and 2 more. Cut all three and 7 of the 17 combos they
+> appear in would go; the other 10 have a stand-in.
+
+That last number is the one worth the feature, and it is not the sum of anything
+on the card list. **Cutting a card does not cost you its combos when another card
+in your deck fills the same slot** — which is exactly what the interchangeable
+relation knows and a combo count does not. On the tuning deck, cutting *Essence
+Warden, Soul Warden and Prosperous Innkeeper* — 33 combos between them — costs
+nothing at all, because Lunarch Veteran, Elas il-Kor and Case of the Uneaten
+Feast cover every one. Cutting *Herd Baloth and Scurry Oak* costs 16 of 47.
+
+The arithmetic is `compare()` in `graph.js`, counted from the combos rather than
+from the graph: "how many combos need all three of these" is a question about
+combos, not about pairs. Pressing a pinned card again unpins it, pressing the
+background clears them, and Escape does too.
+
+**The cards are buttons.** A shape you press to change what the page says is a
+button whatever it is drawn as, so each one is focusable, carries its own name
+and combo count, reports whether it is pinned, and the comparison is announced
+when it changes. That is also why the map as a whole is a `group` and not an
+`img`: an image is not something you press.
 
 **Either question on its own.** Three chips above the map — *Both*, *Works
 together*, *Interchangeable* — hide one set of lines or the other. Nothing moves
@@ -764,7 +802,10 @@ that the biggest overlap keeps its number even in a knot, that nodes land inside
 the canvas, that no two dots overlap *given how big they are drawn*, that no
 label or number is drawn over a dot or over another one, that a crowded map drops
 names rather than piling them up, that an unconnected cluster is still on screen,
-and that two identical searches draw identical pictures. The layout test
+that two identical searches draw identical pictures, and — for the comparison
+behind picking cards out — that cutting a card with a stand-in costs nothing,
+that cutting every alternative costs the lot, and that a card filling a template
+slot is compared like any other. The layout test
 then presses the real page: the map renders at every viewport, in three colours,
 scales with its column, dims on hover, and **grows a card when + Add to deck is
 pressed** — a picture one search behind the list beside it would be worse than no
@@ -1160,7 +1201,10 @@ inside the layout runs, for the same reason:
   in a combo together and each complete two of the same ones, so the run asserts
   a dashed line joins them, that it carries its count as a real number placed on
   the line, and that pressing **Interchangeable** hides every solid line *without
-  moving a single card*.
+  moving a single card*. Picking cards out is pressed too: one card, then a
+  second, reading back the sentence each time, that both stay ringed and lit with
+  the pointer elsewhere, that the cards are real buttons with names, and that
+  pressing a pinned card again — or the background — puts it all back.
 
 Every one of those was confirmed by breaking the code and watching them fail.
 

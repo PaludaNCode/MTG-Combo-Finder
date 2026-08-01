@@ -64,13 +64,17 @@
   // and its Viscera Seer version into one row. A looser measure — how many
   // partners two cards happen to share — was tried on a real deck and produced
   // 302 pairs against this one's 48, most of them saying nothing.
-  function swapCounts(comboCards) {
+  // What a combo is besides one of its cards. Two cards under the same signature
+  // are the same combo with one card exchanged.
+  const signatureOf = (keys, key) => keys.filter((other) => other !== key).sort().join('+');
+
+  // signature -> every card that can occupy that slot. The one index behind both
+  // the swap counts and, later, what cutting a card would actually cost.
+  function signatureIndex(comboCards) {
     const bySignature = new Map();
     for (const keys of comboCards) {
       for (const key of keys) {
-        // What the combo is besides this card. Two cards under the same signature
-        // are the same combo with one card exchanged.
-        const signature = keys.filter((other) => other !== key).sort().join('+');
+        const signature = signatureOf(keys, key);
         let sharing = bySignature.get(signature);
         if (!sharing) {
           sharing = new Set();
@@ -79,6 +83,11 @@
         sharing.add(key);
       }
     }
+    return bySignature;
+  }
+
+  function swapCounts(comboCards) {
+    const bySignature = signatureIndex(comboCards);
     const counts = new Map();
     for (const sharing of bySignature.values()) {
       const swappable = [...sharing].sort();
@@ -196,7 +205,78 @@
         || a.source.localeCompare(b.source)
         || a.target.localeCompare(b.target));
 
-    return { nodes, links, omitted };
+    // The combos themselves, as lists of card keys, and what each key is called.
+    // Kept so compare() can answer questions the graph alone cannot — "how many
+    // combos need all three of these" is about combos, not about pairs — without
+    // the page having to hand the whole dataset back in.
+    const names = new Map([...cards.values()].map((node) => [node.id, node.name]));
+    return { nodes, links, omitted, combos: comboCards, names };
+  }
+
+  // ---- comparing a few cards ------------------------------------------------
+  //
+  // The map answers "what is this card tangled up with" by lighting one card at a
+  // time. The question after that one is always about two or three of them at
+  // once — these all look like the same effect, which do I keep? — and that is
+  // not a question about any single line on the map. It is about the combos
+  // behind them, so it is answered from the combos.
+  //
+  // keys: the cards picked out, as node ids.
+  // Returns, all of it counted rather than estimated:
+  //   inAll            combos that need every one of them
+  //   interchangeable  combos where any one of them could fill the same slot
+  //   shared           cards that combo with every one of them
+  //   atRisk           combos that use at least one of them
+  //   lost             how many of those would actually go if all were cut —
+  //                    a combo survives when every picked card in it has a
+  //                    stand-in still in the deck
+  function compare(graph, keys) {
+    const picked = (keys || []).filter((key) => (graph.names || new Map()).has(key));
+    const combos = (graph && graph.combos) || [];
+    const name = (key) => graph.names.get(key) || key;
+    const empty = {
+      cards: [], inAll: 0, interchangeable: 0, shared: [], atRisk: 0, lost: 0, saved: 0,
+    };
+    if (!picked.length) return empty;
+
+    const chosen = new Set(picked);
+    const bySignature = signatureIndex(combos);
+
+    const inAll = combos.filter((c) => picked.every((key) => c.includes(key))).length;
+
+    // A slot every one of them could fill. For two cards this is the same number
+    // the line between them carries; for three it is the size of the group they
+    // all belong to, which is the question "are these three the same card".
+    const interchangeable = picked.length < 2 ? 0
+      : [...bySignature.values()].filter((slot) => picked.every((key) => slot.has(key))).length;
+
+    // Cards that turn up in a combo with every one of the picked cards.
+    const partners = picked.map((key) => new Set(
+      combos.filter((c) => c.includes(key)).flatMap((c) => c.filter((other) => other !== key))
+    ));
+    const shared = [...(partners[0] || [])]
+      .filter((key) => !chosen.has(key) && partners.every((set) => set.has(key)))
+      .map(name)
+      .sort((a, b) => a.localeCompare(b));
+
+    // What cutting all of them would cost. A combo goes only if one of the picked
+    // cards in it has nothing left to fill its slot — which is exactly what the
+    // interchangeable relation is for, and the reason this is worth counting
+    // rather than reading off the combo counts.
+    const using = combos.filter((c) => c.some((key) => chosen.has(key)));
+    const lost = using.filter((c) => c.some((key) => chosen.has(key)
+      && ![...(bySignature.get(signatureOf(c, key)) || [])]
+        .some((standIn) => !chosen.has(standIn)))).length;
+
+    return {
+      cards: picked.map(name),
+      inAll,
+      interchangeable,
+      shared,
+      atRisk: using.length,
+      lost,
+      saved: using.length - lost,
+    };
   }
 
   // What one interchangeable combo is worth against one shared combo. Under 1
@@ -613,7 +693,9 @@
     }
   }
 
-  const api = { build, layout, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LIMIT };
+  const api = {
+    build, layout, compare, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LIMIT,
+  };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

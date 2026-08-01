@@ -161,8 +161,13 @@ test('build: past the limit the busiest cards are kept and the rest reported', (
 });
 
 test('build: nothing in, empty graph out', () => {
-  assert.deepStrictEqual(build([]), { nodes: [], links: [], omitted: 0 });
-  assert.deepStrictEqual(build(), { nodes: [], links: [], omitted: 0 });
+  for (const graph of [build([]), build()]) {
+    assert.deepStrictEqual(graph.nodes, []);
+    assert.deepStrictEqual(graph.links, []);
+    assert.strictEqual(graph.omitted, 0);
+    assert.deepStrictEqual(graph.combos, []);
+    assert.strictEqual(graph.names.size, 0);
+  }
 });
 
 // ---- where the layout puts it ----------------------------------------------
@@ -273,7 +278,9 @@ test('layout: a single card sits in the middle', () => {
 });
 
 test('layout: an empty graph is left alone', () => {
-  assert.deepStrictEqual(layout(build([])), { nodes: [], links: [], omitted: 0 });
+  const graph = layout(build([]));
+  assert.deepStrictEqual(graph.nodes, []);
+  assert.deepStrictEqual(graph.links, []);
 });
 
 // The working values the run needs are not part of the answer, and an SVG
@@ -582,4 +589,97 @@ test('layout: a number never lands on a dot or a name', () => {
       assert.ok(!hits(box, other), `the number ${link.count} is drawn over something else`);
     }
   }
+});
+
+// ---- comparing two or three cards -------------------------------------------
+//
+// Picking one card out answers "what is this tangled up with". Picking two or
+// three answers the question after it — these look like the same effect, which
+// do I keep? — and that one is not about any line on the map. It is about the
+// combos behind them, and every number in the answer is counted.
+
+const { compare } = require('../graph.js');
+
+test('compare: two cards that stand in for each other', () => {
+  const found = compare(outlets(), ['carrion feeder', 'viscera seer']);
+  assert.deepStrictEqual(found.cards, ['Carrion Feeder', 'Viscera Seer']);
+  assert.strictEqual(found.inAll, 0); // no combo needs both
+  assert.strictEqual(found.interchangeable, 2); // either fills the same slot twice
+  assert.deepStrictEqual(found.shared, ['Heliod, Sun-Crowned', 'Scurry Oak']);
+});
+
+test('compare: two cards a combo needs together', () => {
+  const found = compare(build([
+    combo(['Basalt Monolith', 'Rings of Brighthearth']),
+    combo(['Basalt Monolith', 'Rings of Brighthearth', 'Walking Ballista'], ['Infinite damage']),
+  ]), ['basalt monolith', 'rings of brighthearth']);
+  assert.strictEqual(found.inAll, 2);
+  assert.strictEqual(found.interchangeable, 0);
+  assert.deepStrictEqual(found.shared, ['Walking Ballista']);
+});
+
+// The number the whole feature is for. Cutting a card does not cost you its
+// combos when another card in your deck fills the same slot — which is exactly
+// what the interchangeable relation knows and a combo count does not.
+test('compare: cutting a card with a stand-in costs nothing', () => {
+  const found = compare(outlets(), ['carrion feeder']);
+  assert.strictEqual(found.atRisk, 2, 'Carrion Feeder is in two combos');
+  assert.strictEqual(found.lost, 0, 'but either other outlet covers both');
+  assert.strictEqual(found.saved, 2);
+});
+
+test('compare: cutting two of three alternatives still costs nothing', () => {
+  const found = compare(outlets(), ['carrion feeder', 'viscera seer']);
+  assert.strictEqual(found.atRisk, 4);
+  assert.strictEqual(found.lost, 0, "Ashnod's Altar is still there for both combos");
+});
+
+// ...and cutting the whole group costs all of it, which is the answer that makes
+// the previous two worth printing.
+test('compare: cutting every alternative costs every combo', () => {
+  const found = compare(outlets(), ['carrion feeder', 'viscera seer', "ashnod's altar"]);
+  assert.strictEqual(found.atRisk, 6);
+  assert.strictEqual(found.lost, 6);
+  assert.strictEqual(found.saved, 0);
+  assert.strictEqual(found.interchangeable, 2, 'all three fill the same slot in both combos');
+});
+
+test('compare: a card with no stand-in takes its combos with it', () => {
+  const found = compare(outlets(), ['scurry oak']);
+  assert.strictEqual(found.atRisk, 3);
+  // Heliod fills the same role as Scurry Oak in each of the three combos, so
+  // this fixture's payoffs cover for each other too.
+  assert.strictEqual(found.lost, 0);
+  const alone = compare(build([combo(['Basalt Monolith', 'Rings of Brighthearth'])]), ['basalt monolith']);
+  assert.strictEqual(alone.atRisk, 1);
+  assert.strictEqual(alone.lost, 1, 'nothing else in the deck can be Basalt Monolith');
+});
+
+test('compare: three cards that all fill one slot', () => {
+  const found = compare(outlets(), ['carrion feeder', 'viscera seer', "ashnod's altar"]);
+  assert.strictEqual(found.cards.length, 3);
+  assert.strictEqual(found.inAll, 0);
+  assert.deepStrictEqual(found.shared, ['Heliod, Sun-Crowned', 'Scurry Oak']);
+});
+
+test('compare: nothing picked, nothing claimed', () => {
+  const found = compare(outlets(), []);
+  assert.deepStrictEqual(found.cards, []);
+  assert.strictEqual(found.atRisk, 0);
+  assert.strictEqual(found.lost, 0);
+  // A card that is not on the map cannot be compared with one that is.
+  assert.deepStrictEqual(compare(outlets(), ['sol ring']).cards, []);
+});
+
+// A card credited with a template slot is a card on the map, so it has to be
+// comparable like any other — the two panels must not disagree about what is in
+// a combo.
+test('compare: a card filling a template slot counts like any other', () => {
+  const graph = build([
+    combo(['Rings of Brighthearth'], ['Infinite damage'], { fills: [{ card: 'Walking Ballista' }] }),
+    combo(['Rings of Brighthearth', 'Basalt Monolith']),
+  ]);
+  const found = compare(graph, ['walking ballista', 'basalt monolith']);
+  assert.strictEqual(found.interchangeable, 1, 'either completes a Rings combo');
+  assert.deepStrictEqual(found.shared, ['Rings of Brighthearth']);
 });

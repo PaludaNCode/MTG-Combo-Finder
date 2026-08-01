@@ -729,7 +729,10 @@ button:disabled { opacity: .6; cursor: wait; }
   touch-action: manipulation;
 }
 
-.combo-map .edge {
+/* The legend draws its swatches with these same classes, so it cannot describe a
+   line the map does not have — which means the styling has to reach both. */
+.combo-map .edge,
+.map-legend .edge {
   stroke: var(--line-strong);
   stroke-linecap: round;
   opacity: .55;
@@ -737,8 +740,10 @@ button:disabled { opacity: .6; cursor: wait; }
 /* The three result tiers, the same three colours the chips use: an edge takes
    the best result of the combos behind it, so a green line is a pair of cards
    that wins on its own. */
-.combo-map .edge.tier-win { stroke: var(--ok); opacity: .75; }
-.combo-map .edge.tier-decisive { stroke: var(--decisive); opacity: .7; }
+.combo-map .edge.tier-win,
+.map-legend .edge.tier-win { stroke: var(--ok); opacity: .75; }
+.combo-map .edge.tier-decisive,
+.map-legend .edge.tier-decisive { stroke: var(--decisive); opacity: .7; }
 
 /* Interchangeable: these two are never in a combo together — one stands in for
    the other. Dashed rather than another colour, because it is a different *kind*
@@ -748,7 +753,8 @@ button:disabled { opacity: .6; cursor: wait; }
    Drawn at full strength while the combo lines sit at .55–.75: it is the newer
    and quieter signal, and on a busy deck there are three green lines for every
    dashed one. */
-.combo-map .edge.swap {
+.combo-map .edge.swap,
+.map-legend .edge.swap {
   stroke: var(--size);
   stroke-dasharray: 5 4;
   opacity: 1;
@@ -806,6 +812,24 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .combo-map .node { cursor: pointer; }
 .combo-map .node:hover .dot { fill: var(--text); }
+/* The cards are buttons, so a keyboard has to be able to see where it is. */
+.combo-map .node:focus { outline: none; }
+.combo-map .node:focus-visible .dot { stroke: var(--accent); stroke-width: 3; }
+
+/* Pinned for comparison. A ring rather than a fill change, because the fill is
+   already saying how many combos the card is in, and the ring survives the
+   dimming that everything unpicked gets. */
+.combo-map .node.is-picked .dot {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.combo-map .node.is-picked .label {
+  fill: var(--text);
+  opacity: 1;
+}
+/* A pinned card is never dimmed, even while the pointer is somewhere else: the
+   selection is a decision and a hover is a look. */
+.combo-map.is-lit .node.is-picked { opacity: 1; }
 
 /* A label the layout could find no room for. Hidden rather than shrunk or moved
    somewhere misleading — a name drawn nearer another dot than its own is worse
@@ -866,6 +890,27 @@ button:disabled { opacity: .6; cursor: wait; }
   border-color: var(--accent);
   font-weight: 600;
 }
+
+/* What the picked cards have in common, in words and numbers under the map.
+   Reserved height whether or not anything is picked, so pressing a card does not
+   shove the rest of the page down — the map is a thing you press repeatedly, and
+   a panel that grows and shrinks under the pointer is unusable. */
+.map-picked {
+  margin: .6rem 0 0;
+  padding: .55rem .7rem;
+  min-height: 3.4rem;
+  background: var(--panel-2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  font-size: .88rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+.map-picked.is-empty::after {
+  content: 'Press a card on the map — then a second and a third — to compare them.';
+  color: var(--muted);
+}
+.map-picked.is-empty { border-left-color: var(--line); }
 /* Drawn with the same classes the map draws with, so a legend cannot describe a
    line the map no longer has. */
 .map-legend .swatch { width: 28px; height: 8px; flex: 0 0 auto; overflow: visible; }
