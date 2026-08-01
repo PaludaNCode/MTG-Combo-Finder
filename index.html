@@ -95,6 +95,10 @@
              calls, and the panel says which it did not check. -->
         <div id="bracket"></div>
         <div id="included"></div>
+        <!-- The same question, answered on our own authority rather than
+             Spellbook's: combos found by substituting cards Spellbook itself
+             treats as interchangeable elsewhere. Absent unless the deck has one. -->
+        <div id="unofficial"></div>
         <!-- Combos you hold every named card for and cannot assemble because
              nothing fills their slot. Kept apart from the combos above, which
              the deck can actually pull off. -->
@@ -122,6 +126,9 @@
   <!-- The tier inventory has to be in place before combos.js reads it. -->
   <script src="result-tiers.js"></script>
   <script src="combos.js"></script>
+  <!-- The combos we believe in that Spellbook has not published. Before search.js,
+       which reads it at load time the same way it reads combos.js. -->
+  <script src="unofficial.js"></script>
   <!-- The searching itself happens in search-worker.js, which imports the three
        files above plus search.js. This copy is the fallback for a browser with
        no Worker — see runSearch() in app.js. -->
