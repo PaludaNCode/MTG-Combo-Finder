@@ -248,3 +248,67 @@ test('fromArchidekt: tolerates missing categories and card.name fallback', () =>
   });
   assert.deepStrictEqual(deck.main, [{ card: 'Island', quantity: 2 }]);
 });
+
+// ---- writing a card back into a decklist ------------------------------------
+//
+// "+ Add to deck" appends to the box someone is already holding, and the box does
+// not always end where the main deck does. A list ending in "Sideboard:" is how
+// several sites export; a card written below that heading parses as a sideboard
+// card, never enters the deck, and comes straight back as a suggestion — the button
+// appears to do nothing. This is the reported bug.
+const { addMainDeckCard, mainDeckInsertIndex } = require('../parser.js');
+
+const mainNames = (text) => parseDecklist(text).main.map((e) => e.card);
+
+test('add: a plain list gets the card at the end', () => {
+  assert.deepStrictEqual(
+    mainNames(addMainDeckCard('1 Sol Ring\n1 Island', 'Heliod, Sun-Crowned', 1)),
+    ['Sol Ring', 'Island', 'Heliod, Sun-Crowned']
+  );
+});
+
+test('add: a card goes above a trailing Sideboard section, not into it', () => {
+  const out = addMainDeckCard('1 Sol Ring\n\nSideboard:\n1 Pithing Needle', 'Heliod, Sun-Crowned', 1);
+  const parsed = parseDecklist(out);
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring', 'Heliod, Sun-Crowned']);
+  // And the sideboard is still a sideboard.
+  assert.ok(parsed.skipped.some((s) => /Pithing Needle/.test(s.line)));
+});
+
+test('add: the same holds for a bare SIDEBOARD heading', () => {
+  const out = addMainDeckCard('1 Sol Ring\n\nSIDEBOARD:\n1 Pithing Needle', 'Heliod, Sun-Crowned', 1);
+  assert.deepStrictEqual(mainNames(out), ['Sol Ring', 'Heliod, Sun-Crowned']);
+});
+
+// Quieter than the sideboard case and worse: the card would have joined the command
+// zone without anything on screen saying so.
+test('add: a card does not become a commander', () => {
+  const out = addMainDeckCard('1 Sol Ring\n\nCommander:\n1 Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned', 1);
+  const parsed = parseDecklist(out);
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring', 'Heliod, Sun-Crowned']);
+  assert.deepStrictEqual(parsed.commanders.map((e) => e.card), ['Kinnan, Bonder Prodigy']);
+});
+
+test('add: the first section wins when a list has several', () => {
+  const deck = '1 Sol Ring\n\nSideboard:\n1 Pithing Needle\n\nCommander:\n1 Kinnan, Bonder Prodigy';
+  const parsed = parseDecklist(addMainDeckCard(deck, 'Heliod, Sun-Crowned', 1));
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring', 'Heliod, Sun-Crowned']);
+  assert.deepStrictEqual(parsed.commanders.map((e) => e.card), ['Kinnan, Bonder Prodigy']);
+});
+
+test('add: an empty box gets a list with one card in it', () => {
+  assert.strictEqual(addMainDeckCard('', 'Sol Ring', 1), '1 Sol Ring');
+  assert.deepStrictEqual(mainNames(addMainDeckCard('', 'Sol Ring', 1)), ['Sol Ring']);
+});
+
+test('add: quantity is written through', () => {
+  assert.strictEqual(addMainDeckCard('1 Island', 'Forest', 4), '1 Island\n4 Forest');
+});
+
+// The insertion point is the parser's own idea of where the main deck stops, so the
+// two cannot drift apart when a site invents a new heading.
+test('add: the insert index is the first line that leaves the main deck', () => {
+  assert.strictEqual(mainDeckInsertIndex('1 Sol Ring\n1 Island'), 2);
+  assert.strictEqual(mainDeckInsertIndex('1 Sol Ring\nSideboard:\n1 Needle'), 1);
+  assert.strictEqual(mainDeckInsertIndex('Deck:\n1 Sol Ring\nCommander:\n1 Kinnan'), 2);
+});

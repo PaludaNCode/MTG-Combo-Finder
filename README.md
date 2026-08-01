@@ -630,6 +630,24 @@ the objection: 465 requests and ~23 minutes, on a job that already streams a
 
 ## Adding a card, and searching again
 
+
+**The card is written into the main deck, not onto the end of the box.** Several sites
+export a list that ends in a `Sideboard:` section, and a card appended below that
+heading parses as a sideboard card: it never enters the deck, so the next search
+suggests it again and the button looks like it did nothing. `Commander:` was quieter and
+worse — the card silently joined the command zone.
+
+`DeckParser.addMainDeckCard()` writes it above the first line that leaves the main deck,
+and above the blank run separating them, so the list keeps the shape its owner gave it.
+The insertion point is the same walk `parseDecklist()` does, kept in the parser for that
+reason: two notions of "where the main deck ends" would drift apart the first time a
+site invented a heading.
+
+The layout test runs the whole press against a decklist that ends in a sideboard, and
+the old behaviour fails it with *"put Deadeye Navigator below the sideboard heading,
+where it is not in the deck"* and *"6 combos before adding and 6 after"*. Its previous
+assertion — that the added card is the box's **last line** — was the bug written down as
+a requirement, and is now a check on where the card landed relative to the section.
 Every suggestion carries **+ Add to deck**, and so does every interchangeable
 alternative under it. It appends `1 <card>` to the decklist, keeps the list, and
 submits the form again.
