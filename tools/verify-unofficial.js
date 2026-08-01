@@ -3,8 +3,8 @@
 //
 // The rows carry their evidence — the Spellbook combo each was derived from, by
 // id — and that is the whole basis on which the panel asks to be believed. An id
-// nobody ever checks is decoration. Four of the thirteen were looked up by hand
-// while writing them, which is exactly the way a digit gets transposed.
+// nobody ever checks is decoration. Every one of them was looked up by hand while
+// the row was written, which is exactly the way a digit gets transposed.
 //
 // Three things are asserted per row, and each of them is a different failure:
 //
@@ -18,6 +18,11 @@
 // and matchUnofficial() already drops a graduated row at run time — this reports
 // it so the file can be tidied rather than quietly carrying a dead entry.
 //
+// The stand-in rules are checked too, differently: they read their citations off
+// the data as they run and so cannot cite something absent, but a source card
+// misspelled by one accent quietly reaches nothing at all. checkStandIns() counts
+// what each rule actually reached, and says so out loud.
+//
 // Run against the live data, which is why this is a tool and not a unit test:
 //
 //   node tools/verify-unofficial.js               # fetches the published data
@@ -25,7 +30,7 @@
 'use strict';
 
 const fs = require('node:fs');
-const { COMBOS } = require('../unofficial.js');
+const { COMBOS, STAND_INS } = require('../unofficial.js');
 const { nameKey } = require('../combos.js');
 
 const COMBOS_URL = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
@@ -61,6 +66,59 @@ function check(data, rows) {
   return { problems, graduated, counted: combos.length };
 }
 
+// The stand-in rules cannot cite a combo that does not exist — they read the ids
+// off the data as they go — so there is nothing to check there. What can go wrong
+// is quieter and worse: a source card misspelled by one accent produces no rows at
+// all, silently, and the page simply shows less than it did. So this counts what
+// each rule actually reaches and says which source every row leaned on.
+//
+// It also watches for the day the rule stops being needed. Hammerhead is here
+// because Spellbook has never used him; when that changes, the rows start
+// graduating one by one, and the count below is how anybody notices.
+function checkStandIns(data, rules) {
+  const combos = (data && data.combos) || [];
+  const problems = [];
+  const summaries = [];
+
+  for (const rule of rules || []) {
+    const inKey = nameKey(rule.card);
+    const sources = new Map((rule.for || []).map((src, rank) => [nameKey(src.card), { rank, src }]));
+    const counts = new Map([...sources.keys()].map((k) => [k, 0]));
+    const best = new Map();
+    let templated = 0;
+    let alreadyPublished = 0;
+
+    for (const combo of combos) {
+      const keys = (combo.c || []).map(nameKey);
+      if (keys.includes(inKey)) { alreadyPublished += 1; continue; }
+      const hits = keys.filter((k) => sources.has(k));
+      if (hits.length !== 1) continue;
+      counts.set(hits[0], counts.get(hits[0]) + 1);
+      if (combo.t && combo.t.length) { templated += 1; continue; }
+      const key = keys.filter((k) => k !== hits[0]).concat(inKey).sort().join('|');
+      const rank = sources.get(hits[0]).rank;
+      const held = best.get(key);
+      if (!held || rank < held.rank) best.set(key, { rank, from: hits[0] });
+    }
+
+    for (const [key, seen] of counts) {
+      if (!seen) problems.push(`${rule.card}: stands in for "${key}", which no published combo names`);
+    }
+
+    const cited = new Map();
+    for (const { from } of best.values()) cited.set(from, (cited.get(from) || 0) + 1);
+    summaries.push({
+      card: rule.card,
+      rows: best.size,
+      templated,
+      alreadyPublished,
+      cited: [...sources.keys()].map((k) => ({ card: k, rows: cited.get(k) || 0, combos: counts.get(k) })),
+    });
+  }
+
+  return { problems, summaries };
+}
+
 async function load(path) {
   if (path) return JSON.parse(fs.readFileSync(path, 'utf8'));
   const res = await fetch(COMBOS_URL);
@@ -71,12 +129,35 @@ async function load(path) {
 async function main() {
   const data = await load(process.argv[2]);
   const { problems, graduated, counted } = check(data, COMBOS);
+  const rules = checkStandIns(data, STAND_INS);
 
   say('# Unofficial rows against the published data');
   say();
   say(`Checked ${COMBOS.length} rows against ${counted.toLocaleString()} combos, `
     + `snapshot ${data.updatedAt || 'unknown'}.`);
   say();
+
+  for (const s of rules.summaries) {
+    say(`## ${s.card} stands in for ${s.cited.length} card(s)`);
+    say();
+    say(`Reaches **${s.rows.toLocaleString()} combos**, from:`);
+    say();
+    s.cited.forEach((c) => say(`- ${c.card}: ${c.combos.toLocaleString()} published combos, `
+      + `${c.rows.toLocaleString()} rows cited to it`));
+    say();
+    if (s.templated) {
+      say(`${s.templated.toLocaleString()} more were skipped for having a template slot, `
+        + 'which nothing here knows how to fill.');
+      say();
+    }
+    if (s.alreadyPublished) {
+      say(`Spellbook now names ${s.card} in ${s.alreadyPublished.toLocaleString()} combos of `
+        + 'its own — the rule may be on its way to being unnecessary.');
+      say();
+    }
+  }
+
+  problems.push(...rules.problems);
 
   if (graduated.length) {
     say('## Graduated — Spellbook now publishes these');
@@ -88,11 +169,11 @@ async function main() {
   }
 
   if (problems.length) {
-    say('## Broken citations');
+    say('## Broken evidence');
     say();
     problems.forEach((p) => say(`- ${p}`));
     say();
-    say(`**${problems.length} of ${COMBOS.length} rows cite something that is not there.**`);
+    say(`**${problems.length} problem(s) found.**`);
     process.exitCode = 1;
     return;
   }
@@ -100,7 +181,7 @@ async function main() {
   say('Every row cites a combo that exists and names the cards it says it does.');
 }
 
-module.exports = { check };
+module.exports = { check, checkStandIns };
 
 // Only when run, so requiring it for the tests does not go to the network.
 if (require.main === module) {

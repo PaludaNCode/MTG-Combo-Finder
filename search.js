@@ -212,8 +212,16 @@
       // Spellbook has published rather than on a swap we worked out ourselves.
       bracket: DeckCombos.bracketCheck(data, deckNames, included),
       included,
+      // Hand-written rows first, then the ones a stand-in rule works out from the
+      // data: where both name the same cards, matchUnofficial() keeps the first,
+      // and the row somebody reasoned about by name is the better of the two.
       unofficial: DeckCombos.matchUnofficial(
-        data, (Unofficial && Unofficial.COMBOS) || [], deckNames, matched.included
+        data,
+        ((Unofficial && Unofficial.COMBOS) || []).concat(
+          DeckCombos.standInRows(data, (Unofficial && Unofficial.STAND_INS) || [], deckNames)
+        ),
+        deckNames,
+        matched.included
       ).map(DeckCombos.expand),
       oneSlotAway: matched.oneSlotAway.map(DeckCombos.expand),
       slotCandidates: matched.slotCandidates,

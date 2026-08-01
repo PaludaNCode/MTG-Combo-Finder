@@ -1554,7 +1554,7 @@ functional twin, and checking whether that variant exists:
 | Quina, Qu Gourmet + Academy Manufactor + Warren Soultrader | `3000-4231-5670` (Chatterfang version) | **Verified against the cards.** Quina adds a 1/1 Frog to any token creation, so it refuels the sacrifice loop exactly as Chatterfang does |
 | Lunarch Veteran + Heroic Feast + Scurry Oak | `360-4186-7743` (Soul Warden version) | High — Lunarch Veteran's front face is Soul Warden's text, and every other card with that text has the variant |
 | Essence Warden + Hapatra, Vizier of Poisons + Yawgmoth, Thran Physician (×3, with Anointed Procession / Parallel Lives / Doubling Season) | the Soul Warden versions | High — Soul Warden and Essence Warden are functional duplicates |
-| Hammerhead, Maggia Boss in four loops (Scurry Oak or Herd Baloth + Sadistic Glee; Samwise Gamgee + Cauldron Familiar; Camellia, the Seedmiser + Peregrin Took) | the Umbral Collar Zealot versions | **Verified against the cards.** Hammerhead's ability is the Zealot's cost word for word — *sacrifice another creature or artifact*, free and repeatable — with a different rider that no loop uses |
+| Hammerhead, Maggia Boss in 1,730 loops | the Bartolomé del Presidio versions, and the Carrion Feeder ones where Bartolomé has none | **Verified against the cards.** Hammerhead and Bartolomé have one ability each and it is the same sentence. Declared once as a stand-in rule rather than written out — see below |
 
 **A high substitution score is not a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. A worked
@@ -1607,42 +1607,84 @@ network, and the text lands in the run summary. Hammerhead says:
 
 > Sacrifice another creature or artifact: Put a +1/+1 counter on Hammerhead.
 
-Which is Umbral Collar Zealot's ability with a different rider:
+The first answer to that was Umbral Collar Zealot — *sacrifice another creature or
+artifact: surveil 1* — the same cost with a rider no loop uses, which produced
+four hand-written rows. Those rows are gone, because reading further found
+something better than a card with the same cost. It found the same card:
 
-> Sacrifice another creature or artifact: Surveil 1.
+| | | |
+|---|---|---|
+| **Bartolomé del Presidio** | `{W}{B}` 2/1 | Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. |
+| **Hammerhead, Maggia Boss** | `{1}{B}` 2/1 | Sacrifice another creature or artifact: Put a +1/+1 counter on Hammerhead. |
 
-Word for word the same cost — free, repeatable, and in every loop below the rider
-is not part of the loop. So `unofficial.js` now carries four Hammerhead rows,
-each citing the Zealot version of its combo as the source and dropping *Infinite
-surveil* from the results in favour of the counters he accrues instead. That is
-the same difference Spellbook itself publishes between the Zealot and Carrion
-Feeder versions of the same combo (`856-5270-6798` against `856-2438-5270`).
+One ability each, the same sentence, the same body. The names, the mana costs and
+the colours are the whole difference — and Spellbook publishes **1,674** combos
+naming Bartolomé and none naming Hammerhead.
 
-**Ten candidates, four rows.** The ten collapse: three published combos differing
-only in which outlet they name all produce the same Hammerhead row. What is left
-is Scurry Oak + Sadistic Glee, Herd Baloth + Sadistic Glee, Samwise Gamgee +
-Cauldron Familiar, and Camellia, the Seedmiser + Peregrin Took.
+The colour is the part that earns its keep. Hammerhead is mono-black where
+Bartolomé is white-black, so every one of those lines is an Orzhov combo that a
+Golgari deck can actually run, and had no way of being told about.
 
-**The Camellia row is the interesting one**, and the reason "kinda does the same
-thing" is not a standard this file can use. That loop eats *Foods*, not creatures
-— Camellia triggers on sacrificing a Food and Peregrin Took hands the Food back —
-so the outlet has to be able to eat an artifact. Spellbook publishes it with the
-Zealot and with no creature-only outlet at all: no Carrion Feeder version, no
-Viscera Seer version. Hammerhead's ability says *creature **or artifact***, so he
-belongs to that loop and Carrion Feeder does not. The same reading that keeps two
-cards out puts this one in.
+### One card, 1,730 combos: why this one is a rule and not rows
 
-**Not included: the Necrosynthesis versions.** Six of the rows above are Sadistic
-Glee combos with Necrosynthesis swapped in; a Hammerhead version of those would be
-two swaps deep — our own row with another swap on top of it — and every row in the
-file is one swap from something Spellbook published.
+Four rows can be written by hand. Seventeen hundred cannot, and a file with 1,730
+copies of a published combo with one word changed is not evidence anybody can
+check. So `unofficial.js` has a second export, `STAND_INS`, which declares the
+finding once:
 
-**And the citations are checked.** `tools/verify-unofficial.js` reads every row's
-`from.id` against the live data and fails if it does not resolve, or resolves to a
-combo naming different cards; the daily data refresh runs it. Four of the thirteen
-ids were looked up by hand, which is exactly how a digit gets transposed. It also
-reports any row Spellbook has since published — not an error, but the outcome a
-row is supposed to reach, and how anyone finds out it can come out of the file.
+```js
+{
+  card: 'Hammerhead, Maggia Boss',
+  confidence: 'verified',
+  for: [
+    { card: 'Bartolomé del Presidio', why: '…the same sentence…' },
+    { card: 'Carrion Feeder',         why: '…one restriction more…' },
+  ],
+}
+```
+
+`standInRows()` in `combos.js` works the rows out against the live data, and each
+one carries exactly what a hand-written row carries — the source combo by id, the
+swap, the reasoning, the results — except that the evidence is *looked up* rather
+than typed, so it cannot cite a combo that has since been retired.
+
+**Carrion Feeder is the second source and a weaker claim**, which is why it is
+listed second rather than first:
+
+> This creature can't block.
+> Sacrifice a creature: Put a +1/+1 counter on this creature.
+
+Free and repeatable the same way, but creatures only where Hammerhead also eats
+artifacts, and able to eat *itself* where Hammerhead cannot. Every Carrion Feeder
+loop is therefore a Hammerhead loop and the reverse is not true — the swap runs
+one way. A row cites Bartolomé wherever Spellbook published that version (1,515 of
+them) and falls back to the Feeder for the **215** lines the Feeder has and
+Bartolomé does not. Order in `for` is preference, not membership.
+
+**What the rule deliberately does not reach**, reported by
+`tools/verify-unofficial.js` on every refresh rather than left to be discovered:
+
+- **273 combos with a template slot.** A combo reading "any Dragon creature" is
+  filled from your deck by `matchDeck()`; nothing in the generator knows how, so
+  those are skipped rather than half-built.
+- **Loops that sacrifice the Feeder itself.** Hammerhead cannot — his ability says
+  *another*. An outlet that eats itself has no outlet afterwards, so nothing in the
+  data appears to do this on purpose, but the rule cannot prove that and this is
+  the shape it would get wrong.
+- **Our own rows.** A rule reads published combos only. Generating from an
+  unofficial row would be a swap on top of a swap, and every row on this page is
+  one step from something Spellbook published. This is why the six Necrosynthesis
+  rows have no Hammerhead versions.
+
+**And the evidence is checked, both kinds.** `tools/verify-unofficial.js` reads
+every hand-written row's `from.id` against the live data and fails if it does not
+resolve, or resolves to a combo naming different cards — every one of those ids was
+looked up by hand, which is exactly how a digit gets transposed. A stand-in rule
+cannot fail that way, and fails a quieter way instead: a source card misspelled by
+one accent matches nothing, generates nothing, and says nothing about it. So the
+tool counts what each rule actually reached and prints it. It also reports any row
+Spellbook has since published — not an error, but the outcome a row is supposed to
+reach, and for a rule, the sign it is on its way to being unnecessary.
 
 ### Why it is a separate panel and not a badge
 
@@ -1665,13 +1707,18 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All nine currently shipping are `verified`. `derived` stays in the model because it is
-the honest label for a row found before its cards have been read, and the next one will
-need it.
+All nine hand-written rows and the one stand-in rule are `verified`. `derived` stays
+in the model because it is the honest label for a row found before its cards have
+been read, and the next one will need it.
 
-`test/unofficial.test.js` enforces the shape — every row cites a real combo id, every
-swap is genuinely one card in and one out against the cited combo, and every row gives
-a reason. A row that cannot say where it came from cannot ship.
+`test/unofficial.test.js` enforces the shape of both halves — every hand-written row
+cites a real combo id, every swap is genuinely one card in and one out against the
+cited combo, and every row gives a reason; every rule names something other than
+itself to stand in for, and says why. A row that cannot say where it came from
+cannot ship. Where a rule and a hand-written row produce the same cards,
+`matchUnofficial()` keeps the hand-written one — a combo somebody reasoned about by
+name beats the same combo produced by a rule, and printing both would be the combo
+twice.
 
 ### They graduate rather than accumulate
 
@@ -1719,7 +1766,9 @@ survivors, because each is a way a "functionally identical" card turns out not t
 
 **Nothing remains open.** The nine that survived are in `unofficial.js`, and seven of
 them were only settled by reading the cards — which is why the panel prints how far the
-checking went rather than asking to be believed.
+checking went rather than asking to be believed. The 1,730 Hammerhead rows are not
+part of that count and never were: the audit could not have proposed a single one of
+them, because it works by comparing two published cards and Hammerhead is not one.
 
 **A high substitution score is never a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
@@ -1791,8 +1840,11 @@ npm run lint
 
 # Check every unofficial row still cites a real published combo — and report any
 # that Spellbook has published since, which is a row that can come out of the
-# file. Fetches the data branch; pass a path to read a local copy instead. The
-# daily data refresh runs this too.
+# file. Also counts what each stand-in rule reached, and which source each of its
+# rows leaned on: a rule cannot cite something absent, but a source card
+# misspelled by one accent reaches nothing and says nothing about it. Fetches the
+# data branch; pass a path to read a local copy instead. The daily data refresh
+# runs this too.
 npm run verify:unofficial
 
 # Layout smoke test — REQUIRED after any UI change. Renders the real page at

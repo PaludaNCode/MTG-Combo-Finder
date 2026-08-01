@@ -17,11 +17,17 @@
 //
 // The rest by reading a card that substitution could never have proposed. A card
 // Spellbook has never used in a single combo has nothing to be measured against,
-// so no amount of comparing the data will suggest it — the last four rows below
-// are one such card, and they exist because its text was read against loops that
-// are published with a card whose ability is worded the same way.
+// so no amount of comparing the data will suggest it — it takes somebody reading
+// the card and recognising a published one in it.
 //
-// Each row therefore carries its own evidence rather than asking to be taken on
+// Which is why this file has two halves. COMBOS is one row per combo, written by
+// hand, for gaps that are one combo wide. STAND_INS is for the case where the
+// answer is not a combo but a card: two cards with the same ability, one of them
+// in a thousand published combos and the other in none. Writing that difference
+// out by hand is not work anybody finishes, so the rule is declared once and
+// standInRows() in combos.js works out the rows against the live data.
+//
+// Either way a row carries its own evidence rather than asking to be taken on
 // trust, and the page shows it: the published combo it was derived from, which card
 // was swapped for which, and how far the checking actually went.
 //
@@ -185,101 +191,80 @@
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',
       ],
     },
-    // ---- Hammerhead, Maggia Boss: a card Spellbook has never used ------------
-    //
-    // Different in kind from every row above, and worth saying so. The rows above
-    // are gaps *between* published combos — both cards in the swap appear in the
-    // data, and only the pairing is missing. Hammerhead appears in none of the
-    // 103,675 combos at all, so no amount of measuring the data would ever have
-    // proposed him: there is nothing to compare him to. He is here because his
-    // text was read.
-    //
-    // What the text says is that he is Umbral Collar Zealot's ability with a
-    // different rider:
-    //
-    //   Umbral Collar Zealot   Sacrifice another creature or artifact: Surveil 1.
-    //   Hammerhead             Sacrifice another creature or artifact: Put a
-    //                          +1/+1 counter on Hammerhead.
-    //
-    // Word for word the same cost, free and repeatable, and in each loop below the
-    // rider is not part of the loop. So every row cites the Zealot version as its
-    // source and drops "Infinite surveil" from what it produces, replacing it with
-    // the counters Hammerhead accrues — which is exactly the difference Spellbook
-    // itself publishes between the Zealot and Carrion Feeder versions of the same
-    // combos (856-5270-6798 against 856-2438-5270).
-    //
-    // "Sacrifice another creature **or artifact**" is why the fourth row exists.
-    // Camellia's loop eats Foods rather than creatures, and Spellbook publishes it
-    // with the Zealot and with no creature-only outlet — no Carrion Feeder version,
-    // no Viscera Seer version. Hammerhead eats artifacts, so he belongs to that
-    // loop and Carrion Feeder does not. The same reading that rules a card out of
-    // one loop rules this one in.
-    //
-    // Not included: the Necrosynthesis versions of the first two. Those would be
-    // two swaps deep — our own row with another swap on top — and every row here
-    // is one swap from something published.
+  ];
+
+  // ---- cards that are another card under a different name --------------------
+  //
+  // The rows above are gaps *between* published combos: both cards in the swap
+  // appear in the data and only the pairing is missing, so each one is a single
+  // combo somebody read and wrote down. These are a different problem.
+  //
+  // Hammerhead, Maggia Boss appears in none of the 103,675 published combos.
+  // Nothing can be measured against him, so no amount of comparing the data
+  // would ever propose him — he is here because his text was read, and what it
+  // says is that he is a card Spellbook has published 1,674 combos for:
+  //
+  //   Bartolomé del Presidio  {W}{B}  2/1  Sacrifice another creature or
+  //                                        artifact: Put a +1/+1 counter on
+  //                                        Bartolomé del Presidio.
+  //   Hammerhead, Maggia Boss {1}{B}  2/1  Sacrifice another creature or
+  //                                        artifact: Put a +1/+1 counter on
+  //                                        Hammerhead.
+  //
+  // One ability each, the same sentence, the same body. The names, the mana
+  // costs and the colours are the whole difference — and the colour is the part
+  // that earns its keep, because Hammerhead is mono-black where Bartolomé is
+  // white-black, so a Golgari deck can run the ability that Spellbook only ever
+  // writes into a combo in Orzhov colours.
+  //
+  // Carrion Feeder is the second source, and not quite the same claim:
+  //
+  //   Carrion Feeder          {B}     1/1  This creature can't block.
+  //                                        Sacrifice a creature: Put a +1/+1
+  //                                        counter on this creature.
+  //
+  // Free and repeatable the same way, but creatures only where Hammerhead also
+  // eats artifacts, and able to eat *itself* where Hammerhead cannot. So it is
+  // listed second: a row cites Bartolomé when Spellbook published that version,
+  // and falls back to the Feeder for the 215 lines the Feeder has and Bartolomé
+  // does not. The direction matters and only runs one way — every Carrion Feeder
+  // loop is a Hammerhead loop, and the reverse is not true. The one shape this
+  // gets wrong is a loop that sacrifices the Feeder itself, which no longer has
+  // an outlet once it does; a sacrifice outlet that eats itself ends the loop
+  // rather than continuing it, so there is nothing in the data doing this on
+  // purpose, and it is written down here rather than left as a surprise.
+  //
+  // 1,730 combos come out of the two sources together, deduplicated. Four of
+  // them used to be written out by hand above, citing Umbral Collar Zealot —
+  // same cost, different rider — and they are gone: this cites the card that
+  // matches word for word instead, and covers the other 1,726.
+  const STAND_INS = [
     {
-      cards: ['Scurry Oak', 'Sadistic Glee', 'Hammerhead, Maggia Boss'],
+      card: 'Hammerhead, Maggia Boss',
       confidence: 'verified',
-      from: { id: '2082-4186-6798', cards: ['Scurry Oak', 'Sadistic Glee', 'Umbral Collar Zealot'] },
-      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
-      why: 'Sadistic Glee on Scurry Oak. Sacrifice the Squirrel to Hammerhead, the death '
-        + 'puts a +1/+1 counter on Scurry Oak, and the counter makes the next Squirrel. '
-        + 'Hammerhead\'s cost is the Zealot\'s cost word for word — free, repeatable, and '
-        + 'a creature is what is being eaten either way.',
-      produces: [
-        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
-      ],
-    },
-    {
-      cards: ['Herd Baloth', 'Sadistic Glee', 'Hammerhead, Maggia Boss'],
-      confidence: 'verified',
-      from: { id: '2082-3197-6798', cards: ['Herd Baloth', 'Sadistic Glee', 'Umbral Collar Zealot'] },
-      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
-      why: 'The same loop as the Scurry Oak row, with 4/4 Beasts instead of Squirrels: '
-        + 'the counter makes a token, Hammerhead eats it, the death puts on the next '
-        + 'counter.',
-      produces: [
-        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
-      ],
-    },
-    {
-      cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Hammerhead, Maggia Boss'],
-      confidence: 'verified',
-      from: { id: '856-5270-6798', cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Umbral Collar Zealot'] },
-      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
-      why: 'The Cat enters and drains, Samwise makes a Food off it, Hammerhead eats the '
-        + 'Cat, and the Food brings it back. The outlet only has to eat a creature for '
-        + 'free, which is the half of Hammerhead that is identical to the Zealot.',
-      produces: [
-        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
-        'Infinite lifeloss', 'Infinite +1/+1 counters on a creature',
-      ],
-    },
-    {
-      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Hammerhead, Maggia Boss'],
-      confidence: 'verified',
-      from: { id: '4321-5777-6798', cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'] },
-      swap: { out: 'Umbral Collar Zealot', in: 'Hammerhead, Maggia Boss' },
-      why: 'Hammerhead eats a Food, Camellia makes a Squirrel for it, and Peregrin Took '
-        + 'adds a Food to that creation — so the Food comes back and the Squirrels pile '
-        + 'up. This is the loop that needs an outlet which eats *artifacts*: Spellbook '
-        + 'publishes it with the Zealot and with no creature-only outlet at all, which '
-        + 'is why Carrion Feeder and Viscera Seer are absent from it and Hammerhead is '
-        + 'not.',
-      produces: [
-        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite creature tokens', 'Infinite card draw',
-        'Infinite draw triggers', 'Infinite Food tokens',
-        'Infinite +1/+1 counters on a creature',
+      for: [
+        {
+          card: 'Bartolomé del Presidio',
+          why: 'Hammerhead and Bartolomé del Presidio have one ability each and it is '
+            + 'the same sentence: “Sacrifice another creature or artifact: Put a +1/+1 '
+            + 'counter on this creature.” Same cost, free and repeatable, same 2/1 body. '
+            + 'Spellbook publishes this combo with Bartolomé and has never used '
+            + 'Hammerhead in a combo at all — he is mono-black where Bartolomé is '
+            + 'white-black, which is the only difference that reaches the table.',
+        },
+        {
+          card: 'Carrion Feeder',
+          why: 'Carrion Feeder’s ability is “Sacrifice a creature: Put a +1/+1 counter on '
+            + 'this creature”, and Hammerhead’s is the same for one card less restrictive '
+            + '— he eats artifacts as well. Free and repeatable either way, and a creature '
+            + 'is what this loop feeds it. Spellbook publishes the Feeder version and has '
+            + 'never used Hammerhead in a combo at all.',
+        },
       ],
     },
   ];
 
-  const api = { COMBOS };
+  const api = { COMBOS, STAND_INS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.UnofficialCombos = api;
 }(typeof self !== 'undefined' ? self : this));

@@ -1,8 +1,10 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { matchUnofficial, identityString, deckNameSet, nameKey, expand } = require('../combos.js');
-const { COMBOS } = require('../unofficial.js');
+const {
+  matchUnofficial, standInRows, identityString, deckNameSet, nameKey, expand,
+} = require('../combos.js');
+const { COMBOS, STAND_INS } = require('../unofficial.js');
 
 // The one part of the page that is not Commander Spellbook's word. Everything here
 // is about keeping that distinction honest: the rows have to carry their evidence,
@@ -45,6 +47,143 @@ test('unofficial: every row carries the evidence the page prints', () => {
 test('unofficial: no row is listed twice', () => {
   const keys = COMBOS.map((r) => r.cards.map(nameKey).sort().join('|'));
   assert.strictEqual(new Set(keys).size, keys.length);
+});
+
+test('unofficial: every stand-in rule says what it stands in for and why', () => {
+  assert.ok(STAND_INS.length > 0, 'no rules to check');
+  STAND_INS.forEach((rule) => {
+    assert.ok(rule.card, 'a rule with no card');
+    assert.ok(['verified', 'derived'].includes(rule.confidence), rule.card + ': bad confidence');
+    assert.ok(rule.for && rule.for.length, rule.card + ': stands in for nothing');
+    rule.for.forEach((src) => {
+      assert.ok(src.card, rule.card + ': a source with no card');
+      // A card cannot stand in for itself: the rule would generate the combo it
+      // read, and matchUnofficial would print a published combo as ours.
+      assert.notStrictEqual(nameKey(src.card), nameKey(rule.card), rule.card + ': stands in for itself');
+      assert.ok(src.why && src.why.length > 20, rule.card + '/' + src.card + ': no reasoning given');
+    });
+    // Listing a source twice would make the ranking meaningless.
+    const keys = rule.for.map((src) => nameKey(src.card));
+    assert.strictEqual(new Set(keys).size, keys.length, rule.card + ': a source listed twice');
+  });
+});
+
+// ---- stand-in rules ----------------------------------------------------------
+//
+// A rule reaches over a thousand combos, so what it does with any one of them is
+// not something reading the output will tell you. These check the decisions:
+// which source it cites when it has a choice, what it refuses to touch, and that
+// it never generates work for a deck that cannot use it.
+
+const OUTLET = {
+  combos: [
+    { id: '1-2-3', c: ['Scurry Oak', 'Sadistic Glee', 'Twin A'], p: ['Infinite ETB'] },
+    { id: '4-5-6', c: ['Scurry Oak', 'Sadistic Glee', 'Twin B'], p: ['Infinite ETB'] },
+    { id: '7-8-9', c: ['Gravecrawler', 'Twin B'], p: ['Infinite death triggers'] },
+    // A template slot is "any card that does X", filled from the deck elsewhere.
+    { id: '10-11-12', c: ['Scurry Oak', 'Twin A'], t: ['Sacrifice outlet'], p: ['Infinite ETB'] },
+    // Nothing to swap: no source card in it at all.
+    { id: '13-14-15', c: ['Basalt Monolith', 'Rings of Brighthearth'], p: ['Infinite mana'] },
+  ],
+  cardIdentity: {
+    'Scurry Oak': 'G', 'Sadistic Glee': 'B', 'Twin A': 'WB', 'Twin B': 'B',
+    Gravecrawler: 'B', Copycat: 'B',
+  },
+};
+const RULE = {
+  card: 'Copycat',
+  confidence: 'verified',
+  for: [
+    { card: 'Twin A', why: 'Word for word the same ability, so the loop does not notice.' },
+    { card: 'Twin B', why: 'The same ability with one more restriction, which this loop clears.' },
+  ],
+};
+const rowFor = (rows, ...cards) => rows.find(
+  (r) => r.cards.map(nameKey).sort().join('|') === cards.map(nameKey).sort().join('|')
+);
+
+test('stand-in: a published combo becomes a row with the stand-in in it', () => {
+  const rows = standInRows(OUTLET, [RULE], deck('Copycat', 'Gravecrawler'));
+  assert.strictEqual(rows.length, 1);
+  assert.deepStrictEqual(rows[0].cards.slice().sort(), ['Copycat', 'Gravecrawler']);
+  // Everything a hand-written row carries, read off the source rather than typed.
+  assert.strictEqual(rows[0].from.id, '7-8-9');
+  assert.deepStrictEqual(rows[0].swap, { out: 'Twin B', in: 'Copycat' });
+  assert.deepStrictEqual(rows[0].produces, ['Infinite death triggers']);
+  assert.strictEqual(rows[0].confidence, 'verified');
+  assert.strictEqual(rows[0].standIn, true);
+});
+
+// The order of `for` is the point of the field: both sources produce the same
+// three cards here, and the row has to cite the one whose text matches best.
+test('stand-in: with two sources for the same combo, the first listed wins', () => {
+  const rows = standInRows(OUTLET, [RULE], deck('Copycat', 'Scurry Oak', 'Sadistic Glee'));
+  const row = rowFor(rows, 'Copycat', 'Scurry Oak', 'Sadistic Glee');
+  assert.ok(row, 'the combo was not generated at all');
+  assert.strictEqual(row.from.id, '1-2-3');
+  assert.strictEqual(row.swap.out, 'Twin A');
+  // ...and it is one row, not one per source.
+  assert.strictEqual(rows.length, 1);
+});
+
+test('stand-in: nothing is generated for a deck without the card', () => {
+  assert.deepStrictEqual(standInRows(OUTLET, [RULE], deck('Scurry Oak', 'Sadistic Glee')), []);
+});
+
+test('stand-in: a combo the deck is short of is not generated', () => {
+  // Sadistic Glee missing, so the Scurry Oak lines are out of reach; Gravecrawler
+  // is present, so that one still comes through.
+  const rows = standInRows(OUTLET, [RULE], deck('Copycat', 'Scurry Oak', 'Gravecrawler'));
+  assert.deepStrictEqual(rows.map((r) => r.from.id), ['7-8-9']);
+});
+
+// Skipped rather than half-built: filling a template slot is matchDeck()'s job and
+// this does not know how, so a combo with one is left where it is.
+test('stand-in: a combo with a template slot is left alone', () => {
+  const rows = standInRows(OUTLET, [RULE], deck('Copycat', 'Scurry Oak'));
+  assert.deepStrictEqual(rows, []);
+});
+
+test('stand-in: a combo already naming the stand-in is not rewritten', () => {
+  const data = { combos: [{ id: '1-1-1', c: ['Copycat', 'Twin A'], p: [] }], cardIdentity: {} };
+  assert.deepStrictEqual(standInRows(data, [RULE], deck('Copycat', 'Twin A')), []);
+});
+
+test('stand-in: missing or empty inputs are not an error', () => {
+  const names = deck('Copycat', 'Gravecrawler');
+  assert.deepStrictEqual(standInRows(null, [RULE], names), []);
+  assert.deepStrictEqual(standInRows(OUTLET, null, names), []);
+  assert.deepStrictEqual(standInRows(OUTLET, [RULE], null), []);
+  assert.deepStrictEqual(standInRows(OUTLET, [{ card: 'Copycat', for: [] }], names), []);
+  assert.deepStrictEqual(standInRows({ combos: [] }, [RULE], names), []);
+});
+
+// The two halves of the file meet here, and the failure this prevents is the
+// combo printed twice — once because somebody wrote it out and once because a
+// rule worked it out.
+test('stand-in: a generated row that duplicates a hand-written one is dropped', () => {
+  const hand = {
+    cards: ['Copycat', 'Gravecrawler'],
+    produces: ['Infinite death triggers'],
+    confidence: 'verified',
+    from: { id: '7-8-9', cards: ['Gravecrawler', 'Twin B'] },
+    swap: { out: 'Twin B', in: 'Copycat' },
+    why: 'Written out by hand, before the rule existed.',
+  };
+  const names = deck('Copycat', 'Gravecrawler');
+  const rows = standInRows(OUTLET, [RULE], names);
+  const out = matchUnofficial(OUTLET, [hand].concat(rows), names, []);
+  assert.strictEqual(out.length, 1);
+  // First one wins, and search.js puts the hand-written rows first on purpose.
+  assert.strictEqual(out[0].unofficial, hand);
+});
+
+test('stand-in: a generated row Spellbook has since published drops out', () => {
+  const names = deck('Copycat', 'Gravecrawler');
+  const rows = standInRows(OUTLET, [RULE], names);
+  assert.strictEqual(rows.length, 1);
+  const published = [{ id: '9-9-9', c: ['Gravecrawler', 'Copycat'] }];
+  assert.strictEqual(matchUnofficial(OUTLET, rows, names, published).length, 0);
 });
 
 // ---- matching --------------------------------------------------------------
@@ -122,7 +261,7 @@ test('identityString: colourless is C, and the order is WUBRG', () => {
 // every daily refresh. What *is* checkable here is that the checker works: that
 // a broken citation is caught rather than that today's data happens to be fine.
 
-const { check } = require('../tools/verify-unofficial.js');
+const { check, checkStandIns } = require('../tools/verify-unofficial.js');
 
 const PUBLISHED = {
   combos: [
@@ -168,4 +307,41 @@ test('citations: a row Spellbook has published is reported as graduated', () => 
 
 test('citations: no data and no rows are not an error', () => {
   assert.deepStrictEqual(check(null, null), { problems: [], graduated: [], counted: 0 });
+});
+
+// The failure a stand-in rule has that a written row does not: it cannot cite a
+// combo that is absent, because it reads its citations off the data — but a
+// source card whose name is one accent wrong matches nothing, generates nothing,
+// and says nothing about it. The page just quietly shows less.
+test('rules: a source card no combo names is caught', () => {
+  const out = checkStandIns(OUTLET, [{
+    card: 'Copycat',
+    for: [{ card: 'Twin A', why: 'x' }, { card: 'Twin Á', why: 'x' }],
+  }]);
+  assert.strictEqual(out.problems.length, 1);
+  assert.match(out.problems[0], /twin á/);
+});
+
+test('rules: the summary counts what the rule actually reached', () => {
+  const [summary] = checkStandIns(OUTLET, [RULE]).summaries;
+  // Two published lines reachable: the Scurry Oak one (both twins have it, so it
+  // is one row) and the Gravecrawler one. The templated one is not counted.
+  assert.strictEqual(summary.rows, 2);
+  assert.strictEqual(summary.templated, 1);
+  assert.strictEqual(summary.alreadyPublished, 0);
+  assert.deepStrictEqual(summary.cited.map((c) => c.rows), [1, 1]);
+});
+
+// Not an error either — it is the outcome the rule wants. Every row it makes
+// graduates one at a time, and this is the count that shows it happening.
+test('rules: the stand-in turning up in published combos is reported', () => {
+  const data = { combos: [{ id: '1-1-1', c: ['Copycat', 'Gravecrawler'] }], cardIdentity: {} };
+  const [summary] = checkStandIns(data, [{
+    card: 'Copycat', for: [{ card: 'Gravecrawler', why: 'x' }],
+  }]).summaries;
+  assert.strictEqual(summary.alreadyPublished, 1);
+});
+
+test('rules: no data and no rules are not an error', () => {
+  assert.deepStrictEqual(checkStandIns(null, null), { problems: [], summaries: [] });
 });

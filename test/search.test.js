@@ -256,3 +256,60 @@ test('an empty database is refused rather than shown as a deck with no combos', 
   stubFetch([new Response(JSON.stringify({ combos: [] }))]);
   await assert.rejects(() => ComboSearch.run(URL_A, DECK), /empty/);
 });
+
+// ---- the two kinds of unofficial row, wired together -----------------------
+//
+// matchUnofficial() and standInRows() are each tested on their own in
+// unofficial.test.js. What is only true here is that search.js calls both, and
+// concatenates them in the order the deduplication depends on. A wiring mistake
+// leaves the page silently missing a thousand rows, and nothing else would catch
+// it: the unit tests would still pass and the panel would simply be shorter.
+
+const OUTLET_DATA = {
+  updatedAt: '2026-01-01T00:00:00Z',
+  cardIdentity: {
+    'Bartolomé del Presidio': 'WB',
+    'Hammerhead, Maggia Boss': 'B',
+    'Scurry Oak': 'G',
+    'Sadistic Glee': 'B',
+  },
+  combos: [{
+    id: '2082-2921-4186',
+    c: ['Scurry Oak', 'Sadistic Glee', 'Bartolomé del Presidio'],
+    p: ['Infinite ETB'],
+    i: 'WBG',
+  }],
+};
+
+test('a deck holding the stand-in gets the combos its twin is published in', () => {
+  const out = ComboSearch.matchAgainst(OUTLET_DATA, [
+    { card: 'Hammerhead, Maggia Boss', quantity: 1 },
+    { card: 'Scurry Oak', quantity: 1 },
+    { card: 'Sadistic Glee', quantity: 1 },
+  ]);
+  assert.strictEqual(out.unofficial.length, 1);
+  const row = out.unofficial[0];
+  assert.deepStrictEqual(
+    row.uses.map((u) => u.card.name).sort(),
+    ['Hammerhead, Maggia Boss', 'Sadistic Glee', 'Scurry Oak']
+  );
+  // The evidence, read off the source combo rather than written down.
+  assert.strictEqual(row.unofficial.from.id, '2082-2921-4186');
+  assert.strictEqual(row.unofficial.swap.out, 'Bartolomé del Presidio');
+  assert.strictEqual(row.unofficial.standIn, true);
+  // Worked out from the cards: Hammerhead is mono-black where Bartolomé is not,
+  // which is the whole reason a Golgari deck can run this line.
+  assert.strictEqual(row.i || row.identity, 'BG');
+  // And it stays out of the published count, which speaks for Spellbook.
+  assert.strictEqual(out.included.length, 0);
+});
+
+test('a deck without the stand-in is told nothing extra', () => {
+  const out = ComboSearch.matchAgainst(OUTLET_DATA, [
+    { card: 'Bartolomé del Presidio', quantity: 1 },
+    { card: 'Scurry Oak', quantity: 1 },
+    { card: 'Sadistic Glee', quantity: 1 },
+  ]);
+  assert.strictEqual(out.included.length, 1);
+  assert.deepStrictEqual(out.unofficial, []);
+});
