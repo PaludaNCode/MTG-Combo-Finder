@@ -212,9 +212,14 @@
       // Spellbook has published rather than on a swap we worked out ourselves.
       bracket: DeckCombos.bracketCheck(data, deckNames, included),
       included,
+      // Two sources, one list: rows written out one combo at a time, and rows
+      // expanded from a rule that says one card stands in for another wherever it
+      // appears. The page cannot tell them apart, and should not have to.
       unofficial: DeckCombos.matchUnofficial(
         data, (Unofficial && Unofficial.COMBOS) || [], deckNames, matched.included
-      ).map(DeckCombos.expand),
+      ).concat(DeckCombos.matchSubstitutions(
+        data, (Unofficial && Unofficial.SUBSTITUTIONS) || [], deckNames, matched.included
+      )).map(DeckCombos.expand),
       oneSlotAway: matched.oneSlotAway.map(DeckCombos.expand),
       slotCandidates: matched.slotCandidates,
       almostIncluded: matched.almostIncluded.map(DeckCombos.expand),

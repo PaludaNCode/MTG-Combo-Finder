@@ -179,7 +179,47 @@
     },
   ];
 
-  const api = { COMBOS };
+  // ---- and one card, rather than one combo, that Spellbook is missing ---------
+  //
+  // The list above is one row per combo, which works while the gaps are individual.
+  // It does not work when a whole card is missing: Hammerhead, Maggia Boss reads
+  // "Sacrifice another creature or artifact: Put a +1/+1 counter on Hammerhead",
+  // which is the same free outlet as Umbral Collar Zealot's, and the Zealot is in
+  // 1,514 published combos while Hammerhead is in none. Writing 1,514 rows by hand
+  // would be absurd and would rot the moment Spellbook published the 1,515th.
+  //
+  // So a rule instead, expanded against the dataset the page has already loaded:
+  // wherever a published combo uses `substituteFor`, the same combo works with
+  // `card`. See matchSubstitutions() in combos.js.
+  const SUBSTITUTIONS = [
+    {
+      card: 'Hammerhead, Maggia Boss',
+      substituteFor: 'Umbral Collar Zealot',
+      confidence: 'verified',
+      // The two abilities are the same ability: free, repeatable, "another creature
+      // or artifact", neither able to eat itself. Only the rider differs — Surveil 1
+      // against a +1/+1 counter — and Hammerhead costs the same {1}{B}.
+      //
+      // Which leaves one risk, and it is a real one: a combo that uses the Zealot
+      // *for* the surveil rather than for the sacrifice. Hammerhead would not work
+      // in those, and 1,482 of the Zealot's combos do list surveil as a result, so
+      // the wording cannot tell them apart.
+      //
+      // `attestedBy` is what settles it. Bartolomé del Presidio is a second outlet
+      // of the same class whose rider is a +1/+1 counter, and Spellbook publishes
+      // 1,492 of the Zealot's 1,514 combos with it as well. A combo published with
+      // both riders is a combo that demonstrably does not care which rider it gets.
+      // The 22 left over — 19 of them surveil combos — are exactly the ones this
+      // excludes, without anyone having to guess which.
+      attestedBy: 'Bartolomé del Presidio',
+      why: 'Hammerhead’s ability is Umbral Collar Zealot’s ability — free, repeatable, '
+        + '"another creature or artifact" — for the same {1}{B}. Spellbook publishes '
+        + 'this combo with a second outlet of that class as well, so the loop does not '
+        + 'depend on the Zealot’s surveil.',
+    },
+  ];
+
+  const api = { COMBOS, SUBSTITUTIONS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.UnofficialCombos = api;
 }(typeof self !== 'undefined' ? self : this));

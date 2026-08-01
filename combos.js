@@ -598,6 +598,111 @@
     return out.sort(bySizeThenName);
   }
 
+  // The other half of unofficial.js: not "this combo is missing" but "this card is".
+  // A rule says one card stands in for another wherever that other one appears, and
+  // this expands it against the dataset the page has already loaded — so the answer
+  // stays right as Spellbook grows, which a written-out list of 1,492 rows would not.
+  //
+  // Three things keep it from inventing combos:
+  //
+  //   the deck must hold the substitute   — no point walking 100k combos otherwise,
+  //                                         and it makes the whole pass free for the
+  //                                         decks that do not play the card
+  //   `attestedBy`                        — the same combo must also be published
+  //                                         with a third card of the same class, which
+  //                                         is what proves the loop does not depend on
+  //                                         the replaced card's particular rider
+  //   no template slots                   — a combo with a slot needs the full
+  //                                         resolveSlots() walk to know whether the
+  //                                         deck fills it, and a row claiming a combo
+  //                                         the deck cannot assemble is the one thing
+  //                                         worse than no row
+  //
+  // The results are taken from the attested twin rather than from the combo being
+  // substituted into. That is not a detail: 1,482 of the Zealot's combos list
+  // "Infinite surveil", which comes from the Zealot and not from the loop, and
+  // printing it next to Hammerhead would be stating something false.
+  function matchSubstitutions(dataset, rules, deckNames, included) {
+    const combos = (dataset && dataset.combos) || [];
+    if (!Array.isArray(rules) || !rules.length || !combos.length || !deckNames) return [];
+
+    // Whether any rule can fire at all is one Set lookup, and it is answered before
+    // anything is indexed. Almost no deck plays the substitute, and those decks
+    // should not pay for the feature — indexing first cost 300 ms on every search.
+    const active = rules.filter((rule) => rule && rule.card && rule.substituteFor
+      && deckNames.has(nameKey(rule.card)));
+    if (!active.length) return [];
+
+    const setKey = (names) => (names || []).map(nameKey).sort().join('|');
+    const published = new Set((included || []).map((c) => setKey(c.c)));
+    const out = [];
+    const seen = new Set();
+
+    for (const rule of active) {
+      const wanted = rule.card;
+      const wantedKey = nameKey(wanted);
+      const replaced = nameKey(rule.substituteFor);
+      const attests = rule.attestedBy ? nameKey(rule.attestedBy) : null;
+
+      // One walk, and only the three small subsets it turns up are keyed. Keying all
+      // 103k — a sort and a join each — is what made this slow; the combos naming any
+      // one of these three cards number in the low thousands.
+      const targets = [];
+      const attested = new Map();
+      const already = new Set();
+      for (const combo of combos) {
+        let hasReplaced = false;
+        let hasAttest = false;
+        let hasWanted = false;
+        for (const name of combo.c || []) {
+          const key = nameKey(name);
+          if (key === replaced) hasReplaced = true;
+          else if (key === wantedKey) hasWanted = true;
+          else if (attests && key === attests) hasAttest = true;
+        }
+        if (hasWanted) already.add(setKey(combo.c));
+        if (hasAttest) attested.set(setKey(combo.c), combo);
+        // A slot needs the full resolveSlots() walk to know whether the deck fills
+        // it, so a combo carrying one is never claimed here.
+        if (hasReplaced && !combo.t) targets.push(combo);
+      }
+
+      for (const combo of targets) {
+        const cards = combo.c || [];
+        const swapped = cards.map((name) => (nameKey(name) === replaced ? wanted : name));
+        // Cheapest discriminator first: nearly every combo fails it.
+        if (!swapped.every((name) => deckNames.has(nameKey(name)))) continue;
+
+        // The same combo, published with a different card of the same class — which
+        // is what says the loop does not depend on the replaced card's own rider.
+        let twin = combo;
+        if (attests) {
+          twin = attested.get(setKey(cards.map((n) => (nameKey(n) === replaced ? rule.attestedBy : n))));
+          if (!twin) continue;
+        }
+
+        const key = setKey(swapped);
+        if (seen.has(key) || published.has(key) || already.has(key)) continue;
+        seen.add(key);
+
+        out.push({
+          id: 'unofficial:' + key,
+          c: swapped,
+          p: (twin.p || []).slice(),
+          i: identityString(deckIdentity(dataset.cardIdentity, new Set(swapped.map(nameKey)))),
+          unofficial: {
+            confidence: rule.confidence || 'derived',
+            from: { id: combo.id, cards: cards.slice() },
+            swap: { out: rule.substituteFor, in: wanted },
+            why: rule.why || '',
+          },
+        });
+      }
+    }
+
+    return out.sort(bySizeThenName);
+  }
+
   // A colour set back into the WUBRG string the combo rows carry.
   function identityString(colours) {
     if (!colours || !colours.size) return 'C';
@@ -893,7 +998,7 @@
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
-    matchDeck, matchUnofficial, identityString,
+    matchDeck, matchUnofficial, matchSubstitutions, identityString,
     deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,

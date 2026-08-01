@@ -1282,6 +1282,41 @@ need it.
 swap is genuinely one card in and one out against the cited combo, and every row gives
 a reason. A row that cannot say where it came from cannot ship.
 
+### When a whole card is missing, not a combo
+
+One row per combo works while the gaps are individual. It stops working when
+Spellbook is missing a card outright: **Hammerhead, Maggia Boss** reads *"Sacrifice
+another creature or artifact: Put a +1/+1 counter on Hammerhead"* — the same free
+outlet as Umbral Collar Zealot's, for the same `{1}{B}` — and the Zealot is in **1,514**
+published combos while Hammerhead is in **none**. Writing 1,514 rows by hand would be
+absurd, and would rot the moment Spellbook published the 1,515th.
+
+So `SUBSTITUTIONS` holds a rule instead, expanded by `matchSubstitutions()` against the
+dataset the page has already loaded. Wherever a published combo uses the one card, the
+same combo is offered with the other.
+
+That is a powerful enough mechanism to be dangerous, so it is fenced:
+
+- **`attestedBy` is required.** The risk is a combo that uses the Zealot *for* the
+  surveil rather than for the sacrifice — 1,482 of its combos list surveil as a result,
+  so the wording cannot tell those apart. Bartolomé del Presidio is a second outlet of
+  the same class whose rider is a `+1/+1` counter instead, and Spellbook publishes
+  **1,492 of the Zealot's 1,514** combos with it as well. A combo published with both
+  riders demonstrably does not care which rider it gets. The 22 left over — 19 of them
+  surveil combos — are exactly what this excludes, without anyone having to guess which.
+- **The results come from the attested twin**, not from the combo being substituted
+  into. "Infinite surveil" comes from the Zealot and not from the loop; printing it
+  beside Hammerhead would state something false.
+- **Combos with template slots are skipped.** Only the full `resolveSlots()` walk knows
+  whether the deck fills a slot, and a row claiming a combo the deck cannot assemble is
+  worse than no row at all.
+- **Nothing is indexed until a rule can fire.** Whether the deck holds the substitute is
+  one `Set` lookup, taken first: 0 ms for the decks that don't play it, against 300 ms
+  when the index was built up front. It costs only when it delivers.
+
+`test/unofficial.test.js` covers each guard separately, since a rule that fires too
+widely invents combos at scale rather than one at a time.
+
 ### They graduate rather than accumulate
 
 Spellbook is refreshed nightly, and the day a row is published it arrives in the
