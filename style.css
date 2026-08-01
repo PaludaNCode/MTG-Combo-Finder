@@ -766,6 +766,32 @@ button.result.more:hover { color: var(--text); filter: none; }
 summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 .combo-link { margin: .5rem 0 0; font-size: .85rem; }
 
+/* The working shown on an unofficial combo. Quieter than the cards and the
+   results either side of it: it is there to be read once, when deciding whether
+   to believe the row, not on every pass down the list. */
+.derived-note {
+  margin: .5rem 0 0;
+  font-size: .85rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.derived-badge {
+  display: inline-block;
+  margin-right: .4rem;
+  padding: .05rem .4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  vertical-align: .05em;
+}
+/* Two words that mean quite different things, so they do not look the same:
+   one was read against the cards, the other was inferred from coverage. */
+.derived-badge.verified { color: var(--ok); }
+.derived-badge.derived { color: var(--muted); }
+
 .data-age { margin: .4rem 0 0; font-size: .8rem; }
 .data-age time { color: var(--text); }
 

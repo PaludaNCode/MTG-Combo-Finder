@@ -119,3 +119,35 @@ test('tiers: the calls made on each outcome, pinned', () => {
     assert.strictEqual(TIERS.tierOf(name).tier, tier, name);
   }
 });
+
+// Two outcomes that read as plumbing and are not. Neither says "infinite", which
+// is what kept them grey, but the question a tier answers is whether the game is
+// over — not whether the number is. A hundred-card singleton deck put into your
+// hands at once holds whatever you built it to win with.
+//
+// Pinned by name because that is what the file is: moving one outcome between
+// tiers is moving one string, and this is the string.
+test('tiers: your whole library, all at once, is green', () => {
+  for (const name of [
+    'Exile your library with the ability to play the exiled cards until your next turn',
+    'Put all creature cards from your library onto the battlefield',
+  ]) {
+    const { tier, why } = TIERS.tierOf(name);
+    assert.strictEqual(tier, 'win', `"${name}" is ${tier}, not green`);
+    assert.ok(why.length > 10, `"${name}" is green without saying why`);
+  }
+});
+
+// ...and the neighbours it would be easy to sweep up with them, which are grey on
+// purpose. Into your hand still costs the mana to cast them; exiling your library
+// with no way to play the cards is a drawback; and putting your creatures onto the
+// battlefield only to bin them is a graveyard filler, not a board.
+test('tiers: the near-identical wordings around them stay grey', () => {
+  for (const name of [
+    'Exile your library',
+    'Put all creature cards from your library into your hand',
+    'Put all creature cards in your library onto the battlefield, then into your graveyard',
+  ]) {
+    assert.strictEqual(TIERS.tierOf(name).tier, 'other', `"${name}" was swept into another tier`);
+  }
+});

@@ -560,6 +560,50 @@
     };
   }
 
+  // The combos in unofficial.js that this deck can assemble, in the same shape
+  // matchDeck() returns so the renderer needs no second code path.
+  //
+  // `included` is passed in and checked against, not for speed but for correctness:
+  // these rows exist because Spellbook has not published them, and Spellbook is
+  // refreshed nightly. The day a row is published it arrives in `included` on its
+  // own authority, and showing our copy beside it would be the same combo listed
+  // twice — one of them stale. So a row that has been published drops out here and
+  // the entry graduates to the official list without anyone editing this file.
+  function matchUnofficial(dataset, rows, deckNames, included) {
+    if (!Array.isArray(rows) || !deckNames) return [];
+    const published = new Set(
+      (included || []).map((c) => (c.c || []).map(nameKey).sort().join('|'))
+    );
+    const out = [];
+
+    for (const row of rows) {
+      const cards = (row && row.cards) || [];
+      if (!cards.length) continue;
+      if (!cards.every((name) => deckNames.has(nameKey(name)))) continue;
+
+      const key = cards.map(nameKey).sort().join('|');
+      if (published.has(key)) continue;
+
+      out.push({
+        id: 'unofficial:' + key,
+        c: cards.slice(),
+        p: (row.produces || []).slice(),
+        // Worked out from the cards rather than stored, so it cannot drift from the
+        // identity data the rest of the page filters by.
+        i: identityString(deckIdentity(dataset && dataset.cardIdentity, new Set(cards.map(nameKey)))),
+        unofficial: row,
+      });
+    }
+
+    return out.sort(bySizeThenName);
+  }
+
+  // A colour set back into the WUBRG string the combo rows carry.
+  function identityString(colours) {
+    if (!colours || !colours.size) return 'C';
+    return 'WUBRG'.split('').filter((c) => colours.has(c)).join('');
+  }
+
   // Normalizes a dataset combo into the shape the renderer expects, so the
   // rendering code doesn't need to know about the compact field names.
   function expand(combo) {
@@ -574,6 +618,10 @@
       // Which of the deck's cards was credited with each template slot, so the
       // page can show it rather than asking anyone to take the match on trust.
       fills: combo.fills || undefined,
+      // Present only on rows from unofficial.js: which published combo this was
+      // derived from, and how far the checking went. The renderer keys the whole
+      // "unofficial" treatment off this field being there.
+      unofficial: combo.unofficial || undefined,
       // And which slot it is short of, for the combos it cannot assemble.
       gaps: combo.gaps || undefined,
     };
@@ -845,7 +893,8 @@
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
-    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
+    matchDeck, matchUnofficial, identityString,
+    deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
     comboSize, sizeBreakdown, bracketCheck,

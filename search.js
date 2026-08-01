@@ -12,6 +12,11 @@
   'use strict';
 
   const DeckCombos = global.DeckCombos || (typeof require === 'function' ? require('./combos.js') : null);
+  // The handful of combos we believe in that Spellbook has not published. Loaded
+  // the same way as the rest, and optional: if the file is missing the page shows
+  // the official list and nothing else, rather than failing to search.
+  const Unofficial = global.UnofficialCombos
+    || (typeof require === 'function' ? require('./unofficial.js') : null);
 
   // Bumping the name is how a payload shape change abandons old copies: a cached
   // response from before a new field existed would otherwise be served forever.
@@ -202,8 +207,14 @@
       identity: matched.identity,
       // The Game Changer list lives in the dataset, and the dataset stays here —
       // so the bracket is worked out beside the match rather than in the page.
+      // Deliberately `included` and not the unofficial rows: the bracket is a
+      // claim about what a deck is allowed to be, and it should rest on what
+      // Spellbook has published rather than on a swap we worked out ourselves.
       bracket: DeckCombos.bracketCheck(data, deckNames, included),
       included,
+      unofficial: DeckCombos.matchUnofficial(
+        data, (Unofficial && Unofficial.COMBOS) || [], deckNames, matched.included
+      ).map(DeckCombos.expand),
       oneSlotAway: matched.oneSlotAway.map(DeckCombos.expand),
       slotCandidates: matched.slotCandidates,
       almostIncluded: matched.almostIncluded.map(DeckCombos.expand),

@@ -18,7 +18,10 @@
 // query string is its script URL's, so it can pass the same stamp along. Empty
 // in a local checkout, which is exactly right.
 const VERSION = location.search;
-importScripts('result-tiers.js' + VERSION, 'combos.js' + VERSION, 'search.js' + VERSION);
+importScripts(
+  'result-tiers.js' + VERSION, 'combos.js' + VERSION,
+  'unofficial.js' + VERSION, 'search.js' + VERSION
+);
 
 self.onmessage = async (event) => {
   const { id, url, entries } = event.data || {};
