@@ -118,10 +118,12 @@
     return { name, quantity, sideboardPrefix, commander };
   }
 
-  // Parses a full decklist text blob into { commanders, main, skipped } where
-  // each card entry is { card, quantity } (the shape Commander Spellbook's
-  // find-my-combos endpoint expects) and `skipped` lists what was dropped and
-  // why, so the page can show it rather than silently losing lines.
+  // How many cards a section has to hold before we stop believing its heading.
+  // A command zone is one card, or two with partners; nothing legal comes near this.
+  // A section claiming sixteen is a deck pasted under the only heading its export
+  // wrote, and every board below reads from that: see parseDecklist().
+  const DECK_SIZED_RUN = 15;
+
   // Where a new main-deck card should be written into a decklist someone is
   // already holding.
   //
@@ -145,12 +147,21 @@
   // is where someone would have typed it.
   //
   // Lives here rather than in the page because this is the same walk parseDecklist()
-  // does, and two notions of "which lines are the main deck" would drift apart the
-  // first time a site invented a heading.
+  // does — including the oversized-command-zone rule — and two notions of "which
+  // lines are the main deck" would drift apart the first time a site invented a
+  // heading.
   function mainDeckInsertIndex(text) {
     const lines = String(text || '').split(/\r?\n/);
     let target = 'main';
-    let end = 0; // an empty box, or one that never reaches the main deck, takes the top
+
+    // Every contiguous run of card lines with the board it was read under, plus a
+    // zero-card marker at each main heading so a heading with nothing under it yet
+    // still says where cards would go. Collected rather than resolved on the fly
+    // because whether the command zone is really the deck is only known at the end.
+    const runs = [];
+    let run = null;
+    const closeRun = () => { if (run) { runs.push(run); run = null; } };
+
     for (let i = 0; i < lines.length; i += 1) {
       const trimmed = lines[i].trim();
       if (!trimmed) continue;
@@ -158,17 +169,38 @@
       const heading = normalizeHeading(trimmed);
       if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
         target = SECTION_TARGET[heading];
-        // A heading with nothing under it yet still marks where cards would go.
-        if (target === 'main') end = i + 1;
+        closeRun();
+        if (target === 'main') runs.push({ target, cards: 0, end: i + 1 });
         continue;
       }
       if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) {
         target = 'ignore';
+        closeRun();
         continue;
       }
-      if (target === 'main') end = i + 1;
+      if (isCategoryHeading(trimmed)) continue; // a label inside a board, not a board
+      // MTGO marks its sideboard per line instead of with a heading. Those lines sit
+      // inside the main run but are not in the deck, so a card added to such a list
+      // goes above them rather than into the middle of the sideboard.
+      if (/^sb:/i.test(trimmed)) continue;
+
+      if (!run || run.target !== target) { closeRun(); run = { target, cards: 0, end: 0 }; }
+      run.cards += 1;
+      run.end = i + 1;
     }
-    return end;
+    closeRun();
+
+    // The same rule parseDecklist() applies: a command zone this large is the deck.
+    const zone = runs.reduce((n, r) => (r.target === 'commanders' ? n + r.cards : n), 0);
+    const isDeck = (r) => r.target === 'main'
+      || (r.target === 'commanders' && zone > DECK_SIZED_RUN);
+
+    // The end of the last run that is deck. Not the first heading that leaves the
+    // deck: on an export that opens with its command zone that would be line 0,
+    // above everything, which parses correctly but reads as though the button
+    // misfired. An empty box, and a list with no deck in it at all, take the top.
+    const deck = runs.filter(isDeck);
+    return deck.length ? deck[deck.length - 1].end : 0;
   }
 
   // The decklist someone is holding, with one more card in its main deck. Trailing
@@ -189,6 +221,10 @@
     return lines.slice(0, at).concat(line, lines.slice(at)).join('\n');
   }
 
+  // Parses a full decklist text blob into { commanders, main, skipped } where
+  // each card entry is { card, quantity } (the shape Commander Spellbook's
+  // find-my-combos endpoint expects) and `skipped` lists what was dropped and
+  // why, so the page can show it rather than silently losing lines.
   function parseDecklist(text) {
     const commanders = [];
     const main = [];
@@ -248,6 +284,21 @@
         const entry = { card: parsed.name, quantity: parsed.quantity };
         bucket.set(parsed.name.toLowerCase(), entry);
         (board === 'commanders' ? commanders : main).push(entry);
+      }
+    }
+
+    // A whole decklist pasted under a "Commander" heading, with no "Deck" heading
+    // after it, is the one shape where believing the heading is worse than counting
+    // the cards: it produces a hundred-card command zone, and colour identity — which
+    // every suggestion is filtered by — is taken from the command zone. So the deck
+    // would filter itself against itself, and the button that adds a card would add a
+    // commander. Over DECK_SIZED_RUN cards, the heading loses.
+    if (commanders.length > DECK_SIZED_RUN) {
+      for (const entry of commanders.splice(0)) {
+        const key = entry.card.toLowerCase();
+        const existing = byName.main.get(key);
+        if (existing) existing.quantity += entry.quantity;
+        else { byName.main.set(key, entry); main.push(entry); }
       }
     }
 

@@ -630,15 +630,23 @@ the objection: 465 requests and ~23 minutes, on a job that already streams a
 
 ## Adding a card, and searching again
 
+Every suggestion carries **+ Add to deck**, and so does every interchangeable
+alternative under it. It writes `1 <card>` into the decklist, keeps the list, and
+submits the form again.
 
-**The card is written into the main deck, not onto the end of the box.** Several sites
+**The card goes into the main deck, not onto the end of the box.** Several sites
 export a list that ends in a `Sideboard:` section, and a card appended below that
 heading parses as a sideboard card: it never enters the deck, so the next search
 suggests it again and the button looks like it did nothing. `Commander:` was quieter and
 worse — the card silently joined the command zone.
 
-`DeckParser.addMainDeckCard()` writes it above the first line that leaves the main deck,
-and above the blank run separating them, so the list keeps the shape its owner gave it.
+`DeckParser.addMainDeckCard()` writes it at the **end of the last main-deck run**, above
+the blank line separating that run from whatever follows, so the list keeps the shape its
+owner gave it. Not the first line that leaves the deck: on an export that opens with its
+command zone that is line 0, above everything, which parses correctly but reads as though
+the button misfired. MTGO's `SB:` lines carry their own marker instead of a heading, so
+they are stepped over too and the card lands above them.
+
 The insertion point is the same walk `parseDecklist()` does, kept in the parser for that
 reason: two notions of "where the main deck ends" would drift apart the first time a
 site invented a heading.
@@ -648,9 +656,26 @@ the old behaviour fails it with *"put Deadeye Navigator below the sideboard head
 where it is not in the deck"* and *"6 combos before adding and 6 after"*. Its previous
 assertion — that the added card is the box's **last line** — was the bug written down as
 a requirement, and is now a check on where the card landed relative to the section.
-Every suggestion carries **+ Add to deck**, and so does every interchangeable
-alternative under it. It appends `1 <card>` to the decklist, keeps the list, and
-submits the form again.
+
+### When the heading and the card count disagree
+
+One shape defeats all of that, because there the heading is simply wrong: a whole deck
+pasted under a `Commander` heading with no `Deck` heading after it — what you get by
+copying an export from the commander down and losing the second heading. Read literally
+it is a hundred-card command zone, and since **colour identity is taken from the command
+zone**, the deck ends up filtered against itself; the add button then appends a 101st
+commander, which is the original bug wearing a different hat.
+
+So one rule in the parser overrules the exporter: a command zone holding more than
+`DECK_SIZED_RUN = 15` cards is not a command zone, and its cards are folded into the main
+deck. Fifteen is far above anything legal — a command zone is one card, or two with
+partners — and far below a deck, so there is no real list in between. `parseDecklist()`
+and the insertion walk apply the same rule, so a card added to such a list joins the deck
+under the block rather than the command zone above it.
+
+`test/parser.test.js` pins the threshold from both sides (15 believed, 16 not) rather
+than deriving it from the constant, so moving it has to be a deliberate edit in two
+places.
 
 It is a button rather than a note telling you to type the card in because of where
 the database already is: parsed, in the worker, from the search you just ran.
