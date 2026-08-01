@@ -423,3 +423,28 @@ test('board: a deck lost behind a stale sideboard heading is reported, not recov
   assert.strictEqual(parsed.skipped.length, 22);
   assert.ok(parsed.skipped.every((s) => s.reason === 'sideboard / ignored section'));
 });
+
+// When a section splits the deck in two, the bigger half is the deck. This is the
+// only place "we do not know where the deck is" has an answer worth acting on: the
+// button that adds a card only exists once a search has found combos, which needs a
+// deck, so the deck is always in the box somewhere — sometimes in more than one run.
+test('add: the card goes into the biggest deck block, not the last one', () => {
+  const text = ['Deck']
+    .concat(Array.from({ length: 20 }, (_, i) => '1 Card ' + (i + 1)))
+    .concat(['', 'Sideboard', '1 Pithing Needle', '', 'Deck', '1 Sol Ring'])
+    .join('\n');
+  const out = addMainDeckCard(text, 'Heliod, Sun-Crowned', 1);
+  const lines = out.split('\n');
+  assert.strictEqual(lines[21], '1 Heliod, Sun-Crowned', 'not at the end of the 20-card block');
+  assert.ok(lines.indexOf('1 Heliod, Sun-Crowned') < lines.indexOf('Sideboard'));
+  const parsed = parseDecklist(out);
+  assert.strictEqual(parsed.main.length, 22);
+});
+
+// ...but an ordinary list, where every block is the same size, keeps taking the last
+// one, so the common case is not reshuffled by the rule above.
+test('add: equal-sized blocks still take the last', () => {
+  const text = 'Deck\n1 Sol Ring\n\nSideboard\n1 Pithing Needle\n\nDeck\n1 Arcane Signet';
+  const out = addMainDeckCard(text, 'Heliod, Sun-Crowned', 1);
+  assert.strictEqual(out.split('\n').pop(), '1 Heliod, Sun-Crowned');
+});

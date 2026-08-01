@@ -206,12 +206,25 @@
     const deck = runs.filter((r) => r.target === 'main'
       || (r.target === 'commanders' && zone > DECK_SIZED_RUN));
 
-    // The end of the last run that is deck. Not the first heading that leaves the
-    // deck: on an export that opens with its command zone that would be line 0,
-    // above everything, which parses correctly but reads as though the button
-    // misfired. An empty box, and a list with no deck in it anywhere, take the top —
-    // never a sideboard, however many cards someone has parked in it.
-    return deck.length ? deck[deck.length - 1].end : 0;
+    // An empty box, and a list with no deck in it anywhere, take the top. Never a
+    // sideboard, however many cards someone has parked in it: a card written there
+    // is a card the next search will not see.
+    if (!deck.length) return 0;
+
+    // Otherwise the end of the **biggest** run that is deck, which is only a question
+    // when a section has split the deck in two — a sideboard in the middle of a list,
+    // or an export that repeats its Deck heading. Then "which of these is the deck"
+    // is answered by weight of cards rather than by which happens to come last, and a
+    // card added to a 60-card block reads as belonging where a card added to the
+    // one-line block below the sideboard does not.
+    //
+    // Ties keep the later run, so an ordinary single-block list is unaffected and the
+    // marker pushed at an empty Deck heading only wins when there is nothing else.
+    //
+    // Not the first heading that *leaves* the deck, in any case: on an export that
+    // opens with its command zone that is line 0, above everything, which parses
+    // correctly but reads as though the button misfired.
+    return deck.reduce((best, r) => (r.cards >= best.cards ? r : best)).end;
   }
 
   // The decklist someone is holding, with one more card in its main deck. Trailing
