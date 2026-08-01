@@ -34,6 +34,7 @@ const BROWSER = {
   atob: 'readonly',
   btoa: 'readonly',
   console: 'readonly',
+  getComputedStyle: 'readonly',
   globalThis: 'readonly',
   // Worker scope.
   self: 'readonly',
@@ -104,9 +105,12 @@ export default [
     // The page. Real `<script>` files, so a `function` at top level really does
     // land on `window` — which is why no-implicit-globals belongs here and only
     // here. Each of these files wraps itself in an IIFE for exactly that reason.
+    // Every script either page loads. Listing them by name is deliberate — see
+    // the note on the Node block below for what a file missing from both lists
+    // gets, which is nothing.
     files: [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
-      'result-tiers.js', 'tiers-page.js',
+      'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,
@@ -117,14 +121,36 @@ export default [
     rules: { ...RULES, 'no-implicit-globals': 'error' },
   },
   {
-    // Node: the tools and the tests. CommonJS is module scope, not global scope,
-    // so a top-level function here leaks nowhere and no-implicit-globals would be
-    // reporting the language rather than a mistake.
-    files: ['tools/**/*.js', 'test/**/*.js'],
+    // Node: the tools, the unit tests, and the browser tests with their server
+    // and config. CommonJS is module scope, not global scope, so a top-level
+    // function here leaks nowhere and no-implicit-globals would be reporting the
+    // language rather than a mistake.
+    //
+    // Between these two lists they have to cover every .js in the repository. A
+    // file in neither is not linted leniently — it is not linted *at all*: flat
+    // config applies no rules to a file no block matches, and it passes in
+    // silence. theme.js, unofficial.js and graph.js sat outside both for a while
+    // and a misspelled global in any of them would have gone to production
+    // green. There is a test below that fails if a file is orphaned again.
+    files: ['tools/**/*.js', 'test/**/*.js', 'playwright.config.js', 'e2e/server.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'commonjs',
       globals: NODE,
+    },
+    linterOptions: { reportUnusedDisableDirectives: true },
+    rules: RULES,
+  },
+  {
+    // The browser tests. Node files that contain browser code: everything inside
+    // a `page.evaluate()` callback is serialised and run in the tab, so `window`
+    // and `document` are as real there as `require` is around them. Both sets of
+    // globals, or half of every spec is a false positive.
+    files: ['e2e/**/*.spec.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
+      globals: { ...NODE, ...BROWSER },
     },
     linterOptions: { reportUnusedDisableDirectives: true },
     rules: RULES,

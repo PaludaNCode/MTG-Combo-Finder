@@ -739,6 +739,8 @@
   // from nowhere but itself, so a library would have to be vendored into the
   // repository, and this is ~60 lines.
   const SVG_NS = 'http://www.w3.org/2000/svg';
+  // How far outside a dot a press still counts as that card's.
+  const HIT_MARGIN = 5;
 
   function svgEl(tag, className) {
     const node = document.createElementNS(SVG_NS, tag);
@@ -994,6 +996,16 @@
       g.setAttribute('aria-pressed', 'false');
       g.setAttribute('aria-label', node.name + ', in ' + node.combos
         + ' combo' + (node.combos === 1 ? '' : 's') + '. Pick to compare.');
+      // An invisible ring of forgiveness around the dot. The smallest card on
+      // the map is a 5-unit circle, which on a phone — a 900-unit canvas scaled
+      // into a 330px column — is under two physical pixels of target. This does
+      // not make it a thumb-sized one, but it makes a near miss count, and it
+      // costs nothing: the gap the layout leaves between two dots is wider than
+      // this, so no card can steal another's presses.
+      const hit = svgEl('circle', 'hit');
+      hit.setAttribute('cx', node.x);
+      hit.setAttribute('cy', node.y);
+      hit.setAttribute('r', String(node.r + HIT_MARGIN));
       const dot = svgEl('circle', 'dot');
       dot.setAttribute('cx', node.x);
       dot.setAttribute('cy', node.y);
@@ -1013,6 +1025,7 @@
       hint.textContent = node.name + ' — in ' + node.combos
         + ' combo' + (node.combos === 1 ? '' : 's');
       g.appendChild(hint);
+      g.appendChild(hit);
       g.appendChild(dot);
       g.appendChild(label);
       nodeLayer.appendChild(g);

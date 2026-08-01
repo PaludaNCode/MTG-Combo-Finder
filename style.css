@@ -810,6 +810,10 @@ button:disabled { opacity: .6; cursor: wait; }
      map ignoring you. */
   pointer-events: none;
 }
+/* The press target: a little wider than the dot, painted with nothing. `all`
+   rather than a transparent fill, because a fill nobody can see is not a fill
+   anything is required to hit. */
+.combo-map .hit { fill: none; pointer-events: all; }
 .combo-map .node { cursor: pointer; }
 .combo-map .node:hover .dot { fill: var(--text); }
 /* The cards are buttons, so a keyboard has to be able to see where it is. */

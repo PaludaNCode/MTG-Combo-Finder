@@ -44,3 +44,28 @@ jobs:
         run: npm run verify
         env:
           CHROME_PATH: /usr/bin/google-chrome
+
+      # The same pages, driven rather than measured: a real pointer, real key
+      # presses, a real touchscreen, a reload, a shared link opened in a second
+      # tab. See "Two browser test suites" in the README for which check belongs
+      # in which of the two.
+      #
+      # Only Chromium is installed. Three engines would triple a step that is
+      # already the longest in this job, and nothing here is engine-specific —
+      # the page is plain DOM and hand-written SVG. A Firefox or WebKit bug would
+      # be found by someone using the site, which is the honest trade and worth
+      # writing down rather than implying otherwise by not naming the browser.
+      - name: Install Chromium for the browser tests
+        run: npx --yes playwright@1.56.1 install --with-deps chromium
+
+      - name: Browser tests
+        run: npm run test:ui
+
+      # The report is worth having exactly when the step above went red.
+      - name: Keep the report from a failing run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

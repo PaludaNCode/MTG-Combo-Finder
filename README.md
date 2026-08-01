@@ -1165,6 +1165,33 @@ page reports in ~450ms.
 That discovery is also why `search.js` never *waits* on the cache: see
 [Downloading the database once](#downloading-the-database-once-not-once-a-visit).
 
+### Two browser test suites, and which check belongs in which
+
+There are two, they are not the same job, and a check put in the wrong one is
+either slow or a lie.
+
+| | `tools/verify-layout.js` (`npm run verify`) | `e2e/` (`npm run test:ui`) |
+| --- | --- | --- |
+| **What it does** | *measures* the rendered page | *uses* the rendered page |
+| Typical assertion | "no dot is drawn outside the viewBox", "the columns split at 900px", "this number sits on its line" | "hovering a card dims the rest", "pressing two cards says what cutting them costs", "the shared link opens the right deck" |
+| Input | synthetic: it dispatches `pointerenter` at an element | real: a pointer that moves, keys that are pressed, a finger that taps |
+| Dependencies | none — it drives headless Chrome directly and has the page POST back a verdict | Playwright, fetched for the run |
+| Widths | four, in an iframe sized per viewport | two device profiles, desktop and phone |
+| Runs in | ~6s | ~20s |
+
+The rule of thumb: **geometry goes left, gestures go right.** "Where did this land"
+is a measurement and belongs in the layout test, which can read it back at four
+widths for the price of one page load. "Does this work when a person does it" is
+a gesture and belongs in Playwright, because a dispatched event will happily
+light a card that a real mouse could never reach — the map's cards are a case in
+point, and the Playwright suite is what noticed that a card's press target is its
+dot rather than the middle of the box its label stretches.
+
+Both drive the real files, unbuilt, against the same made-up deck in
+`test/fixtures/dataset.js`. One fixture, because two copies of a fixture is two
+fixtures: a case added to one and not the other is a claim only half the tests
+make.
+
 ### What the layout test proves
 
 Ten runs. Four are layout at 390/768/1440/1920px, two are the tier page, and three
@@ -1289,6 +1316,13 @@ Static site, zero dependencies, no build step:
   instead of a bare "it didn't work".
 - `tools/fetch-combos.js` — downloads Commander Spellbook's bulk export and
   writes a compact `combos.json`. Run by CI, not by the page.
+- `e2e/` — the browser tests: `server.js` serves the repository as it deploys
+  with `combos.json` answered from the fixture, and the two spec files press the
+  pages the way a person does. `playwright.config.js` at the root wires them to
+  a desktop and a phone profile. See
+  [Two browser test suites](#two-browser-test-suites-and-which-check-belongs-in-which).
+- `test/fixtures/dataset.js` — the made-up deck and dataset both browser suites
+  run against, so neither can drift from the other.
 
 ## Why the data is published, not queried live
 

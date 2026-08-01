@@ -19,3 +19,7 @@ build/
 
 # Combo database — built by tools/fetch-combos.js, published to the data branch
 combos.json
+
+# Playwright: fetched for the run, and its output is per-run
+test-results/
+playwright-report/
