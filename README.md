@@ -1295,24 +1295,35 @@ So `SUBSTITUTIONS` holds a rule instead, expanded by `matchSubstitutions()` agai
 dataset the page has already loaded. Wherever a published combo uses the one card, the
 same combo is offered with the other.
 
+The rule is anchored on **Bartolomé del Presidio** rather than on the Zealot, because
+Bartolomé has the identical ability — free, repeatable, "another creature or artifact",
+a `+1/+1` counter on itself — with no rider to differ. That is worth 1,674 combos against
+the Zealot's 1,514, and it sidesteps the Zealot's one hazard: 1,482 of its combos list
+surveil as a result, and a combo that wants the *surveil* rather than the sacrifice would
+not work with Hammerhead. Hammerhead is `{1}{B}` where Bartolomé is `{1}{W}{B}`, so it
+fits every deck the published version fits, and some mono-black decks it does not.
+
 That is a powerful enough mechanism to be dangerous, so it is fenced:
 
-- **`attestedBy` is required.** The risk is a combo that uses the Zealot *for* the
-  surveil rather than for the sacrifice — 1,482 of its combos list surveil as a result,
-  so the wording cannot tell those apart. Bartolomé del Presidio is a second outlet of
-  the same class whose rider is a `+1/+1` counter instead, and Spellbook publishes
-  **1,492 of the Zealot's 1,514** combos with it as well. A combo published with both
-  riders demonstrably does not care which rider it gets. The 22 left over — 19 of them
-  surveil combos — are exactly what this excludes, without anyone having to guess which.
-- **The results come from the attested twin**, not from the combo being substituted
-  into. "Infinite surveil" comes from the Zealot and not from the loop; printing it
-  beside Hammerhead would state something false.
+- **A rule must carry evidence of one of two kinds**, and the tests reject one that
+  carries neither. `sameAbility` means the two cards were read and there is no rider to
+  differ. `attestedBy` names a third card of the same class that Spellbook publishes with
+  the same combos, which proves from published data that the loop does not care which
+  rider it gets — before these cards were read, that is how this swap was checked, and
+  the Zealot/Bartolomé overlap corroborates 1,492 of the 1,674 either way.
+- **With `attestedBy`, the results come from the attested twin**, not from the combo
+  being substituted into, so a rider's own result never appears next to a card that does
+  not have it.
 - **Combos with template slots are skipped.** Only the full `resolveSlots()` walk knows
   whether the deck fills a slot, and a row claiming a combo the deck cannot assemble is
   worse than no row at all.
 - **Nothing is indexed until a rule can fire.** Whether the deck holds the substitute is
   one `Set` lookup, taken first: 0 ms for the decks that don't play it, against 300 ms
   when the index was built up front. It costs only when it delivers.
+
+Each rule costs a walk of the whole database, so a rule that adds no coverage does not
+get to exist for the record. Anchoring on the Zealot as well would have cost a second
+walk to find nothing new, since its attested set is a subset of Bartolomé's.
 
 `test/unofficial.test.js` covers each guard separately, since a rule that fires too
 widely invents combos at scale rather than one at a time.

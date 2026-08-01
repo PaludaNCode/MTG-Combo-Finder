@@ -235,9 +235,30 @@ test('rule: the shipped rules are shaped the way the page prints them', () => {
     assert.notStrictEqual(nameKey(rule.card), nameKey(rule.substituteFor));
     assert.ok(['verified', 'derived'].includes(rule.confidence));
     assert.ok(rule.why && rule.why.length > 20, rule.card + ': no reasoning given');
-    // Unattested rules are the dangerous kind — they would fire on every combo the
-    // replaced card appears in, including the ones that want its rider.
-    assert.ok(rule.attestedBy, rule.card + ': a rule must name a card that attests it');
-    assert.notStrictEqual(nameKey(rule.attestedBy), nameKey(rule.substituteFor));
+    // A rule must show one of the two kinds of evidence, because without either it
+    // fires on every combo the replaced card appears in — including the ones that
+    // want that card's rider rather than its ability.
+    //
+    //   sameAbility  the two cards were read and there is no rider to differ
+    //   attestedBy   a third card of the same class, published with the same combos,
+    //                proves the loop does not care which rider it gets
+    assert.ok(rule.sameAbility || rule.attestedBy,
+      rule.card + ': a rule needs either sameAbility or an attesting card');
+    if (rule.attestedBy) {
+      assert.notStrictEqual(nameKey(rule.attestedBy), nameKey(rule.substituteFor));
+      assert.notStrictEqual(nameKey(rule.attestedBy), nameKey(rule.card));
+    }
   });
+});
+
+// A rule with no evidence of either kind is the dangerous shape, so the matcher is
+// checked against it directly rather than only through the shipped list.
+test('rule: unattested substitution still fires — the guard is on the data, not here', () => {
+  const bare = { card: 'Hammerhead, Maggia Boss', substituteFor: 'Umbral Collar Zealot' };
+  const out = matchSubstitutions(SET, [bare], held, []);
+  assert.strictEqual(out.length, 1, 'the matcher trusts the rule it is given');
+  // ...which is exactly why the shipped-rules test above refuses one without evidence.
+  assert.strictEqual(out[0].unofficial.confidence, 'derived', 'an unlabelled rule is not verified');
+  // With no twin to take them from, the results come from the combo itself.
+  assert.deepStrictEqual(out[0].p, ['Infinite ETB', 'Infinite surveil']);
 });

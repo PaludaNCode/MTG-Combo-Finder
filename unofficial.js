@@ -194,28 +194,28 @@
   const SUBSTITUTIONS = [
     {
       card: 'Hammerhead, Maggia Boss',
-      substituteFor: 'Umbral Collar Zealot',
+      substituteFor: 'Bartolomé del Presidio',
       confidence: 'verified',
-      // The two abilities are the same ability: free, repeatable, "another creature
-      // or artifact", neither able to eat itself. Only the rider differs — Surveil 1
-      // against a +1/+1 counter — and Hammerhead costs the same {1}{B}.
+      // Read against both cards: the same free "sacrifice another creature or
+      // artifact", the same +1/+1 counter on itself, and no other ability between
+      // them that a combo could be using instead. There is no rider to differ, which
+      // is why this rule needs no attesting third card — see `attestedBy` below.
       //
-      // Which leaves one risk, and it is a real one: a combo that uses the Zealot
-      // *for* the surveil rather than for the sacrifice. Hammerhead would not work
-      // in those, and 1,482 of the Zealot's combos do list surveil as a result, so
-      // the wording cannot tell them apart.
-      //
-      // `attestedBy` is what settles it. Bartolomé del Presidio is a second outlet
-      // of the same class whose rider is a +1/+1 counter, and Spellbook publishes
-      // 1,492 of the Zealot's 1,514 combos with it as well. A combo published with
-      // both riders is a combo that demonstrably does not care which rider it gets.
-      // The 22 left over — 19 of them surveil combos — are exactly the ones this
-      // excludes, without anyone having to guess which.
-      attestedBy: 'Bartolomé del Presidio',
-      why: 'Hammerhead’s ability is Umbral Collar Zealot’s ability — free, repeatable, '
-        + '"another creature or artifact" — for the same {1}{B}. Spellbook publishes '
-        + 'this combo with a second outlet of that class as well, so the loop does not '
-        + 'depend on the Zealot’s surveil.',
+      // Hammerhead is {1}{B} against Bartolomé's {1}{W}{B}, so the substitute is the
+      // narrower colour identity. Nothing is lost by it: any deck that could play
+      // Bartolomé can play Hammerhead, and some mono-black decks can play only the one.
+      sameAbility: true,
+      // `attestedBy` is the other way a rule can earn its place, and this one does not
+      // need it: before the cards were read, the swap was checked by noticing that
+      // 1,492 of Umbral Collar Zealot's 1,514 combos are published with Bartolomé as
+      // well. That corroborates 89% of this rule's coverage from published data alone.
+      // It is not a second rule, though — the Zealot's attested set is a subset of
+      // Bartolomé's, so running it too would cost a second walk of 103k combos to
+      // find nothing new.
+      why: 'The same ability on both cards — free, repeatable, "another creature or '
+        + 'artifact", a +1/+1 counter on itself — with nothing else on either that a '
+        + 'combo could be using instead. Hammerhead is mono-black where Bartolomé is '
+        + 'Orzhov, so it fits every deck the published version fits and some it does not.',
     },
   ];
 
