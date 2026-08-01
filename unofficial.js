@@ -10,8 +10,8 @@
 // across many published combos — Soul Warden and Essence Warden share 97.5% of
 // theirs — and any combo that names one but not the other is a candidate. Most
 // candidates are not gaps: the cards turn out to differ in a way that matters to
-// that particular loop, and the audit in the README lists the 28 of 44 that were
-// ruled out and why. What survives is here.
+// that particular loop, and the audit in the README lists the 35 of 44 that were
+// ruled out and why. What survives is here — the nine below.
 //
 // Each row therefore carries its own evidence rather than asking to be taken on
 // trust, and the page shows it: the published combo it was derived from, which card
@@ -38,8 +38,14 @@
         cards: ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Academy Manufactor'],
       },
       swap: { out: 'Chatterfang, Squirrel General', in: 'Quina, Qu Gourmet' },
-      why: 'Quina fills the same doubling role Chatterfang does here, confirmed against '
-        + 'both cards’ text. The rest of the loop is untouched.',
+      // Not because the two cards are equivalent — they are not. Chatterfang adds
+      // *that many* Squirrels to a token creation; Quina adds exactly one Frog,
+      // however many tokens were made. It works here because this loop only ever
+      // needs one creature back per turn of the cycle.
+      why: 'Soultrader eats a Frog and makes a Treasure, Academy Manufactor turns that '
+        + 'into a Clue, a Food and a Treasure, and Quina adds one Frog to that creation — '
+        + 'which is exactly the Frog that was eaten. The artifacts accumulate; the Frog '
+        + 'count never moves.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
@@ -69,20 +75,43 @@
       ],
     },
 
-    // ---- derived, not read against the card text -----------------------------
+    {
+      cards: ['Scurry Oak', 'Heroic Feast', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'verified',
+      from: {
+        id: '1939-3197-7743',
+        cards: ['Herd Baloth', 'Heroic Feast', 'Lunarch Veteran // Luminous Phantom'],
+      },
+      swap: { out: 'Herd Baloth', in: 'Scurry Oak' },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this '
+        + 'creature, create a token”, and this loop only needs the token to enter: '
+        + 'Lunarch Veteran turns that into a life gained, and Heroic Feast turns the '
+        + 'life into the next counter. Spellbook publishes Scurry Oak + Heroic Feast '
+        + 'with 33 other lifegain-on-entry cards, and Lunarch Veteran is the one missing.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens',
+        'Infinite lifegain', 'Infinite lifegain triggers',
+      ],
+    },
+
+    // ---- one shape, six rows -------------------------------------------------
     //
-    // One shape, six rows. Spellbook publishes <token maker> + Sadistic Glee with all
-    // fourteen sacrifice outlets it knows, and publishes the same token makers with
-    // Necrosynthesis for eight other outlets — including Altar of Dementia, which like
-    // these three is free and makes no mana. So both halves of every swap below are
-    // already published; only the specific pairing is missing. What has not been done
-    // is reading Necrosynthesis against Sadistic Glee, which is why these say derived.
+    // Necrosynthesis gives the creature it enchants “whenever another creature dies,
+    // put a +1/+1 counter on this creature”. Enchant a token maker with it and any
+    // free sacrifice outlet closes the loop: the counter makes a token, the outlet
+    // eats the token, the death puts on the next counter. Each of these three outlets
+    // is free and can eat the token in question, which is all the loop asks of it.
+    //
+    // Spellbook publishes the same six with Sadistic Glee, and publishes both token
+    // makers with Necrosynthesis for five other outlets — so both halves of every swap
+    // are already there. Only the pairing is missing.
     {
       cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: { id: '2082-2292-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
       swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-      why: 'Both halves of the swap are published separately; the pairing is not.',
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next '
+        + 'counter. Read against all three cards.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature',
@@ -90,10 +119,11 @@
     },
     {
       cards: ['Scurry Oak', 'Necrosynthesis', 'Carrion Feeder'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: { id: '2082-2438-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'] },
       swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-      why: 'Both halves of the swap are published separately; the pairing is not.',
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next '
+        + 'counter. Read against all three cards.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
@@ -101,10 +131,11 @@
     },
     {
       cards: ['Scurry Oak', 'Necrosynthesis', 'Umbral Collar Zealot'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: { id: '2082-4186-6798', cards: ['Scurry Oak', 'Sadistic Glee', 'Umbral Collar Zealot'] },
       swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-      why: 'Both halves of the swap are published separately; the pairing is not.',
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next '
+        + 'counter. Read against all three cards.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',
@@ -112,10 +143,11 @@
     },
     {
       cards: ['Herd Baloth', 'Necrosynthesis', 'Viscera Seer'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: { id: '2082-2292-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Viscera Seer'] },
       swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-      why: 'Both halves of the swap are published separately; the pairing is not.',
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next '
+        + 'counter. Read against all three cards.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature',
@@ -123,10 +155,11 @@
     },
     {
       cards: ['Herd Baloth', 'Necrosynthesis', 'Carrion Feeder'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: { id: '2082-2438-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'] },
       swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-      why: 'Both halves of the swap are published separately; the pairing is not.',
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next '
+        + 'counter. Read against all three cards.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
@@ -134,10 +167,11 @@
     },
     {
       cards: ['Herd Baloth', 'Necrosynthesis', 'Umbral Collar Zealot'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: { id: '2082-3197-6798', cards: ['Herd Baloth', 'Sadistic Glee', 'Umbral Collar Zealot'] },
       swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-      why: 'Both halves of the swap are published separately; the pairing is not.',
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next '
+        + 'counter. Read against all three cards.',
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',

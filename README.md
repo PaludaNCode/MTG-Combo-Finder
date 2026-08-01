@@ -1274,6 +1274,10 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
+All nine currently shipping are `verified`. `derived` stays in the model because it is
+the honest label for a row found before its cards have been read, and the next one will
+need it.
+
 `test/unofficial.test.js` enforces the shape — every row cites a real combo id, every
 swap is genuinely one card in and one out against the cited combo, and every row gives
 a reason. A row that cannot say where it came from cannot ship.
@@ -1289,7 +1293,7 @@ the file.
 ### The audit, and what it ruled out
 
 44 candidates, from pairs of cards that Spellbook itself treats as interchangeable
-elsewhere. **28 were ruled out**, and the reasons are more interesting than the
+elsewhere. **35 were ruled out**, and the reasons are more interesting than the nine
 survivors, because each is a way a "functionally identical" card turns out not to be:
 
 - **18 — Trudge Garden needs mana, not just a sacrifice.** All 187 published Trudge
@@ -1309,8 +1313,22 @@ survivors, because each is a way a "functionally identical" card turns out not t
   including the Treasures that pay Camellia's `{2}`. One Treasure per cycle against a
   two-mana cost does not sustain.
 
-**8 remain open**, needing text for Heroic Feast, Shilgengar, Phantom Train, Quina and
-Necrosynthesis. They are not in `unofficial.js`; an unread row is not a combo.
+- **4 — the loop needs a *token*, not just a sacrifice.** Only two cards partner
+  Cauldron Familiar + Peregrin Took as a three-card combo, and both make a token when
+  they eat something: Shilgengar a Blood, Warren Soultrader a Treasure. Every other
+  outlet Spellbook lists there needs Garrison Excavator as a fourth card. Viscera Seer,
+  Carrion Feeder, Umbral Collar Zealot and Ashnod's Altar make no token.
+- **2 — Camellia's loop eats artifacts.** Every outlet published with Camellia +
+  Peregrin Took either sacrifices artifacts (Phantom Train, Umbral Collar Zealot, the
+  Atog family, Arcbound Ravager) or pays her `{2}` with mana (Ashnod's Altar). Viscera
+  Seer and Carrion Feeder take creatures only and produce nothing.
+- **1 — Quina is not a doubler.** Anointed Procession doubles every token; Quina adds
+  *one* Frog to a creation however many tokens it made. A loop that needs the Treasures
+  doubled does not get them.
+
+**Nothing remains open.** The nine that survived are in `unofficial.js`, and seven of
+them were only settled by reading the cards — which is why the panel prints how far the
+checking went rather than asking to be believed.
 
 **A high substitution score is never a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
