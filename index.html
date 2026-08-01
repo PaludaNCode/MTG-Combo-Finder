@@ -95,6 +95,10 @@
              calls, and the panel says which it did not check. -->
         <div id="bracket"></div>
         <div id="included"></div>
+        <!-- The same combos as a picture: a dot per card, a line between two the
+             same combo needs. Directly under the list it summarises, and redrawn
+             from scratch by every search, so adding a card moves the map too. -->
+        <div id="graph"></div>
         <!-- Combos you hold every named card for and cannot assemble because
              nothing fills their slot. Kept apart from the combos above, which
              the deck can actually pull off. -->
@@ -122,9 +126,12 @@
   <!-- The tier inventory has to be in place before combos.js reads it. -->
   <script src="result-tiers.js"></script>
   <script src="combos.js"></script>
-  <!-- The searching itself happens in search-worker.js, which imports the three
-       files above plus search.js. This copy is the fallback for a browser with
-       no Worker — see runSearch() in app.js. -->
+  <!-- Page-only, so the worker below does not import it: the map is drawn from
+       what the search hands back, not worked out during one. -->
+  <script src="graph.js"></script>
+  <!-- The searching itself happens in search-worker.js, which imports parser.js,
+       result-tiers.js and combos.js plus search.js. This copy is the fallback for
+       a browser with no Worker — see runSearch() in app.js. -->
   <script src="search.js"></script>
   <script src="app.js"></script>
 </body>

@@ -56,6 +56,13 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   of combos hides this: cutting a card that turns up in four of them costs four
   combos, which is exactly what you want to know before trimming a deck — and
   whether those four are two-carders or four-carders changes the answer.
+- **How your combos connect** — the same combos as a picture: a dot per card, a
+  line between two cards a combo needs together, drawn green when those two win
+  the game on their own. Which cards the deck is really built around, and whether
+  it holds one engine or three unrelated ones, is a shape rather than a number —
+  and neither the list of combos nor the list of cards can show it. Redrawn from
+  scratch by every search, so **+ Add to deck** moves the map too. See
+  [The combo map](#the-combo-map).
 - **Suggestions split by colour** — two tabs, *In your colours* and *Other
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
   tab rather than into the list. **Colours are read off the cards** — every card
@@ -628,6 +635,83 @@ not error, it silently yields a card list that is slightly wrong. Cost was never
 the objection: 465 requests and ~23 minutes, on a job that already streams a
 578 MB export.
 
+## The combo map
+
+*A prototype.* It draws, it keeps up with the deck, and it is tested — the rough
+edges it still has are named at the bottom of this section rather than smoothed
+over.
+
+Under "Combos in your deck" sits the same set of combos as a picture: **a dot per
+card, and a line between two cards whenever one of your combos needs both**. A
+combo of three cards is a triangle, not a chain — every pair inside it is a pair
+the combo needs, and drawing two of the three lines would say two of the cards
+were unrelated.
+
+What that adds over the panels around it is shape, which is the one thing a list
+cannot show. "Cards carrying your combos" will tell you Basalt Monolith is in
+five combos and Dramatic Reversal is in two; it cannot tell you that the deck is
+one artifact-mana engine with a Heliod cluster bolted on and two pairs that touch
+nothing else. That is a picture, and it is usually the thing you wanted to know
+before cutting anything.
+
+Three things carry meaning, and nothing else does:
+
+| What you see | What it means |
+| --- | --- |
+| **Dot size** | how many of your combos that card takes part in — the same count "Cards carrying your combos" ranks by, sized by area so a card in nine combos is not drawn eighty times the size of one in a single combo |
+| **Line colour** | the best result of the combos behind that pair, in the same three tiers the result chips use: **green** wins the game, **yellow** is real value something else must convert, **grey** is plumbing |
+| **Line weight** | how many of your combos need that exact pair, capped so one very busy pair does not draw a bar across the map |
+
+Hovering a card lights it, everything it touches and the lines between them, and
+pushes the rest back. On a deck with thirty combos in it that is the only way to
+read the thing — every line is drawn at the same weight until you ask about one
+card. On touch, where there is no hover, a tap does the same.
+
+**A card filling a template slot is on the map like any other.** It holds the
+combo up just as much as a card the combo names, and cutting it costs the combo
+all the same. That is the same rule "Cards carrying your combos" applies, and a
+test pins the two panels to the same set of cards so they cannot drift apart.
+
+**The placement is deterministic, which is not the usual choice.** A
+force-directed layout normally seeds its starting positions at random. This one
+starts from a ring in a fixed order — busiest card first, ties broken by name —
+so the same deck always draws the same picture. That matters here because the map
+is thrown away and rebuilt by *every* search, including the one **+ Add to deck**
+fires: with random seeding, adding one card would reshuffle the whole picture and
+every card would appear to have moved.
+
+**No charting library.** The page's Content-Security-Policy allows scripts from
+nowhere but itself, so a library would have to be vendored into the repository.
+Fruchterman–Reingold — every node pushes every other away, every edge pulls its
+two ends together, the whole thing cools over a fixed number of steps — is about
+thirty lines, plus a pull toward the centre so that a deck whose combos fall into
+two unconnected clusters does not simply push them off the canvas.
+
+**The arithmetic is in `graph.js` and the drawing is in `app.js`.** `build()`
+turns combos into `{nodes, links}` and `layout()` places them; neither knows what
+SVG is. That is what makes the interesting half testable in node, where there is
+nothing to look at: `test/graph.test.js` asserts that nodes land inside the
+canvas, that nothing is drawn on top of anything else, that an unconnected
+cluster is still on screen, that the card nearest each one is a card it combos
+with, and that two identical searches draw identical pictures. The layout test
+then presses the real page: the map renders at every viewport, in three colours,
+scales with its column, dims on hover, and **grows a card when + Add to deck is
+pressed** — a picture one search behind the list beside it would be worse than no
+picture at all.
+
+**Sixty cards, then it stops.** Past that the labels collide faster than the
+layout can separate them, and the repulsion pass is O(n²) per iteration. The
+busiest cards are kept and the panel says how many were left out, rather than
+quietly drawing a smaller deck than the one it was given.
+
+**What it does not do yet.** Labels on adjacent dots can still overlap — the halo
+behind them keeps each readable over the lines, but not over each other, and
+nothing here does label collision avoidance. There is no dragging, no zoom, and
+no click-through to a card. And the map is one image to a screen reader, with a
+one-line description: everything on it is written out in words in the panels
+above, which is the better read anyway, so the alternative was forty unlabelled
+shapes in the tab order.
+
 ## Adding a card, and searching again
 
 Every suggestion carries **+ Add to deck**, and so does every interchangeable
@@ -956,6 +1040,14 @@ inside the layout runs, for the same reason:
   card the group shows — the recommended one included — with every term exact.
 - **"Combos this unlocks"** must run smallest-first. The fixture's most-played combo
   is deliberately also its largest, so sorting on popularity alone fails the run.
+- **The combo map** is entirely geometry, and every way it can break is invisible:
+  a graph with every node at one point, or with nodes placed outside the box it is
+  drawn in, is valid SVG and an empty panel to look at. So the run reads the real
+  circles back out — inside the viewBox, none overlapping, more than one size —
+  checks its three tiers come out in three computed colours, hovers the quietest
+  card and measures that its neighbours light while the rest fade, and presses
+  **+ Add to deck** to assert the map *grew that card*. A picture one search
+  behind the list beside it says the added card is in no combos.
 
 Every one of those was confirmed by breaking the code and watching them fail.
 
@@ -1016,6 +1108,12 @@ Static site, zero dependencies, no build step:
   floor in `bracketCheck()`. Also the small view helpers that need testing without a
   browser: `edhrecSlug()`, `scryfallSetQuery()` for the whole-choice comparison link,
   and `orderComboNames()` for the order a combo's cards are named in.
+- `graph.js` — the combo map's arithmetic (`ComboGraph`): `build()` turns the
+  combos the deck can assemble into a graph of cards and the pairs that share
+  one, `layout()` places that graph on a canvas with a deterministic
+  force-directed run. No DOM — `app.js` draws the result as SVG — so the half
+  with all the interesting failure modes is testable under Node. See
+  [The combo map](#the-combo-map).
 - `theme.js` — resolves the theme (`DeckTheme`): the reader's stored choice, else what
   the browser asks for, written on `<html>` before the first paint and toggled by the
   sun/moon button. Loaded from `<head>` rather than with the rest, and excluded from
@@ -1026,7 +1124,9 @@ Static site, zero dependencies, no build step:
   beside the match: the Game Changer list is in the dataset, and the dataset stays in
   the worker.
 - `search-worker.js` — the worker that does all of the above off the thread drawing
-  the page. Imports the three files above.
+  the page. Imports `parser.js`, `result-tiers.js`, `combos.js` and `search.js` —
+  not `graph.js`, which is drawn from what a search hands back rather than used
+  during one.
 - `app.js` — reads the form, asks for a search, renders the sections above. On failure it
   shows a copyable report (endpoint, HTTP status, what was sent, which lines were skipped)
   instead of a bare "it didn't work".
@@ -1318,8 +1418,9 @@ npm run lint
 # actually clearing, the share link's whole round trip, the same output with
 # Worker taken away, "+ Add to deck" leaving the deck with more combos than it
 # had, the bracket pips and the explanation behind them, the theme toggle
-# overriding the system and being remembered, and the Scryfall comparison link
-# naming every card in a choice — and that the search really did run where it was
+# overriding the system and being remembered, the Scryfall comparison link
+# naming every card in a choice, and the combo map drawing a readable graph that
+# grows when a card is added — and that the search really did run where it was
 # supposed to. See "What the layout test proves" below.
 npm run verify
 

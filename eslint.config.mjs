@@ -50,6 +50,7 @@ const BROWSER = {
 const PAGE = {
   DeckParser: 'readonly',
   DeckCombos: 'readonly',
+  ComboGraph: 'readonly',
   ComboSearch: 'readonly',
   ResultTiers: 'readonly',
 };

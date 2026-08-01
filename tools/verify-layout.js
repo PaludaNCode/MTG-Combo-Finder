@@ -465,6 +465,58 @@ function measure(win, doc) {
       .reduce((n, row) => n + Math.max(1, row.querySelectorAll('details .combo').length), 0),
   };
 
+  // The combo map. Everything about it is geometry, so nothing about it can be
+  // read off the markup: a graph drawn with every node at the same point, or
+  // outside its own viewBox, is valid SVG and an empty panel on screen.
+  const map = (() => {
+    const svg = doc.querySelector('#graph .combo-map');
+    if (!svg) return null;
+    const box = svg.viewBox.baseVal;
+    const dots = [...svg.querySelectorAll('.node .dot')].map((c) => ({
+      x: c.cx.baseVal.value, y: c.cy.baseVal.value, r: c.r.baseVal.value,
+    }));
+    // Hovering a card has to pick out its own corner of the map, or the picture
+    // is unreadable the moment a deck has more than a handful of combos in it.
+    // The *last* card, which is the one in fewest combos: hovering the busiest
+    // one can light the whole map, and then there is nothing dimmed to measure.
+    const nodes = [...svg.querySelectorAll('.node')];
+    const hovered = nodes[nodes.length - 1];
+    if (hovered) hovered.dispatchEvent(new win.PointerEvent('pointerenter', { bubbles: true }));
+    const dark = svg.querySelector('.node:not(.is-lit)');
+    const lit = {
+      nodes: svg.querySelectorAll('.node.is-lit').length,
+      edges: svg.querySelectorAll('.edge.is-lit').length,
+      dimmed: svg.classList.contains('is-lit'),
+      // What the dimming is actually worth, measured rather than assumed: a rule
+      // that stopped applying would leave the class on and the map unchanged.
+      // null when the hovered card touches everything, which is not a failure.
+      faded: dark ? win.getComputedStyle(dark).opacity : null,
+    };
+    // Read after the pointer leaves, so "the map goes back to normal" is a fact
+    // about the page rather than about the order the checks happen to run in.
+    svg.dispatchEvent(new win.PointerEvent('pointerleave', { bubbles: true }));
+    return {
+      dots,
+      width: Math.round(svg.getBoundingClientRect().width),
+      viewBox: [box.width, box.height],
+      // Rendered wider than it is tall at every viewport, or the SVG is not
+      // scaling with the column and the panel is a letterbox on a phone.
+      height: Math.round(svg.getBoundingClientRect().height),
+      edges: svg.querySelectorAll('.edge').length,
+      tiers: [...new Set([...svg.querySelectorAll('.edge')].map((e) => (
+        e.classList.contains('tier-win') ? 'win' : e.classList.contains('tier-decisive') ? 'decisive' : 'other'
+      )))].sort(),
+      // The colour has to survive CSS, not just be in a class name.
+      edgeColours: [...new Set([...svg.querySelectorAll('.edge')].map((e) => win.getComputedStyle(e).stroke))].length,
+      labels: [...svg.querySelectorAll('.node .label')].map((t) => t.textContent),
+      titled: [...svg.querySelectorAll('.node > title')].map((t) => t.textContent),
+      described: (svg.querySelector(':scope > title') || {}).textContent || '',
+      role: svg.getAttribute('role'),
+      lit,
+      stillLit: svg.classList.contains('is-lit'),
+    };
+  })();
+
   const firstCombo = doc.querySelector('.combo');
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
     text: c.textContent, win: c.classList.contains('tier-win'),
@@ -502,6 +554,7 @@ function measure(win, doc) {
     badges,
     sizes,
     included,
+    map,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
     panels,
@@ -756,6 +809,10 @@ function runOne(vp) {
           spoken: addBtn ? addBtn.getAttribute('aria-label') : '',
           card: addRow ? addRow.querySelector('h3 .card-name').textContent : '',
           combosBefore: before.included.badge,
+          // The map is drawn from the search's own results, so it has to move
+          // with them. A picture that is one search behind the list beside it is
+          // worse than no picture — it says the added card is in no combos.
+          mapBefore: before.map ? before.map.dots.length : 0,
         };
         if (addBtn) {
           addBtn.click();
@@ -787,6 +844,10 @@ function runOne(vp) {
           afterAdd.sectionLine = lines.findIndex(function (l) { return /^side\\s*board/i.test(l); });
           afterAdd.status = doc.getElementById('status').textContent;
           afterAdd.combosAfter = now.included.badge;
+          afterAdd.mapAfter = now.map ? now.map.dots.length : 0;
+          afterAdd.mapHasCard = now.map
+            ? now.map.titled.some(function (t) { return t.indexOf(afterAdd.card) === 0; })
+            : false;
           afterAdd.suggestionsAfter = now.tabs.length ? now.tabs[0].count : null;
           // Kept immediately rather than on the typing debounce: the search that
           // follows must not be able to outrun the save.
@@ -1141,11 +1202,11 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    // Bracket check, combos in your deck, one slot away, cards carrying them,
-    // suggested additions.
-    // Four now: the bracket check stopped being a panel and became a line beside the
-    // colour identity, so a fifth would mean it had come back.
-    if (v.panels.length !== 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
+    // Combos in your deck, how they connect, one slot away, cards carrying them,
+    // suggested additions. The bracket check is not among them — it stopped being
+    // a panel and became a line beside the colour identity, which the next check
+    // is what keeps true.
+    if (v.panels.length !== 5) problems.push(`expected 5 panels, got ${v.panels.length}`);
     if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
@@ -1506,6 +1567,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!/^Add .+ to your decklist/.test(added.spoken)) {
         problems.push(`the add control's spoken label reads "${added.spoken}"`);
       }
+      // And the map was redrawn with it, rather than left showing the deck as it
+      // was one search ago.
+      if (!(added.mapAfter > added.mapBefore)) {
+        problems.push(`the map drew ${added.mapBefore} cards before adding ${added.card} and `
+          + `${added.mapAfter} after — it was not rebuilt`);
+      }
+      if (!added.mapHasCard) problems.push(`${added.card} was added but is not on the map`);
     }
 
     // The decklist is the whole input; losing it on reload is the one thing a
@@ -1572,6 +1640,54 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           }
         }
       }
+    }
+    // ---- the combo map ----
+    //
+    // Every claim here is geometric, and every failure of it is silent: a graph
+    // whose nodes all landed on one point, or outside the box it is drawn in, is
+    // perfectly valid SVG and an empty panel to look at.
+    if (!v.map) {
+      problems.push('the combo map did not render');
+    } else {
+      const m = v.map;
+      if (m.role !== 'img' || !/\d+ cards joined by \d+/.test(m.described)) {
+        problems.push(`the map is not described to a screen reader: "${m.described}"`);
+      }
+      if (m.dots.length < 5) problems.push(`the map drew only ${m.dots.length} cards`);
+      if (!m.edges) problems.push('the map drew no lines between the cards');
+      // The fixture has a game-winning combo, a mana one and a plumbing one, so
+      // all three tiers must be on the map and in three different colours — a
+      // single-colour map is one where the tier classes stopped reaching the CSS.
+      if (m.tiers.length !== 3) problems.push(`the map's lines cover ${m.tiers.length} tier(s): ${m.tiers.join('/')}`);
+      if (m.edgeColours < 3) problems.push(`the map drew its three tiers in ${m.edgeColours} colour(s)`);
+      // Inside its own viewBox, with nothing sitting on top of anything else.
+      const [vw, vh] = m.viewBox;
+      const outside = m.dots.filter((d) => d.x < 0 || d.y < 0 || d.x > vw || d.y > vh);
+      if (outside.length) problems.push(`${outside.length} card(s) drawn outside the map`);
+      const collided = m.dots.some((a, i) => m.dots.slice(i + 1).some(
+        (b) => Math.hypot(a.x - b.x, a.y - b.y) < a.r + b.r
+      ));
+      if (collided) problems.push('two cards are drawn on top of each other');
+      // Busier cards are drawn bigger, which is the only thing the sizes say.
+      if (new Set(m.dots.map((d) => d.r)).size < 2) problems.push('every card on the map is the same size');
+      if (m.labels.some((t) => !t)) problems.push('a card on the map is unlabelled');
+      if (m.titled.some((t) => !/ — in \d+ combos?$/.test(t))) problems.push('a card on the map has no hover text');
+      // And it scales with the column rather than overflowing it — the panel is
+      // 760px wide by design and the phone viewport is 390.
+      if (m.width > v.outWidth + 1) problems.push(`the map is ${m.width}px wide in a ${v.outWidth}px column`);
+      if (m.height < 100) problems.push(`the map rendered ${m.height}px tall`);
+      // Hovering a card lights it, its neighbours and the lines between them, and
+      // pushes the rest back. Without the dimming the highlight is invisible.
+      if (m.lit.nodes < 2 || !m.lit.edges) {
+        problems.push(`hovering a card lit ${m.lit.nodes} card(s) and ${m.lit.edges} line(s)`);
+      }
+      if (!m.lit.dimmed) problems.push('hovering a card did not dim the map');
+      if (m.lit.faded == null) {
+        problems.push('hovering the quietest card lit the whole map, so the dimming is untested');
+      } else if (Number(m.lit.faded) > 0.5) {
+        problems.push(`a card the hovered one does not touch is still at opacity ${m.lit.faded}`);
+      }
+      if (m.stillLit) problems.push('the map stayed lit after the pointer left it');
     }
     if (v.panels.some((p) => !p.bodyVisible)) problems.push('a panel rendered with no visible body');
     if (v.panels.some((p) => p.headHeight < 44)) problems.push('a collapse control is under 44px tall');
@@ -1640,8 +1756,11 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
-      const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
+        + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`;
+      const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} lines (${v.map.tiers.join(',')})`
+        + ` at ${v.map.width}×${v.map.height}, hover lights ${v.map.lit.nodes}+${v.map.lit.edges}`;
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

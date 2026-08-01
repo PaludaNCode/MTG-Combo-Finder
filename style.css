@@ -709,6 +709,71 @@ button:disabled { opacity: .6; cursor: wait; }
 .alt-more summary { font-size: .82rem; }
 .alt-more .alt-list { margin-top: .25rem; }
 .suggestion details .combo { background: var(--panel-2); margin-top: .5rem; }
+/* ---- the combo map ---- */
+
+/* Drawn at a fixed 760×440 and scaled by the viewBox, so the same picture fits a
+   phone and a 1920px monitor without the layout doing anything: at 390px it is
+   simply the same graph, smaller. `height: auto` keeps its aspect ratio, and the
+   width cap stops a wide results column stretching it into a letterbox. */
+.combo-map {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  margin: .2rem auto 0;
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  /* The dots handle their own pointer events; the gaps between them are where
+     "nothing is hovered" has to be detectable. */
+  touch-action: manipulation;
+}
+
+.combo-map .edge {
+  stroke: var(--line-strong);
+  stroke-linecap: round;
+  opacity: .55;
+}
+/* The three result tiers, the same three colours the chips use: an edge takes
+   the best result of the combos behind it, so a green line is a pair of cards
+   that wins on its own. */
+.combo-map .edge.tier-win { stroke: var(--ok); opacity: .75; }
+.combo-map .edge.tier-decisive { stroke: var(--decisive); opacity: .7; }
+
+.combo-map .dot {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+}
+.combo-map .label {
+  fill: var(--muted);
+  font-size: 11px;
+  text-anchor: middle;
+  /* A halo in the map's own background, drawn under the glyphs rather than over
+     them. Labels sit below their dot and there is no arrangement of a graph this
+     dense where none of them lands on a line; without this the two cross-hatch
+     and neither is readable. */
+  paint-order: stroke;
+  stroke: var(--code-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  /* The label must never eat the pointer: it overhangs its own dot and the ones
+     below it, and a hover landing on the text instead of the circle reads as the
+     map ignoring you. */
+  pointer-events: none;
+}
+.combo-map .node { cursor: pointer; }
+.combo-map .node:hover .dot { fill: var(--text); }
+
+/* One card picked out, and everything it does not touch pushed back. Dimming the
+   rest rather than hiding it keeps the shape of the map while you read a corner
+   of it. */
+.combo-map.is-lit .node { opacity: .22; }
+.combo-map.is-lit .edge { opacity: .08; }
+.combo-map.is-lit .node.is-lit { opacity: 1; }
+.combo-map.is-lit .node.is-lit .label { fill: var(--text); }
+.combo-map.is-lit .edge.is-lit { opacity: 1; }
+
 /* ---- what a combo produces ---- */
 .results {
   display: flex;

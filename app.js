@@ -674,6 +674,149 @@
     pieces.forEach((p, i) => body.appendChild(pieceCard(p, i + 1)));
   }
 
+  // ---- the combo map -------------------------------------------------------
+  //
+  // The same combos as a picture: a dot per card, a line between two cards a
+  // combo needs together. Redrawn from scratch on every search, which is what
+  // makes it keep up with "+ Add to deck" — the added card is in the next
+  // render's `included`, so it turns up in the map with the rest of them, and
+  // ComboGraph places the graph deterministically so the picture around it is
+  // the one that was there before rather than a reshuffle.
+  //
+  // Hand-drawn SVG rather than a charting library: the page's CSP allows scripts
+  // from nowhere but itself, so a library would have to be vendored into the
+  // repository, and this is ~60 lines.
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const MAP_SIZE = { width: ComboGraph.DEFAULT_WIDTH, height: ComboGraph.DEFAULT_HEIGHT };
+  // Long names are clipped rather than wrapped — a second line per label turns a
+  // busy map into a wall of text — and the whole name stays in the node's title.
+  const LABEL_MAX = 18;
+
+  function svgEl(tag, className) {
+    const node = document.createElementNS(SVG_NS, tag);
+    if (className) node.setAttribute('class', className);
+    return node;
+  }
+
+  function renderGraph(container, included) {
+    if (!included.length) {
+      container.textContent = '';
+      return;
+    }
+    const graph = ComboGraph.build(included);
+    ComboGraph.layout(graph, MAP_SIZE);
+
+    const body = panel(container, 'graph', 'How your combos connect', graph.nodes.length);
+    body.appendChild(el('p', 'empty',
+      'A line joins two cards whenever one of your combos needs both, and takes the colour of the '
+      + 'best result those combos produce. The bigger a dot, the more of your combos that card is in. '
+      + 'Hover a card to pick out what it touches — everything here is also written out in the panels above.'));
+
+    const svg = svgEl('svg', 'combo-map');
+    svg.setAttribute('viewBox', '0 0 ' + MAP_SIZE.width + ' ' + MAP_SIZE.height);
+    // One image with one description, rather than 40 unlabelled shapes: a screen
+    // reader gets the summary and then the panels above, which say all of this in
+    // words and are the better read anyway.
+    svg.setAttribute('role', 'img');
+    const title = svgEl('title');
+    title.textContent = 'Combo map: ' + graph.nodes.length + ' cards joined by '
+      + graph.links.length + ' shared ' + (graph.links.length === 1 ? 'combo' : 'combos') + '.';
+    svg.appendChild(title);
+
+    const edgeLayer = svgEl('g', 'edges');
+    const nodeLayer = svgEl('g', 'nodes');
+    svg.appendChild(edgeLayer);
+    svg.appendChild(nodeLayer);
+
+    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+    // What each card touches, so hovering one can pick out its own corner of the
+    // map. Built once here rather than searched for on every pointer move.
+    const touching = new Map(graph.nodes.map((n) => [n.id, { nodes: new Set([n.id]), edges: [] }]));
+
+    graph.links.forEach((linkData) => {
+      const a = byId.get(linkData.source);
+      const b = byId.get(linkData.target);
+      const line = svgEl('line', 'edge tier-' + linkData.tier);
+      line.setAttribute('x1', a.x);
+      line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x);
+      line.setAttribute('y2', b.y);
+      // Thicker for a pair that turns up in several combos, capped so one very
+      // busy pair does not draw a bar across the map.
+      line.setAttribute('stroke-width', String(1 + Math.min(linkData.weight - 1, 4) * 0.7));
+      edgeLayer.appendChild(line);
+
+      [[a, b], [b, a]].forEach(([from, to]) => {
+        const near = touching.get(from.id);
+        near.nodes.add(to.id);
+        near.edges.push(line);
+      });
+    });
+
+    const groups = new Map();
+    graph.nodes.forEach((node) => {
+      const g = svgEl('g', 'node');
+      // Area with the count rather than radius, so a card in nine combos does not
+      // draw a blob eighty times the size of one in a single combo.
+      const r = 5 + 3 * Math.sqrt(node.combos - 1);
+      const dot = svgEl('circle', 'dot');
+      dot.setAttribute('cx', node.x);
+      dot.setAttribute('cy', node.y);
+      dot.setAttribute('r', String(Math.round(r * 10) / 10));
+      const label = svgEl('text', 'label');
+      label.setAttribute('x', node.x);
+      label.setAttribute('y', node.y + r + 11);
+      label.textContent = node.name.length > LABEL_MAX
+        ? node.name.slice(0, LABEL_MAX - 1).trimEnd() + '…'
+        : node.name;
+      const hint = svgEl('title');
+      hint.textContent = node.name + ' — in ' + node.combos
+        + ' combo' + (node.combos === 1 ? '' : 's');
+      g.appendChild(hint);
+      g.appendChild(dot);
+      g.appendChild(label);
+      nodeLayer.appendChild(g);
+      groups.set(node.id, g);
+    });
+
+    // Lighting up one card dims the rest, which is the only way to read a map
+    // this dense: "what is Basalt Monolith actually in" is a question the picture
+    // cannot answer while every line is drawn at the same weight.
+    const lit = [];
+    const clear = () => {
+      svg.classList.remove('is-lit');
+      lit.forEach((node) => node.classList.remove('is-lit'));
+      lit.length = 0;
+    };
+    const light = (id) => {
+      clear();
+      const near = touching.get(id);
+      if (!near) return;
+      svg.classList.add('is-lit');
+      near.nodes.forEach((other) => {
+        const g = groups.get(other);
+        if (g) { g.classList.add('is-lit'); lit.push(g); }
+      });
+      near.edges.forEach((line) => { line.classList.add('is-lit'); lit.push(line); });
+    };
+    groups.forEach((g, id) => {
+      g.addEventListener('pointerenter', () => light(id));
+      // Touch has no hover, so a tap lights a card and a tap anywhere else on the
+      // map puts it out again.
+      g.addEventListener('click', () => light(id));
+    });
+    svg.addEventListener('pointerleave', clear);
+
+    body.appendChild(svg);
+
+    if (graph.omitted) {
+      body.appendChild(el('p', 'note',
+        'Showing the ' + graph.nodes.length + ' cards in the most combos. '
+        + graph.omitted + ' more take part in your combos and are listed under '
+        + '“Cards carrying your combos”.'));
+    }
+  }
+
   // Suggestions in two tabs. An off-colour card is still worth knowing about —
   // decks get rebuilt — but if your deck isn't red, a red card is noise while
   // you're reading the list, so it goes behind a tab instead of sitting in the
@@ -916,6 +1059,11 @@
     } else {
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
+
+    // Drawn from the same `included` the list above is, and rebuilt on every
+    // search — including the one "+ Add to deck" fires — so the picture is never
+    // a search behind the list beside it.
+    renderGraph($('graph'), included);
 
     renderSlots($('slots'), results.oneSlotAway || [], results.slotCandidates || {});
 

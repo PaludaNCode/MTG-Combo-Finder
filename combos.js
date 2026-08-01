@@ -579,6 +579,22 @@
     };
   }
 
+  // Every card one combo is actually held up by, as key -> the spelling to
+  // print: the cards it names, plus whichever of your cards filled each of its
+  // template slots. A card filling a slot holds the combo up just as much as one
+  // the combo names, and cutting it costs the combo all the same. A card listed
+  // twice in one combo appears once, because it is still one card.
+  function comboCardIndex(variant) {
+    const unique = new Map();
+    for (const name of variantCardNames(variant)) {
+      unique.set(nameKey(name), name.split('//')[0].trim());
+    }
+    for (const fill of (variant && variant.fills) || []) {
+      if (fill && fill.card) unique.set(nameKey(fill.card), fill.card.split('//')[0].trim());
+    }
+    return unique;
+  }
+
   // Which of your cards are load-bearing: how many of the combos you can
   // already assemble each one takes part in. A list of combos doesn't make this
   // obvious — cutting a card that turns up in four of them costs four combos,
@@ -586,18 +602,10 @@
   function comboPieces(variants) {
     const byCard = new Map();
     for (const variant of variants || []) {
-      // A card listed twice in one combo is still one combo for that card.
-      const unique = new Map();
-      for (const name of variantCardNames(variant)) unique.set(nameKey(name), name);
-      // A card filling a template slot holds the combo up just as much as one
-      // the combo names, and cutting it costs the combo all the same.
-      for (const fill of variant.fills || []) {
-        if (fill && fill.card) unique.set(nameKey(fill.card), fill.card);
-      }
-      for (const [key, name] of unique) {
+      for (const [key, name] of comboCardIndex(variant)) {
         let entry = byCard.get(key);
         if (!entry) {
-          entry = { card: name.split('//')[0].trim(), combos: [] };
+          entry = { card: name, combos: [] };
           byCard.set(key, entry);
         }
         entry.combos.push(variant);
@@ -845,7 +853,8 @@
   const api = {
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
-    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, splitResults,
+    matchDeck, deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, comboCardIndex,
+    splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
     comboSize, sizeBreakdown, bracketCheck,
