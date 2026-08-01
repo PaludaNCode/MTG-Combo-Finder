@@ -1504,8 +1504,96 @@ Carrion Feeder do neither, and 20 candidate gaps died on that one reading of the
 Whether a substitution holds is a question about the cards, and this database cannot
 answer it either way.
 
-**Nothing here needs a code change.** When Spellbook adds a variant, the next daily
-snapshot picks it up.
+## Unofficial combos: the page's own second opinion
+
+Everything above comes from Spellbook and is shown on their authority. `unofficial.js`
+is the one exception — the surviving output of that substitution audit, rendered in its
+own panel below **Combos in your deck** and never counted among them.
+
+### Why it is a separate panel and not a badge
+
+The difference is not a property of a row, it is the difference between *somebody
+published this* and *we worked this out*. A reader deciding whether to trust a line
+needs that before they read the cards, not after — so it is a heading, and the panel
+opens by saying what it is. The same reasoning keeps these rows out of three other
+places: the combo count, **Cards carrying your combos**, and the bracket check. The
+bracket in particular is a claim about what a deck is *allowed to be*, and it should
+rest on published data rather than on a swap we made ourselves.
+
+### What each row has to carry
+
+A combo nobody published is only worth showing if it shows its working, so every row
+prints the published combo it came from, which card was swapped for which, and how far
+the checking actually went:
+
+| | |
+|---|---|
+| `verified` | the swap was read against both cards' oracle text |
+| `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
+
+All nine currently shipping are `verified`. `derived` stays in the model because it is
+the honest label for a row found before its cards have been read, and the next one will
+need it.
+
+`test/unofficial.test.js` enforces the shape — every row cites a real combo id, every
+swap is genuinely one card in and one out against the cited combo, and every row gives
+a reason. A row that cannot say where it came from cannot ship.
+
+### They graduate rather than accumulate
+
+Spellbook is refreshed nightly, and the day a row is published it arrives in the
+official list on its own authority. `matchUnofficial()` therefore drops any row whose
+card set already appears there. Showing both copies would be the same combo listed
+twice, one of them ours and stale — so the entry moves up a panel with nobody editing
+the file.
+
+### The audit, and what it ruled out
+
+44 candidates, from pairs of cards that Spellbook itself treats as interchangeable
+elsewhere. **35 were ruled out**, and the reasons are more interesting than the nine
+survivors, because each is a way a "functionally identical" card turns out not to be:
+
+- **18 — Trudge Garden needs mana, not just a sacrifice.** All 187 published Trudge
+  Garden combos use a mana-producing outlet (Ashnod's Altar, Phyrexian Altar,
+  Thermopod, Pitiless Plunderer, Krark-Clan Ironworks). Not one uses a free outlet.
+  Viscera Seer, Carrion Feeder and Umbral Collar Zealot make no mana, so the loop has
+  nothing to pay with.
+- **5 — supersets of a two-card combo.** Basking Broodscale's Eldrazi Spawn carries
+  *"Sacrifice this token: Add {C}"*, so the token is its own sacrifice outlet and
+  Broodscale + Sadistic Glee is already a published pair. Adding an outlet to it is a
+  strict superset, which Spellbook never publishes.
+- **4 — the opposite reading of the same card.** Scurry Oak's Squirrel and Herd
+  Baloth's Beast have no sacrifice ability, so neither works as a *pair* the way
+  Broodscale does. They need the third card.
+- **1 — Chatterfang does not double what the loop spends.** Chatterfang adds Squirrels
+  equal to the number of tokens created; Parallel Lives doubles the tokens themselves,
+  including the Treasures that pay Camellia's `{2}`. One Treasure per cycle against a
+  two-mana cost does not sustain.
+
+- **4 — the loop needs a *token*, not just a sacrifice.** Only two cards partner
+  Cauldron Familiar + Peregrin Took as a three-card combo, and both make a token when
+  they eat something: Shilgengar a Blood, Warren Soultrader a Treasure. Every other
+  outlet Spellbook lists there needs Garrison Excavator as a fourth card. Viscera Seer,
+  Carrion Feeder, Umbral Collar Zealot and Ashnod's Altar make no token.
+- **2 — Camellia's loop eats artifacts.** Every outlet published with Camellia +
+  Peregrin Took either sacrifices artifacts (Phantom Train, Umbral Collar Zealot, the
+  Atog family, Arcbound Ravager) or pays her `{2}` with mana (Ashnod's Altar). Viscera
+  Seer and Carrion Feeder take creatures only and produce nothing.
+- **1 — Quina is not a doubler.** Anointed Procession doubles every token; Quina adds
+  *one* Frog to a creation however many tokens it made. A loop that needs the Treasures
+  doubled does not get them.
+
+**Nothing remains open.** The nine that survived are in `unofficial.js`, and seven of
+them were only settled by reading the cards — which is why the panel prints how far the
+checking went rather than asking to be believed.
+
+**A high substitution score is never a verdict.** Two cards filling the same slot in
+1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
+substitution holds is a question about the cards, and this database cannot answer it
+either way — which is exactly why the panel prints its confidence rather than hiding it.
+
+**Reporting upstream is still the better fix.** When Spellbook adds a variant the next
+daily snapshot picks it up, and the row here graduates on its own.
 
 ## Data-source research (why Commander Spellbook only)
 

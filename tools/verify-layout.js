@@ -59,6 +59,9 @@ const VIEWPORTS = [
   { name: 'theme toggle', width: 1440, height: 900, kind: 'theme' },
   // Same page, same press, a decklist that ends in a section.
   { name: 'desktop (sideboarded deck)', width: 1440, height: 900, deck: 'sideboarded' },
+  // Combos we believe in that Spellbook has not published, in their own panel
+  // below the published ones.
+  { name: 'unofficial combos', width: 1440, height: 900, deck: 'unofficial', kind: 'unofficial' },
 ];
 
 function findBrowser() {
@@ -194,6 +197,10 @@ const DECKS = {
   // as a suggestion on the next search. The button appeared to do nothing.
   sideboarded: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
     .concat(REST, ['', 'Sideboard:', '1 Pithing Needle']).join('\n'),
+  // Exactly one unofficial row's cards and nothing else, so the page has no
+  // published combo to find and precisely one of ours. Real card names, because
+  // the row being matched is the real one out of unofficial.js.
+  unofficial: ['1 Scurry Oak', '1 Necrosynthesis', '1 Viscera Seer'].join('\n'),
 };
 
 // The page under test is loaded inside an iframe sized to each viewport.
@@ -842,10 +849,61 @@ async function runStamped(vp) {
   }
 }
 
+// The unofficial panel, against the real unofficial.js rather than a fixture — the
+// data is small enough to ship and its rows are the thing being checked. The
+// fixture dataset does not need to know about any of it: an unofficial row matches
+// on the deck alone, so a deck of exactly one row's cards finds nothing official
+// and exactly one unofficial combo, which is the cleanest possible reading.
+async function runUnofficial(vp) {
+  try {
+    const { win, doc } = await load('/index.html', vp.width);
+    win.localStorage.clear();
+    doc.getElementById('commanders').value = '';
+    doc.getElementById('decklist').value = DECKS[vp.deck];
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await settled(doc, '#unofficial .combo');
+
+    const panel = doc.querySelector('#unofficial .panel');
+    const row = doc.querySelector('#unofficial .combo');
+    const badge = row && row.querySelector('.derived-badge');
+    const link = row && row.querySelector('.combo-link a');
+    const included = doc.getElementById('included');
+    const unofficial = doc.getElementById('unofficial');
+    // Which comes first on the page. Published combos have to be read before ours.
+    const order = included.compareDocumentPosition(unofficial);
+
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      unofficial: {
+        title: panel ? panel.querySelector('.panel-title').textContent : null,
+        count: panel ? panel.querySelector('.panel-count').textContent : null,
+        rows: doc.querySelectorAll('#unofficial .combo').length,
+        cards: row ? [...row.querySelectorAll('h3 .card-name')].map(function (n) { return n.textContent; }) : [],
+        badge: badge ? badge.textContent : null,
+        badgeClass: badge ? badge.className : null,
+        note: row && row.querySelector('.derived-note') ? row.querySelector('.derived-note').textContent : '',
+        link: link ? link.textContent : null,
+        href: link ? link.getAttribute('href') : null,
+        chips: row ? row.querySelectorAll('.results .result').length : 0,
+        officialEmpty: !!included.querySelector('.empty'),
+        officialRows: doc.querySelectorAll('#included .combo').length,
+        // DOCUMENT_POSITION_FOLLOWING is 4.
+        unofficialIsBelow: (order & 4) === 4,
+        overflow: doc.documentElement.scrollWidth > vp.width,
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
 function runOne(vp) {
   if (vp.kind === 'theme') return runTheme(vp);
   if (vp.kind === 'share') return runShare(vp);
   if (vp.kind === 'stamped') return runStamped(vp);
+  if (vp.kind === 'unofficial') return runUnofficial(vp);
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:' + vp.height + 'px';
@@ -1189,7 +1247,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // the worker's URL, and the worker building its importScripts URLs. The
       // sandbox already fails the run if either is dropped — this only says
       // which one, since "the search ran in the page" is a symptom, not a cause.
-      for (const file of ['search-worker.js', 'result-tiers.js', 'combos.js', 'search.js']) {
+      for (const file of ['search-worker.js', 'result-tiers.js', 'combos.js', 'unofficial.js', 'search.js']) {
         if (!REQUESTS.some((u) => u === `/stamped/${file}${STAMP}`)) {
           wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
         }
@@ -1201,6 +1259,46 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
         console.log(`ok   ${v.name} — ${s.scripts.length} stamped scripts, searched in the worker, ${s.panels} panels`);
+      }
+      continue;
+    }
+
+    // The unofficial run is about a claim, not a layout: that the page keeps our
+    // own combos visibly apart from Commander Spellbook's and shows the working
+    // for each. Every assertion here is something that, if it broke, would leave
+    // a reader believing Spellbook had published something it had not.
+    if (v.unofficial) {
+      const u = v.unofficial;
+      const wrong = [];
+      if (u.rows !== 1) wrong.push(`${u.rows} unofficial rows rendered, expected exactly 1`);
+      if (u.count !== '1') wrong.push(`the panel counts "${u.count}"`);
+      if (!/unofficial/i.test(u.title || '')) wrong.push(`the panel is titled "${u.title}"`);
+      // The heart of it. A row nobody published must not sit in the published list,
+      // and must not be read before it.
+      if (!u.unofficialIsBelow) wrong.push('the unofficial panel is not below the published one');
+      if (u.officialRows) wrong.push(`${u.officialRows} combos leaked into the published panel`);
+      if (!u.officialEmpty) wrong.push('the published panel does not say it found nothing');
+      // ...and it has to show its working, or it is just an assertion on screen.
+      if (!['verified', 'derived'].includes(u.badge)) wrong.push(`no confidence badge: "${u.badge}"`);
+      if (!(u.badgeClass || '').includes(u.badge)) wrong.push('the badge is not styled by its confidence');
+      if (!/in place of/.test(u.note)) wrong.push('the row does not say which card was swapped');
+      if (u.note.length < 60) wrong.push(`the reasoning is missing: "${u.note}"`);
+      // The link goes to the published combo it came from, not to a page for this
+      // one — there is no such page, and a dead Spellbook link would be worse than
+      // no link, because it would look like a citation.
+      if (!/came from/.test(u.link || '')) wrong.push(`the link reads "${u.link}"`);
+      if (!/commanderspellbook\.com\/combo\/\d+(-\d+)+\//.test(u.href || '')) {
+        wrong.push(`the link does not point at a published combo: ${u.href}`);
+      }
+      if (u.cards.length !== 3) wrong.push(`the row names ${u.cards.length} cards`);
+      if (!u.chips) wrong.push('the row shows no results');
+      if (u.overflow) wrong.push('the panel overflows horizontally');
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — ${u.rows} row [${u.badge}] ${u.cards.join(' + ')}, `
+          + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty`);
       }
       continue;
     }

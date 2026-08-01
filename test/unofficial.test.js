@@ -1,0 +1,114 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert');
+const { matchUnofficial, identityString, deckNameSet, nameKey, expand } = require('../combos.js');
+const { COMBOS } = require('../unofficial.js');
+
+// The one part of the page that is not Commander Spellbook's word. Everything here
+// is about keeping that distinction honest: the rows have to carry their evidence,
+// they have to disappear the moment Spellbook publishes them, and they must never
+// leak into the counts and the bracket that speak for the published data.
+
+const DATASET = {
+  cardIdentity: {
+    'Scurry Oak': 'G',
+    Necrosynthesis: 'B',
+    'Viscera Seer': 'B',
+    'Sol Ring': '',
+  },
+};
+
+const deck = (...names) => deckNameSet(names.map((card) => ({ card, quantity: 1 })));
+
+// ---- the data file itself --------------------------------------------------
+
+test('unofficial: every row carries the evidence the page prints', () => {
+  assert.ok(COMBOS.length > 0, 'no rows to check');
+  COMBOS.forEach((row) => {
+    const at = row.cards.join(' + ');
+    assert.ok(row.cards.length >= 2, at + ': a combo needs at least two cards');
+    assert.ok(row.produces.length, at + ': no results');
+    assert.ok(['verified', 'derived'].includes(row.confidence), at + ': bad confidence');
+    assert.ok(row.from && /^\d+(-\d+)+$/.test(row.from.id), at + ': no published combo cited');
+    assert.ok(row.why && row.why.length > 20, at + ': no reasoning given');
+    // The swap has to be a swap: one card out, one in, against the cited combo.
+    assert.ok(row.from.cards.includes(row.swap.out), at + ': the swapped-out card is not in it');
+    assert.ok(row.cards.includes(row.swap.in), at + ': the swapped-in card is not in the result');
+    assert.deepStrictEqual(
+      row.from.cards.map((c) => (c === row.swap.out ? row.swap.in : c)).slice().sort(),
+      row.cards.slice().sort(),
+      at + ': the two card lists differ by more than the stated swap'
+    );
+  });
+});
+
+test('unofficial: no row is listed twice', () => {
+  const keys = COMBOS.map((r) => r.cards.map(nameKey).sort().join('|'));
+  assert.strictEqual(new Set(keys).size, keys.length);
+});
+
+// ---- matching --------------------------------------------------------------
+
+const ROW = {
+  cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
+  produces: ['Infinite scry 1'],
+  confidence: 'derived',
+  from: { id: '2082-2292-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
+  swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+  why: 'Both halves of the swap are published separately; the pairing is not.',
+};
+
+test('match: a deck holding every card gets the row', () => {
+  const out = matchUnofficial(DATASET, [ROW], deck('Scurry Oak', 'Necrosynthesis', 'Viscera Seer'), []);
+  assert.strictEqual(out.length, 1);
+  assert.deepStrictEqual(out[0].c, ROW.cards);
+  assert.strictEqual(out[0].unofficial, ROW);
+  // Worked out from the cards, not stored, so it cannot drift from the identity data.
+  assert.strictEqual(out[0].i, 'BG');
+});
+
+test('match: one card short is not a match', () => {
+  const out = matchUnofficial(DATASET, [ROW], deck('Scurry Oak', 'Necrosynthesis'), []);
+  assert.deepStrictEqual(out, []);
+});
+
+// The whole point of the graduation rule. Spellbook is refreshed nightly, and the
+// day one of these is published it arrives in `included` on its own authority —
+// showing our copy beside it would be the same combo twice, one of them stale.
+test('match: a row Spellbook has since published drops out', () => {
+  const names = deck('Scurry Oak', 'Necrosynthesis', 'Viscera Seer');
+  const published = [{ id: '9-9-9', c: ['Viscera Seer', 'Scurry Oak', 'Necrosynthesis'] }];
+  assert.strictEqual(matchUnofficial(DATASET, [ROW], names, published).length, 0);
+  // ...and order and case in the published copy make no difference to that.
+  const messy = [{ id: '9-9-9', c: ['viscera seer', 'NECROSYNTHESIS', 'Scurry Oak'] }];
+  assert.strictEqual(matchUnofficial(DATASET, [ROW], names, messy).length, 0);
+  // A different combo that merely overlaps does not count as publishing it.
+  const other = [{ id: '9-9-9', c: ['Scurry Oak', 'Necrosynthesis'] }];
+  assert.strictEqual(matchUnofficial(DATASET, [ROW], names, other).length, 1);
+});
+
+test('match: missing or empty inputs are not an error', () => {
+  const names = deck('Scurry Oak');
+  assert.deepStrictEqual(matchUnofficial(DATASET, null, names, []), []);
+  assert.deepStrictEqual(matchUnofficial(DATASET, [], names, []), []);
+  assert.deepStrictEqual(matchUnofficial(DATASET, [ROW], null, []), []);
+  assert.deepStrictEqual(matchUnofficial(DATASET, [{ cards: [] }], names, []), []);
+  // No `included` argument at all — nothing has been published, so nothing drops.
+  assert.strictEqual(matchUnofficial(DATASET, [ROW], deck(...ROW.cards)).length, 1);
+});
+
+test('match: expand carries the evidence through to the renderer', () => {
+  const row = expand(matchUnofficial(DATASET, [ROW], deck(...ROW.cards), [])[0]);
+  assert.strictEqual(row.unofficial.confidence, 'derived');
+  assert.strictEqual(row.unofficial.from.id, '2082-2292-4186');
+  assert.deepStrictEqual(row.uses.map((u) => u.card.name), ROW.cards);
+  // An official row must not grow the field, or every combo would render as derived.
+  assert.strictEqual(expand({ id: '1-2-3', c: ['Sol Ring'], p: [] }).unofficial, undefined);
+});
+
+test('identityString: colourless is C, and the order is WUBRG', () => {
+  assert.strictEqual(identityString(null), 'C');
+  assert.strictEqual(identityString(new Set()), 'C');
+  assert.strictEqual(identityString(new Set(['G', 'W', 'B'])), 'WBG');
+  assert.strictEqual(identityString(new Set(['R', 'U'])), 'UR');
+});

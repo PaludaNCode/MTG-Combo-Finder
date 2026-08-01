@@ -167,9 +167,17 @@
     // does not publish it (test/scanner.test.js pins that): a description for
     // every one of ~100k combos would multiply the download the page already
     // makes. The link below goes to the combo's own page, which has the steps.
-    if (variant.id) {
+    // An unofficial row has no page of its own to link to — that is what makes it
+    // unofficial. It links to the published combo it was derived from instead, which
+    // is also the evidence for it, so a reader can go and judge the swap.
+    const derived = variant.unofficial;
+    const linkId = derived ? derived.from && derived.from.id : variant.id;
+    if (linkId) {
       const p = el('p', 'combo-link');
-      p.appendChild(link(SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
+      p.appendChild(link(
+        SPELLBOOK_COMBO_URL + encodeURIComponent(linkId) + '/',
+        derived ? 'View the published combo this came from →' : 'View on Commander Spellbook →'
+      ));
       // Every card in the combo on one Scryfall page. One link rather than a link per
       // name: a four-card combo would carry four, and the heading is the combo, not a
       // list of links — and reading the cards is one action, so it is one press.
@@ -187,6 +195,22 @@
         p.appendChild(compare);
       }
       card.appendChild(p);
+    }
+
+    // Why we think this one works, on the row rather than in a footnote. A combo
+    // nobody has published is only worth showing if it shows its working.
+    if (derived) {
+      const note = el('p', 'derived-note');
+      note.appendChild(el('span', 'derived-badge ' + derived.confidence, derived.confidence));
+      if (derived.swap) {
+        note.appendChild(document.createTextNode(' '));
+        note.appendChild(el('span', 'card-name', derived.swap.in));
+        note.appendChild(document.createTextNode(' in place of '));
+        note.appendChild(el('span', 'card-name', derived.swap.out));
+        note.appendChild(document.createTextNode('. '));
+      }
+      note.appendChild(document.createTextNode(derived.why || ''));
+      card.appendChild(note);
     }
 
     card.appendChild(resultChips(variant));
@@ -660,6 +684,34 @@
       'Every card these combos name is already in your deck. What each one is short of is a slot — '
       + 'a kind of card rather than a specific one — so there is no single card to recommend.'));
     rows.forEach((row) => body.appendChild(slotAwayCard(row, candidates)));
+  }
+
+  // The second half of "Combos in your deck". Everything in the panel above comes
+  // from Commander Spellbook and is shown on their authority; these are ours, found
+  // by substituting cards that Spellbook itself treats as interchangeable elsewhere.
+  //
+  // A separate panel rather than a badge in the list above, because the difference is
+  // not a detail of a row — it is the difference between "somebody published this"
+  // and "we worked this out", and a reader deciding whether to trust a line needs
+  // that before they read the cards, not after.
+  //
+  // Absent entirely when there are none, which is the usual case: eight rows against
+  // Spellbook's hundred thousand.
+  function renderUnofficial(container, rows) {
+    if (!rows.length) {
+      container.textContent = '';
+      return;
+    }
+    const body = panel(container, 'unofficial', 'Unofficial combos', rows.length);
+    body.appendChild(el('p', 'empty',
+      'Not published by Commander Spellbook. Each of these was found by swapping a card for '
+      + 'one Spellbook treats as interchangeable in other combos, and each says which swap it '
+      + 'is and how far the checking went. They are not counted in the totals above, and the '
+      + 'bracket check ignores them.'));
+    // Already expanded by search.js, like every other list here. Expanding twice
+    // reads `c` and `p` off a row that no longer has them and quietly renders a
+    // combo with no cards and no results.
+    rows.forEach((row) => body.appendChild(comboCard(row, null)));
   }
 
   function renderPieces(container, included) {
@@ -1329,9 +1381,13 @@
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
 
-    // Drawn from the same `included` the list above is, and rebuilt on every
-    // search — including the one "+ Add to deck" fires — so the picture is never
-    // a search behind the list beside it.
+    renderUnofficial($('unofficial'), results.unofficial || []);
+
+    // Drawn from the same `included` the list above is — Spellbook's own combos
+    // and not the unofficial ones, which is the same line "Cards carrying your
+    // combos" draws, so the two panels cannot disagree about what a card is in.
+    // Rebuilt on every search, including the one "+ Add to deck" fires, so the
+    // picture is never a search behind the list beside it.
     renderGraph($('graph'), included);
 
     renderSlots($('slots'), results.oneSlotAway || [], results.slotCandidates || {});

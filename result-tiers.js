@@ -155,6 +155,15 @@
       'Infinite ventures into the dungeon',
       'Near-infinite ventures into the dungeon',
     ]],
+    // Not unbounded, and it does not have to be: a hundred-card singleton deck put
+    // into your hands at once contains whatever you built it to win with. These sat
+    // in the grey tier because nothing about the wording says "infinite", which is
+    // the wrong test — the question is whether the game is over, not whether the
+    // number is.
+    ['Your whole library at once — whatever you built the deck to win with is in it.', [
+      'Exile your library with the ability to play the exiled cards until your next turn',
+      'Put all creature cards from your library onto the battlefield',
+    ]],
     ['Milling without limit empties libraries.', [
       'Infinite mill',
     ]],
@@ -685,7 +694,6 @@
     'Exile your library and graveyard',
     'Exile your library with the ability to play the exiled cards until end of turn',
     'Exile your library with the ability to play the exiled cards until the end of your next turn',
-    'Exile your library with the ability to play the exiled cards until your next turn',
     'From now on, destroy any creatures opponents control at instant speed',
     'Gain control of all artifacts',
     'Gain control of all commanders',
@@ -1046,7 +1054,6 @@
     'Put all creature cards from each opponent\'s library onto the battlefield under your control',
     'Put all creature cards from your library and graveyard onto the battlefield with finality counters on them',
     'Put all creature cards from your library into your hand',
-    'Put all creature cards from your library onto the battlefield',
     'Put all creature cards from your library onto the battlefield tapped',
     'Put all creature cards in your library onto the battlefield, then into your graveyard',
     'Put all enchant creature Auras in your library onto the battlefield',
