@@ -132,24 +132,43 @@
   // the button looks like it did nothing. Appending after "Commander:" is quieter
   // and worse, silently promoting whatever you added to the command zone.
   //
-  // Returns the line index to insert before — the first line that switches the board
-  // away from the main deck, or the end if none does. Lives here rather than in the
-  // page because this is the same walk parseDecklist() does, and two notions of
-  // "where the main deck ends" would drift apart the first time a site invented a
-  // new heading.
+  // Returns the line index to insert before: the **end of the last main-deck run**,
+  // not the first heading that leaves it. The difference shows on an export that
+  // opens with its command zone —
+  //
+  //     Commander        Deck
+  //     1 Chatterfang    1 Arcane Signet
+  //
+  // where "before the first non-main heading" is line 0, above everything. The card
+  // parses as main-deck from there, so it works, but it reads as though the button
+  // put it in the wrong place. The end of the last main run is under the deck, which
+  // is where someone would have typed it.
+  //
+  // Lives here rather than in the page because this is the same walk parseDecklist()
+  // does, and two notions of "which lines are the main deck" would drift apart the
+  // first time a site invented a heading.
   function mainDeckInsertIndex(text) {
     const lines = String(text || '').split(/\r?\n/);
+    let target = 'main';
+    let end = 0; // an empty box, or one that never reaches the main deck, takes the top
     for (let i = 0; i < lines.length; i += 1) {
       const trimmed = lines[i].trim();
       if (!trimmed) continue;
+
       const heading = normalizeHeading(trimmed);
       if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
-        if (SECTION_TARGET[heading] !== 'main') return i;
+        target = SECTION_TARGET[heading];
+        // A heading with nothing under it yet still marks where cards would go.
+        if (target === 'main') end = i + 1;
         continue;
       }
-      if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) return i;
+      if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) {
+        target = 'ignore';
+        continue;
+      }
+      if (target === 'main') end = i + 1;
     }
-    return lines.length;
+    return end;
   }
 
   // The decklist someone is holding, with one more card in its main deck. Trailing
@@ -167,11 +186,7 @@
       return body ? body + '\n' + line : line;
     }
 
-    // Otherwise the card goes above the section, and above the blank run separating
-    // them, so the list keeps the shape its owner gave it.
-    let end = at;
-    while (end > 0 && !lines[end - 1].trim()) end -= 1;
-    return lines.slice(0, end).concat(line, lines.slice(end)).join('\n');
+    return lines.slice(0, at).concat(line, lines.slice(at)).join('\n');
   }
 
   function parseDecklist(text) {
