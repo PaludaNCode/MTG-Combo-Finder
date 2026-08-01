@@ -640,12 +640,24 @@ heading parses as a sideboard card: it never enters the deck, so the next search
 suggests it again and the button looks like it did nothing. `Commander:` was quieter and
 worse — the card silently joined the command zone.
 
-`DeckParser.addMainDeckCard()` writes it at the **end of the last main-deck run**, above
-the blank line separating that run from whatever follows, so the list keeps the shape its
-owner gave it. Not the first line that leaves the deck: on an export that opens with its
-command zone that is line 0, above everything, which parses correctly but reads as though
-the button misfired. MTGO's `SB:` lines carry their own marker instead of a heading, so
-they are stepped over too and the card lands above them.
+`DeckParser.addMainDeckCard()` writes it at the **end of the biggest main-deck run**,
+above the blank line separating that run from whatever follows, so the list keeps the
+shape its owner gave it. Not the first line that leaves the deck: on an export that opens
+with its command zone that is line 0, above everything, which parses correctly but reads
+as though the button misfired. MTGO's `SB:` lines carry their own marker instead of a
+heading, so they are stepped over too and the card lands above them.
+
+Biggest rather than last, because a section can split the deck in two — a sideboard in
+the middle of a list, an export that repeats its `Deck` heading — and then which run is
+"the deck" is a question about weight of cards, not about which one came last. A card
+added to a 60-card block reads as belonging; the same card added to the one-line block
+below the sideboard does not. Ties keep the later run, so an ordinary single-block list
+is unaffected.
+
+That is as far as "we don't know where it goes" ever has to reach. **+ Add to deck only
+exists once a search has found combos**, and that needs a deck — so the deck is always in
+the box somewhere, and the only real question is which run of it to write into. A list
+with no deck in it at all takes the top of the box, where it parses as the main deck.
 
 The insertion point is the same walk `parseDecklist()` does, kept in the parser for that
 reason: two notions of "where the main deck ends" would drift apart the first time a
