@@ -129,6 +129,12 @@ const FIXTURE = {
     // Interchangeable with combo 2: same partner, same result, one card swapped.
     // Both are already in the deck, so they must collapse into one row.
     { id: '8', c: ['Basalt Monolith', 'Sword of the Meek'], p: ['Infinite colorless mana'], i: 'C', pop: 80 },
+    // The same two cards standing in for each other a *second* time, off a
+    // different partner. One swap is the thinnest line the map draws and carries
+    // no number; two is what makes the map's second relation — and the number on
+    // it — something this run can actually check.
+    { id: '16', c: ['Palinchron', 'Rings of Brighthearth'], p: ['Infinite mana'], i: 'U', pop: 40 },
+    { id: '17', c: ['Palinchron', 'Sword of the Meek'], p: ['Infinite mana'], i: 'U', pop: 39 },
     // And two more that only differ in the card you'd have to add, so the
     // suggestion for them has to read as one choice, not two recommendations.
     { id: '9', c: ['Walking Ballista', 'Bloom Tender'], p: ['Infinite damage'], i: 'G' },
@@ -495,6 +501,31 @@ function measure(win, doc) {
     // Read after the pointer leaves, so "the map goes back to normal" is a fact
     // about the page rather than about the order the checks happen to run in.
     svg.dispatchEvent(new win.PointerEvent('pointerleave', { bubbles: true }));
+
+    const combos = [...svg.querySelectorAll('.edge:not(.swap)')];
+    const swapEdges = [...svg.querySelectorAll('.edge.swap')];
+    const shownCount = (el) => win.getComputedStyle(el).display !== 'none'
+      && Number(win.getComputedStyle(el).opacity) > 0.5;
+
+    // Either relation on its own. Nothing about the *cards* may move — the layout
+    // is worked out from both at once and the whole promise of the control is
+    // that it takes lines away rather than redrawing the map.
+    const before = [...svg.querySelectorAll('.node .dot')].map((c) => [c.cx.baseVal.value, c.cy.baseVal.value]);
+    const chips = [...doc.querySelectorAll('#graph .map-filter .chip')];
+    const chip = (view) => chips.find((c) => c.dataset.view === view);
+    const filtered = {};
+    for (const view of ['swap', 'combo']) {
+      if (chip(view)) chip(view).click();
+      filtered[view] = {
+        combos: combos.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        swaps: swapEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        pressed: chip(view) ? chip(view).getAttribute('aria-pressed') : null,
+        moved: [...svg.querySelectorAll('.node .dot')]
+          .some((c, i) => c.cx.baseVal.value !== before[i][0] || c.cy.baseVal.value !== before[i][1]),
+      };
+    }
+    if (chip('all')) chip('all').click();
+
     return {
       dots,
       width: Math.round(svg.getBoundingClientRect().width),
@@ -502,14 +533,42 @@ function measure(win, doc) {
       // Rendered wider than it is tall at every viewport, or the SVG is not
       // scaling with the column and the panel is a letterbox on a phone.
       height: Math.round(svg.getBoundingClientRect().height),
-      edges: svg.querySelectorAll('.edge').length,
-      tiers: [...new Set([...svg.querySelectorAll('.edge')].map((e) => (
+      edges: combos.length,
+      // The second relation: cards that stand in for each other, which is the
+      // half of the map a list cannot show at all.
+      swapEdges: swapEdges.length,
+      swapDashed: swapEdges.length ? win.getComputedStyle(swapEdges[0]).strokeDasharray : '',
+      tiers: [...new Set(combos.map((e) => (
         e.classList.contains('tier-win') ? 'win' : e.classList.contains('tier-decisive') ? 'decisive' : 'other'
       )))].sort(),
       // The colour has to survive CSS, not just be in a class name.
-      edgeColours: [...new Set([...svg.querySelectorAll('.edge')].map((e) => win.getComputedStyle(e).stroke))].length,
+      edgeColours: [...new Set(combos.map((e) => win.getComputedStyle(e).stroke))].length,
+      // The explicit number on a line, and the ones kept back for the hover.
+      counts: [...svg.querySelectorAll('.count')].filter(shownCount).map((t) => t.textContent),
+      hiddenCounts: svg.querySelectorAll('.count.is-crowded').length,
+      // A number has to sit on the line it belongs to, not somewhere in the middle
+      // of the picture.
+      countsOnLines: [...svg.querySelectorAll('.count')].filter(shownCount).every((t) => {
+        const x = Number(t.getAttribute('x'));
+        const y = Number(t.getAttribute('y'));
+        return [...svg.querySelectorAll('.edge')].some((e) => {
+          const x1 = Number(e.getAttribute('x1'));
+          const y1 = Number(e.getAttribute('y1'));
+          const x2 = Number(e.getAttribute('x2'));
+          const y2 = Number(e.getAttribute('y2'));
+          const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+          // Distance from the point to the line the segment lies on.
+          const off = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / len;
+          const within = Math.min(x1, x2) - 40 <= x && x <= Math.max(x1, x2) + 40
+            && Math.min(y1, y2) - 40 <= y && y <= Math.max(y1, y2) + 40;
+          return off < 40 && within;
+        });
+      }),
+      legend: [...doc.querySelectorAll('#graph .map-legend li')].length,
+      filtered,
       labels: [...svg.querySelectorAll('.node .label')].map((t) => t.textContent),
       titled: [...svg.querySelectorAll('.node > title')].map((t) => t.textContent),
+      lineTitles: [...svg.querySelectorAll('.edge > title')].map((t) => t.textContent),
       described: (svg.querySelector(':scope > title') || {}).textContent || '',
       role: svg.getAttribute('role'),
       lit,
@@ -1650,11 +1709,42 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       problems.push('the combo map did not render');
     } else {
       const m = v.map;
-      if (m.role !== 'img' || !/\d+ cards joined by \d+/.test(m.described)) {
+      if (m.role !== 'img' || !/\d+ cards, \d+ pairs .* and \d+ pairs /.test(m.described)) {
         problems.push(`the map is not described to a screen reader: "${m.described}"`);
       }
       if (m.dots.length < 5) problems.push(`the map drew only ${m.dots.length} cards`);
       if (!m.edges) problems.push('the map drew no lines between the cards');
+      // The second relation. Rings of Brighthearth and Sword of the Meek are
+      // never in a combo together and each completes two of the same combos, so
+      // the map has to join them — that pair is the whole reason the map is laid
+      // out from both relations rather than from shared combos alone.
+      if (!m.swapEdges) problems.push('no interchangeable pair was drawn');
+      if (!/\d/.test(m.swapDashed)) {
+        problems.push(`an interchangeable line is not dashed (${m.swapDashed || 'no dashes'})`);
+      }
+      if (!m.lineTitles.some((t) => /either one works in \d+ of your combos/.test(t))) {
+        problems.push('an interchangeable line does not say what it means on hover');
+      }
+      // The explicit count, which is the half of "how much overlap" that
+      // thickness alone cannot carry.
+      if (!m.counts.length) problems.push('no line carries its count');
+      if (!m.counts.every((t) => /^\d+$/.test(t))) problems.push(`a count reads "${m.counts.join(',')}"`);
+      if (!m.countsOnLines) problems.push('a count is drawn away from the line it belongs to');
+      if (m.legend < 4) problems.push(`the legend explains only ${m.legend} of the line kinds`);
+      // Either question on its own, with the cards staying exactly where they are
+      // — a filter that re-laid the map out would move every card the reader had
+      // just found.
+      if (m.filtered.swap.combos || !m.filtered.swap.swaps) {
+        problems.push(`"interchangeable" left ${m.filtered.swap.combos} combo lines `
+          + `and ${m.filtered.swap.swaps} interchangeable ones on screen`);
+      }
+      if (m.filtered.combo.swaps || !m.filtered.combo.combos) {
+        problems.push(`"works together" left ${m.filtered.combo.swaps} interchangeable lines on screen`);
+      }
+      if (m.filtered.swap.pressed !== 'true') problems.push('the filter does not report which view is on');
+      if (m.filtered.swap.moved || m.filtered.combo.moved) {
+        problems.push('filtering the lines moved the cards');
+      }
       // The fixture has a game-winning combo, a mana one and a plumbing one, so
       // all three tiers must be on the map and in three different colours — a
       // single-colour map is one where the tier classes stopped reaching the CSS.
@@ -1758,8 +1848,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
         + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`;
-      const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} lines (${v.map.tiers.join(',')})`
-        + ` at ${v.map.width}×${v.map.height}, hover lights ${v.map.lit.nodes}+${v.map.lit.edges}`;
+      const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
+        + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
+        + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
+        + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}`;
       console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }

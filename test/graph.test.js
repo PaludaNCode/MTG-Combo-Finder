@@ -27,7 +27,8 @@ test('build: a two-card combo is two nodes and the line between them', () => {
   const graph = build([combo(['Basalt Monolith', 'Rings of Brighthearth'])]);
   assert.deepStrictEqual(graph.nodes.map((n) => n.name), ['Basalt Monolith', 'Rings of Brighthearth']);
   assert.strictEqual(graph.links.length, 1);
-  assert.strictEqual(graph.links[0].weight, 1);
+  assert.strictEqual(graph.links[0].together, 1);
+  assert.strictEqual(graph.links[0].kind, 'combo');
   assert.strictEqual(graph.omitted, 0);
 });
 
@@ -49,7 +50,12 @@ test('build: a card in several combos is one node, counted once per combo', () =
   assert.strictEqual(graph.nodes.length, 4);
   assert.strictEqual(graph.nodes[0].name, 'Basalt Monolith'); // busiest first
   assert.strictEqual(graph.nodes[0].combos, 3);
-  assert.strictEqual(graph.links.length, 3);
+  // Three lines to Basalt Monolith, and three more between its three partners:
+  // each of them is "Basalt Monolith + one other card", so any one stands in for
+  // any other. That is the second relation, and this fixture is the smallest
+  // thing that has one.
+  assert.strictEqual(graph.links.filter((l) => l.kind === 'combo').length, 3);
+  assert.strictEqual(graph.links.filter((l) => l.kind === 'swap').length, 3);
 });
 
 // The same pair turning up in two combos is one line, drawn heavier — not two
@@ -59,8 +65,8 @@ test('build: a pair sharing two combos is one line of weight two', () => {
     combo(['Devoted Druid', 'Vizier of Remedies'], ['Infinite green mana']),
     combo(['Devoted Druid', 'Vizier of Remedies', 'Walking Ballista'], ['Infinite damage']),
   ]);
-  assert.strictEqual(edge(graph, 'devoted druid', 'vizier of remedies').weight, 2);
-  assert.strictEqual(edge(graph, 'devoted druid', 'walking ballista').weight, 1);
+  assert.strictEqual(edge(graph, 'devoted druid', 'vizier of remedies').together, 2);
+  assert.strictEqual(edge(graph, 'devoted druid', 'walking ballista').together, 1);
 });
 
 // Card names are compared the way they are everywhere else on the page: front
@@ -85,7 +91,7 @@ test('build: a card filling a template slot is in the graph too', () => {
     combo(['Rings of Brighthearth'], ['Infinite damage'], { fills: [{ card: 'Walking Ballista' }] }),
   ]);
   assert.deepStrictEqual(graph.nodes.map((n) => n.name).sort(), ['Rings of Brighthearth', 'Walking Ballista']);
-  assert.strictEqual(edge(graph, 'rings of brighthearth', 'walking ballista').weight, 1);
+  assert.strictEqual(edge(graph, 'rings of brighthearth', 'walking ballista').together, 1);
 });
 
 test('build: the map holds exactly the cards the pieces panel lists', () => {
@@ -148,7 +154,10 @@ test('build: past the limit the busiest cards are kept and the rest reported', (
   // line to a corner of the canvas with nothing in it.
   const kept = new Set(graph.nodes.map((n) => n.id));
   assert.ok(graph.links.every((l) => kept.has(l.source) && kept.has(l.target)));
-  assert.strictEqual(graph.links.length, 4);
+  // Four spokes left, so four lines to the hub — and the six between the spokes,
+  // which are all "Hub + one spoke" and so all stand in for each other.
+  assert.strictEqual(graph.links.filter((l) => l.kind === 'combo').length, 4);
+  assert.strictEqual(graph.links.filter((l) => l.kind === 'swap').length, 6);
 });
 
 test('build: nothing in, empty graph out', () => {
@@ -354,16 +363,13 @@ test('layout: no two labels are drawn on top of each other', () => {
 // read as another card's. Forced with a canvas far too small for the graph,
 // which is the same crowding a real 28-card map produces at full size — and
 // deterministic, where waiting for a fixture to happen to collide is not.
-test('layout: with no room the quiet cards lose their labels, not the busy ones', () => {
+test('layout: with no room, names are dropped rather than piled up', () => {
   const graph = placed(dense(), { width: 400, height: 300 });
   const dropped = graph.nodes.filter((n) => n.labelDy == null);
   assert.ok(dropped.length, 'nothing was dropped on a canvas with no room, so the fallback is untested');
-  // The busiest card keeps its name: those are the ones worth reading without
-  // being asked for.
-  assert.notStrictEqual(graph.nodes[0].labelDy, null, `${graph.nodes[0].name} lost its label`);
-  // And every dropped one still carries the text, for the hover to show.
+  // Every dropped one still carries its text, for the hover to show.
   assert.ok(dropped.every((n) => n.label));
-  // Whatever did survive is still placed cleanly.
+  // And whatever did survive is still placed cleanly.
   const shown = graph.nodes.filter((n) => n.labelDy != null).map(labelBox);
   for (let i = 0; i < shown.length; i++) {
     for (let j = i + 1; j < shown.length; j++) {
@@ -389,5 +395,191 @@ test('layout: a crowded label goes beside its dot rather than being dropped', ()
     // Growing away from the dot, not back through it.
     if (node.labelAnchor === 'start') assert.ok(node.labelDx > 0);
     else assert.ok(node.labelDx < 0);
+  }
+});
+
+// ---- the second relation: cards that stand in for each other ----------------
+//
+// The reason the map exists in this shape. Two sacrifice outlets are never in a
+// combo together — they are alternatives — so on shared combos alone there is
+// nothing joining them at all, and the repulsion puts them in opposite corners.
+// That was the first version's real failure: a reader looking for "which of
+// these do the same job" was looking at the one question the picture could not
+// answer.
+
+// Two payoffs and three outlets, each outlet completing the same combos: the
+// shape a real aristocrats deck makes, and the smallest one that has it.
+const outlets = () => build([
+  combo(['Scurry Oak', 'Carrion Feeder'], ['Win the game']),
+  combo(['Scurry Oak', 'Viscera Seer'], ['Win the game']),
+  combo(['Scurry Oak', 'Ashnod\'s Altar'], ['Win the game']),
+  combo(['Heliod, Sun-Crowned', 'Carrion Feeder'], ['Infinite damage']),
+  combo(['Heliod, Sun-Crowned', 'Viscera Seer'], ['Infinite damage']),
+  combo(['Heliod, Sun-Crowned', 'Ashnod\'s Altar'], ['Infinite damage']),
+]);
+
+test('build: cards that fill the same role in a combo are joined', () => {
+  const graph = outlets();
+  const link = edge(graph, 'carrion feeder', 'viscera seer');
+  assert.ok(link, 'two interchangeable outlets have no line between them');
+  assert.strictEqual(link.kind, 'swap');
+  // Both payoffs: either outlet works in the Scurry Oak combo and in the Heliod
+  // one, so the pair stands in for each other twice.
+  assert.strictEqual(link.swap, 2);
+  assert.strictEqual(link.together, 0);
+});
+
+test('build: being in a combo together is not the same as standing in for each other', () => {
+  const graph = outlets();
+  const worksWith = edge(graph, 'scurry oak', 'carrion feeder');
+  assert.strictEqual(worksWith.kind, 'combo');
+  assert.strictEqual(worksWith.together, 1);
+  assert.strictEqual(worksWith.swap, 0);
+});
+
+// A pair can be both — a combo needs them together, and somewhere else one
+// replaces the other. One line carries both counts; two lines drawn between the
+// same two dots is one line as far as anyone looking can tell.
+test('build: a pair that is both ways round is still one line', () => {
+  const graph = build([
+    combo(['A', 'B']),
+    combo(['A', 'C']),
+    combo(['B', 'C']),
+  ]);
+  const link = edge(graph, 'a', 'b');
+  assert.strictEqual(link.together, 1);
+  assert.strictEqual(link.swap, 1); // both are "C + one other card"
+  assert.strictEqual(graph.links.length, 3);
+});
+
+test('build: a card that stands in for nothing has no swap line', () => {
+  const graph = build([combo(['Basalt Monolith', 'Rings of Brighthearth'])]);
+  assert.ok(graph.links.every((l) => l.swap === 0));
+});
+
+// What the user actually asked for, as geometry: the interchangeable cards end
+// up together. Compared against the payoffs they all combo with — the outlets
+// are joined to those by real combos, so with no pull on the swap lines the
+// outlets would be spread evenly around the payoffs instead of grouped.
+//
+// On the average rather than the worst case: this fixture is a complete graph —
+// every one of its five cards is related to every other — so a layout that
+// separated the two groups perfectly would have to be a line, not a picture.
+test('layout: cards that do the same job are drawn closer than cards that merely combo', () => {
+  const graph = placed(outlets());
+  const at = (name) => graph.nodes.find((n) => n.name.startsWith(name));
+  const gap = (a, b) => Math.hypot(at(a).x - at(b).x, at(a).y - at(b).y);
+  const mean = (xs) => xs.reduce((sum, x) => sum + x, 0) / xs.length;
+  const amongOutlets = mean([
+    gap('Carrion', 'Viscera'), gap('Carrion', 'Ashnod'), gap('Viscera', 'Ashnod'),
+  ]);
+  const toPayoffs = mean([
+    gap('Carrion', 'Scurry'), gap('Viscera', 'Scurry'), gap('Ashnod', 'Scurry'),
+    gap('Carrion', 'Heliod'), gap('Viscera', 'Heliod'), gap('Ashnod', 'Heliod'),
+  ]);
+  assert.ok(amongOutlets < toPayoffs,
+    `outlets average ${amongOutlets.toFixed(0)}px apart, ${toPayoffs.toFixed(0)}px from a payoff`);
+});
+
+// And two groups that share nothing stay two groups. Measured the way cluster
+// separation is measured — how far apart the two sets sit against how spread
+// each one is — rather than by each card's single nearest neighbour: with four
+// cards mutually related, a hub can legitimately end up nearer one alternative
+// than the alternatives are to each other, and that is geometry in two
+// dimensions, not a layout that failed to group anything.
+test('layout: two sets of interchangeable cards make two clusters', () => {
+  const graph = placed(build([
+    combo(['Payoff', 'Sac A'], ['Win the game']),
+    combo(['Payoff', 'Sac B'], ['Win the game']),
+    combo(['Payoff', 'Sac C'], ['Win the game']),
+    combo(['Engine', 'Draw A'], ['Infinite card draw']),
+    combo(['Engine', 'Draw B'], ['Infinite card draw']),
+    combo(['Engine', 'Draw C'], ['Infinite card draw']),
+  ]));
+  const pick = (prefix) => graph.nodes.filter((n) => n.name.startsWith(prefix));
+  const spread = (group) => {
+    const gaps = [];
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        gaps.push(Math.hypot(group[i].x - group[j].x, group[i].y - group[j].y));
+      }
+    }
+    return Math.max(...gaps);
+  };
+  const centre = (group) => ({
+    x: group.reduce((s, n) => s + n.x, 0) / group.length,
+    y: group.reduce((s, n) => s + n.y, 0) / group.length,
+  });
+  const sacs = pick('Sac');
+  const draws = pick('Draw');
+  const a = centre(sacs);
+  const b = centre(draws);
+  const between = Math.hypot(a.x - b.x, a.y - b.y);
+  assert.ok(between > spread(sacs) && between > spread(draws),
+    `the groups are ${between.toFixed(0)}px apart but ${spread(sacs).toFixed(0)}px `
+    + `and ${spread(draws).toFixed(0)}px wide`);
+});
+
+// ---- the number on a line ---------------------------------------------------
+
+test('layout: every line worth a number gets one, shown or on hover', () => {
+  const graph = placed(outlets());
+  for (const link of graph.links) {
+    if (link.count >= 2) {
+      assert.ok(link.countX != null, 'a line worth a number was given nowhere to put it');
+    }
+  }
+  // One shared combo is the thinnest line on the map and there are a great many
+  // of them; a "1" on each says nothing the line does not.
+  assert.ok(graph.links.filter((l) => l.count === 1).every((l) => l.countX == null));
+});
+
+test('layout: the number counts the relation its line is for', () => {
+  const graph = placed(outlets());
+  const swap = edge(graph, 'carrion feeder', 'viscera seer');
+  const worksWith = edge(graph, 'scurry oak', 'carrion feeder');
+  assert.strictEqual(swap.count, swap.swap);
+  assert.strictEqual(worksWith.count, worksWith.together);
+});
+
+// The failure this ordering was written against: the heaviest overlaps sit in
+// the middle of the deck's engine, which is exactly where there is no room, so
+// leaving the numbers until after the card names meant the map's biggest number
+// was the one it never printed.
+test('layout: the biggest overlap keeps its number even in a knot', () => {
+  const graph = placedDense();
+  const strongest = graph.links[0];
+  assert.ok(strongest.count >= 2, 'the dense fixture has no overlap worth a number');
+  assert.ok(strongest.countShown, `the strongest line (${strongest.count}) printed no number`);
+});
+
+test('layout: only a handful of numbers are on screen at rest', () => {
+  const graph = placedDense();
+  const shown = graph.links.filter((l) => l.countShown);
+  const hidden = graph.links.filter((l) => l.countX != null && !l.countShown);
+  assert.ok(shown.length && shown.length <= 14, `${shown.length} numbers drawn at rest`);
+  assert.ok(hidden.length, 'nothing was left for the hover, so the crowding is untested');
+  // Shown strongest-first: nothing on screen may be weaker than something hidden
+  // that could have taken its place.
+  const weakestShown = Math.min(...shown.map((l) => l.count));
+  const strongestHidden = Math.max(...hidden.map((l) => l.count));
+  assert.ok(weakestShown >= strongestHidden - 0.001
+    || shown.length === 14, 'a weaker number was drawn over a stronger one');
+});
+
+test('layout: a number never lands on a dot or a name', () => {
+  const graph = placedDense();
+  const boxes = graph.nodes.map((n) => ({
+    left: n.x - n.r, right: n.x + n.r, top: n.y - n.r, bottom: n.y + n.r,
+  })).concat(graph.nodes.filter((n) => n.labelDy != null).map(labelBox));
+  for (const link of graph.links.filter((l) => l.countShown)) {
+    const half = (String(link.count).length * 5.4) / 2 + 3.5;
+    const box = {
+      left: link.countX - half, right: link.countX + half,
+      top: link.countY - 6, bottom: link.countY + 6,
+    };
+    for (const other of boxes) {
+      assert.ok(!hits(box, other), `the number ${link.count} is drawn over something else`);
+    }
   }
 });

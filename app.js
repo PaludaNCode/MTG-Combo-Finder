@@ -694,6 +694,81 @@
     return node;
   }
 
+  // What the lines mean, in the lines themselves. Two kinds of relation on one
+  // picture is one more than a reader can be expected to infer, and the dashes
+  // are the half that is not guessable: a dashed line between two cards that are
+  // never in a combo together looks like a mistake until something says what it
+  // is for.
+  const LEGEND = [
+    { className: 'tier-win', width: 3, text: 'a combo needs both — green ends the game' },
+    { className: 'tier-decisive', width: 2, text: 'yellow is value to convert' },
+    { className: 'tier-other', width: 1.5, text: 'grey is plumbing' },
+    { className: 'swap', width: 2, text: 'either card works — they stand in for each other' },
+  ];
+
+  // A knot of 162 lines is two questions drawn on top of each other. This lets
+  // either be asked on its own — "what works together" and "what stands in for
+  // what" — without moving a single card: the layout is the same picture, and
+  // only which lines are drawn changes. Which is the point of laying it out from
+  // both relations at once.
+  const MAP_VIEWS = [
+    { id: 'all', label: 'Both', spoken: 'Show every line' },
+    { id: 'combo', label: 'Works together', spoken: 'Show only pairs a combo needs' },
+    { id: 'swap', label: 'Interchangeable', spoken: 'Show only cards that stand in for each other' },
+  ];
+
+  function mapFilter(svg) {
+    const row = el('div', 'map-filter');
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', 'Which lines to show');
+    const buttons = [];
+    const select = (view) => {
+      svg.classList.remove('show-all', 'show-combo', 'show-swap');
+      svg.classList.add('show-' + view);
+      buttons.forEach((b) => {
+        const on = b.dataset.view === view;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    };
+    MAP_VIEWS.forEach((view) => {
+      const button = el('button', 'chip', view.label);
+      button.type = 'button';
+      button.dataset.view = view.id;
+      button.title = view.spoken;
+      button.addEventListener('click', () => select(view.id));
+      buttons.push(button);
+      row.appendChild(button);
+    });
+    select('all');
+    return row;
+  }
+
+  function mapLegend() {
+    const list = el('ul', 'map-legend');
+    LEGEND.forEach((item) => {
+      const row = el('li');
+      const swatch = svgEl('svg', 'swatch');
+      swatch.setAttribute('viewBox', '0 0 28 8');
+      swatch.setAttribute('aria-hidden', 'true');
+      const line = svgEl('line', 'edge ' + item.className);
+      line.setAttribute('x1', '1');
+      line.setAttribute('y1', '4');
+      line.setAttribute('x2', '27');
+      line.setAttribute('y2', '4');
+      line.setAttribute('stroke-width', String(item.width));
+      swatch.appendChild(line);
+      row.appendChild(swatch);
+      row.appendChild(el('span', null, item.text));
+      list.appendChild(row);
+    });
+    const numbers = el('li', 'map-legend-note');
+    numbers.appendChild(el('span', null,
+      'Thicker means more of your combos, and the number on a line says how many.'));
+    list.appendChild(numbers);
+    return list;
+  }
+
   function renderGraph(container, included) {
     if (!included.length) {
       container.textContent = '';
@@ -706,12 +781,14 @@
     const size = ComboGraph.sizeFor(graph.nodes.length);
     ComboGraph.layout(graph, size);
 
+    const swaps = graph.links.filter((l) => l.kind === 'swap').length;
     const body = panel(container, 'graph', 'How your combos connect', graph.nodes.length);
     body.appendChild(el('p', 'empty',
-      'A line joins two cards whenever one of your combos needs both, and takes the colour of the '
-      + 'best result those combos produce. The bigger a dot, the more of your combos that card is in. '
-      + 'Hover a card to name it and pick out what it touches — everything here is also written out '
-      + 'in the panels above.'));
+      'Two cards are joined when a combo needs both of them — a solid line, in the colour of the best '
+      + 'result those combos produce — or when they do the same job: a dashed line, meaning one can be '
+      + 'swapped for the other and you still have a combo. Both carry the count, so cards that overlap '
+      + 'a lot are drawn heavier and say by how much, and cards that stand in for each other end up '
+      + 'side by side. Hover one to name it and pick out what it touches.'));
 
     const svg = svgEl('svg', 'combo-map');
     svg.setAttribute('viewBox', '0 0 ' + size.width + ' ' + size.height);
@@ -720,13 +797,22 @@
     // words and are the better read anyway.
     svg.setAttribute('role', 'img');
     const title = svgEl('title');
-    title.textContent = 'Combo map: ' + graph.nodes.length + ' cards joined by '
-      + graph.links.length + ' shared ' + (graph.links.length === 1 ? 'combo' : 'combos') + '.';
+    title.textContent = 'Combo map: ' + graph.nodes.length + ' cards, '
+      + (graph.links.length - swaps) + ' pairs a combo needs together and '
+      + swaps + ' pairs that can stand in for each other.';
     svg.appendChild(title);
 
+    // Interchangeable lines go in their own layer *above* the combo lines. They
+    // are the answer to "which of these do the same job", and underneath a
+    // hundred and fourteen green ones they were the hardest thing on the map to
+    // see — which is precisely backwards.
     const edgeLayer = svgEl('g', 'edges');
+    const swapLayer = svgEl('g', 'edges swaps');
+    const countLayer = svgEl('g', 'counts');
     const nodeLayer = svgEl('g', 'nodes');
     svg.appendChild(edgeLayer);
+    svg.appendChild(swapLayer);
+    svg.appendChild(countLayer);
     svg.appendChild(nodeLayer);
 
     const byId = new Map(graph.nodes.map((n) => [n.id, n]));
@@ -737,20 +823,48 @@
     graph.links.forEach((linkData) => {
       const a = byId.get(linkData.source);
       const b = byId.get(linkData.target);
-      const line = svgEl('line', 'edge tier-' + linkData.tier);
+      const swap = linkData.kind === 'swap';
+      const line = svgEl('line', 'edge ' + (swap ? 'swap' : 'tier-' + linkData.tier));
       line.setAttribute('x1', a.x);
       line.setAttribute('y1', a.y);
       line.setAttribute('x2', b.x);
       line.setAttribute('y2', b.y);
-      // Thicker for a pair that turns up in several combos, capped so one very
-      // busy pair does not draw a bar across the map.
-      line.setAttribute('stroke-width', String(1 + Math.min(linkData.weight - 1, 4) * 0.7));
-      edgeLayer.appendChild(line);
+      // Heavier the more the two overlap, on both meanings of overlap, and capped
+      // so one very busy pair does not draw a bar across the map. Interchangeable
+      // counts run much higher than shared-combo ones — six cards that all stand
+      // in for each other are interchangeable in every combo the group appears in
+      // — so it takes more of them to earn the same width.
+      line.setAttribute('stroke-width', String(swap
+        ? 1 + Math.min(linkData.swap - 1, 12) * 0.28
+        : 1 + Math.min(linkData.together - 1, 4) * 0.7));
+      const hint = svgEl('title');
+      hint.textContent = swap
+        ? a.name + ' or ' + b.name + ' — either one works in ' + linkData.swap
+          + ' of your combos'
+        : a.name + ' + ' + b.name + ' — ' + linkData.together
+          + ' combo' + (linkData.together === 1 ? '' : 's') + ' need both';
+      line.appendChild(hint);
+      (swap ? swapLayer : edgeLayer).appendChild(line);
+
+      // The number itself. The strongest few stay on screen; the rest are drawn
+      // and hidden, and come back when either of their cards is picked out —
+      // where they are one card's dozen lines rather than the map's hundred and
+      // fifty, and there is room for all of them.
+      let count = null;
+      if (linkData.countX != null) {
+        count = svgEl('text', 'count' + (swap ? ' swap' : '')
+          + (linkData.countShown ? '' : ' is-crowded'));
+        count.setAttribute('x', linkData.countX);
+        count.setAttribute('y', linkData.countY + 3.5);
+        count.textContent = String(linkData.count);
+        countLayer.appendChild(count);
+      }
 
       [[a, b], [b, a]].forEach(([from, to]) => {
         const near = touching.get(from.id);
         near.nodes.add(to.id);
         near.edges.push(line);
+        if (count) near.edges.push(count);
       });
     });
 
@@ -810,6 +924,11 @@
     });
     svg.addEventListener('pointerleave', clear);
 
+    // Built after the SVG because both of these describe it — the filter drives
+    // it, and the legend is drawn with the same classes the map is, so it cannot
+    // describe a line the map no longer has. Inserted above it all the same.
+    body.appendChild(mapFilter(svg));
+    body.appendChild(mapLegend());
     body.appendChild(svg);
 
     if (graph.omitted) {

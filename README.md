@@ -56,13 +56,14 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   of combos hides this: cutting a card that turns up in four of them costs four
   combos, which is exactly what you want to know before trimming a deck — and
   whether those four are two-carders or four-carders changes the answer.
-- **How your combos connect** — the same combos as a picture: a dot per card, a
-  line between two cards a combo needs together, drawn green when those two win
-  the game on their own. Which cards the deck is really built around, and whether
-  it holds one engine or three unrelated ones, is a shape rather than a number —
-  and neither the list of combos nor the list of cards can show it. Redrawn from
-  scratch by every search, so **+ Add to deck** moves the map too. See
-  [The combo map](#the-combo-map).
+- **How your combos connect** — the same combos as a picture: a dot per card, and
+  a line between two cards that overlap. **Solid** means a combo needs both of
+  them; **dashed** means they do the same job — swap one for the other and you
+  still have a combo — so your four sacrifice outlets end up in one cluster
+  instead of four corners. Both are drawn heavier the more they overlap and
+  carry the count as a number, and three chips let you read either relation on
+  its own. Redrawn from scratch by every search, so **+ Add to deck** moves the
+  map too. See [The combo map](#the-combo-map).
 - **Suggestions split by colour** — two tabs, *In your colours* and *Other
   colours*. A red card is noise for a deck that isn't red, so it goes behind a
   tab rather than into the list. **Colours are read off the cards** — every card
@@ -642,30 +643,96 @@ edges it still has are named at the bottom of this section rather than smoothed
 over.
 
 Under "Combos in your deck" sits the same set of combos as a picture: **a dot per
-card, and a line between two cards whenever one of your combos needs both**. A
-combo of three cards is a triangle, not a chain — every pair inside it is a pair
-the combo needs, and drawing two of the three lines would say two of the cards
-were unrelated.
+card, and a line between two cards that overlap**. Two cards can overlap in two
+quite different ways, and the map draws both:
 
-What that adds over the panels around it is shape, which is the one thing a list
-cannot show. "Cards carrying your combos" will tell you Basalt Monolith is in
-five combos and Dramatic Reversal is in two; it cannot tell you that the deck is
-one artifact-mana engine with a Heliod cluster bolted on and two pairs that touch
-nothing else. That is a picture, and it is usually the thing you wanted to know
-before cutting anything.
+| | What it means |
+| --- | --- |
+| **Solid line** | *a combo needs both of them.* A combo of three cards is a triangle, not a chain — every pair inside it is a pair the combo needs, and drawing two of the three lines would say two of the cards were unrelated. |
+| **Dashed line** | *they do the same job.* Swap one for the other and one of your combos turns into another of your combos. Your sacrifice outlets are never in a combo *together* — they are alternatives — so this is the only line that will ever join them. |
 
-Three things carry meaning, and nothing else does:
+Three more things carry meaning, and nothing else does:
 
 | What you see | What it means |
 | --- | --- |
 | **Dot size** | how many of your combos that card takes part in — the same count "Cards carrying your combos" ranks by, sized by area so a card in nine combos is not drawn eighty times the size of one in a single combo |
-| **Line colour** | the best result of the combos behind that pair, in the same three tiers the result chips use: **green** wins the game, **yellow** is real value something else must convert, **grey** is plumbing |
-| **Line weight** | how many of your combos need that exact pair, capped so one very busy pair does not draw a bar across the map |
+| **Line weight** | how much the pair overlaps, on whichever of the two meanings its line is for, capped so one very busy pair does not draw a bar across the map |
+| **The number on a line** | the same thing said exactly: *6* on a solid line is six combos needing both, *23* on a dashed one is twenty-three combos where either card will do |
+| **Line colour** | on a solid line, the best result of the combos behind it, in the same three tiers the result chips use: **green** wins the game, **yellow** is real value something else must convert, **grey** is plumbing |
+
+What all of that adds over the panels around it is shape, which is the one thing
+a list cannot show. "Cards carrying your combos" will tell you Basalt Monolith is
+in five combos and Dramatic Reversal is in two; it cannot tell you that the deck
+is one artifact-mana engine with a Heliod cluster bolted on, or that six of your
+cards are the same lifegain trigger wearing different hats. That is a picture,
+and it is usually the thing you wanted to know before cutting anything.
 
 Hovering a card lights it, everything it touches and the lines between them, and
 pushes the rest back. On a deck with thirty combos in it that is the only way to
 read the thing — every line is drawn at the same weight until you ask about one
 card. On touch, where there is no hover, a tap does the same.
+
+**Either question on its own.** Three chips above the map — *Both*, *Works
+together*, *Interchangeable* — hide one set of lines or the other. Nothing moves
+when you switch: the layout is worked out from both relations at once and stays
+put, so a card's neighbours are still its neighbours and the filter only ever
+takes lines away. On a real deck "Interchangeable" is the view that answers
+"which of these are the same card in different clothes" in one glance.
+
+### Why interchangeable had to be its own relation
+
+The first version drew only the solid lines, and it was wrong in a way that took
+a real deck to see: **the cards a reader most wants grouped were the ones it
+pushed furthest apart.** Four sacrifice outlets never appear in a combo together,
+so on shared combos alone there is nothing joining them at all — and every node
+repels every other, so they ended up in four different corners. The map answered
+"what works with what" and was silent on "which of these do the same job", which
+is the question you ask when you are deciding what to cut.
+
+**Interchangeability is measured exactly, not by similarity.** Two cards are
+interchangeable in a combo when the rest of that combo is identical — the same
+rule `groupVariants()` already uses to collapse *Scurry Oak + Sadistic Glee +
+Carrion Feeder* and its Viscera Seer version into one row. A looser measure was
+tried first: how many partners two cards happen to share. On the tuning deck that
+produced **302 pairs against the exact rule's 48**, most of them saying nothing
+at all, and its top entries were the same pairs the exact rule already found.
+
+**The pull is asymmetric, deliberately.** A dashed line pulls its two ends
+together harder than a solid one, and that asymmetry is the whole reason the map
+groups anything: cards that do the same job are exactly the ones a reader wants
+side by side, while cards that combo together are already tied by the combo
+itself. A swap link also earns a flat bonus before its count is counted, because
+one combo where either card will do is already the strongest statement the data
+makes — without that step a single swap (pull 1.4) barely beat a single shared
+combo (1.0), and on a fixture of three outlets around one payoff the third outlet
+still settled nearer the payoff than its own alternatives.
+
+On the tuning deck the result is six legible groups: the sacrifice outlets, the
+lifegain triggers, the counter payoffs, the lifegain payoffs, and two smaller
+pairs — none of which existed as a shape on the map before.
+
+### The number on a line
+
+Thickness says "more than that one". It does not say how many, and the difference
+between an interchangeable pair worth 3 combos and one worth 17 is a
+deckbuilding decision, so the count is printed on the line as well.
+
+Not on all 162 of them. The strongest fourteen are on screen at rest; every other
+line's number is drawn, hidden, and shown when either of its cards is picked out
+— where it is one card's dozen lines rather than the map's hundred and fifty.
+Each number is offered a place in the same occupied space the dots and the card
+names hold, sliding along its line and then off it if the midpoint is taken.
+
+Two orderings in that came from watching it fail:
+
+- **Numbers are placed before card names**, not after. The heaviest overlaps sit
+  in the middle of the deck's engine, which is exactly where there is no room, so
+  leaving them until last meant the map's biggest number was the one it never
+  printed. A name crowded out comes back on hover; so does a number, but the
+  number is the thing being asked for.
+- **A number may step off its line.** The very biggest overlap is usually two big
+  dots side by side, and the whole length of the line between them is inside
+  them — there is no room *on* that line at any point along it.
 
 **A card filling a template slot is on the map like any other.** It holds the
 combo up just as much as a card the combo names, and cutting it costs the combo
@@ -690,12 +757,14 @@ two unconnected clusters does not simply push them off the canvas.
 **The arithmetic is in `graph.js` and the drawing is in `app.js`.** `build()`
 turns combos into `{nodes, links}` and `layout()` places them; neither knows what
 SVG is. That is what makes the interesting half testable in node, where there is
-nothing to look at: `test/graph.test.js` asserts that nodes land inside the
-canvas, that no two dots overlap *given how big they are drawn*, that no label is
-drawn over a dot or another label, that a crowded map drops names rather than
-piling them up and keeps the busiest card's, that an unconnected cluster is still
-on screen, that the card nearest each one is a card it combos with, and that two
-identical searches draw identical pictures. The layout test
+nothing to look at: `test/graph.test.js` asserts that cards filling the same role
+are joined and drawn closer than the payoffs they all combo with, that two such
+groups stay two clusters, that a pair which is both ways round is still one line,
+that the biggest overlap keeps its number even in a knot, that nodes land inside
+the canvas, that no two dots overlap *given how big they are drawn*, that no
+label or number is drawn over a dot or over another one, that a crowded map drops
+names rather than piling them up, that an unconnected cluster is still on screen,
+and that two identical searches draw identical pictures. The layout test
 then presses the real page: the map renders at every viewport, in three colours,
 scales with its column, dims on hover, and **grows a card when + Add to deck is
 pressed** — a picture one search behind the list beside it would be worse than no
@@ -1086,7 +1155,12 @@ inside the layout runs, for the same reason:
   checks its three tiers come out in three computed colours, hovers the quietest
   card and measures that its neighbours light while the rest fade, and presses
   **+ Add to deck** to assert the map *grew that card*. A picture one search
-  behind the list beside it says the added card is in no combos.
+  behind the list beside it says the added card is in no combos. The second
+  relation is checked the same way — the fixture holds two cards that are never
+  in a combo together and each complete two of the same ones, so the run asserts
+  a dashed line joins them, that it carries its count as a real number placed on
+  the line, and that pressing **Interchangeable** hides every solid line *without
+  moving a single card*.
 
 Every one of those was confirmed by breaking the code and watching them fail.
 

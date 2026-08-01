@@ -740,6 +740,48 @@ button:disabled { opacity: .6; cursor: wait; }
 .combo-map .edge.tier-win { stroke: var(--ok); opacity: .75; }
 .combo-map .edge.tier-decisive { stroke: var(--decisive); opacity: .7; }
 
+/* Interchangeable: these two are never in a combo together — one stands in for
+   the other. Dashed rather than another colour, because it is a different *kind*
+   of relation and not a different grade of the same one, and the three colours
+   are already spoken for by what a combo produces.
+
+   Drawn at full strength while the combo lines sit at .55–.75: it is the newer
+   and quieter signal, and on a busy deck there are three green lines for every
+   dashed one. */
+.combo-map .edge.swap {
+  stroke: var(--size);
+  stroke-dasharray: 5 4;
+  opacity: 1;
+}
+
+/* Either question on its own. The cards do not move — the layout is worked out
+   from both relations at once and stays put — so switching views is the same
+   picture with one set of lines taken away, and a card's neighbours are still
+   its neighbours. */
+.combo-map.show-combo .edge.swap,
+.combo-map.show-combo .count.swap,
+.combo-map.show-swap .edge:not(.swap),
+.combo-map.show-swap .count:not(.swap) { display: none; }
+
+/* The count on a line. Small, in the map's own background halo, and centred on
+   the line it belongs to. */
+.combo-map .count {
+  fill: var(--muted);
+  font-size: 10px;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--code-bg);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.combo-map .count.swap { fill: var(--size); }
+/* A number the map has no room for at rest. Drawn, hidden, and shown when its
+   line is picked out — the whole map's numbers at once is noise, one card's are
+   the answer to what you just asked. */
+.combo-map .count.is-crowded { opacity: 0; }
+.combo-map.is-lit .count.is-crowded.is-lit { opacity: 1; }
+
 .combo-map .dot {
   fill: var(--accent);
   stroke: var(--bg);
@@ -776,10 +818,58 @@ button:disabled { opacity: .6; cursor: wait; }
    rest rather than hiding it keeps the shape of the map while you read a corner
    of it. */
 .combo-map.is-lit .node { opacity: .22; }
-.combo-map.is-lit .edge { opacity: .08; }
+.combo-map.is-lit .edge,
+.combo-map.is-lit .count { opacity: .08; }
 .combo-map.is-lit .node.is-lit { opacity: 1; }
 .combo-map.is-lit .node.is-lit .label { fill: var(--text); }
-.combo-map.is-lit .edge.is-lit { opacity: 1; }
+.combo-map.is-lit .edge.is-lit,
+.combo-map.is-lit .count.is-lit { opacity: 1; }
+
+/* ---- what the lines mean ---- */
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem 1.1rem;
+  margin: 0 0 .1rem;
+  padding: 0;
+  list-style: none;
+  font-size: .82rem;
+  color: var(--muted);
+}
+.map-legend li { display: flex; align-items: center; gap: .45rem; }
+
+/* Which lines to show. Chips rather than tabs: nothing is being switched between
+   — the map underneath is the same one — so this is a filter on a picture, not a
+   choice of panel. */
+.map-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin: .2rem 0 .1rem;
+}
+.map-filter .chip {
+  min-height: 32px;
+  padding: .3rem .7rem;
+  font-size: .82rem;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.map-filter .chip:hover { color: var(--text); border-color: var(--line-strong); }
+.map-filter .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.map-filter .chip.is-active {
+  background: var(--accent);
+  color: var(--brass-ink);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+/* Drawn with the same classes the map draws with, so a legend cannot describe a
+   line the map no longer has. */
+.map-legend .swatch { width: 28px; height: 8px; flex: 0 0 auto; overflow: visible; }
+.map-legend-note { color: var(--muted); opacity: .85; }
 
 /* ---- what a combo produces ---- */
 .results {
