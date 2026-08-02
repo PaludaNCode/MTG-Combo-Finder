@@ -74,6 +74,30 @@ test('unofficial: a chained row is the exception, not the shape', () => {
   });
 });
 
+// The swapped-in card is the one name in the file with nothing behind it: the
+// cited combo anchors `from.cards`, and `cards` is that list with the swaps
+// applied, but the card coming *in* is only ever a string somebody typed. The id
+// beside it is what tools/verify-unofficial.js reads it against, so the id has to
+// be there — null is a real answer, meaning "the published data has no such card".
+test('unofficial: every swap records the card id of what it swaps in', () => {
+  COMBOS.forEach((row) => {
+    const at = row.cards.join(' + ');
+    (row.swaps || [row.swap]).forEach((step) => {
+      assert.ok('inId' in step, at + ': no card id recorded for ' + step.in);
+      assert.ok(step.inId === null || Number.isInteger(step.inId),
+        at + ': ' + step.in + ' has a card id that is neither a number nor null');
+    });
+  });
+  STAND_INS.forEach((rule) => {
+    assert.ok('cardId' in rule, rule.card + ': no card id recorded');
+    (rule.for || []).forEach((src) => {
+      assert.ok('cardId' in src, rule.card + ': no card id recorded for ' + src.card);
+      assert.ok(Number.isInteger(src.cardId), rule.card + ': ' + src.card + ' stands in for '
+        + 'a card the published data does not name — a rule reads published combos only');
+    });
+  });
+});
+
 test('unofficial: no row is listed twice', () => {
   const keys = COMBOS.map((r) => r.cards.map(nameKey).sort().join('|'));
   assert.strictEqual(new Set(keys).size, keys.length);
@@ -370,7 +394,7 @@ test('identityString: colourless is C, and the order is WUBRG', () => {
 // every daily refresh. What *is* checkable here is that the checker works: that
 // a broken citation is caught rather than that today's data happens to be fine.
 
-const { check, checkStandIns } = require('../tools/verify-unofficial.js');
+const { check, checkStandIns, checkCardIds, cardIndex } = require('../tools/verify-unofficial.js');
 
 const PUBLISHED = {
   combos: [
@@ -416,6 +440,80 @@ test('citations: a row Spellbook has published is reported as graduated', () => 
 
 test('citations: no data and no rows are not an error', () => {
   assert.deepStrictEqual(check(null, null), { problems: [], graduated: [], counted: 0 });
+});
+
+// ---- the card id beside the name -------------------------------------------
+//
+// The failure this exists for cannot be reached by any other check: a card
+// misspelled where it is swapped *in* names nothing, matches no deck, and reads on
+// the page exactly like a card that simply nobody plays. The id is the second
+// opinion, and these prove it is actually consulted.
+
+const CARDS = cardIndex({
+  names: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer', 'Sadistic Glee'],
+  cardIds: [4186, 1628, 2292, 2082],
+});
+const idRow = (over) => Object.assign({
+  cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
+  from: { id: '1-2-3', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
+  swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
+}, over);
+
+test('card ids: a swap whose name and id agree is fine', () => {
+  assert.deepStrictEqual(checkCardIds(CARDS, [idRow()], []), []);
+});
+
+test('card ids: a card id the data does not have is caught', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 9999 },
+  })], []);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /does not have/);
+});
+
+// The one the id exists for: upstream renames the card, the name stops matching
+// anything, and without the id nothing would say why.
+test('card ids: an id that now carries a different name is caught', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 2292 },
+  })], []);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /is now "Viscera Seer"/);
+});
+
+// null is a claim, not a blank: it says the published data has no such card. That
+// is Hammerhead's whole position, and it stops being true one day.
+test('card ids: null on a card the data does not name is fine', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    cards: ['Scurry Oak', 'Hammerhead, Maggia Boss', 'Viscera Seer'],
+    swap: { out: 'Sadistic Glee', in: 'Hammerhead, Maggia Boss', inId: null },
+  })], []);
+  assert.deepStrictEqual(out, []);
+});
+
+test('card ids: null on a card the data now names is reported', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: null },
+  })], []);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /now names it \(id 1628\)/);
+});
+
+test('card ids: the stand-in rules are read the same way', () => {
+  const out = checkCardIds(CARDS, [], [{
+    card: 'Hammerhead, Maggia Boss',
+    cardId: null,
+    for: [{ card: 'Viscera Seer', cardId: 4186 }],
+  }]);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /is now "Scurry Oak"/);
+});
+
+// A payload with no tables — the fixtures, and any older local combos.json — has
+// no ids to read, and that is not a failure. It is the same no-op decode() makes.
+test('card ids: a payload without the tables is skipped, not failed', () => {
+  assert.strictEqual(cardIndex({ combos: [] }), null);
+  assert.deepStrictEqual(checkCardIds(null, [idRow()], []), []);
 });
 
 // The failure a stand-in rule has that a written row does not: it cannot cite a

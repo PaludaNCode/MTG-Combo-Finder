@@ -52,7 +52,7 @@
         id: '3000-4231-5670',
         cards: ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Academy Manufactor'],
       },
-      swap: { out: 'Chatterfang, Squirrel General', in: 'Quina, Qu Gourmet' },
+      swap: { out: 'Chatterfang, Squirrel General', in: 'Quina, Qu Gourmet', inId: 6705 },
       // Not because the two cards are equivalent — they are not. Chatterfang adds
       // *that many* Squirrels to a token creation; Quina adds exactly one Frog,
       // however many tokens were made. It works here because this loop only ever
@@ -77,7 +77,7 @@
         id: '2919-4268-5641',
         cards: ['Basking Broodscale', 'Archangel of Thune', 'Kor Celebrant'],
       },
-      swap: { out: 'Kor Celebrant', in: 'Elas il-Kor, Sadistic Pilgrim' },
+      swap: { out: 'Kor Celebrant', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
       why: 'Broodscale’s counter makes an Eldrazi Spawn; the Spawn entering is another '
         + 'creature entering, which Elas il-Kor turns into a life gained, which Archangel '
         + 'of Thune turns back into a counter. Spellbook publishes this loop with 26 other '
@@ -97,7 +97,7 @@
         id: '1939-3197-7743',
         cards: ['Herd Baloth', 'Heroic Feast', 'Lunarch Veteran // Luminous Phantom'],
       },
-      swap: { out: 'Herd Baloth', in: 'Scurry Oak' },
+      swap: { out: 'Herd Baloth', in: 'Scurry Oak', inId: 4186 },
       why: 'Both cards read “whenever one or more +1/+1 counters are put on this '
         + 'creature, create a token”, and this loop only needs the token to enter: '
         + 'Lunarch Veteran turns that into a life gained, and Heroic Feast turns the '
@@ -127,7 +127,7 @@
       cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
       confidence: 'verified',
       from: { id: '2082-2292-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next '
         + 'counter. Read against all three cards.',
       produces: [
@@ -139,7 +139,7 @@
       cards: ['Scurry Oak', 'Necrosynthesis', 'Carrion Feeder'],
       confidence: 'verified',
       from: { id: '2082-2438-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'] },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next '
         + 'counter. Read against all three cards.',
       produces: [
@@ -151,7 +151,7 @@
       cards: ['Scurry Oak', 'Necrosynthesis', 'Umbral Collar Zealot'],
       confidence: 'verified',
       from: { id: '2082-4186-6798', cards: ['Scurry Oak', 'Sadistic Glee', 'Umbral Collar Zealot'] },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next '
         + 'counter. Read against all three cards.',
       produces: [
@@ -163,7 +163,7 @@
       cards: ['Herd Baloth', 'Necrosynthesis', 'Viscera Seer'],
       confidence: 'verified',
       from: { id: '2082-2292-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Viscera Seer'] },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next '
         + 'counter. Read against all three cards.',
       produces: [
@@ -175,7 +175,7 @@
       cards: ['Herd Baloth', 'Necrosynthesis', 'Carrion Feeder'],
       confidence: 'verified',
       from: { id: '2082-2438-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'] },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next '
         + 'counter. Read against all three cards.',
       produces: [
@@ -187,7 +187,7 @@
       cards: ['Herd Baloth', 'Necrosynthesis', 'Umbral Collar Zealot'],
       confidence: 'verified',
       from: { id: '2082-3197-6798', cards: ['Herd Baloth', 'Sadistic Glee', 'Umbral Collar Zealot'] },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next '
         + 'counter. Read against all three cards.',
       produces: [
@@ -205,8 +205,8 @@
       confidence: 'verified',
       from: { id: '2082-2438-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'] },
       swaps: [
-        { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss' },
+        { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
+        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss', inId: null },
       ],
       why: 'The counter makes a Squirrel, Hammerhead eats it for free, and the death puts '
         + 'on the next counter. He eats creatures on the same terms Carrion Feeder does — '
@@ -222,8 +222,8 @@
       confidence: 'verified',
       from: { id: '2082-2438-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'] },
       swaps: [
-        { out: 'Sadistic Glee', in: 'Necrosynthesis' },
-        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss' },
+        { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
+        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss', inId: null },
       ],
       why: 'The same loop as the Scurry Oak row, with 4/4 Beasts instead of Squirrels: the '
         + 'counter makes a token, Hammerhead eats it, the death puts on the next counter.',
@@ -295,7 +295,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Altar of Dementia',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Altar of Dementia eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -317,7 +317,7 @@
           'Kitchen Finks', 'Ashnod\'s Altar', 'Archangel of Thune',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Ashnod\'s Altar eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -339,7 +339,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Bartolomé del Presidio',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Bartolomé del Presidio eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -361,7 +361,7 @@
           'Kitchen Finks', 'Blasting Station', 'Archangel of Thune',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Blasting Station eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -383,7 +383,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Bloodflow Connoisseur',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Bloodflow Connoisseur eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -405,7 +405,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Carrion Feeder',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Carrion Feeder eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -427,7 +427,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Goblin Bombardment',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Goblin Bombardment eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -449,7 +449,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Phantom Train',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Phantom Train eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -471,7 +471,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Phyrexian Altar',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Phyrexian Altar eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -493,7 +493,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Shilgengar, Sire of Famine',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Shilgengar, Sire of Famine eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -516,7 +516,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Thermopod',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Thermopod eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -539,7 +539,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Umbral Collar Zealot',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Umbral Collar Zealot eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -562,7 +562,7 @@
           'Kitchen Finks', 'Viscera Seer', 'Archangel of Thune',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Viscera Seer eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -585,7 +585,7 @@
           'Kitchen Finks', 'Woe Strider', 'Archangel of Thune',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Woe Strider eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -608,7 +608,7 @@
           'Kitchen Finks', 'Archangel of Thune', 'Yahenni, Undying Partisan',
         ],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Yahenni, Undying Partisan eats the Finks for free; persist returns it with a -1/-1 '
         + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
         + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
@@ -641,8 +641,8 @@
         cards: ['Kitchen Finks', 'Archangel of Thune', 'Bartolomé del Presidio'],
       },
       swaps: [
-        { out: 'Archangel of Thune', in: 'Heroic Feast' },
-        { out: 'Bartolomé del Presidio', in: 'Hammerhead, Maggia Boss' },
+        { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
+        { out: 'Bartolomé del Presidio', in: 'Hammerhead, Maggia Boss', inId: null },
       ],
       why: 'Hammerhead eats the Finks for free; persist returns it with a -1/-1 counter, '
         + 'its entry gains 2 life, and Heroic Feast spends one of those two targets putting '
@@ -681,7 +681,7 @@
         id: '2919-4186-6097',
         cards: ['Archangel of Thune', 'Scurry Oak', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Archangel of Thune puts a +1/+1 counter on Scurry Oak, the counter makes a 1/1 '
         + 'Squirrel, and the token entering is another creature entering — which Virulent '
         + 'Emissary turns into a life gained, and the life into the next counter. Virulent '
@@ -702,7 +702,7 @@
         id: '1274-4186-6097',
         cards: ['Heliod, Sun-Crowned', 'Scurry Oak', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Scurry Oak, the counter makes a 1/1 '
         + 'Squirrel, and the token entering is another creature entering — which Virulent '
         + 'Emissary turns into a life gained, and the life into the next counter. Virulent '
@@ -723,7 +723,7 @@
         id: '2919-3197-6097',
         cards: ['Archangel of Thune', 'Herd Baloth', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Archangel of Thune puts a +1/+1 counter on Herd Baloth, the counter makes a 4/4 '
         + 'Beast, and the token entering is another creature entering — which Virulent Emissary '
         + 'turns into a life gained, and the life into the next counter. Virulent Emissary’s '
@@ -744,7 +744,7 @@
         id: '1274-3197-6097',
         cards: ['Heliod, Sun-Crowned', 'Herd Baloth', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Herd Baloth, the counter makes a 4/4 '
         + 'Beast, and the token entering is another creature entering — which Virulent Emissary '
         + 'turns into a life gained, and the life into the next counter. Virulent Emissary’s '
@@ -765,7 +765,7 @@
         id: '2919-5641-6097',
         cards: ['Basking Broodscale', 'Archangel of Thune', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Archangel of Thune puts a +1/+1 counter on Basking Broodscale, the counter makes an '
         + 'Eldrazi Spawn, and the token entering is another creature entering — which Virulent '
         + 'Emissary turns into a life gained, and the life into the next counter. Virulent '
@@ -788,7 +788,7 @@
         id: '2919-5641-6097',
         cards: ['Basking Broodscale', 'Archangel of Thune', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May', inId: 6823 },
       why: 'Archangel of Thune puts a +1/+1 counter on Basking Broodscale, the counter makes an '
         + 'Eldrazi Spawn, and the token entering is another creature entering — which Aunt May '
         + 'turns into a life gained, and the life into the next counter. Aunt May’s trigger is '
@@ -810,7 +810,7 @@
         id: '1274-5641-6097',
         cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Lunarch Veteran // Luminous Phantom' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Lunarch Veteran // Luminous Phantom', inId: 1939 },
       why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Basking Broodscale, the counter makes an '
         + 'Eldrazi Spawn, and the token entering is another creature entering — which Lunarch '
         + 'Veteran turns into a life gained, and the life into the next counter. Lunarch '
@@ -831,7 +831,7 @@
         id: '1274-5641-6097',
         cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Elas il-Kor, Sadistic Pilgrim' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
       why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Basking Broodscale, the counter makes an '
         + 'Eldrazi Spawn, and the token entering is another creature entering — which Elas '
         + 'il-Kor, Sadistic Pilgrim turns into a life gained, and the life into the next '
@@ -853,7 +853,7 @@
         id: '1274-5641-6097',
         cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May', inId: 6823 },
       why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Basking Broodscale, the counter makes an '
         + 'Eldrazi Spawn, and the token entering is another creature entering — which Aunt May '
         + 'turns into a life gained, and the life into the next counter. Aunt May’s trigger is '
@@ -892,7 +892,7 @@
         id: '3490-4050-6097-7743',
         cards: ['Animation Module', 'Phyrexian Altar', 'Hinterland Sanctifier', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Hinterland Sanctifier, and Heroic Feast spends that life on one '
         + 'target — which is the next counter. The altar is there to eat the Servo and pay for '
@@ -917,7 +917,7 @@
         id: '3490-4050-7173-7743',
         cards: ['Animation Module', 'Phyrexian Altar', 'Virulent Emissary', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Virulent Emissary, and Heroic Feast spends that life on one target '
         + '— which is the next counter. The altar is there to eat the Servo and pay for the '
@@ -942,7 +942,7 @@
         id: '3490-4050-6823-7743',
         cards: ['Animation Module', 'Phyrexian Altar', 'Aunt May', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Aunt May, and Heroic Feast spends that life on one target — which '
         + 'is the next counter. The altar is there to eat the Servo and pay for the next one, '
@@ -966,7 +966,7 @@
         id: '3490-4050-4716-7743',
         cards: ['Animation Module', 'Phyrexian Altar', 'Prosperous Innkeeper', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Prosperous Innkeeper, and Heroic Feast spends that life on one '
         + 'target — which is the next counter. The altar is there to eat the Servo and pay for '
@@ -991,7 +991,7 @@
         id: '360-3490-4050-7743',
         cards: ['Animation Module', 'Soul Warden', 'Phyrexian Altar', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Soul Warden, and Heroic Feast spends that life on one target — '
         + 'which is the next counter. The altar is there to eat the Servo and pay for the next '
@@ -1015,7 +1015,7 @@
         id: '2741-3490-4050-7743',
         cards: ['Animation Module', 'Essence Warden', 'Phyrexian Altar', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Essence Warden, and Heroic Feast spends that life on one target — '
         + 'which is the next counter. The altar is there to eat the Servo and pay for the next '
@@ -1039,7 +1039,7 @@
         id: '3490-4050-6720-7743',
         cards: ['Animation Module', 'Phyrexian Altar', 'Case of the Uneaten Feast', 'Heroic Feast'],
       },
-      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar', inId: 2034 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
         + 'gains 1 life off Case of the Uneaten Feast, and Heroic Feast spends that life on one '
         + 'target — which is the next counter. The altar is there to eat the Servo and pay for '
@@ -1066,7 +1066,7 @@
         id: '2034-2811-2919-3490',
         cards: ['Animation Module', 'Ashnod\'s Altar', 'Elas il-Kor, Sadistic Pilgrim', 'Archangel of Thune'],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Ashnod\'s Altar eats the '
         + 'Servo to pay for the next one, and Elas il-Kor, Sadistic Pilgrim gains 1 life every '
         + 'time one enters. Heroic Feast does Archangel of Thune’s job here: one life gained is '
@@ -1088,7 +1088,7 @@
         id: '1939-2034-2919-3490',
         cards: ['Animation Module', 'Ashnod\'s Altar', 'Archangel of Thune', 'Lunarch Veteran // Luminous Phantom'],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Ashnod\'s Altar eats the '
         + 'Servo to pay for the next one, and Lunarch Veteran gains 1 life every time one '
         + 'enters. Heroic Feast does Archangel of Thune’s job here: one life gained is one '
@@ -1108,7 +1108,7 @@
         id: '2811-2919-3490-4050',
         cards: ['Animation Module', 'Elas il-Kor, Sadistic Pilgrim', 'Archangel of Thune', 'Phyrexian Altar'],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Phyrexian Altar eats '
         + 'the Servo to pay for the next one, and Elas il-Kor, Sadistic Pilgrim gains 1 life '
         + 'every time one enters. Heroic Feast does Archangel of Thune’s job here: one life '
@@ -1129,7 +1129,7 @@
         id: '1939-2919-3490-4050',
         cards: ['Animation Module', 'Archangel of Thune', 'Lunarch Veteran // Luminous Phantom', 'Phyrexian Altar'],
       },
-      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
       why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Phyrexian Altar eats '
         + 'the Servo to pay for the next one, and Lunarch Veteran gains 1 life every time one '
         + 'enters. Heroic Feast does Archangel of Thune’s job here: one life gained is one '
@@ -1157,7 +1157,7 @@
         id: '2034-2919-3490-6097',
         cards: ['Animation Module', 'Ashnod\'s Altar', 'Archangel of Thune', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Archangel of Thune turns each life gained into a +1/+1 counter, Animation Module '
         + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
         + 'Emissary gains the life for; Ashnod\'s Altar eats the Servo to pay the {1}. Virulent '
@@ -1179,7 +1179,7 @@
         id: '2919-3490-4050-6097',
         cards: ['Animation Module', 'Archangel of Thune', 'Phyrexian Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Archangel of Thune turns each life gained into a +1/+1 counter, Animation Module '
         + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
         + 'Emissary gains the life for; Phyrexian Altar eats the Servo to pay the {1}. Virulent '
@@ -1201,7 +1201,7 @@
         id: '1274-2034-3490-6097',
         cards: ['Animation Module', 'Ashnod\'s Altar', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Heliod, Sun-Crowned turns each life gained into a +1/+1 counter, Animation Module '
         + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
         + 'Emissary gains the life for; Ashnod\'s Altar eats the Servo to pay the {1}. Virulent '
@@ -1223,7 +1223,7 @@
         id: '1274-3490-4050-6097',
         cards: ['Animation Module', 'Heliod, Sun-Crowned', 'Phyrexian Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Heliod, Sun-Crowned turns each life gained into a +1/+1 counter, Animation Module '
         + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
         + 'Emissary gains the life for; Phyrexian Altar eats the Servo to pay the {1}. Virulent '
@@ -1248,7 +1248,7 @@
         id: '2034-3490-6097-6283',
         cards: ['Amalia Benavides Aguirre', 'Animation Module', 'Ashnod\'s Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Every life gained sends Amalia Benavides Aguirre exploring, which puts a +1/+1 '
         + 'counter on her; Animation Module turns that counter into a Servo for {1}; and the '
         + 'Servo entering is the life. Ashnod\'s Altar eats the Servo to pay for the next one. '
@@ -1271,7 +1271,7 @@
         id: '3490-4050-6097-6283',
         cards: ['Amalia Benavides Aguirre', 'Animation Module', 'Phyrexian Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Every life gained sends Amalia Benavides Aguirre exploring, which puts a +1/+1 '
         + 'counter on her; Animation Module turns that counter into a Servo for {1}; and the '
         + 'Servo entering is the life. Phyrexian Altar eats the Servo to pay for the next one. '
@@ -1302,7 +1302,7 @@
         id: '3000-5670-6097',
         cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May', inId: 6823 },
       why: 'Warren Soultrader pays 1 life and eats a Squirrel to make a Treasure, Chatterfang '
         + 'puts a Squirrel back into that creation, and Aunt May gains the 1 life back as it '
         + 'enters. The token count and the life total both end where they started; the '
@@ -1321,7 +1321,7 @@
         id: '3000-5670-6097',
         cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast', inId: 6720 },
       why: 'Warren Soultrader pays 1 life and eats a Squirrel to make a Treasure, Chatterfang '
         + 'puts a Squirrel back into that creation, and Case of the Uneaten Feast gains the 1 '
         + 'life back as it enters. The token count and the life total both end where they '
@@ -1341,7 +1341,7 @@
         id: '3000-5670-6097',
         cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Warren Soultrader pays 1 life and eats a Squirrel to make a Treasure, Chatterfang '
         + 'puts a Squirrel back into that creation, and Virulent Emissary gains the 1 life back '
         + 'as it enters. The token count and the life total both end where they started; the '
@@ -1362,7 +1362,7 @@
         id: '5670-6097-6291',
         cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Stridehangar Automaton'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May', inId: 6823 },
       why: 'Warren Soultrader pays 1 life and eats a Thopter to make a Treasure, Stridehangar '
         + 'Automaton puts a Thopter back into that creation, and Aunt May gains the 1 life back '
         + 'as it enters. The token count and the life total both end where they started; the '
@@ -1381,7 +1381,7 @@
         id: '5670-6097-6291',
         cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Stridehangar Automaton'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast', inId: 6720 },
       why: 'Warren Soultrader pays 1 life and eats a Thopter to make a Treasure, Stridehangar '
         + 'Automaton puts a Thopter back into that creation, and Case of the Uneaten Feast '
         + 'gains the 1 life back as it enters. The token count and the life total both end '
@@ -1401,7 +1401,7 @@
         id: '5670-6097-6291',
         cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Stridehangar Automaton'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Warren Soultrader pays 1 life and eats a Thopter to make a Treasure, Stridehangar '
         + 'Automaton puts a Thopter back into that creation, and Virulent Emissary gains the 1 '
         + 'life back as it enters. The token count and the life total both end where they '
@@ -1422,7 +1422,7 @@
         id: '5670-6097-6705',
         cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Quina, Qu Gourmet'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary', inId: 7173 },
       why: 'Warren Soultrader pays 1 life and eats a Frog to make a Treasure, Quina puts a Frog '
         + 'back into that creation, and Virulent Emissary gains the 1 life back as it enters. '
         + 'The token count and the life total both end where they started; the Treasures do '
@@ -1451,7 +1451,7 @@
         id: '2034-2308-6097',
         cards: ['Trudge Garden', 'Ashnod\'s Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May', inId: 6823 },
       why: 'A 4/4 Fungus Beast enters, Aunt May gains 1 life for it, and Trudge Garden pays {2} '
         + 'off that trigger for the next 4/4 — the {2} Ashnod’s Altar has already made by '
         + 'eating the last one. Aunt May’s trigger is Hinterland Sanctifier’s sentence word for '
@@ -1470,7 +1470,7 @@
         id: '2034-2308-6097',
         cards: ['Trudge Garden', 'Ashnod\'s Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast', inId: 6720 },
       why: 'A 4/4 Fungus Beast enters, Case of the Uneaten Feast gains 1 life for it, and Trudge '
         + 'Garden pays {2} off that trigger for the next 4/4 — the {2} Ashnod’s Altar has '
         + 'already made by eating the last one. Case of the Uneaten Feast gains the life on a '
@@ -1491,7 +1491,7 @@
         id: '2308-4050-4871-6097',
         cards: ['Trudge Garden', 'Pitiless Plunderer', 'Phyrexian Altar', 'Hinterland Sanctifier'],
       },
-      swap: { out: 'Hinterland Sanctifier', in: 'Lunarch Veteran // Luminous Phantom' },
+      swap: { out: 'Hinterland Sanctifier', in: 'Lunarch Veteran // Luminous Phantom', inId: 1939 },
       why: 'Phyrexian Altar eats the 4/4 Fungus Beast for one mana and Pitiless Plunderer’s '
         + 'Treasure makes the second, which is the {2} Trudge Garden charges for the next one — '
         + 'and Lunarch Veteran gains the 1 life that triggers it as the token enters. Lunarch '
@@ -1523,7 +1523,7 @@
         id: '2760-4762-7325',
         cards: ['Mighty Mutanimals', 'Devoted Druid', 'Nest of Scarabs'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1538,7 +1538,7 @@
         id: '2228-4762-7325',
         cards: ['Mighty Mutanimals', 'Devoted Druid', 'Hapatra, Vizier of Poisons'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1553,7 +1553,7 @@
         id: '1084-4762-7325',
         cards: ['Mighty Mutanimals', 'Devoted Druid', 'Flourishing Defenses'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1568,7 +1568,7 @@
         id: '1242-2760-7325',
         cards: ['Mighty Mutanimals', 'Cinderhaze Wretch', 'Nest of Scarabs'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1582,7 +1582,7 @@
         id: '1242-2228-7325',
         cards: ['Mighty Mutanimals', 'Cinderhaze Wretch', 'Hapatra, Vizier of Poisons'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1596,7 +1596,7 @@
         id: '1084-1242-7325',
         cards: ['Mighty Mutanimals', 'Flourishing Defenses', 'Cinderhaze Wretch'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1610,7 +1610,7 @@
         id: '2335-2760-7325',
         cards: ['Mighty Mutanimals', 'Barrenton Medic', 'Nest of Scarabs'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1624,7 +1624,7 @@
         id: '2228-2335-7325',
         cards: ['Mighty Mutanimals', 'Hapatra, Vizier of Poisons', 'Barrenton Medic'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1638,7 +1638,7 @@
         id: '1084-2335-7325',
         cards: ['Mighty Mutanimals', 'Flourishing Defenses', 'Barrenton Medic'],
       },
-      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
       produces: [
         'Infinite ETB',
@@ -1652,7 +1652,7 @@
         id: '4214-4535-5189',
         cards: ['Ghave, Guru of Spores', 'Utopia Mycon', 'Good-Fortune Unicorn'],
       },
-      swap: { out: 'Good-Fortune Unicorn', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Good-Fortune Unicorn', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite death triggers',
@@ -1668,7 +1668,7 @@
         id: '4535-4929-5189',
         cards: ['Ghave, Guru of Spores', 'Cryptic Trilobite', 'Good-Fortune Unicorn'],
       },
-      swap: { out: 'Good-Fortune Unicorn', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Good-Fortune Unicorn', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite death triggers',
@@ -1684,7 +1684,7 @@
         id: '2757-2850-5189',
         cards: ['Ghave, Guru of Spores', 'Earthcraft', 'Ivy Lane Denizen'],
       },
-      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite creature tokens',
@@ -1700,7 +1700,7 @@
         id: '1335-2034-2850',
         cards: ['Marath, Will of the Wild', 'Ivy Lane Denizen', 'Ashnod\'s Altar'],
       },
-      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -1718,7 +1718,7 @@
         id: '1335-2440-2850',
         cards: ['Marath, Will of the Wild', 'Mana Echoes', 'Ivy Lane Denizen'],
       },
-      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite colorless mana',
@@ -1733,7 +1733,7 @@
         id: '2744-3192-4214',
         cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Utopia Mycon'],
       },
-      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite death triggers',
@@ -1750,7 +1750,7 @@
         id: '2034-2850-3192',
         cards: ['Ulasht, the Hate Seed', 'Ivy Lane Denizen', 'Ashnod\'s Altar'],
       },
-      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite colorless mana',
@@ -1767,7 +1767,7 @@
         id: '2440-2850-3192',
         cards: ['Ulasht, the Hate Seed', 'Ivy Lane Denizen', 'Mana Echoes'],
       },
-      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite colorless mana',
@@ -1782,7 +1782,7 @@
         id: '2744-3192-4050',
         cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Phyrexian Altar'],
       },
-      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
       produces: [
         'Infinite death triggers',
@@ -1799,7 +1799,7 @@
         id: '1636-2850-3143',
         cards: ['Xavier Sal, Infested Captain', 'Intruder Alarm', 'Ivy Lane Denizen'],
       },
-      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Intruder Alarm untaps the mana creatures that pay for the next token, and the token is what Rosie reads — she puts the +1/+1 counter on a creature, which is what the published third card does when a creature enters. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite ETB',
@@ -1816,7 +1816,7 @@
         id: '1636-2744-3490',
         cards: ['Animation Module', 'Intruder Alarm', 'Cathars\' Crusade'],
       },
-      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane' },
+      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane', inId: 2433 },
       why: 'Intruder Alarm untaps the mana creatures that pay for the next token, and the token is what Rosie reads — she puts the +1/+1 counter on a creature, which is what the published third card does when a creature enters. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite creature tokens',
@@ -1833,7 +1833,7 @@
         id: '2034-2082-3490',
         cards: ['Sadistic Glee', 'Animation Module', 'Ashnod\'s Altar'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite +1/+1 counters on a creature',
@@ -1851,7 +1851,7 @@
         id: '2082-4214-5189',
         cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Utopia Mycon'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -1867,7 +1867,7 @@
         id: '2082-3490-4050',
         cards: ['Sadistic Glee', 'Animation Module', 'Phyrexian Altar'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite sacrifice triggers',
@@ -1884,7 +1884,7 @@
         id: '2082-4050-5189',
         cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Phyrexian Altar'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -1900,7 +1900,7 @@
         id: '997-2082-4186',
         cards: ['Scurry Oak', 'Sadistic Glee', 'Woe Strider'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -1918,7 +1918,7 @@
         id: '997-2082-3197',
         cards: ['Herd Baloth', 'Sadistic Glee', 'Woe Strider'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -1936,7 +1936,7 @@
         id: '2082-2921-4186',
         cards: ['Scurry Oak', 'Sadistic Glee', 'Bartolomé del Presidio'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -1953,7 +1953,7 @@
         id: '2082-3967-4186',
         cards: ['Scurry Oak', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -1970,7 +1970,7 @@
         id: '2082-2511-4186',
         cards: ['Scurry Oak', 'Sadistic Glee', 'Bloodflow Connoisseur'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -1987,7 +1987,7 @@
         id: '2082-3944-5660',
         cards: ['Evolution Witness', 'Sadistic Glee', 'Blood Pet'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2005,7 +2005,7 @@
         id: '2082-3197-3967',
         cards: ['Herd Baloth', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2022,7 +2022,7 @@
         id: '2082-2511-3197',
         cards: ['Herd Baloth', 'Sadistic Glee', 'Bloodflow Connoisseur'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2039,7 +2039,7 @@
         id: '2082-3490-4659',
         cards: ['Sadistic Glee', 'Animation Module', 'Krark-Clan Ironworks'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite +1/+1 counters on a creature',
@@ -2057,7 +2057,7 @@
         id: '2082-2921-3197',
         cards: ['Herd Baloth', 'Sadistic Glee', 'Bartolomé del Presidio'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2074,7 +2074,7 @@
         id: '2082-4186-5231',
         cards: ['Scurry Oak', 'Sadistic Glee', 'Thermopod'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2092,7 +2092,7 @@
         id: '1497-2082-5660',
         cards: ['Evolution Witness', 'Sadistic Glee', 'Wild Cantor'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2110,7 +2110,7 @@
         id: '2082-3192-4214',
         cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Utopia Mycon'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2126,7 +2126,7 @@
         id: '2082-3192-4050',
         cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Phyrexian Altar'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2142,7 +2142,7 @@
         id: '1947-2082-5660',
         cards: ['Evolution Witness', 'Sadistic Glee', 'Reckless Barbarian'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2160,7 +2160,7 @@
         id: '2082-3197-5686',
         cards: ['Herd Baloth', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2178,7 +2178,7 @@
         id: '2082-4186-5686',
         cards: ['Scurry Oak', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2196,7 +2196,7 @@
         id: '2082-3192-5231',
         cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Thermopod'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2212,7 +2212,7 @@
         id: '2082-5189-5231',
         cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Thermopod'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
       produces: [
         'Infinite LTB',
@@ -2228,7 +2228,7 @@
         id: '2082-3197-5231',
         cards: ['Herd Baloth', 'Sadistic Glee', 'Thermopod'],
       },
-      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
       why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
       produces: [
         'Infinite LTB',
@@ -2289,10 +2289,12 @@
   const STAND_INS = [
     {
       card: 'Hammerhead, Maggia Boss',
+      cardId: null,
       confidence: 'verified',
       for: [
         {
           card: 'Bartolomé del Presidio',
+          cardId: 2921,
           why: 'Hammerhead and Bartolomé del Presidio have one ability each and it is '
             + 'the same sentence: “Sacrifice another creature or artifact: Put a +1/+1 '
             + 'counter on this creature.” Same cost, free and repeatable, same 2/1 body. '
@@ -2302,6 +2304,7 @@
         },
         {
           card: 'Carrion Feeder',
+          cardId: 2438,
           why: 'Carrion Feeder’s ability is “Sacrifice a creature: Put a +1/+1 counter on '
             + 'this creature”, and Hammerhead’s is the same for one card less restrictive '
             + '— he eats artifacts as well. Free and repeatable either way, and a creature '

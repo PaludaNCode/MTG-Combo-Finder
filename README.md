@@ -2401,6 +2401,34 @@ tool counts what each rule actually reached and prints it. It also reports any r
 Spellbook has since published — not an error, but the outcome a row is supposed to
 reach, and for a rule, the sign it is on its way to being unnecessary.
 
+**The card swapped *in* is the one name nothing else can check**, so it carries an id.
+`from.cards` is anchored to the cited combo and `cards` is that list with the swaps
+applied, but the card arriving is only ever a string somebody typed — misspell it and
+the row is shown to a reader, matches no deck ever, and reads exactly like a card
+nobody happens to play. Every swap therefore records the Spellbook card id beside the
+name, and the tool reads the two against each other. Both directions are a finding: an
+id that now carries a *different* name is a card renamed upstream, which the name alone
+would register only as a row that quietly stopped being about anything; and `inId: null`
+is a claim in its own right — *the published data has no such card* — which is
+Hammerhead's whole position, and the day it stops being true is the day his rule can go.
+
+**Names stayed the key, and that was measured rather than assumed.** The obvious repair
+to "a name is ambiguous" is to key on the id instead. Against this snapshot that is the
+wrong way round: all **7,364** card names are distinct, no name carries two ids, and
+`nameKey()` produces **zero** collisions — while **123 cards (1.7%) have no id at all**,
+every one of them a real combo piece rather than a template filler. Sméagol, Helpful
+Guide is in 30 combos with no id; Command Tower is in 15. The id is the *less* complete
+identifier here, which is why it sits beside the name as a second opinion rather than
+replacing it. A decklist is names in any case — that is what the page is handed.
+
+**And a name that matches nothing now stops the run.** `nameKey()` matches the front
+face exactly, so `Chatterfang` is not `Chatterfang, Squirrel General` and the missing
+comma found zero combos — which printed as *"No published combo names all of them
+together. That is Spellbook's data, not our matching"*, blaming Spellbook for a typo
+here. `tools/combos-with.js` now refuses an unknown name and prints its nearest
+matches, on the same principle the README's own number check runs on: a search that
+matches nothing is not a search reporting an empty answer.
+
 ### Why it is a separate panel and not a badge
 
 The difference is not a property of a row, it is the difference between *somebody
