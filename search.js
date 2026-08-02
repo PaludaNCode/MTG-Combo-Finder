@@ -30,6 +30,28 @@
   let diagnostics = {};
   let dataset = null; // parsed once per worker, reused for every search
 
+  // How long each third of a search took, in milliseconds, on the machine that
+  // ran it. Collected because the alternative is guessing: the download is a few
+  // MB, the parse builds tens of thousands of objects, and the match walks all of
+  // them, and which of the three dominates depends entirely on the device. A
+  // laptop says one thing and a five-year-old phone says another, and only one of
+  // those is the reader.
+  //
+  // This is the number that says whether the data-side work is worth doing at
+  // all. Kept beside the diagnostics rather than in a devtools trace, because the
+  // machine worth measuring belongs to somebody who is not going to open one.
+  //
+  // performance.now() where there is one — a monotonic clock, unaffected by the
+  // system time changing mid-search — and Date.now() under Node, where the tests
+  // run and the precision does not matter.
+  const now = () => (typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now());
+
+  // Rounded on the way in. These are reported to a person, and a tenth of a
+  // millisecond of a JSON parse is noise dressed as precision.
+  const took = (from) => Math.round(now() - from);
+
   const caches = () => (global.caches && typeof global.caches.open === 'function' ? global.caches : null);
 
   // Cache Storage is a nicety, never a requirement: private mode, a full disk
@@ -170,10 +192,18 @@
   async function loadDataset(url) {
     if (dataset) {
       diagnostics.source = 'memory';
+      // No download and no parse to report. The absence is the measurement: the
+      // second search of a session is a walk over data already in hand, and a
+      // zero here would read as "it was instant" rather than "it did not happen".
       return dataset;
     }
 
+    const startedFetch = now();
     const raw = await fetchDatabase(url, diagnostics);
+    diagnostics.msFetch = took(startedFetch);
+    diagnostics.bytes = raw.length;
+
+    const startedParse = now();
     let parsed;
     try {
       parsed = JSON.parse(raw);
@@ -182,6 +212,7 @@
       diagnostics.likelyCause = 'The combo database is not valid JSON.';
       throw new Error('Could not read the combo database');
     }
+    diagnostics.msParse = took(startedParse);
     if (!parsed.combos || !parsed.combos.length) {
       diagnostics.likelyCause = 'The combo database downloaded but contains no combos.';
       throw new Error('Combo database is empty');
@@ -257,8 +288,22 @@
   // included, as { card, quantity } — the shape DeckParser produces.
   async function run(url, entries) {
     diagnostics = { endpoint: url, method: 'GET' };
+    const started = now();
     const data = await loadDataset(url);
+    const startedMatch = now();
     const out = matchAgainst(data, entries);
+    diagnostics.msMatch = took(startedMatch);
+    // Not the sum of the three: the total is what the reader waited, and the
+    // difference between it and the parts is worth being able to see rather than
+    // arithmetic away.
+    diagnostics.msTotal = took(started);
+    out.meta.timing = {
+      fetch: diagnostics.msFetch,
+      parse: diagnostics.msParse,
+      match: diagnostics.msMatch,
+      total: diagnostics.msTotal,
+      bytes: diagnostics.bytes,
+    };
     out.diagnostics = diagnostics;
     return out;
   }

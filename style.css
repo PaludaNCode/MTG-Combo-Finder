@@ -1127,6 +1127,11 @@ summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 
 .data-age { margin: .4rem 0 0; font-size: .8rem; }
 .data-age time { color: var(--text); }
+/* What the search cost. Tabular figures because the interesting use of this line
+   is comparing it to the last one — two runs on the same phone, or the same run
+   before and after a change to the payload — and proportional digits make two
+   numbers of the same width look different. */
+.data-age .timing { font-variant-numeric: tabular-nums; }
 
 .build { margin: .4rem 0 0; font-size: .78rem; opacity: .75; }
 .build code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }

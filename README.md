@@ -1520,6 +1520,34 @@ to searching in the page: slower, but working, and the same code either way — 
 is loaded both ways rather than duplicated. The layout test runs one viewport with `Worker`
 deleted from the page to prove the fallback isn't a branch nobody has ever executed.
 
+### What the search cost, in the footer
+
+Three phases — download, parse, match — and until now nothing measured any of them.
+Which one dominates depends entirely on the device: the download is a few MB, the
+parse builds tens of thousands of objects, and the match walks all of them. A laptop
+answers one way and a five-year-old phone another, and only one of those is the
+reader.
+
+So the footer says. **`ready in 1.4s (download 0.9s · parse 0.4s · match 0.1s)`**,
+beside the snapshot date that was already there. In the footer rather than in a
+devtools trace on purpose: the machine worth measuring belongs to somebody who is
+never going to open one.
+
+**Only the phases that happened.** The second search of a session has no download and
+no parse — the dataset is already in memory, which is the whole reason the worker
+keeps it — and the line falls back to `ready in 0.1s`. Printing `download 0ms` would
+report a skipped phase as an instant one, which is the opposite of what makes the
+number worth having.
+
+The numbers also land on the diagnostics object, so a failure report carries them
+without a second mechanism. Nothing is sent anywhere: this is a static page with no
+analytics, and the measurement is for whoever is looking at the screen.
+
+**This is what the data-side decisions were missing.** `IMPROVEMENTS.md` argues for
+shrinking the payload and for keeping a decoded copy in IndexedDB, and both are
+substantial work justified entirely by numbers nobody had collected. Now they can be
+argued from a phone instead of from a laptop.
+
 ### Colours come from the cards, not from a commander
 
 The commander used to decide the deck's colours, which meant the commander had

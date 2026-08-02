@@ -1905,6 +1905,29 @@
   // not something to have to guess at — especially now that a copy is kept
   // between visits. `data-source` says where this one came from, which is also
   // how the layout test can tell that caching is still working.
+  // What the search cost, in the footer rather than in a devtools trace. The
+  // machine worth measuring belongs to somebody who is not going to open one, and
+  // "is it slow, and which third of it" has until now been answerable only by
+  // inference from a laptop.
+  //
+  // Only the phases that happened. The second search of a session has no download
+  // and no parse — the dataset is already in memory — and printing "download 0ms"
+  // would report that as instant rather than as skipped, which is the opposite of
+  // what makes the number worth having.
+  const secs = (ms) => (ms >= 100 ? (ms / 1000).toFixed(1) + 's' : ms + 'ms');
+
+  function timingSentence(t) {
+    if (!t || typeof t.total !== 'number') return '';
+    const parts = [];
+    if (typeof t.fetch === 'number') parts.push('download ' + secs(t.fetch));
+    if (typeof t.parse === 'number') parts.push('parse ' + secs(t.parse));
+    if (typeof t.match === 'number') parts.push('match ' + secs(t.match));
+    // One phase and a total that agrees with it is the same number twice.
+    return parts.length > 1
+      ? `ready in ${secs(t.total)} (${parts.join(' · ')})`
+      : `ready in ${secs(t.total)}`;
+  }
+
   function renderDataAge(meta) {
     const line = $('data-age');
     if (!line) return;
@@ -1925,6 +1948,8 @@
     line.appendChild(document.createTextNode(
       ` · ${(meta.count || 0).toLocaleString()} combos · refreshed daily`
     ));
+    const timing = timingSentence(meta.timing);
+    if (timing) line.appendChild(el('span', 'timing', ' · ' + timing));
     line.dataset.source = meta.source || 'network';
     line.dataset.via = lastVia || 'unknown';
     line.title = meta.source === 'cache'
