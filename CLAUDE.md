@@ -65,6 +65,20 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 in that order (each reads the previous at load time). It does **not** load
 `parser.js` (the page parses before posting) or `graph.js` (drawn from the result).
 
+### The two fixture decks
+
+| deck | what it is for |
+|---|---|
+| `test/fixtures/deck.txt` | the tuning deck. What `try-deck.js` and `verify-layout.js` default to, and what the README's measurements are taken on. |
+| `test/fixtures/chatterfang-deck.txt` | **the standing deck for `unofficial.js`.** 103 maindeck cards plus a sideboard that must stay ignored, built to sit on top of the unofficial rows. |
+
+Use the Chatterfang deck whenever a change touches `unofficial.js`. `test/unofficial.test.js`
+pins the exact rows it unlocks — an exact list, not a count, because a count moves when a
+row is added and says nothing about which. **A diff there is a prompt to read the list, not
+a failure**: adding rows is supposed to change it. It went 39 → 44 when the Necrosynthesis
+rows landed. The same test also holds the Chatterfang rows to being *one card away* from
+this deck, which is how a row that matches on something too loose gets caught.
+
 The nightly job publishes `steps/` beside `combos.json`: one small file per combo, in
 256 buckets, written by `tools/fetch-combos.js` in the same pass. Gitignored, like
 `combos.json`, and for the same reason.

@@ -5,6 +5,9 @@ const {
   matchUnofficial, standInRows, identityString, deckNameSet, nameKey, expand,
 } = require('../combos.js');
 const { COMBOS, STAND_INS } = require('../unofficial.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const DeckParser = require('../parser.js');
 
 // The one part of the page that is not Commander Spellbook's word. Everything here
 // is about keeping that distinction honest: the rows have to carry their evidence,
@@ -71,6 +74,30 @@ test('unofficial: a chained row is the exception, not the shape', () => {
       rule.for.some((src) => nameKey(src.card) === nameKey(row.swaps[1].out)),
       row.cards.join(' + ') + ': ' + rule.card + ' does not stand in for ' + row.swaps[1].out
     );
+  });
+});
+
+// The swapped-in card is the one name in the file with nothing behind it: the
+// cited combo anchors `from.cards`, and `cards` is that list with the swaps
+// applied, but the card coming *in* is only ever a string somebody typed. The id
+// beside it is what tools/verify-unofficial.js reads it against, so the id has to
+// be there — null is a real answer, meaning "the published data has no such card".
+test('unofficial: every swap records the card id of what it swaps in', () => {
+  COMBOS.forEach((row) => {
+    const at = row.cards.join(' + ');
+    (row.swaps || [row.swap]).forEach((step) => {
+      assert.ok('inId' in step, at + ': no card id recorded for ' + step.in);
+      assert.ok(step.inId === null || Number.isInteger(step.inId),
+        at + ': ' + step.in + ' has a card id that is neither a number nor null');
+    });
+  });
+  STAND_INS.forEach((rule) => {
+    assert.ok('cardId' in rule, rule.card + ': no card id recorded');
+    (rule.for || []).forEach((src) => {
+      assert.ok('cardId' in src, rule.card + ': no card id recorded for ' + src.card);
+      assert.ok(Number.isInteger(src.cardId), rule.card + ': ' + src.card + ' stands in for '
+        + 'a card the published data does not name — a rule reads published combos only');
+    });
   });
 });
 
@@ -370,7 +397,7 @@ test('identityString: colourless is C, and the order is WUBRG', () => {
 // every daily refresh. What *is* checkable here is that the checker works: that
 // a broken citation is caught rather than that today's data happens to be fine.
 
-const { check, checkStandIns } = require('../tools/verify-unofficial.js');
+const { check, checkStandIns, checkCardIds, cardIndex } = require('../tools/verify-unofficial.js');
 
 const PUBLISHED = {
   combos: [
@@ -416,6 +443,186 @@ test('citations: a row Spellbook has published is reported as graduated', () => 
 
 test('citations: no data and no rows are not an error', () => {
   assert.deepStrictEqual(check(null, null), { problems: [], graduated: [], counted: 0 });
+});
+
+// ---- a real deck, against the real rows -------------------------------------
+//
+// Every other test here builds a two-card deck to exercise one branch. This one
+// reads a decklist somebody actually plays — 103 cards, built to sit on top of
+// this file — and pins what the panel gives it. That is a different kind of
+// check: not "does matchUnofficial() do what it says" but "does the file, as
+// written today, still reach the deck it was written for".
+//
+// It is deliberately an exact list rather than a count. A count moves when a row
+// is added and says nothing about which; the list fails with the name of whatever
+// appeared or vanished. Adding rows to unofficial.js is *expected* to change it —
+// the five Necrosynthesis rows below are what this session added, and before them
+// the same deck saw 39 — so a diff here is a prompt to read, not a break.
+//
+// The fixture is matched against a small stand-in dataset rather than the real
+// 28 MB one: matchUnofficial() only consults it to drop rows Spellbook has since
+// published, and an empty list of those is the honest state for these rows today.
+// tools/verify-unofficial.js is what checks that claim against the live data.
+const DECK_TEXT = fs.readFileSync(
+  path.join(__dirname, 'fixtures', 'chatterfang-deck.txt'), 'utf8'
+);
+
+test('a real deck: the fixture parses to its 103 maindeck cards, sideboard ignored', () => {
+  const parsed = DeckParser.parseDecklist(DECK_TEXT);
+  const entries = (parsed.commanders || []).concat(parsed.main || []);
+  assert.strictEqual(entries.length, 103);
+  // The sideboard is 27 cards plus two loose lines after it, and none of them
+  // may reach the deck — Nadier's Nightblade sits there precisely because it
+  // would otherwise light up rows the maindeck should not have.
+  const names = deckNameSet(entries);
+  assert.ok(!names.has(nameKey("Nadier's Nightblade")), 'a sideboard card reached the deck');
+  assert.ok(!names.has(nameKey('Elvish Mystic')), 'a sideboard card reached the deck');
+  assert.ok(names.has(nameKey('Chatterfang, Squirrel General')));
+  assert.ok(names.has(nameKey('Lunarch Veteran')), 'the front face of a split card should match');
+});
+
+test('a real deck: the unofficial rows it unlocks are exactly these', () => {
+  const parsed = DeckParser.parseDecklist(DECK_TEXT);
+  const names = deckNameSet((parsed.commanders || []).concat(parsed.main || []));
+  const rows = matchUnofficial({}, COMBOS, names, [], 0)
+    .map((r) => r.c.join(' + ')).sort();
+
+  assert.deepStrictEqual(rows, [
+    "Animation Module + Ashnod's Altar + Heroic Feast + Aunt May",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Case of the Uneaten Feast",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Elas il-Kor, Sadistic Pilgrim",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Essence Warden",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Hinterland Sanctifier",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Lunarch Veteran // Luminous Phantom",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Prosperous Innkeeper",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Soul Warden",
+    'Animation Module + Phyrexian Altar + Heroic Feast + Elas il-Kor, Sadistic Pilgrim',
+    'Animation Module + Phyrexian Altar + Heroic Feast + Lunarch Veteran // Luminous Phantom',
+    'Basking Broodscale + Archangel of Thune + Aunt May',
+    'Basking Broodscale + Archangel of Thune + Elas il-Kor, Sadistic Pilgrim',
+    'Basking Broodscale + Heliod, Sun-Crowned + Aunt May',
+    'Basking Broodscale + Heliod, Sun-Crowned + Elas il-Kor, Sadistic Pilgrim',
+    'Basking Broodscale + Heliod, Sun-Crowned + Lunarch Veteran // Luminous Phantom',
+    'Herd Baloth + Necrosynthesis + Carrion Feeder',
+    'Herd Baloth + Necrosynthesis + Hammerhead, Maggia Boss',
+    'Herd Baloth + Necrosynthesis + Umbral Collar Zealot',
+    'Herd Baloth + Necrosynthesis + Viscera Seer',
+    "Kitchen Finks + Ashnod's Altar + Heroic Feast",
+    'Kitchen Finks + Heroic Feast + Bartolomé del Presidio',
+    'Kitchen Finks + Heroic Feast + Carrion Feeder',
+    'Kitchen Finks + Heroic Feast + Hammerhead, Maggia Boss',
+    'Kitchen Finks + Heroic Feast + Phyrexian Altar',
+    'Kitchen Finks + Heroic Feast + Umbral Collar Zealot',
+    'Kitchen Finks + Viscera Seer + Heroic Feast',
+    // The five this session added that this deck can actually assemble.
+    "Necrosynthesis + Animation Module + Ashnod's Altar",
+    'Necrosynthesis + Animation Module + Phyrexian Altar',
+    'Necrosynthesis + Ghave, Guru of Spores + Phyrexian Altar',
+    'Necrosynthesis + Herd Baloth + Bartolomé del Presidio',
+    'Necrosynthesis + Scurry Oak + Bartolomé del Presidio',
+    'Quina, Qu Gourmet + Warren Soultrader + Academy Manufactor',
+    'Scurry Oak + Heroic Feast + Lunarch Veteran // Luminous Phantom',
+    'Scurry Oak + Necrosynthesis + Carrion Feeder',
+    'Scurry Oak + Necrosynthesis + Hammerhead, Maggia Boss',
+    'Scurry Oak + Necrosynthesis + Umbral Collar Zealot',
+    'Scurry Oak + Necrosynthesis + Viscera Seer',
+    "Trudge Garden + Ashnod's Altar + Aunt May",
+    "Trudge Garden + Ashnod's Altar + Case of the Uneaten Feast",
+    'Trudge Garden + Pitiless Plunderer + Phyrexian Altar + Lunarch Veteran // Luminous Phantom',
+    'Warren Soultrader + Chatterfang, Squirrel General + Aunt May',
+    'Warren Soultrader + Chatterfang, Squirrel General + Case of the Uneaten Feast',
+    'Warren Soultrader + Stridehangar Automaton + Aunt May',
+    'Warren Soultrader + Stridehangar Automaton + Case of the Uneaten Feast',
+  ].sort());
+});
+
+// The Chatterfang rows name cards this deck does not hold, which is the point of
+// checking: a row that fires for every deck is a row matching on something too
+// loose. These need exactly one card each, and the panel says which. Three are
+// the gainers this session added; Virulent Emissary was already here, and it
+// belongs in the list for the same reason the others do.
+test('a real deck: the Chatterfang rows are each one card away', () => {
+  const parsed = DeckParser.parseDecklist(DECK_TEXT);
+  const names = deckNameSet((parsed.commanders || []).concat(parsed.main || []));
+  const away = matchUnofficial({}, COMBOS, names, [], 1)
+    .filter((r) => (r.needs || []).length === 1 && r.c.includes('Chatterfang, Squirrel General'))
+    .map((r) => r.needs[0]).sort();
+  assert.deepStrictEqual(away,
+    ['Anointer Priest', 'Dazzling Angel', 'Pactdoll Terror', 'Virulent Emissary']);
+});
+
+// ---- the card id beside the name -------------------------------------------
+//
+// The failure this exists for cannot be reached by any other check: a card
+// misspelled where it is swapped *in* names nothing, matches no deck, and reads on
+// the page exactly like a card that simply nobody plays. The id is the second
+// opinion, and these prove it is actually consulted.
+
+const CARDS = cardIndex({
+  names: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer', 'Sadistic Glee'],
+  cardIds: [4186, 1628, 2292, 2082],
+});
+const idRow = (over) => Object.assign({
+  cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
+  from: { id: '1-2-3', cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'] },
+  swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
+}, over);
+
+test('card ids: a swap whose name and id agree is fine', () => {
+  assert.deepStrictEqual(checkCardIds(CARDS, [idRow()], []), []);
+});
+
+test('card ids: a card id the data does not have is caught', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 9999 },
+  })], []);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /does not have/);
+});
+
+// The one the id exists for: upstream renames the card, the name stops matching
+// anything, and without the id nothing would say why.
+test('card ids: an id that now carries a different name is caught', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 2292 },
+  })], []);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /is now "Viscera Seer"/);
+});
+
+// null is a claim, not a blank: it says the published data has no such card. That
+// is Hammerhead's whole position, and it stops being true one day.
+test('card ids: null on a card the data does not name is fine', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    cards: ['Scurry Oak', 'Hammerhead, Maggia Boss', 'Viscera Seer'],
+    swap: { out: 'Sadistic Glee', in: 'Hammerhead, Maggia Boss', inId: null },
+  })], []);
+  assert.deepStrictEqual(out, []);
+});
+
+test('card ids: null on a card the data now names is reported', () => {
+  const out = checkCardIds(CARDS, [idRow({
+    swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: null },
+  })], []);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /now names it \(id 1628\)/);
+});
+
+test('card ids: the stand-in rules are read the same way', () => {
+  const out = checkCardIds(CARDS, [], [{
+    card: 'Hammerhead, Maggia Boss',
+    cardId: null,
+    for: [{ card: 'Viscera Seer', cardId: 4186 }],
+  }]);
+  assert.strictEqual(out.length, 1);
+  assert.match(out[0], /is now "Scurry Oak"/);
+});
+
+// A payload with no tables — the fixtures, and any older local combos.json — has
+// no ids to read, and that is not a failure. It is the same no-op decode() makes.
+test('card ids: a payload without the tables is skipped, not failed', () => {
+  assert.strictEqual(cardIndex({ combos: [] }), null);
+  assert.deepStrictEqual(checkCardIds(null, [idRow()], []), []);
 });
 
 // The failure a stand-in rule has that a written row does not: it cannot cite a

@@ -38,6 +38,42 @@ function bestResult(names) {
   return best;
 }
 
+// A name that matches nothing is the one answer this tool must never give
+// quietly. Every card name is matched exactly on its front face, so "Chatterfang"
+// is not "Chatterfang, Squirrel General" and a missing comma finds zero combos —
+// which used to print as "No published combo names all of them together. That is
+// Spellbook's data, not our matching", blaming them for a typo here.
+//
+// So an unknown name stops the run and takes its nearest matches with it. The
+// ranking is deliberately dumb — prefix first, then substring, then a shared first
+// word — because the failure it serves is a half-remembered name, not a garbled
+// one, and a reader who sees the full name recognises it instantly.
+function suggest(known, name) {
+  const k = DeckCombos.nameKey(name);
+  const first = k.split(/[ ,]/)[0];
+  const score = (candidate) => {
+    if (candidate.startsWith(k)) return 0;
+    if (candidate.includes(k)) return 1;
+    if (first.length > 2 && candidate.split(/[ ,]/)[0] === first) return 2;
+    return 99;
+  };
+  return [...known.values()]
+    .map((n) => ({ n, s: score(DeckCombos.nameKey(n)) }))
+    .filter((x) => x.s < 99)
+    .sort((a, b) => a.s - b.s || a.n.length - b.n.length)
+    .slice(0, 8)
+    .map((x) => x.n);
+}
+
+// Every card the published data names, which is every card used as a combo piece.
+function knownCards(data) {
+  const known = new Map();
+  for (const combo of (data.combos || [])) {
+    for (const name of (combo.c || [])) known.set(DeckCombos.nameKey(name), name);
+  }
+  return known;
+}
+
 // What a combo needs that the deck has not got. Named cards and template slots
 // are reported apart on purpose: a missing named card is a suggestion the page
 // can make, a missing slot is not, and that difference is the whole point.
@@ -64,6 +100,19 @@ async function main() {
   const res = await fetch(COMBOS_URL, { headers: { Accept: 'application/json', 'User-Agent': UA } });
   if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
   const data = DeckCombos.decode(await res.json());
+
+  const known = knownCards(data);
+  const unknown = names.filter((n) => !known.has(DeckCombos.nameKey(n)));
+  if (unknown.length) {
+    console.error('No card by that name is in the published data:');
+    for (const name of unknown) {
+      const near = suggest(known, name);
+      console.error('  ' + name + (near.length ? '\n      did you mean: ' + near.join('\n                    ') : ''));
+    }
+    console.error('\nNames are matched exactly, on the front face. '
+      + known.size.toLocaleString() + ' cards are named in the data.');
+    process.exit(2);
+  }
 
   const wanted = names.map((n) => DeckCombos.nameKey(n));
   const deckFile = process.env.DECK_FILE || DEFAULT_DECK;

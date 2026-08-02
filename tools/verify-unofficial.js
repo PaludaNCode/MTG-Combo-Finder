@@ -124,20 +124,89 @@ function checkStandIns(data, rules) {
   return { problems, summaries };
 }
 
+// The card a row swaps *in* is the one name in the file that nothing else can
+// check. `from.cards` is checked against the cited combo, and `cards` is that list
+// with the swaps applied — so both are anchored to real data. The swapped-in card
+// is anchored to nothing, and a name misspelled there produces a row that is shown
+// to a reader, matches no deck ever, and says nothing about it.
+//
+// So every swap records the card's Spellbook id beside the name, and this reads
+// the two against each other. Both directions are a finding:
+//
+//   inId: <number>   the id must exist and must still carry that name. If Spellbook
+//                    renames the card, the id resolves to the new one and says so,
+//                    where the name alone would just quietly stop being a card.
+//   inId: null       a claim that the published data has no such card. Hammerhead
+//                    makes it — being in no combo at all is the entire reason he
+//                    needs a stand-in rule — and the day it stops being true is the
+//                    day the rule can go.
+function checkCardIds(cards, rows, rules) {
+  if (!cards) return [];
+  const problems = [];
+  const look = (where, name, id) => {
+    const known = cards.byKey.get(nameKey(name));
+    if (id === null || id === undefined) {
+      if (known) {
+        problems.push(`${where}: records no card id for ${name}, but the published data `
+          + `now names it (id ${known.id}) — the citation can be direct.`);
+      }
+      return;
+    }
+    const current = cards.byId.get(String(id));
+    if (current === undefined) {
+      problems.push(`${where}: ${name} is recorded as card id ${id}, which the published data does not have`);
+    } else if (nameKey(current) !== nameKey(name)) {
+      problems.push(`${where}: ${name} is recorded as card id ${id}, which is now "${current}"`);
+    }
+  };
+
+  for (const row of rows || []) {
+    const at = row.cards.join(' + ');
+    for (const step of (row.swaps || [row.swap])) {
+      if (!step) continue;
+      look(at, step.in, step.inId);
+    }
+  }
+  for (const rule of rules || []) {
+    look(`stand-in ${rule.card}`, rule.card, rule.cardId);
+    for (const src of (rule.for || [])) look(`stand-in ${rule.card}`, src.card, src.cardId);
+  }
+  return problems;
+}
+
+// The name/id tables are read off the payload *before* decode(), which deletes
+// them once it has resolved the combos — so this has to happen on the way in.
+function cardIndex(raw) {
+  if (!raw || !Array.isArray(raw.names) || !Array.isArray(raw.cardIds)) return null;
+  const byKey = new Map(), byId = new Map();
+  raw.names.forEach((name, i) => {
+    const id = raw.cardIds[i];
+    byKey.set(nameKey(name), { name, id });
+    if (typeof id === 'number') byId.set(String(id), name);
+  });
+  return { byKey, byId };
+}
+
 // decode() turns the payload's interned card names and result strings back into
 // strings; it is a no-op on a payload that has no tables, so a local copy in
 // either shape reads the same.
 async function load(path) {
-  if (path) return decode(JSON.parse(fs.readFileSync(path, 'utf8')));
-  const res = await fetch(COMBOS_URL);
-  if (!res.ok) throw new Error('the data branch answered HTTP ' + res.status);
-  return decode(await res.json());
+  const raw = path
+    ? JSON.parse(fs.readFileSync(path, 'utf8'))
+    : await (async () => {
+      const res = await fetch(COMBOS_URL);
+      if (!res.ok) throw new Error('the data branch answered HTTP ' + res.status);
+      return res.json();
+    })();
+  const cards = cardIndex(raw);
+  return { data: decode(raw), cards };
 }
 
 async function main() {
-  const data = await load(process.argv[2]);
+  const { data, cards } = await load(process.argv[2]);
   const { problems, graduated, counted } = check(data, COMBOS);
   const rules = checkStandIns(data, STAND_INS);
+  problems.push(...checkCardIds(cards, COMBOS, STAND_INS));
 
   say('# Unofficial rows against the published data');
   say();
@@ -187,10 +256,11 @@ async function main() {
     return;
   }
 
-  say('Every row cites a combo that exists and names the cards it says it does.');
+  say('Every row cites a combo that exists and names the cards it says it does, and every '
+    + 'card swapped in still answers to the id recorded beside it.');
 }
 
-module.exports = { check, checkStandIns };
+module.exports = { check, checkStandIns, checkCardIds, cardIndex };
 
 // Only when run, so requiring it for the tests does not go to the network.
 if (require.main === module) {

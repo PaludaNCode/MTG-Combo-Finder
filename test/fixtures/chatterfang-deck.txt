@@ -1,0 +1,135 @@
+1 Abrupt Decay
+1 Academy Manufactor
+1 Arcane Signet
+1 Archangel of Thune
+1 Avacyn's Pilgrim
+1 Basking Broodscale
+1 Birds of Paradise
+1 Blooming Marsh
+1 Blossoming Bogbeast
+1 Brushland
+1 Call Damage Control
+1 Camellia, the Seedmiser
+1 Canopy Vista
+1 Carrion Feeder
+1 Cauldron Familiar
+1 Caves of Koilos
+1 Chatterfang, Squirrel General
+1 Chord of Calling
+1 Collected Company
+1 Command Tower
+1 Concealed Courtyard
+1 Dina, Soul Steeper
+1 Esper Sentinel
+1 Essence Warden
+1 Exotic Orchard
+1 Farseek
+1 Fetid Heath
+1 Fix What's Broken
+10 Forest
+1 Gilded Goose
+1 Greta, Sweettooth Scourge
+1 Hammerhead, Maggia Boss
+1 Heroic Feast
+1 Horizon Canopy
+1 Hurska Sweet-Tooth
+1 Isolated Chapel
+1 Llanowar Wastes
+1 Lunarch Veteran
+1 Marsh Flats
+1 Meriadoc Brandybuck
+1 Michelangelo, the Heart
+1 Mirkwood Bats
+1 Moseo, Vein's New Dean
+1 Nature's Rhythm
+1 Necrosynthesis
+1 Of Herbs and Stewed Rabbit
+1 Path to Exile
+1 Peregrin Took
+1 Pest Infestation
+1 Pick Your Poison
+1 Pippin, Warden of Isengard
+1 Plains
+1 Prosperous Innkeeper
+1 Rampant Growth
+1 Razorverge Thicket
+1 Rosie Cotton of South Lane
+1 Sadistic Glee
+1 Samwise Gamgee
+1 Savvy Hunter
+1 Scurry Oak
+1 Sevinne's Reclamation
+1 Shared Roots
+1 Shattered Sanctum
+1 Sol Ring
+1 Sorin of House Markov
+1 Spike Feeder
+1 Summoner's Pact
+1 Sunpetal Grove
+5 Swamp
+1 Swords to Plowshares
+1 Sylvan Library
+1 Temple Garden
+1 The Shire
+1 Trail of Crumbs
+1 Trudge Garden
+1 Twilight Mire
+1 Umbral Collar Zealot
+1 Veinwitch Coven
+1 Vernal Fen
+1 Viscera Seer
+1 Warren Soultrader
+1 Well of Lost Dreams
+1 Witherbloom Charm
+1 Witherbloom Command
+1 Woodland Cemetery
+1 Ashnod's Altar
+1 Kitchen Finks
+1 Herd Baloth
+1 Hinterland Sanctifier
+1 Elas il-Kor, Sadistic Pilgrim
+1 Quina, Qu Gourmet
+1 Heliod, Sun-Crowned
+1 Ghave, Guru of Spores
+1 Bartolomé del Presidio
+1 Stridehangar Automaton
+1 Pitiless Plunderer
+1 Animation Module
+1 Phyrexian Altar
+1 Aunt May
+1 Soul Warden
+1 Case of the Uneaten Feast
+1 Ravenous Squirrel
+1 Mortician Beetle
+
+SIDEBOARD:
+1 Banquet Guests
+1 Bonecache Overseer
+1 Bristlebud Farmer
+1 Dina, Essence Brewer
+1 Dismember
+1 Drag to the Roots
+1 Elves of Deep Shadow
+1 Elvish Mystic
+1 Farmer Cotton
+1 Field-Tested Frying Pan
+1 Helping Hand
+1 Inspiring Statuary
+1 Llanowar Elves
+1 Merry, Warden of Isengard
+1 Nadier's Nightblade
+1 Night of the Sweets' Revenge
+1 Night's Whisper
+1 Renegade Rallier
+1 Revive the Shire
+1 Sandsteppe Citadel
+1 Sierra, Nuka's Biggest Fan
+1 Soul Warden
+1 Tarrian's Soulcleaver
+1 Touch the Spirit Realm
+1 Unearth
+1 Village Rites
+1 Vindicate
+
+1 Frodo, Adventurous Hobbit
+1 Sam, Loyal Attendant
