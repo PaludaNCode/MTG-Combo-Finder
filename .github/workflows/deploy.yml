@@ -61,7 +61,9 @@ jobs:
 
       # All three on their Node 24 majors. The Node 20 runtime is deprecated and every
       # deploy was reporting these as forced onto 24 — including actions/upload-artifact,
-      # which we never name: it comes in under upload-pages-artifact.
+      # which this workflow never names: it comes in under upload-pages-artifact.
+      # ci.yml does name it, to keep the Playwright report from a failing run, and is
+      # on v5 for the same reason.
       #
       # upload-pages-artifact v4 stopped including hidden files, and this uploads
       # `path: .`, so that is a real behaviour change. Checked: the only tracked dotfile

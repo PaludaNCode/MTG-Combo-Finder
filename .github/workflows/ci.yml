@@ -62,9 +62,16 @@ jobs:
         run: npm run test:ui
 
       # The report is worth having exactly when the step above went red.
+      #
+      # v5 rather than v4, for the reason every action in deploy.yml is on its
+      # Node 24 major: the Node 20 runtime is deprecated and every run reported
+      # this one as forced onto 24. v4 → v5 is that runtime bump and nothing
+      # else — the immutable-artifact change that broke uploading twice under one
+      # name was v3 → v4, and this step uploads once, from a job that has already
+      # failed.
       - name: Keep the report from a failing run
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/

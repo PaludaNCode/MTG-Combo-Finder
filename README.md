@@ -2198,9 +2198,15 @@ either make the repo public or run the page locally until then.
 **Action versions are kept on their Node 24 majors.** GitHub deprecated the Node 20
 runtime, and every run was reporting the actions it uses as forced onto 24:
 `checkout@v5`, `setup-node@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`,
-`deploy-pages@v5`. The one exception is `actions/upload-artifact@v4` in `ci.yml`,
-which keeps the Playwright report from a failing run — still on the Node 20 major,
-and the next bump to make.
+`deploy-pages@v5`, and `upload-artifact@v5` in `ci.yml` — the one place
+`actions/upload-artifact` is named directly, for the Playwright report from a
+failing run. Everywhere else it arrives under `upload-pages-artifact`, so bumping
+that is what moves it.
+
+For `upload-artifact`, v4 → v5 is the runtime bump and nothing else. The change
+worth knowing about was v3 → v4, which made artifacts immutable and so stopped two
+steps uploading under one name; this repo uploads once, from a job that has already
+failed.
 
 One real behaviour change came with it: **`upload-pages-artifact` v4 stopped including
 hidden files**, and this deploy uploads `path: .`. That is safe here — the only tracked
