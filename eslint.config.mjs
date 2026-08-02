@@ -42,6 +42,9 @@ const BROWSER = {
   btoa: 'readonly',
   console: 'readonly',
   getComputedStyle: 'readonly',
+  // A monotonic clock, in the window and in the worker. search.js times the
+  // three phases of a search with it.
+  performance: 'readonly',
   globalThis: 'readonly',
   // Worker scope.
   self: 'readonly',
@@ -60,6 +63,7 @@ const PAGE = {
   DeckCombos: 'readonly',
   ComboGraph: 'readonly',
   ComboSteps: 'readonly',
+  DeckView: 'readonly',
   ComboSearch: 'readonly',
   ResultTiers: 'readonly',
 };
@@ -78,6 +82,7 @@ const NODE = {
   setTimeout: 'readonly',
   clearTimeout: 'readonly',
   globalThis: 'readonly',
+  performance: 'readonly',
 };
 
 // The mistakes worth failing a build over, in both environments.
@@ -119,7 +124,7 @@ export default [
     files: [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
-      'combo-steps.js',
+      'combo-steps.js', 'view-model.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

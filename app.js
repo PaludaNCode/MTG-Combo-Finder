@@ -495,32 +495,21 @@
   // "Suggested additions", does not need a caption telling the reader it is about
   // combo sizes — and a caption repeated on every row is 80 of them.
   function sizeRow(variants) {
-    const breakdown = DeckCombos.sizeBreakdown(variants);
-    if (!breakdown.length) return null;
+    // Slate pills, deliberately not the green/yellow/grey a result uses: those say
+    // what a combo achieves, and "2-card" must not read as "this wins". What each
+    // pill says, and which one is marked easiest, is DeckView.sizePills().
+    const pills = DeckView.sizePills(DeckCombos.sizeBreakdown(variants));
+    if (!pills.length) return null;
 
     const row = el('span', 'sizes');
-    // A single combo needs no multiplier: "2-card" says it.
-    const only = breakdown.length === 1 && breakdown[0].count === 1;
-    breakdown.forEach(({ size, count }) => {
-      // Two cards is as small as a combo gets, so a two-card pill is the easiest
-      // thing on the page and the one worth marking. Filling whichever pill
-      // happens to be smallest on its row would instead mark "smallest of one
-      // size" — a card whose seven combos all need three would light up for it.
-      const easiest = size <= 2;
-      // Slate, deliberately not the green/yellow/grey a result uses: those say
-      // what a combo achieves, and "2-card" must not read as "this wins".
-      const label = only ? size + '-card' : count + ' × ' + size + '-card';
-      const pill = el('span', 'size' + (easiest ? ' is-easiest' : ''), label);
-      pill.title = count === 1
-        ? `One combo needing ${size} cards on the table`
-        : `${count} combos needing ${size} cards on the table`;
+    pills.forEach((p) => {
+      const pill = el('span', 'size' + (p.easiest ? ' is-easiest' : ''), p.label);
+      pill.title = p.title;
       row.appendChild(pill);
     });
     return row;
   }
 
-  // One interchangeable card: its name, where to read about it, and a way to take
-  // it. Two lists render these — the first few, and the folded-away remainder.
   function alternativeItem(name) {
     const li = el('li');
     // The name is the column that gives way when the row is too narrow, clipped with
@@ -584,26 +573,21 @@
   // whole claim, and a claim a reader has to hover to find is one the page is
   // hiding.
   function splitLine(official, ours, plus) {
-    if (!ours) return null;
+    const parts = DeckView.splitParts(official, ours, plus);
+    if (!parts) return null;
     const line = el('p', 'split-line');
-    const n = (count) => (plus ? '+' : '') + count;
-    if (official) {
-      line.appendChild(document.createTextNode(n(official) + ' official'));
+    if (parts.official) {
+      line.appendChild(document.createTextNode(parts.official));
       line.appendChild(el('span', 'dot', ' · '));
     }
-    line.appendChild(el('span', 'ours', n(ours) + ' unofficial'));
-    // A card whose whole case is ours says so, rather than leaving the reader to
-    // infer it from a missing half.
-    if (!official) {
+    line.appendChild(el('span', 'ours', parts.ours));
+    if (parts.none) {
       line.appendChild(el('span', 'dot', ' · '));
-      line.appendChild(document.createTextNode('none published'));
+      line.appendChild(document.createTextNode(parts.none));
     }
     return line;
   }
 
-  // One suggestion, which may be a choice between cards that do the same job.
-  // Grouping them matters: four cards each claiming "+7 combos" is four ways of
-  // describing one decision, and reads as four decisions.
   function suggestionCard(group, rank, deckNames) {
     const card = el('article', 'combo suggestion');
     const [first, ...rest] = group.cards;
@@ -995,60 +979,6 @@
     return row;
   }
 
-  // How many of the cards they all combo with to name before the number speaks
-  // for itself.
-  const SHARED_NAMED = 3;
-
-  // What picking these cards out found, in a sentence. Every number in it is
-  // counted rather than estimated — see compare() in graph.js — and the last one
-  // is the one worth the feature: what cutting the lot would actually cost, which
-  // is not the sum of their combo counts, because a combo whose slot another of
-  // your cards can fill survives losing this one.
-  function pickedSentence(found) {
-    const names = found.cards;
-    const list = names.length === 1 ? names[0]
-      : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
-    const plural = names.length > 2 ? 'all three' : 'both';
-
-    if (names.length === 1) {
-      const parts = [list + ' is in ' + found.inAll + ' of your combos'];
-      if (found.shared.length) {
-        parts.push('with ' + found.shared.length + ' other '
-          + (found.shared.length === 1 ? 'card' : 'cards'));
-      }
-      let text = parts.join(', ') + '. ';
-      text += found.lost
-        ? 'Cutting it would cost ' + found.lost + ' of them'
-          + (found.saved ? '; the other ' + found.saved + ' have a stand-in' : '')
-        : 'Cutting it costs nothing — every one of them has a stand-in in your deck';
-      return text + '. Pick another card to compare the two.';
-    }
-
-    const relation = [];
-    if (found.inAll) relation.push(found.inAll + ' need ' + plural);
-    if (found.interchangeable) {
-      relation.push(found.interchangeable + ' take any one of them in the same slot');
-    }
-    if (!relation.length) relation.push('no combo of yours needs them together or takes one for another');
-
-    // "3 of your combos need both, 4 take any one of them" — what the numbers
-    // count is said once, on the first of them, whichever that turns out to be.
-    let text = list + ': ' + relation.join(', ').replace(/^(\d+)/, '$1 of your combos') + '. ';
-    if (found.shared.length) {
-      const named = found.shared.slice(0, SHARED_NAMED).join(', ');
-      const more = found.shared.length - SHARED_NAMED;
-      text += (names.length > 2 ? 'All three' : 'Both') + ' combo with ' + named
-        + (more > 0 ? ' and ' + more + ' more' : '') + '. ';
-    }
-    text += found.lost
-      ? 'Cut ' + plural + ' and ' + found.lost + ' of the ' + found.atRisk
-        + ' combos they appear in would go'
-        + (found.saved ? '; the other ' + found.saved + ' have a stand-in' : '')
-      : 'Cut ' + plural + ' and none of the ' + found.atRisk
-        + ' combos they appear in would go — each has a stand-in in your deck';
-    return text + '.';
-  }
-
   function mapLegend() {
     const list = el('ul', 'map-legend');
     LEGEND.forEach((item) => {
@@ -1293,7 +1223,7 @@
     };
 
     const describe = () => {
-      summary.textContent = picked.length ? pickedSentence(ComboGraph.compare(graph, picked)) : '';
+      summary.textContent = picked.length ? DeckView.pickedSentence(ComboGraph.compare(graph, picked)) : '';
       summary.classList.toggle('is-empty', !picked.length);
       groups.forEach((g, id) => g.setAttribute('aria-pressed', String(picked.includes(id))));
     };
@@ -1458,7 +1388,6 @@
   //
   // Wizards' own words for each bracket, so a number on the page is followed by
   // the name people actually use for it.
-  const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
 
   // The five brackets as a row of pips, in the shape of the colour identity line
   // above it: a label, a compact visual, no prose. Brackets the list has ruled
@@ -1476,7 +1405,6 @@
   // that the panel has to carry everything a reader needed in order not to be misled
   // — the reasoning, the Game Changers *with their links*, the combos behind the
   // floor, and the criteria nobody checked — rather than being a summary of it.
-  const BRACKET_STEPS = [1, 2, 3, 4, 5];
 
   function renderBracket(container, bracket) {
     container.textContent = '';
@@ -1484,9 +1412,15 @@
     // check is worse than none, so nothing is drawn.
     if (!bracket) return;
 
+    // The words, the reasoning and which pip is in which state are all
+    // DeckView.bracketProse() — every one of them a claim about what a deck is
+    // allowed to be, and every one of them able to be wrong while rendering
+    // perfectly. This function draws what it returns.
+    const prose = DeckView.bracketProse(bracket);
+    if (!prose) return;
     const changers = bracket.gameChangers || [];
     const wins = bracket.twoCardWins || [];
-    const floor = bracket.floor;
+    const named = prose.named;
 
     const line = el('p', 'bracket-line');
     line.appendChild(el('span', 'bracket-label', 'Bracket'));
@@ -1494,11 +1428,6 @@
     // The pips and their explanation share a wrapper: the panel is positioned
     // against it, and shown while anything inside it is hovered or focused.
     const wrap = el('span', 'bracket-wrap');
-
-    const headline = floor > 2
-      ? `Bracket ${floor}${floor === 4 ? '' : ' at the earliest'}`
-      : 'Nothing here rules out bracket 2';
-    const named = headline + ' — ' + BRACKET_NAMES[floor];
 
     const scale = el('button', 'bracket-scale');
     scale.type = 'button';
@@ -1508,9 +1437,8 @@
     // than nothing. The pips are decorative; the button carries the answer.
     scale.setAttribute('aria-label', named + '. Why this bracket?');
     scale.title = named;
-    BRACKET_STEPS.forEach((n) => {
-      const state = n < floor ? ' out' : n === floor ? ' floor' : ' open';
-      const pip = el('span', 'step' + state, String(n));
+    prose.steps.forEach((step) => {
+      const pip = el('span', 'step ' + step.state, String(step.n));
       pip.setAttribute('aria-hidden', 'true');
       scale.appendChild(pip);
     });
@@ -1520,21 +1448,7 @@
     why.id = 'bracket-why';
     why.appendChild(el('p', 'why-floor', named));
 
-    const counts = [];
-    if (changers.length) {
-      counts.push(changers.length + ' Game Changer' + (changers.length === 1 ? '' : 's'));
-    }
-    if (wins.length) {
-      counts.push(wins.length === 1
-        ? '1 two-card combo that ends the game'
-        : wins.length + ' two-card combos that end the game');
-    }
-    const reason = floor === 4
-      ? `${counts.join(' · ')}. Bracket 3 allows three Game Changers, so a list with more sits at 4.`
-      : floor === 3
-        ? `${counts.join(' · ')}. Brackets 1 and 2 allow neither, so 3 is the floor.`
-        : 'No Game Changers, and no two-card combo that says it ends the game.';
-    why.appendChild(el('p', 'why-reason', reason));
+    why.appendChild(el('p', 'why-reason', prose.reason));
 
     // Named and still linked. These are the cards the answer rests on, and a name
     // you cannot look up is a claim the reader has to take on trust.
@@ -1905,29 +1819,6 @@
   // not something to have to guess at — especially now that a copy is kept
   // between visits. `data-source` says where this one came from, which is also
   // how the layout test can tell that caching is still working.
-  // What the search cost, in the footer rather than in a devtools trace. The
-  // machine worth measuring belongs to somebody who is not going to open one, and
-  // "is it slow, and which third of it" has until now been answerable only by
-  // inference from a laptop.
-  //
-  // Only the phases that happened. The second search of a session has no download
-  // and no parse — the dataset is already in memory — and printing "download 0ms"
-  // would report that as instant rather than as skipped, which is the opposite of
-  // what makes the number worth having.
-  const secs = (ms) => (ms >= 100 ? (ms / 1000).toFixed(1) + 's' : ms + 'ms');
-
-  function timingSentence(t) {
-    if (!t || typeof t.total !== 'number') return '';
-    const parts = [];
-    if (typeof t.fetch === 'number') parts.push('download ' + secs(t.fetch));
-    if (typeof t.parse === 'number') parts.push('parse ' + secs(t.parse));
-    if (typeof t.match === 'number') parts.push('match ' + secs(t.match));
-    // One phase and a total that agrees with it is the same number twice.
-    return parts.length > 1
-      ? `ready in ${secs(t.total)} (${parts.join(' · ')})`
-      : `ready in ${secs(t.total)}`;
-  }
-
   function renderDataAge(meta) {
     const line = $('data-age');
     if (!line) return;
@@ -1948,7 +1839,7 @@
     line.appendChild(document.createTextNode(
       ` · ${(meta.count || 0).toLocaleString()} combos · refreshed daily`
     ));
-    const timing = timingSentence(meta.timing);
+    const timing = DeckView.timingSentence(meta.timing);
     if (timing) line.appendChild(el('span', 'timing', ' · ' + timing));
     line.dataset.source = meta.source || 'network';
     line.dataset.via = lastVia || 'unknown';

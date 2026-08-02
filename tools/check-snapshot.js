@@ -114,7 +114,7 @@ function compare(next, previous, options) {
   const lines = [];
   const failures = [];
 
-  for (const { key, of, what } of COUNTS) {
+  for (const { of, what } of COUNTS) {
     const now = of(next);
     // A first publish, or a field the previous snapshot did not have yet — a new
     // count appearing is not a regression, and comparing against zero would make

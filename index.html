@@ -140,6 +140,10 @@
        a single combo when a reader asks for them, which cannot happen during a
        search because nobody has asked yet. -->
   <script src="combo-steps.js"></script>
+  <!-- The decisions app.js used to make while building DOM — what a sentence says,
+       how a number is phrased — pulled out where `node --test` can reach them.
+       Page-only and dependency-free; it just has to be here before app.js. -->
+  <script src="view-model.js"></script>
   <!-- The searching itself happens in search-worker.js, which imports parser.js,
        result-tiers.js, combos.js and unofficial.js plus search.js. This copy is
        the fallback for a browser with no Worker — see runSearch() in app.js. -->

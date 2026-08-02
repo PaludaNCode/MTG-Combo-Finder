@@ -1291,6 +1291,37 @@ Both drive the real files, unbuilt, against the same made-up deck in
 fixtures: a case added to one and not the other is a claim only half the tests
 make.
 
+### The decisions live where a test can reach them
+
+`app.js` is not covered by the unit tests, deliberately: it is the layout test's job,
+and that is the right call for DOM wiring. It is a much weaker call for the parts of
+`app.js` that are not DOM wiring at all.
+
+The layout test proves a panel is not empty. It cannot prove the panel is telling the
+truth, because **a wrong number renders exactly as happily as a right one**. "3 of
+your combos need both" and "4 of your combos need both" are both perfectly good HTML,
+and so is "Bracket 3" on a list whose floor is 4.
+
+So `view-model.js` holds the decisions — pure functions of a search result, no
+`document` anywhere in the file:
+
+| | what it decides |
+| --- | --- |
+| `pickedSentence()` | what picking two or three cards out of the map found, in a sentence |
+| `bracketProse()` | the headline, the reasoning, and which of the five pips is in which state |
+| `sizePills()` | "3 × 2-card", and which pill counts as the easiest |
+| `splitParts()` | "+4 official · +1 unofficial", or "none published" |
+| `timingSentence()` | what the search cost, and which phases to name |
+
+`app.js` turns what they return into elements and does nothing else with it. The rule
+for what belongs there: **if getting it wrong would produce a page that looks right
+and says something false, it is a decision.**
+
+`pickedSentence()` is the case that makes the argument. Forty lines of pluralisation —
+"both" against "all three", "card" against "cards", a list joined as "A and B" or "A,
+B and C", and a regex that inserts "of your combos" after whichever number happens to
+lead — none of which any test could see. It now has fourteen.
+
 ### The accessibility check, and the four things it found
 
 `e2e/a11y.spec.js` runs axe-core over both pages, in both themes, empty and after a

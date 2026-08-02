@@ -51,6 +51,8 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `search.js` | `ComboSearch` | download, Cache Storage, running a search |
 | `graph.js` | `ComboGraph` | the combo map's arithmetic — no DOM |
 | `theme.js` | `DeckTheme` | light/dark resolution, loaded from `<head>` |
+| `combo-steps.js` | `ComboSteps` | a combo's prerequisites and steps, fetched on demand |
+| `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
 | `app.js` | — | the only file that touches the DOM of `index.html` |
 | `tiers-page.js` | — | the same for `tiers.html` |
 
@@ -65,7 +67,9 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 
 - **`app.js` and `tiers-page.js` are not covered by the unit tests** — by design.
   They are the layout test's job. Logic you want tested belongs in one of the
-  DOM-free modules.
+  DOM-free modules. If getting it wrong would produce a page that looks right and
+  says something false — a count, a pluralisation, a bracket's reasoning — it is a
+  decision, and it belongs in `view-model.js`, where `node --test` can reach it.
 - **Load order is load-bearing.** `combos.js` reads the tier inventory at load time
   and `search.js` reads `combos.js` the same way. Adding a script means adding it in
   the right place in `index.html` *and* in `search-worker.js`.
