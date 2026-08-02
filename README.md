@@ -1634,6 +1634,55 @@ old copy off readers' disks rather than leaving 26 MB of it there forever.
 `tools/check-snapshot.js` refuses to publish a payload whose indices do not land on
 a string — that failure parses, passes a length check, and renders as nothing.
 
+### The combo id is not published, because it is derivable
+
+After interning, `id` was the biggest single field left: **27.5% of the payload on the
+wire**, spent on something the reader can work out. A Spellbook variant id is not
+opaque — it is the combo's card ids in ascending order joined with `-`, then each
+distinct template id, ascending, prefixed with `--`:
+
+```
+1110-4694-7839--112     three cards, one template slot
+215-579--85--181        two cards, two template slots
+```
+
+So the payload now ships **one card id per distinct card** — 7,364 numbers in a
+`cardIds` table aligned to `names` — instead of one composite id per combo, 103,737
+times. `DeckCombos.rebuildId()` puts them back.
+
+| | file | on the wire |
+| --- | --- | --- |
+| interned, ids published | 9.37 MB | 1.72 MB |
+| ids derived | **7.00 MB** | **1.27 MB** |
+
+Together with the interning above, that is **26.37 MB → 7.00 MB** and **2.73 MB →
+1.27 MB** from where this started.
+
+**Where the card ids come from is the careful part, and it is not upstream.** The bulk
+export's shape belongs to Spellbook, and a card id read from a field they rename would
+arrive as `undefined` inside a URL rather than as an error in a log. They are recovered
+instead from the combo ids we already hold, which cannot disagree with themselves: a
+card's id must appear in the id of *every* combo that card is in, so intersecting those
+sets narrows each card to a few candidates, and since an id belongs to exactly one card,
+a solved card frees its id from every other candidate set. Three rounds of that settles
+**7,241 of 7,364** cards.
+
+**Nothing is trusted on the strength of that.** The fetcher rebuilds every id and
+compares it to the real one, and **a row that does not rebuild exactly keeps its literal
+id**. On the current snapshot that is 162 rows out of 103,737 — the cards the derivation
+could not pin. A card left unsolved, a template requirement whose id the data could not
+record, or an encoding Spellbook changes tomorrow all cost a few hundred bytes instead
+of a wrong link.
+
+That asymmetry is the whole design. A broken page announces itself; **a permalink that
+works and shows somebody a different combo does not**, and no test the reader runs would
+catch it. So the scheme is built so that the failure mode is a slightly larger file.
+
+`tools/check-snapshot.js` enforces the other half before publishing: a row with no `id`
+*and* no way to rebuild one is refused, because that renders as a missing link rather
+than as an error. It calls the page's own `rebuildId()` rather than a copy, so the gate
+cannot drift from what readers actually run.
+
 ### Downloading the database once, not once a visit
 
 The published file is **1.7 MB on the wire** (~9 MB parsed, 35 MB in memory once decoded), and
@@ -1704,10 +1753,31 @@ The numbers also land on the diagnostics object, so a failure report carries the
 without a second mechanism. Nothing is sent anywhere: this is a static page with no
 analytics, and the measurement is for whoever is looking at the screen.
 
-**This is what the data-side decisions were missing.** `IMPROVEMENTS.md` argues for
-shrinking the payload and for keeping a decoded copy in IndexedDB, and both are
-substantial work justified entirely by numbers nobody had collected. Now they can be
-argued from a phone instead of from a laptop.
+**This is what the data-side decisions were missing**, and it settled them the day it
+shipped. `IMPROVEMENTS.md` argued for sharding the payload and for keeping a decoded
+copy in IndexedDB, both substantial work justified entirely by numbers nobody had
+collected. The first reading off a real phone, cold:
+
+```
+ready in 1.6s (download 1.5s · parse 61ms · match 64ms)
+```
+
+**The parse was 61 ms.** Keeping a decoded copy in IndexedDB existed to skip that, on
+the stated worry that "phones are several times worse" at parsing — measured, they are
+not, because interning had already taken the parse from ~340 ms on a laptop to nothing
+worth naming on a phone. That idea is closed, and closed by a number rather than by an
+argument.
+
+**The download was 94% of the search**, which is why the combo id stopped being
+published: one field, 27.5% of the wire, no change to the design. Sharding the payload
+would go after the same third and cost the one-file property the section above defends
+— and it would go after a *cold* load only. Cache Storage serves every later visit and
+revalidates in the background, so the same phone waits about 125 ms on its second
+visit and never waits again.
+
+Which is the point of measuring rather than reasoning: the two ideas that looked
+biggest on paper were the two the numbers killed, and the one filed as "optional,
+small, slightly risky" turned out to be the only one worth building.
 
 ### Colours come from the cards, not from a commander
 

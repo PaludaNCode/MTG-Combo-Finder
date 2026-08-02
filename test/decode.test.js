@@ -101,3 +101,82 @@ test('an index past the end of the table resolves to undefined, not a throw', ()
   assert.deepStrictEqual(data.combos[0].c, ['A', undefined]);
   assert.deepStrictEqual(data.combos[0].p, [undefined]);
 });
+
+// ---- rebuilding the combo id ------------------------------------------------
+//
+// A Spellbook variant id is the combo's card ids ascending joined with `-`, then
+// each distinct template id ascending prefixed with `--`. Publishing one id per
+// distinct card instead of one composite id per combo was 27.5% of the wire.
+//
+// Tested harder than its size suggests, for one reason: this builds the URL behind
+// "View on Commander Spellbook". A wrong id is not a broken page, it is a link that
+// works and shows somebody a different combo.
+
+const { rebuildId } = require('../combos.js');
+
+test('cards ascending, joined with a dash — whatever order the row lists them', () => {
+  assert.strictEqual(rebuildId({ c: [0, 1, 2] }, [4559, 413, 7839]), '413-4559-7839');
+  assert.strictEqual(rebuildId({ c: [2, 0, 1] }, [4559, 413, 7839]), '413-4559-7839');
+});
+
+test('each template id gets its own double dash, ascending', () => {
+  assert.strictEqual(rebuildId({ c: [0], t: [112] }, [7839]), '7839--112');
+  assert.strictEqual(rebuildId({ c: [0, 1], t: [181, 85] }, [215, 579]), '215-579--85--181');
+});
+
+// `t` repeats an id when a combo needs two of that slot filled; the published id
+// names it once. Getting this wrong produced 335 wrong links in the first pass.
+test('a template needed twice is still named once', () => {
+  assert.strictEqual(rebuildId({ c: [0], t: [44, 44] }, [3967]), '3967--44');
+});
+
+// compact() records a requirement whose id it could not read as null, deliberately.
+// A null must never become "0" in a URL.
+test('an unreadable template id refuses to build rather than guessing', () => {
+  assert.strictEqual(rebuildId({ c: [0], t: [null] }, [3967]), null);
+  assert.strictEqual(rebuildId({ c: [0], t: [44, null] }, [3967]), null);
+});
+
+test('a card whose id was never solved refuses too', () => {
+  assert.strictEqual(rebuildId({ c: [0, 1] }, [413, null]), null);
+  assert.strictEqual(rebuildId({ c: [0, 5] }, [413]), null);
+});
+
+test('decode rebuilds the id of a row that arrives without one', () => {
+  const data = decode({
+    names: ['A', 'B'],
+    results: ['r'],
+    cardIds: [4559, 413],
+    combos: [{ c: [0, 1], p: [0] }],
+  });
+  assert.strictEqual(data.combos[0].id, '413-4559');
+  assert.deepStrictEqual(data.combos[0].c, ['A', 'B'], 'the cards still resolve');
+});
+
+// The fetcher only drops an id it has rebuilt and checked, so a row that arrives
+// *with* one kept it because it could not be rebuilt. Overwriting it would undo
+// the one safeguard the whole scheme rests on.
+test('a row that kept its own id keeps it', () => {
+  const data = decode({
+    names: ['A'],
+    results: [],
+    cardIds: [null],
+    combos: [{ id: 'kept-me', c: [0] }],
+  });
+  assert.strictEqual(data.combos[0].id, 'kept-me');
+});
+
+test('the cardIds table is dropped on the way out, like the others', () => {
+  const data = decode({ names: ['A'], results: [], cardIds: [1], combos: [{ c: [0] }] });
+  assert.strictEqual(data.cardIds, undefined);
+});
+
+// An older payload has ids on every row and no table. Nothing should be touched.
+test('a payload with no cardIds leaves every id alone', () => {
+  const data = decode({
+    names: ['A'],
+    results: [],
+    combos: [{ id: '413', c: [0] }],
+  });
+  assert.strictEqual(data.combos[0].id, '413');
+});

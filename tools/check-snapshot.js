@@ -27,6 +27,10 @@
 'use strict';
 
 const fs = require('node:fs');
+// The same rebuild the page will run. Checking the published shape with a copy of
+// the logic would let the two drift, and this gate exists precisely for the day
+// the shape moves.
+const { rebuildId } = require('../combos.js');
 
 const PUBLISHED = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
 const USER_AGENT = 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder)';
@@ -51,6 +55,9 @@ const COUNTS = [
   // day's clothes.
   { key: 'names', of: (d) => (d.names || []).length, what: 'interned card names' },
   { key: 'results', of: (d) => (d.results || []).length, what: 'interned results' },
+  // One Spellbook card id per distinct card. Rows drop their own id when it can be
+  // rebuilt from these, so this table going missing takes every permalink with it.
+  { key: 'cardIds', of: (d) => (d.cardIds || []).filter((v) => typeof v === 'number').length, what: 'derived card ids' },
 ];
 
 // What the page reads off every row. Checked here rather than trusted, because an
@@ -82,9 +89,20 @@ function checkShape(data) {
 
   // Every row, not a sample. It is one pass over data already in memory, and a
   // sample answers "probably fine", which is not what a publish gate is for.
+  // A row may legitimately carry no `id`: most do not, because theirs is rebuilt
+  // from `cardIds`. What is never acceptable is a row with neither — that is a
+  // combo whose "View on Commander Spellbook" link has nowhere to go, and it would
+  // render as a missing link rather than as an error.
+  const cardIds = Array.isArray(data.cardIds) ? data.cardIds : null;
+  const hasId = (row) => {
+    if (typeof row.id === 'string' && row.id) return true;
+    if (!cardIds || !Array.isArray(row.c)) return false;
+    return typeof rebuildId(row, cardIds) === 'string';
+  };
+
   const missing = { id: 0, c: 0, i: 0, p: 0 };
   for (const row of rows) {
-    if (!row || typeof row.id !== 'string' || !row.id) missing.id += 1;
+    if (!row || !hasId(row)) missing.id += 1;
     if (!Array.isArray(row && row.c) || !row.c.length || !allUsable(row.c, names)) missing.c += 1;
     if (typeof (row && row.i) !== 'string') missing.i += 1;
     if (!allUsable(row && row.p, results)) missing.p += 1;

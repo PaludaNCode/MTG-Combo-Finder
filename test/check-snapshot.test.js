@@ -171,3 +171,52 @@ test('gaining the tables is growth, not a drop', () => {
   const { failures } = compare(internedSnapshot(1000), previous);
   assert.deepStrictEqual(failures, []);
 });
+
+// ---- rows whose id is rebuilt rather than published -------------------------
+//
+// Most rows now arrive with no `id`: theirs is rebuilt from the `cardIds` table.
+// The gate has to tell that apart from a row that genuinely has no link, because
+// the second renders as a missing link rather than as an error.
+
+const derivedSnapshot = (n, extra) => Object.assign({
+  updatedAt: '2026-08-02T12:50:01.908Z',
+  names: ['Basalt Monolith', 'Rings of Brighthearth'],
+  results: ['Infinite colorless mana'],
+  cardIds: [413, 4559],
+  combos: Array.from({ length: n }, () => ({ c: [0, 1], p: [0], i: 'C' })),
+  cardIdentity: { 'Basalt Monolith': '' },
+  gameChangers: ['Sol Ring'],
+  templateCards: { 'Basalt Monolith': [1] },
+}, extra);
+
+test('a row with no id is fine when the table can rebuild it', () => {
+  assert.deepStrictEqual(checkShape(derivedSnapshot(100)), []);
+});
+
+// The failure that matters. No id and no way to build one is a combo whose
+// "View on Commander Spellbook" link has nowhere to go.
+test('a row with no id and no way to build one is refused', () => {
+  const data = derivedSnapshot(3, { cardIds: [413, null] });
+  assert.match(checkShape(data).join(' | '), /3 row\(s\) with no usable `id`/);
+});
+
+test('the cardIds table going missing is caught, not shrugged at', () => {
+  const data = derivedSnapshot(5);
+  delete data.cardIds;
+  assert.match(checkShape(data).join(' | '), /5 row\(s\) with no usable `id`/);
+});
+
+// A row that could not be rebuilt keeps its literal id, and that is the expected
+// state for a handful of rows — it must not read as a problem.
+test('a literal id still satisfies the check', () => {
+  const data = derivedSnapshot(2, { cardIds: [413, null] });
+  data.combos.forEach((r, i) => { r.id = 'kept-' + i; });
+  assert.deepStrictEqual(checkShape(data), []);
+});
+
+test('the derived card ids are counted, so the table shrinking is noticed', () => {
+  const previous = derivedSnapshot(1000);
+  const next = derivedSnapshot(1000, { cardIds: [413, null] });
+  next.combos.forEach((r, i) => { r.id = 'kept-' + i; });
+  assert.match(fails(compare(next, previous)), /derived card ids fell 50/);
+});

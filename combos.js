@@ -45,6 +45,10 @@
   // resolving lazily also lands at 35 MB. The saving is in the sharing, not in
   // the integers, so the rest of this file never learns that any of this happened.
   //
+  // A third table, `cardIds`, carries one Spellbook card id per distinct card, and
+  // most rows arrive with no `id` at all because theirs can be rebuilt from it —
+  // see rebuildId() below. That was another 27.5% of the wire.
+  //
   // Mutates in place — building a copy would need both shapes in memory at once,
   // which is the one thing this is for. Idempotent: the tables are dropped on the
   // way out, so a second call finds nothing to do. A payload with no tables is
@@ -54,13 +58,41 @@
     if (!data || !Array.isArray(data.names)) return data;
     const names = data.names;
     const results = Array.isArray(data.results) ? data.results : [];
+    const cardIds = Array.isArray(data.cardIds) ? data.cardIds : null;
     for (const combo of data.combos || []) {
+      // Before `c` stops being indices. A row without an `id` has one that can be
+      // rebuilt; a row with one kept it because it could not be.
+      if (cardIds && !combo.id && Array.isArray(combo.c)) combo.id = rebuildId(combo, cardIds);
       if (Array.isArray(combo.c)) combo.c = combo.c.map((i) => names[i]);
       if (Array.isArray(combo.p)) combo.p = combo.p.map((i) => results[i]);
     }
     delete data.names;
     delete data.results;
+    delete data.cardIds;
     return data;
+  }
+
+  // A Spellbook variant id, rebuilt rather than downloaded: the combo's card ids
+  // in ascending order joined with `-`, then each distinct template id, ascending,
+  // prefixed with `--`.
+  //
+  //   1110-4694-7839--112     three cards, one template slot
+  //   215-579--85--181        two cards, two template slots
+  //
+  // It was 27.5% of the payload on the wire, spent on something derivable from one
+  // number per distinct card. The fetcher only drops a row's id after rebuilding it
+  // and checking it matches, so anything this cannot rebuild still arrives with its
+  // own — which is why an unrebuildable row returns null here rather than guessing:
+  // it never happens on a payload the fetcher produced, and a wrong permalink is
+  // the one outcome worth refusing outright. Callers treat a null id as "no link",
+  // the same as a row that never had one.
+  function rebuildId(combo, cardIds) {
+    const ids = combo.c.map((i) => cardIds[i]);
+    if (ids.some((id) => typeof id !== 'number')) return null;
+    const templates = (combo.t || []).filter((t) => typeof t === 'number');
+    if (templates.length !== (combo.t || []).length) return null;
+    const unique = [...new Set(templates)].sort((a, b) => a - b);
+    return ids.slice().sort((a, b) => a - b).join('-') + unique.map((t) => '--' + t).join('');
   }
 
   function variantCardNames(variant) {
@@ -1203,7 +1235,7 @@
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
     comboSize, sizeBreakdown, bracketCheck,
-    decode,
+    decode, rebuildId,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
