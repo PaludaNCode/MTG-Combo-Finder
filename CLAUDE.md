@@ -20,7 +20,7 @@ npm test                  # unit tests, node:test, zero deps (~370 tests, ~1s)
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change
-npm run test:ui           # Playwright browser tests (desktop + phone profiles)
+npm run test:ui           # Playwright browser tests + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
 
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
@@ -78,6 +78,11 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   The worker is not in the HTML and stamps its own imports from its query string.
   `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
   so the test and the deploy cannot disagree — they did, for a while.
+- **Colour is a token, and `opacity` is not a way to make one quieter.** Opacity is
+  applied after the colour is chosen, so it spends a contrast budget already
+  allocated, invisibly — four rules did exactly that and three were a couple of
+  hundredths under AA. `e2e/a11y.spec.js` catches it now. `--faint` exists for text
+  below `--muted`, and is only safe on `--bg`.
 - **Both HTML files carry a CSP** (`default-src 'none'`, `script-src 'self'`). No
   inline scripts, no CDN, no remote fonts or icons. `connect-src` names only
   `raw.githubusercontent.com` and Archidekt.

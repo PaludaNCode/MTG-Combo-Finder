@@ -1291,6 +1291,54 @@ Both drive the real files, unbuilt, against the same made-up deck in
 fixtures: a case added to one and not the other is a claim only half the tests
 make.
 
+### The accessibility check, and the four things it found
+
+`e2e/a11y.spec.js` runs axe-core over both pages, in both themes, empty and after a
+search, and again with each control that builds DOM on press opened. WCAG 2.1 AA and
+nothing else — axe also ships "best practice" rules, which are advice, and a suite
+that cries wolf gets muted.
+
+It is in the Playwright suite rather than the layout test because it needs what that
+step already pays for: a real engine computing real colours on a page that has
+actually been searched. axe is injected with `page.evaluate()` rather than
+`addScriptTag()`, so the page keeps the exact `script-src 'self'` it ships with — a
+tag would be refused, correctly.
+
+The accessibility work here was already careful — `aria-pressed` on every map node, a
+tablist with roving tabindex, `role="status"` on the summary, labelled mana pips, a
+`<title>` inside the SVG. What it was not was *checked*, and the first run found four
+contrast failures, all of them the same mistake:
+
+| Where | Was | Measured |
+| --- | --- | --- |
+| The build stamp in the footer | `--muted` at `opacity: .75` | 4.43:1 |
+| The map legend's footnote | `--muted` at `opacity: .85` | 4.1:1 |
+| A tier filter chip switched off | `--muted` at `opacity: .5` | 2.5:1 |
+| The map's two inactive view chips | the same rule, reaching further than it looked | 2.5:1 |
+
+**Opacity is the common cause, and it is worth naming.** Every colour on these pages
+is a token, chosen against a background and checked once. `opacity` is applied
+*after* that choice, so it spends a contrast budget that has already been allocated
+— and it does so invisibly, because the declaration says `.75`, not "and now this
+text is below AA". Three of the four were a couple of hundredths under. The fourth
+was half.
+
+The last row is a second lesson. `.chip[aria-pressed="false"] { opacity: .5 }` was
+written for the tier filter; the map's view filter happens to share `.chip` and set
+`aria-pressed` for its own unrelated reasons, so a rule about one control was dimming
+another. Off is now signalled by the tier colour and border reverting, and by the
+dot going hollow — which is a better cue anyway, since it does not rest on colour.
+
+The fix added one token, `--faint`, for the build stamp: quieter than `--muted` and
+still legible. **It is only safe on `--bg`** — 4.8:1 there, 4.3:1 on a panel — which
+is why the legend's footnote went back to `--muted` instead. There is less headroom
+under `--muted` than it looks: it is 7:1 on the page background, `--faint` is 4.8:1,
+and below that there is nothing left to have.
+
+Two of the four only appear in a state a page load never reaches — a filter switched
+off, a disclosure opened — so the spec presses them. A check that only ever sees the
+default state would have found half of this.
+
 ### What the layout test proves
 
 Fifteen runs. Four are layout at 390/768/1440/1920px, two are the tier page, three

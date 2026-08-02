@@ -8,7 +8,7 @@
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-exclude=theme.js --test-coverage-lines=94 --test-coverage-branches=90 --test-coverage-functions=95 'test/*.test.js'",
     "lint": "npx --yes eslint@9.39.5 .",
     "verify": "node tools/verify-layout.js",
-    "test:ui": "npx --yes --package=@playwright/test@1.56.1 -c 'NODE_PATH=\"${PATH%%:*}/..\" playwright test'",
+    "test:ui": "npx --yes --package=@playwright/test@1.56.1 --package=axe-core@4.12.1 -c 'NODE_PATH=\"${PATH%%:*}/..\" playwright test'",
     "verify:unofficial": "node tools/verify-unofficial.js"
   }
 }

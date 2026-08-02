@@ -50,6 +50,11 @@ jobs:
       # tab. See "Two browser test suites" in the README for which check belongs
       # in which of the two.
       #
+      # e2e/a11y.spec.js runs in here too, on the same browsers, because it needs
+      # exactly what this step already pays for: a real engine computing real
+      # colours over a page that has actually been searched. It fetches axe-core
+      # alongside Playwright — pinned, like everything else fetched per run.
+      #
       # Only Chromium is installed. Three engines would triple a step that is
       # already the longest in this job, and nothing here is engine-specific —
       # the page is plain DOM and hand-written SVG. A Firefox or WebKit bug would
