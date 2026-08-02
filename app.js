@@ -237,7 +237,16 @@
     return { control, panel };
   }
 
-  function comboCard(variant, deckNames, lead, trail) {
+  // `opts.steps` puts the "How it works" disclosure on the row. Off by default,
+  // and deliberately not on every row that draws a combo: the steps are how you
+  // execute a line you have, so they belong on the two panels that answer "what
+  // can this deck do" — the combos found and the unofficial ones — and nowhere
+  // else. A suggestion is a combo the deck cannot assemble yet, a one-slot-away
+  // row is the same, and the pieces panel relists combos the found panel has
+  // already offered them on, once per card in each. Left on all four, a page
+  // carried 429 controls, most of them a second or third way to ask the same
+  // question.
+  function comboCard(variant, deckNames, lead, trail, opts) {
     const card = el('article', 'combo');
 
     const header = el('h3');
@@ -289,7 +298,7 @@
     const linkId = derived ? derived.from && derived.from.id : variant.id;
     if (linkId) {
       const p = el('p', 'combo-link');
-      const steps = stepsDisclosure(linkId, derived);
+      const steps = opts && opts.steps ? stepsDisclosure(linkId, derived) : null;
       if (steps) {
         p.appendChild(steps.control);
         p.appendChild(document.createTextNode(' · '));
@@ -350,7 +359,7 @@
   // shown as a choice rather than as separate combos. The variants are real and
   // still reachable — each keeps its own link to Spellbook.
   function comboGroupCard(group) {
-    if (group.choices.length < 2) return comboCard(group.variants[0], null);
+    if (group.choices.length < 2) return comboCard(group.variants[0], null, null, null, { steps: true });
 
     const card = el('article', 'combo');
 
@@ -393,7 +402,7 @@
     // The interchangeable cards go last in every version, so each row reads in the
     // same shape as the heading above them — the shared cards, then the one that
     // makes this version this version.
-    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices)));
+    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices, { steps: true })));
     card.appendChild(details);
 
     return card;
@@ -899,7 +908,7 @@
     // Already expanded by search.js, like every other list here. Expanding twice
     // reads `c` and `p` off a row that no longer has them and quietly renders a
     // combo with no cards and no results.
-    rows.forEach((row) => body.appendChild(comboCard(row, null)));
+    rows.forEach((row) => body.appendChild(comboCard(row, null, null, null, { steps: true })));
   }
 
   function renderPieces(container, included, unofficial) {
