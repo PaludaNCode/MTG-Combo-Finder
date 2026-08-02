@@ -2596,6 +2596,16 @@ lifegain loops of one deck later proposed 51 more and kept 36 of them — the fi
 in *The lifegain families* above, with the 15 rule-outs written up there. The method did
 not change; what changed is which loops it was asked about.
 
+**Which cards have been swept is now written down.** `research-log.js` carries one entry
+per pass — the cards it covered, how it generated candidates, how many it proposed, how
+many a human actually read, how many it kept, and why every rule-out was one. It exists
+because this section could not previously answer "has anybody checked Chatterfang?", and
+because `unofficial.js` records only what a sweep *kept*, which is the half that cannot
+tell you what was never looked at. `test/research-log.test.js` holds it to the file: a
+row whose cards no recorded pass covers fails the build, so the index cannot quietly stop
+being one. The candidate count in this section is read out of it rather than added up by
+hand, which means a pass that gets logged moves the README and a pass that does not, cannot.
+
 **Which makes this file a record of the cards somebody asked about, and nothing wider.**
 That is worth a number rather than an apology, so `tools/substitution-scope.js` points
 the same method at every card in the database instead of at one. At the strict bar —
@@ -2603,11 +2613,13 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **149 candidates have been
-read, out of thousands proposed** — 44 from the first sweep, 51 from the lifegain pass,
-and 54 from the sweeps that started from the file instead of from a card — and a
-page that prints how far the checking went on any one row should be as willing to say
-how far it has got across the file.
+which is exactly where the method is least trustworthy. But **183 candidates have been
+read, out of thousands proposed** — and which 183 is no longer a matter of reading the
+prose above: `research-log.js` records every pass, the cards it covered, and why each
+rule-out was a rule-out. It is the index this section spent its whole existence not
+having. `node tools/substitution-scope.js` prints the other half from it — the cards
+proposing the most that no recorded pass has swept, which is the only form of "how much
+is left" anybody can act on.
 
 Chatterfang is what a *well-covered* card looks like under the same method, and worth
 recording as the counterweight to Rosie: the sweep proposed **1,202** candidates for him

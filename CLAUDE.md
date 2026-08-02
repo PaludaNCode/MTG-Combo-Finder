@@ -65,6 +65,55 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 in that order (each reads the previous at load time). It does **not** load
 `parser.js` (the page parses before posting) or `graph.js` (drawn from the result).
 
+## Researching a card, and recording that you did
+
+`research-log.js` is the index of what has been swept. **Before starting a deep dive,
+read it; after finishing one, add to it.** A pass that is not in it did not happen as
+far as anyone can tell, which is exactly the state the file was written to end —
+"nothing remains open" was once written under an audit of 44 candidates and read as a
+statement about 103,737 combos.
+
+```bash
+node tools/substitution-scope.js            # how much is unread, and which cards
+node tools/substitution-scope.js 0.8 3      # looser bar, more candidates
+```
+
+The bottom table is the work queue: cards proposing many unpublished combos that no
+recorded pass has swept. The top is the size of the space.
+
+**The pass itself, in the order that avoids wasted reading:**
+
+1. **Find the true peers, from card text, not from a score.** Two cards are peers when
+   they do the same job in a loop. A high substitution score only says they fill the
+   same slot *somewhere*. Stridehangar Automaton scored as Chatterfang's closest peer
+   and is not one — it reads only *artifact* tokens — and that single fact ruled out
+   1,197 of his 1,202 candidates.
+2. **Take every shape a peer is published in and the subject is not.**
+3. **Drop the subsumed.** If the subject already has a combo whose cards are a subset,
+   the candidate is a strict superset and Spellbook does not publish those. Chatterfang
+   + Pitiless Plunderer being a published *two-card* combo killed every "Pitiless
+   Plunderer and an outlet" shape at once.
+4. **Drop what is already published, and what is already a row.**
+5. **Read the survivors against the cards** — the published steps for the peer's version
+   are the best evidence, since they say what the loop actually does. Rosie's nine were
+   settled that way: her step-for-step twin was already published with Mighty Mutanimals.
+6. **Write the rows**, citing the peer combo, and **log the pass** with its rule-outs.
+   The rule-outs are the valuable part; the README's oldest audit is more useful for its
+   35 rejections than its 9 survivors.
+
+Confidence is not a formality. `verified` means somebody read both cards; `derived`
+means both halves are published and the pairing was reasoned, not read. Use `derived`
+rather than reading loosely and claiming `verified`.
+
+### Asking the question of one deck
+
+There is no tool for this yet — it is the obvious next one. The method is the pass above
+with step 2 restricted to shapes whose cards the deck already holds, which is how the
+lifegain pass found 51 candidates nobody had looked for. Until it exists, the deck-level
+question the page *does* answer is the different one of which existing rows a deck can
+assemble: `matchUnofficial()`, exercised in `test/unofficial.test.js` against the deck
+below. `tools/try-deck.js` does **not** cover the unofficial panel.
+
 ### The two fixture decks
 
 | deck | what it is for |
