@@ -1839,7 +1839,8 @@
     line.appendChild(document.createTextNode(
       ` · ${(meta.count || 0).toLocaleString()} combos · refreshed daily`
     ));
-    const timing = DeckView.timingSentence(meta.timing);
+    // `meta.source` decides whether the first phase reads "download" or "cache".
+    const timing = DeckView.timingSentence(meta.timing, meta.source);
     if (timing) line.appendChild(el('span', 'timing', ' · ' + timing));
     line.dataset.source = meta.source || 'network';
     line.dataset.via = lastVia || 'unknown';
