@@ -30,8 +30,8 @@ jobs:
       # only guarantees the HTML and its assets always match.
       - name: Cache-bust asset URLs with the commit SHA
         run: |
-          assets='href="style\.css\|src="parser\.js\|src="result-tiers\.js\|src="combos\.js\|src="unofficial\.js\|src="graph\.js\|src="search\.js\|src="app\.js\|src="tiers-page\.js'
-          # index.html loads eight of them, tiers.html three. Both counts are
+          assets='href="style\.css\|src="parser\.js\|src="result-tiers\.js\|src="combos\.js\|src="unofficial\.js\|src="graph\.js\|src="combo-steps\.js\|src="search\.js\|src="app\.js\|src="tiers-page\.js'
+          # index.html loads nine of them, tiers.html three. Both counts are
           # asserted: a rename should fail the deploy, not quietly publish the
           # old URLs.
           #
@@ -46,7 +46,7 @@ jobs:
           # search-worker.js is deliberately absent: it is loaded from app.js
           # rather than from the HTML, and it stamps its own imports out of its
           # query string. See ASSET_VERSION in app.js.
-          for page in "index.html 8" "tiers.html 3"; do
+          for page in "index.html 9" "tiers.html 3"; do
             set -- $page
             sed -i "s/\($assets\)\"/\1?v=${GITHUB_SHA}\"/g" "$1"
             test "$(grep -c "?v=${GITHUB_SHA}" "$1")" = "$2"

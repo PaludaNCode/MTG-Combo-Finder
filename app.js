@@ -125,6 +125,118 @@
     return DeckCombos.orderComboNames(DeckCombos.variantCardNames(variant), { lead, trail });
   }
 
+  // ---- how a combo is actually executed ------------------------------------
+  //
+  // A disclosure on the combo row: pressed, it fetches the steps for that one
+  // combo and draws them underneath. Collapsed by default and collapsed on every
+  // row — a list of twenty-two combos is a list, and twenty-two sets of steps is
+  // a document nobody asked for.
+  //
+  // Four states, and the last two matter as much as the first two: the steps are
+  // fetched, so they can be slow, they can fail, and Spellbook can simply not have
+  // written any. Each says what happened and leaves the link beside the control as
+  // the way out. See combo-steps.js for where the text comes from.
+  let disclosureSeq = 0;
+
+  function stepsList(data, derived) {
+    const body = el('div', 'steps-body');
+
+    // An unofficial row borrows the published combo's steps, and the whole point
+    // of the row is that one card has been swapped — so the steps name a card the
+    // reader does not have. Saying so is not optional: unattributed, this panel
+    // would be the page quietly printing instructions that do not match the deck.
+    const swaps = derived ? (derived.swaps || (derived.swap ? [derived.swap] : [])) : [];
+    if (swaps.length) {
+      const caveat = el('p', 'steps-caveat');
+      caveat.appendChild(document.createTextNode('These are the published combo’s steps. Read '));
+      swaps.forEach((step, i) => {
+        if (i > 0) caveat.appendChild(document.createTextNode(', and '));
+        caveat.appendChild(el('span', 'card-name', step.out));
+        caveat.appendChild(document.createTextNode(' as '));
+        caveat.appendChild(el('span', 'card-name', step.in));
+      });
+      caveat.appendChild(document.createTextNode('.'));
+      body.appendChild(caveat);
+    }
+
+    if (data.prerequisites.length) {
+      body.appendChild(el('h4', 'steps-head', 'Before you start'));
+      const ul = el('ul', 'steps-pre');
+      data.prerequisites.forEach((line) => ul.appendChild(el('li', null, line)));
+      body.appendChild(ul);
+    }
+
+    if (data.steps.length) {
+      body.appendChild(el('h4', 'steps-head', 'Then, in order'));
+      // A real <ol>: these are a sequence, the numbers carry the order, and a
+      // reader who loses their place mid-loop needs them.
+      const ol = el('ol', 'steps-list');
+      data.steps.forEach((line) => ol.appendChild(el('li', null, line)));
+      body.appendChild(ol);
+    }
+
+    return body;
+  }
+
+  function stepsDisclosure(comboId, derived) {
+    // Optional, like the unofficial rows are to search.js: if the file did not
+    // arrive, the row keeps its link and loses a control it never had.
+    if (typeof ComboSteps === 'undefined' || !ComboSteps) return null;
+
+    const id = 'steps-' + (disclosureSeq += 1);
+    const control = el('button', 'steps-toggle');
+    control.type = 'button';
+    control.setAttribute('aria-expanded', 'false');
+    control.setAttribute('aria-controls', id);
+    control.appendChild(el('span', 'chev', '▸'));
+    control.appendChild(document.createTextNode('How it works'));
+
+    const panel = el('div', 'steps');
+    panel.id = id;
+    panel.hidden = true;
+
+    let loaded = false;
+    // Waiting, failed and "there aren't any" all go here. The panel drops its
+    // quoted-block styling for them: a line saying there is nothing to read
+    // should not occupy the page as heavily as three steps that there are.
+    const say = (className, text) => {
+      panel.textContent = '';
+      panel.classList.add('is-note');
+      panel.appendChild(el('p', className, text));
+    };
+
+    control.addEventListener('click', () => {
+      const open = panel.hidden;
+      panel.hidden = !open;
+      control.setAttribute('aria-expanded', String(open));
+      control.classList.toggle('is-open', open);
+      if (!open || loaded) return;
+
+      // Only fetched once, and only when someone asks. A row nobody opens costs
+      // nothing, which is the entire reason the steps are not in the download.
+      loaded = true;
+      say('steps-pending', 'Looking up the steps…');
+      ComboSteps.get(comboId).then((data) => {
+        if (data && data.error) {
+          // Retryable, unlike a combo with no steps — so the next press asks again.
+          loaded = false;
+          say('steps-note', 'Could not load the steps: ' + data.error
+            + '. The link beside this one goes to the combo’s own page, which has them.');
+          return;
+        }
+        if (!data) {
+          say('steps-note', 'No steps recorded for this combo yet.');
+          return;
+        }
+        panel.textContent = '';
+        panel.classList.remove('is-note');
+        panel.appendChild(stepsList(data, derived));
+      });
+    });
+
+    return { control, panel };
+  }
+
   function comboCard(variant, deckNames, lead, trail) {
     const card = el('article', 'combo');
 
@@ -163,10 +275,13 @@
     // who wants the steps or the card images should not have to scroll past a wall of
     // result chips to find the way out.
     //
-    // No "how it works" here on purpose. Spellbook writes one, but the fetcher
-    // does not publish it (test/scanner.test.js pins that): a description for
-    // every one of ~100k combos would multiply the download the page already
-    // makes. The link below goes to the combo's own page, which has the steps.
+    // The steps are not published with the combos — a description for every one of
+    // ~100k combos would multiply the download the page already makes, and
+    // test/scanner.test.js pins that the fetcher drops them. They are fetched for
+    // the one combo a reader stops on, by combo-steps.js, from this same line: the
+    // line that used to exist only to send people away now offers to bring the
+    // answer here first, and keeps the link as the way out when it cannot.
+    //
     // An unofficial row has no page of its own to link to — that is what makes it
     // unofficial. It links to the published combo it was derived from instead, which
     // is also the evidence for it, so a reader can go and judge the swap.
@@ -174,6 +289,11 @@
     const linkId = derived ? derived.from && derived.from.id : variant.id;
     if (linkId) {
       const p = el('p', 'combo-link');
+      const steps = stepsDisclosure(linkId, derived);
+      if (steps) {
+        p.appendChild(steps.control);
+        p.appendChild(document.createTextNode(' · '));
+      }
       p.appendChild(link(
         SPELLBOOK_COMBO_URL + encodeURIComponent(linkId) + '/',
         derived ? 'View the published combo this came from →' : 'View on Commander Spellbook →'
@@ -195,6 +315,9 @@
         p.appendChild(compare);
       }
       card.appendChild(p);
+      // Directly under the control that opens it. A disclosure that opens
+      // somewhere else on the row reads as something else happening.
+      if (steps) card.appendChild(steps.panel);
     }
 
     // Why we think this one works, on the row rather than in a footnote. A combo

@@ -136,6 +136,10 @@
   <!-- Page-only, so the worker below does not import it: the map is drawn from
        what the search hands back, not worked out during one. -->
   <script src="graph.js"></script>
+  <!-- Page-only for the same reason, and for one more: the steps are fetched for
+       a single combo when a reader asks for them, which cannot happen during a
+       search because nobody has asked yet. -->
+  <script src="combo-steps.js"></script>
   <!-- The searching itself happens in search-worker.js, which imports parser.js,
        result-tiers.js, combos.js and unofficial.js plus search.js. This copy is
        the fallback for a browser with no Worker — see runSearch() in app.js. -->

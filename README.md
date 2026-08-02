@@ -12,6 +12,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 
 - **Combos in your deck** — every known combo your current 99 (or 60) can already pull off,
   with what it produces and a link to the combo's Spellbook page for the steps.
+- **How it works** — *(prototype)* the prerequisites and the steps, in order, on the row
+  itself. Fetched for the one combo you open rather than downloaded for all 103,737, and
+  currently answering from hand-written sample text for three of them — see
+  [How a combo is executed](#how-a-combo-is-executed).
 - **Suggested additions** — every combo you're *one card away* from, aggregated per missing
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
@@ -640,6 +644,74 @@ so a local version would be a reconstruction — and a wrong reconstruction does
 not error, it silently yields a card list that is slightly wrong. Cost was never
 the objection: 465 requests and ~23 minutes, on a job that already streams a
 578 MB export.
+
+## How a combo is executed
+
+*A prototype, and a narrower one than the map below.* The panel, the four states it
+can be in, and the parsing under it are real and tested. **The text it shows is
+not** — three combos are written out by hand in `combo-steps.js` so the interaction
+can be judged end to end, and every other combo answers "no steps recorded". Which
+of the two sources below fills that gap is the open question, and nothing above the
+source depends on the answer.
+
+Every combo row already answers *what this does* — the result chips — and sends you
+to Commander Spellbook for *how you do it*. Now the same line offers to bring the
+answer here first: **How it works · View on Commander Spellbook → · See all 3 cards**.
+The line that existed only to send people away is the right place for it, and the
+link stays as the way out for every case where the panel cannot answer.
+
+**The steps are not in the download, and that is the whole design.** The database is
+103,737 combos and 27.65 MB parsed, of which the results field alone is 13 MB; steps
+and prerequisites run several times longer than results. Publishing them for every
+combo would multiply a download [the page already works hard to make
+once](#downloading-the-database-once-not-once-a-visit), to answer a question a reader
+asks about two or three combos out of thirty-three. So they are fetched for the one
+combo somebody stopped on, when they ask, and held for the rest of the session — a row
+nobody opens costs nothing.
+
+**Collapsed on every row, always.** A list of twenty-two combos is a list. Twenty-two
+sets of steps is a document nobody asked for, and it would bury the ranking the panel
+above it spent so much effort getting right.
+
+**Four states, and the last two are the ones worth building carefully.** The steps are
+fetched, so they can be slow, they can fail, and Spellbook can simply never have
+written any. Waiting says so; a failure names what went wrong and points at the link
+beside it; "no steps recorded for this combo yet" is an answer rather than an empty
+box. The panel drops its quoted-block styling for all three — a line saying there is
+nothing to read should not occupy the row as heavily as three steps that there are.
+A failure is also **not cached**, unlike the other two: the network being down when
+somebody pressed the button says nothing about whether the combo has steps, so the
+next press asks again instead of being told "no" forever.
+
+**An unofficial row borrows the published combo's steps, and says so.** That is the
+one place this panel could mislead: the row exists *because* a card has been swapped,
+so the steps name a card the deck does not run. Every such row leads with the swap —
+*"These are the published combo's steps. Read Sadistic Glee as Necrosynthesis"* — and
+a chained row names both swaps. Unattributed, the page would be quietly printing
+instructions for somebody else's deck.
+
+**Where the text will come from is deliberately not decided yet.** Two options, and
+`setSource()` is one function so that the rest of the file does not know which it got:
+
+1. **Commander Spellbook's per-variant endpoint.** One request, always current, nothing
+   for us to publish — and blocked outright if their CORS allowlist refuses this origin,
+   which is [the same restriction that made this project publish data instead of querying
+   it](#why-the-data-is-published-not-queried-live). The honest expectation is that the
+   answer is no. It needs a `connect-src` entry in both pages' CSP if it turns out to be
+   yes.
+2. **A steps file per bucket of combo ids on the `data` branch**, written by the nightly
+   refresh. No CORS question — `raw.githubusercontent.com` is already named in the CSP —
+   at the cost of publishing and sharding data the fetcher currently drops.
+
+`normalize()` takes Spellbook's own payload shape, so option 1 needs no adapter and
+option 2 can publish that shape untouched. It is tested now, before either source
+exists, which is the only reason it can be: none of it needs a network.
+
+**What is still rough.** The sample text is placeholder and reads like it. Nothing
+measures what a real fetch costs on a phone — the same gap that makes the data-side
+work in `IMPROVEMENTS.md` hard to rank. And `combo-steps.js` is page-only, like
+`graph.js`: the worker does not import it, because nobody has asked for steps at the
+moment a search runs.
 
 ## The combo map
 

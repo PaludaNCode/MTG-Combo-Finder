@@ -52,6 +52,7 @@ const PAGE = {
   DeckParser: 'readonly',
   DeckCombos: 'readonly',
   ComboGraph: 'readonly',
+  ComboSteps: 'readonly',
   ComboSearch: 'readonly',
   ResultTiers: 'readonly',
 };
@@ -111,6 +112,7 @@ export default [
     files: [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
+      'combo-steps.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

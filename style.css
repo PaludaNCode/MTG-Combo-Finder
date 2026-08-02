@@ -1004,7 +1004,100 @@ button.result.more:hover { color: var(--text); filter: none; }
 
 .result-none { font-size: .82rem; color: var(--muted); font-style: italic; }
 summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
-.combo-link { margin: .5rem 0 0; font-size: .85rem; }
+/* Laid out rather than left to inline wrapping. The line is a row of separate
+   offers — read the steps here, read the combo there, see the cards — and at a
+   phone width inline text breaks them mid-phrase, stranding a "→" or a "·" on a
+   line of its own. As flex items they wrap between offers instead of inside one. */
+.combo-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .1rem .35rem;
+  margin: .5rem 0 0;
+  font-size: .85rem;
+}
+
+/* "How it works", beside the link it is an alternative to. Styled as a link
+   rather than as a button because that is what it does from the reader's side —
+   the only difference is that this one brings the answer here instead of opening
+   a tab. It is a real <button> underneath, so it keeps the keyboard and
+   screen-reader behaviour a link would give away. */
+.steps-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+.steps-toggle:hover { text-decoration: underline; }
+.steps-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+/* The shared chevron points down when open. This one starts closed, which is the
+   opposite of the panels' default, so both directions are stated here rather
+   than inherited. */
+.steps-toggle .chev { transform: rotate(0deg); }
+.steps-toggle.is-open .chev { transform: rotate(90deg); }
+
+/* The steps themselves: set apart from the row, because this is quoted from
+   Commander Spellbook rather than worked out here, and a reader should be able
+   to see where our summary stops and their description starts. */
+.steps {
+  margin: .5rem 0 0;
+  padding: .6rem .85rem;
+  background: var(--panel-2);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.steps-head {
+  margin: 0 0 .3rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.steps-pre + .steps-head { margin-top: .7rem; }
+
+.steps-pre,
+.steps-list { margin: 0; padding-left: 1.2rem; }
+.steps-pre { color: var(--muted); }
+.steps-pre li,
+.steps-list li { margin-bottom: .25rem; }
+.steps-list li:last-child,
+.steps-pre li:last-child { margin-bottom: 0; }
+/* The numbers are the point of an ordered list here — a loop is read by
+   position, and someone checking they are on step three needs to find a three. */
+.steps-list li::marker { color: var(--accent); font-weight: 700; }
+
+/* Waiting, failed, and "there aren't any" all land in the same slot. Quiet, and
+   never styled as an error: none of the three is the reader's doing, and the
+   link beside the control still works in all of them. */
+.steps-pending,
+.steps-note { margin: 0; color: var(--muted); font-style: italic; }
+/* And the panel stops looking like a quotation when it is holding one of them.
+   "No steps recorded" drawn in a bordered block reads, at a glance down the
+   list, exactly like a combo that has plenty to say. */
+.steps.is-note {
+  padding: 0;
+  background: none;
+  border-left: 0;
+}
+
+/* An unofficial row borrows the published combo's steps, so the steps name a
+   card the deck does not run. This is the line that says which. Not muted: it is
+   the one part of the panel that is about *this* deck, and reading past it would
+   mean following instructions for somebody else's list. */
+.steps-caveat {
+  margin: 0 0 .6rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--line);
+}
+.steps-caveat .card-name { font-weight: 600; }
 
 /* The working shown on an unofficial combo. Quieter than the cards and the
    results either side of it: it is there to be read once, when deciding whether
