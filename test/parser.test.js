@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const {
   parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl, describeLoadFailure,
+  acceptDeckFile, looksLikeText,
 } = require('../parser.js');
 
 test('parseLine: plain name', () => {
@@ -447,4 +448,82 @@ test('add: equal-sized blocks still take the last', () => {
   const text = 'Deck\n1 Sol Ring\n\nSideboard\n1 Pithing Needle\n\nDeck\n1 Arcane Signet';
   const out = addMainDeckCard(text, 'Heliod, Sun-Crowned', 1);
   assert.strictEqual(out.split('\n').pop(), '1 Heliod, Sun-Crowned');
+});
+
+// ---- decks that arrive as a file -------------------------------------------
+//
+// A file is the one import path that works for every deck site, Moxfield
+// included, because it needs no CORS and no API. Two decisions decide whether it
+// behaves: what to refuse before reading, and how to tell text from bytes after.
+
+test('acceptDeckFile: an ordinary text export is read', () => {
+  for (const name of ['deck.txt', 'Deck.TXT', 'list.dec', 'old.mwdeck', 'export.csv']) {
+    assert.deepStrictEqual(acceptDeckFile({ name, size: 2048, type: 'text/plain' }),
+      { ok: true, name }, name);
+  }
+});
+
+// Browsers report an empty `type` for plenty of legitimate .txt files, so a
+// missing type must never be the thing that refuses one.
+test('acceptDeckFile: no type reported is not a refusal', () => {
+  assert.strictEqual(acceptDeckFile({ name: 'deck.txt', size: 900, type: '' }).ok, true);
+  assert.strictEqual(acceptDeckFile({ name: 'deck', size: 900, type: '' }).ok, true,
+    'no extension either — read it and judge the contents');
+});
+
+test('acceptDeckFile: a type the browser is sure about, and is not text, settles it', () => {
+  for (const type of ['image/png', 'application/pdf', 'application/zip', 'video/mp4']) {
+    const got = acceptDeckFile({ name: 'deck.txt', size: 900, type });
+    assert.strictEqual(got.ok, false, type);
+    assert.strictEqual(got.reason, 'not-text');
+  }
+});
+
+// Not about our limits: it is so dropping a photo fails as a sentence rather
+// than as a browser reading 40 MB into a textarea and locking up the tab.
+test('acceptDeckFile: a file far too big to be a decklist is refused unread', () => {
+  const got = acceptDeckFile({ name: 'holiday.mov', size: 40 * 1024 * 1024, type: '' });
+  assert.strictEqual(got.reason, 'too-big');
+  assert.strictEqual(acceptDeckFile({ name: 'deck.txt', size: 2048, type: '' }).ok, true);
+});
+
+test('acceptDeckFile: an empty file says so rather than loading nothing', () => {
+  assert.strictEqual(acceptDeckFile({ name: 'deck.txt', size: 0, type: 'text/plain' }).reason, 'empty');
+  assert.strictEqual(acceptDeckFile(null).reason, 'empty');
+  assert.strictEqual(acceptDeckFile('not a file').reason, 'empty');
+});
+
+// The honest test, and the one that actually protects the box: an extension is a
+// claim, this is the evidence.
+test('looksLikeText: a decklist is text and a decoded binary is not', () => {
+  assert.strictEqual(looksLikeText('1 Sol Ring\n1 Basalt Monolith\n'), true);
+  assert.strictEqual(looksLikeText('1 Æther Vial\n1 Jötun Grunt\t// note\r\n'), true,
+    'accents, tabs and CRLF are all normal');
+  // What a PNG looks like once a FileReader has decoded it as UTF-8.
+  const decodedBinary = '\x89PNG\r\n\x1a\n' + '�\x00\x01\x02'.repeat(200);
+  assert.strictEqual(looksLikeText(decodedBinary), false);
+  assert.strictEqual(looksLikeText(''), false);
+  assert.strictEqual(looksLikeText(null), false);
+});
+
+// One stray control character in a long list is a quirk of an exporter, not a
+// reason to refuse a deck somebody is waiting on.
+test('looksLikeText: a mostly-text file is still text', () => {
+  const deck = Array.from({ length: 100 }, (_, i) => (i + 1) + ' Card Name ' + i).join('\n');
+  assert.strictEqual(looksLikeText(deck + '\x00'), true);
+});
+
+// The whole point of accepting files: a real export from a site whose API a
+// browser can never read has to come out the other side as a deck.
+test('a Moxfield text export dropped as a file parses like a paste', () => {
+  const exported = [
+    '1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*',
+    '1 Basalt Monolith (MH2) 220',
+    '1 Rings of Brighthearth (LRW) 258',
+    '10 Island (UNF) 240',
+  ].join('\r\n');
+  assert.strictEqual(looksLikeText(exported), true);
+  const parsed = parseDecklist(exported);
+  assert.deepStrictEqual(parsed.commanders.map((c) => c.card), ['Kinnan, Bonder Prodigy']);
+  assert.strictEqual(parsed.main.length, 3);
 });

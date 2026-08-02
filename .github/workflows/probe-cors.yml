@@ -1,0 +1,45 @@
+name: Probe deck sites for CORS
+
+# Can a browser on paludancode.github.io read a deck from this site?
+#
+# It is the question that decides whether a deck site can ever be a URL you paste
+# or only a file you export, and it has exactly one right way to answer it: ask
+# for Access-Control-Allow-Origin with a browser's Origin and read what comes
+# back. Guessing is how Moxfield ended up half-supported.
+#
+# On a runner because that is the only place here with unrestricted network — the
+# sandbox this repository is usually edited from cannot reach any of these hosts,
+# and a 403 from a proxy looks exactly like a site refusing you.
+#
+# On demand only, like peek-variant.yml and for the same reason: it asks live
+# third parties a question, and a check that fails during somebody else's outage
+# is a check that gets muted. Run it, read it, write the answer into SITES in
+# parser.js.
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: 'One site to probe (blank does all of them)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # Into the step summary as well as the log: this is a result somebody reads
+      # once and writes down, and a summary outlives log expiry.
+      - name: Ask each site
+        run: |
+          set -o pipefail
+          node tools/probe-cors.js ${{ inputs.site }} | tee -a "$GITHUB_STEP_SUMMARY"

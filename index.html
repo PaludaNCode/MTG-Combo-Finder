@@ -79,9 +79,17 @@
       <div class="form-actions">
         <button type="button" id="clear-deck">Clear</button>
         <button type="button" id="copy-link">Copy link</button>
+        <!-- Every deck site exports a text file, including the ones whose API a
+             browser can never read — so this is the import path that works
+             everywhere. The input is hidden because the native control cannot be
+             styled to match; the button drives it, which keeps it reachable from
+             the keyboard and to a screen reader, unlike dragging. -->
+        <button type="button" id="choose-file">Load a file</button>
+        <input type="file" id="deck-file" accept=".txt,.dec,.mwdeck,.csv,text/plain" hidden>
       </div>
       <p class="note">Your decklist stays in this browser. <strong>Copy link</strong> puts it
-        in the address bar so you can share or bookmark the deck.</p>
+        in the address bar so you can share or bookmark the deck.
+        You can also drop an exported <code>.txt</code> deck file onto this form.</p>
     </form>
 
     <div class="col-output">

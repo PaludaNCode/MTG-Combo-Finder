@@ -29,6 +29,7 @@ node tools/try-deck.js [deck.txt]              # what would the page show for th
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
+node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works
 ```
@@ -135,6 +136,12 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   a wrong tree invisible: a reader is told there are no steps and believes it.
   `tools/check-snapshot.js --steps` walks every file against `StepsSource.pathFor()` and
   today's combo ids. Publishing the two out of step is the one way they can drift.
+- **A deck site's CORS behaviour is never assumed.** Moxfield is unsupported because
+  somebody assumed and was wrong. `tools/probe-cors.js` asks for the one header that
+  decides it, with the deployed page's Origin, and carries Archidekt and Moxfield as
+  controls so a broken run cannot be mistaken for a refusal. It has to run on a runner:
+  the usual sandbox cannot reach any of those hosts, and a proxy 403 looks exactly like
+  a site saying no. `curl` proves nothing either — it does not enforce CORS.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
 
 ## Conventions

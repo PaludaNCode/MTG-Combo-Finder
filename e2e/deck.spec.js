@@ -215,3 +215,110 @@ test('a combo with no published steps says so and keeps the link', async ({ page
   await expect(panel).toHaveClass(/is-note/);
   await expect(row.getByRole('link', { name: /View on Commander Spellbook/ })).toBeVisible();
 });
+
+// ---- decks that arrive as a file -------------------------------------------
+//
+// The import path that works for every deck site, including the ones whose API a
+// browser can never read. Two entry points, tested separately because they are
+// separate code: the picker is what a keyboard and a phone can drive, dragging is
+// what a desktop reaches for first.
+
+const MOXFIELD_EXPORT = [
+  '1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*',
+  '1 Basalt Monolith (MH2) 220',
+  '1 Rings of Brighthearth (LRW) 258',
+  '1 Walking Ballista (DOM) 213',
+  '10 Island (UNF) 240',
+].join('\n');
+
+test('choosing a deck file fills the box and says what arrived', async ({ page }) => {
+  await page.locator('#deck-file').setInputFiles({
+    name: 'moxfield-export.txt', mimeType: 'text/plain', buffer: Buffer.from(MOXFIELD_EXPORT),
+  });
+
+  await expect(page.locator('#decklist')).toHaveValue(/Basalt Monolith/);
+  await expect(page.locator('#status')).toContainText('from “moxfield-export.txt”');
+  await expect(page.locator('#status')).not.toHaveClass(/error/);
+
+  // And it behaves exactly like a paste from here on — the point of putting the
+  // text in the box rather than searching straight off the file.
+  await search(page);
+  await expect(page.locator('#included .combo').first()).toBeVisible();
+});
+
+// A .txt extension is a claim; the contents are the evidence. A binary file read
+// as text would otherwise land in the box as a wall of skipped lines.
+test('a file that is not a decklist is refused, and the box is left alone', async ({ page }) => {
+  await page.locator('#decklist').fill('1 Sol Ring');
+  await page.locator('#deck-file').setInputFiles({
+    name: 'screenshot.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 1, 2, 3]),
+  });
+
+  await expect(page.locator('#status')).toHaveClass(/error/);
+  await expect(page.locator('#status')).toContainText('isn’t a text file');
+  await expect(page.locator('#status')).toContainText('screenshot.png');
+  await expect(page.locator('#decklist')).toHaveValue('1 Sol Ring', 'the deck they had is untouched');
+});
+
+// A narrow case, deliberately: the parser treats any bare line as a card name,
+// because "plain names, one per line" is the format most people paste. So this
+// only fires for a file with nothing but comments and blank lines — a README
+// dropped by mistake, say — and not for a line that merely isn't a real card,
+// which the search reports far better than a guess here could.
+test('a text file with nothing but comments says so rather than loading nothing', async ({ page }) => {
+  await page.locator('#deck-file').setInputFiles({
+    name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('# just some notes\n\n#  and more\n'),
+  });
+  await expect(page.locator('#status')).toHaveClass(/error/);
+  await expect(page.locator('#status')).toContainText('No card lines found');
+  await expect(page.locator('#status')).toContainText('notes.txt');
+});
+
+// Dragging is the other half, and it has its own hazard: a `drop` the page does
+// not cancel makes the browser navigate to the file, losing the deck entirely.
+test('dropping a deck file on the form loads it without navigating away', async ({ page }) => {
+  const url = page.url();
+
+  await page.evaluate((text) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([text], 'dropped.txt', { type: 'text/plain' }));
+    const form = document.getElementById('deck-form');
+    form.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    form.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, MOXFIELD_EXPORT);
+
+  await expect(page.locator('#status')).toContainText('from “dropped.txt”');
+  await expect(page.locator('#decklist')).toHaveValue(/Rings of Brighthearth/);
+  expect(page.url()).toBe(url);
+  // The drag affordance has to come back off, or the box stays outlined for good.
+  await expect(page.locator('#decklist')).not.toHaveClass(/dropping/);
+});
+
+// Reading the first of five silently would look like the other four failed.
+test('dropping several files at once asks for one', async ({ page }) => {
+  await page.evaluate(() => {
+    const dt = new DataTransfer();
+    dt.items.add(new File(['1 Sol Ring'], 'a.txt', { type: 'text/plain' }));
+    dt.items.add(new File(['1 Mox Opal'], 'b.txt', { type: 'text/plain' }));
+    document.getElementById('deck-form')
+      .dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  });
+  await expect(page.locator('#status')).toHaveClass(/error/);
+  await expect(page.locator('#status')).toContainText('one decklist at a time');
+});
+
+// Choosing the same file twice must fire again — otherwise fixing the file and
+// re-picking it does nothing at all, with no message to explain why.
+test('the same file can be chosen twice', async ({ page }) => {
+  const file = { name: 'deck.txt', mimeType: 'text/plain', buffer: Buffer.from(MOXFIELD_EXPORT) };
+  await page.locator('#deck-file').setInputFiles(file);
+  await expect(page.locator('#status')).toContainText('from “deck.txt”');
+
+  await page.locator('#clear-deck').click();
+  await expect(page.locator('#decklist')).toHaveValue('');
+
+  await page.locator('#deck-file').setInputFiles(file);
+  await expect(page.locator('#decklist')).toHaveValue(/Basalt Monolith/);
+});

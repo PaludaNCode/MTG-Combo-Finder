@@ -436,6 +436,69 @@
     return `Your browser blocked the request to ${label} — it doesn’t allow other websites to read decks. ${hint}`;
   }
 
+  // ---- decks that arrive as a file -------------------------------------------
+  //
+  // Every deck site exports a text file, and a file needs no CORS, no API and no
+  // new origin in the CSP — which is why this covers sites an adapter never will,
+  // Moxfield included. The reading happens in app.js because it needs a DOM; the
+  // two decisions worth getting right happen here, because they are the ones that
+  // can quietly do the wrong thing.
+
+  // A deck of 100 cards is about 2 KB. The cap is not about our own limits — it
+  // is so that dropping a photo or a video on the box fails as a sentence rather
+  // than as a browser reading 40 MB into a textarea and locking up the tab.
+  const MAX_DECK_FILE_BYTES = 1024 * 1024;
+
+  // Extensions deck sites actually export. `.dec` and `.mwdeck` are the old
+  // Magic Workstation formats, which several sites still offer and which
+  // parseLine already reads: they are "1 Sol Ring" with occasional SB: prefixes.
+  const DECK_FILE_EXTENSIONS = ['.txt', '.dec', '.mwdeck', '.csv'];
+
+  // Whether to even try reading a file, from what the browser tells us before it
+  // is opened. Deliberately permissive about type and strict about size: browsers
+  // report an empty `type` for plenty of legitimate .txt files, so a missing type
+  // must not be a refusal, while a 40 MB file is never a decklist.
+  function acceptDeckFile(file) {
+    if (!file || typeof file !== 'object') return { ok: false, reason: 'empty' };
+    const name = String(file.name || '');
+    const size = Number(file.size);
+
+    if (Number.isFinite(size) && size > MAX_DECK_FILE_BYTES) return { ok: false, reason: 'too-big', name };
+    if (Number.isFinite(size) && size === 0) return { ok: false, reason: 'empty', name };
+
+    const type = String(file.type || '').toLowerCase();
+    // A type the browser is sure about and that is not text settles it — this is
+    // what catches an image or a PDF before it is ever read.
+    if (type && !/^text\//.test(type) && type !== 'application/json') {
+      return { ok: false, reason: 'not-text', name };
+    }
+    const lower = name.toLowerCase();
+    const known = DECK_FILE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+    // No extension and no type is not a refusal: it is a file we will read and
+    // then judge by its contents, which is the only honest test anyway.
+    if (!known && lower.includes('.') && !type) return { ok: false, reason: 'not-text', name };
+    return { ok: true, name };
+  }
+
+  // The honest test, applied after reading: does this look like text a person
+  // wrote, or like bytes decoded as if they were? A binary file read as UTF-8
+  // comes back full of U+FFFD replacement characters and C0 control bytes, and
+  // pasting that into the box would produce a wall of skipped lines rather than
+  // "that isn't a decklist".
+  function looksLikeText(text) {
+    const s = String(text || '');
+    if (!s) return false;
+    let bad = 0;
+    for (let i = 0; i < s.length; i += 1) {
+      const c = s.charCodeAt(i);
+      // Tab, newline and carriage return are the only control characters a
+      // decklist has any business containing.
+      if (c === 9 || c === 10 || c === 13) continue;
+      if (c < 32 || c === 0xfffd) bad += 1;
+    }
+    return bad / s.length < 0.01;
+  }
+
   // Limits enforced by the find-my-combos endpoint (common/serializers.py).
   // Exceeding them is a 400, so the page trims and says so instead.
   const API_LIMITS = { maxMain: 600, maxCommanders: 12, maxNameLength: 256 };
@@ -445,6 +508,7 @@
     parseDeckUrl, describeLoadFailure, SITES,
     normalizeHeading, isCategoryHeading, API_LIMITS,
     mainDeckInsertIndex, addMainDeckCard,
+    acceptDeckFile, looksLikeText, MAX_DECK_FILE_BYTES, DECK_FILE_EXTENSIONS,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

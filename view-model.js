@@ -204,12 +204,61 @@
       : `ready in ${secs(t.total)}`;
   }
 
+  // ---- a deck that arrived as a file -----------------------------------------
+  //
+  // Dropping a file is the one way into this page that can fail for reasons the
+  // reader can actually fix — wrong file, empty file, a screenshot of a decklist
+  // rather than the decklist. So each refusal names what happened *and* what to do,
+  // and none of them says "invalid file", which tells nobody anything.
+  //
+  // Here rather than in app.js because a sentence that miscounts, or that says
+  // "cards" when it loaded one, is exactly the kind of wrong that looks right.
+  // "1 card", "12 cards". A count and its noun are the pair most likely to be
+  // built by hand in three places and get it wrong in one of them.
+  const plural = (n, noun) => n + ' ' + noun + (n === 1 ? '' : 's');
+
+  const FILE_REFUSALS = {
+    'too-big': (name, limitMb) => `${name} is too big to be a decklist (over ${limitMb} MB). `
+      + 'Export the deck as text and try that file, or paste it below.',
+    empty: (name) => `${name} is empty. Export the deck as text and try again, or paste it below.`,
+    'not-text': (name) => `${name} isn’t a text file. Deck sites all offer a text or .txt export — `
+      + 'use that one, or paste the list below.',
+    unreadable: (name) => `${name} could not be read as text. If it is a spreadsheet or a PDF, `
+      + 'export the deck as plain text instead, or paste it below.',
+    'no-cards': (name) => `No card lines found in ${name}. `
+      + 'It should have one card per line, like "1 Sol Ring".',
+  };
+
+  function fileRefusal(reason, name, limitBytes) {
+    const build = FILE_REFUSALS[reason] || FILE_REFUSALS.unreadable;
+    const label = name ? '“' + name + '”' : 'That file';
+    return build(label, Math.round((limitBytes || 0) / 1024 / 1024));
+  }
+
+  // What a successful drop says. Counts come from the same parseDecklist() the
+  // search runs, so this cannot claim a card the search will not see.
+  function fileLoaded(name, counts) {
+    const c = counts || {};
+    const cards = Number(c.main) || 0;
+    const commanders = Number(c.commanders) || 0;
+    const parts = [plural(cards, 'card')];
+    if (commanders) parts.push(plural(commanders, 'commander'));
+    // A file with lines the parser threw away is worth saying so about: the
+    // reader chose this file, and silently dropping a third of it is the sort of
+    // thing they should hear from us rather than notice in the results.
+    const skipped = Number(c.skipped) || 0;
+    const tail = skipped ? ` ${plural(skipped, 'line')} skipped.` : '';
+    return `Loaded ${parts.join(' + ')} from “${name}”.${tail}`;
+  }
+
   const api = {
     pickedSentence,
     sizePills,
     splitParts,
     bracketProse,
     timingSentence,
+    fileLoaded,
+    fileRefusal,
     secs,
     SHARED_NAMED,
     BRACKET_NAMES,
