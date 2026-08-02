@@ -2825,7 +2825,7 @@ npx serve .   # or python3 -m http.server
 
 ### Answering questions from the data
 
-Five read-only tools, each also a manual workflow, for the questions that keep
+Six read-only tools, each also a manual workflow, for the questions that keep
 coming up. They exist because guessing at these has been wrong more than once.
 
 ```bash
@@ -2847,7 +2847,14 @@ node tools/lookup-card.js "Camellia, the Seedmiser"
 # How much of the substitution space has nobody looked at? The method behind
 # unofficial.js, pointed at every card instead of at the one being asked about.
 node tools/substitution-scope.js [jaccard] [minShared]
+
+# Which cards carry a deck's combos, ranked by how many published combos name
+# them, and which of those no recorded pass has swept. --unswept for the queue.
+node tools/deck-cards.js [deck.txt] [--unswept] [--top N]
 ```
+
+`.claude/commands/deck-deep-dive.md` is the whole research pass wired to that last one:
+rank a deck's cards, sweep the ones nobody has, write what survives, log the pass.
 
 `tools/research-sources.js` and `tools/research-coverage.js` are kept for the
 questions whose answers can change: has a second combo database appeared, and do

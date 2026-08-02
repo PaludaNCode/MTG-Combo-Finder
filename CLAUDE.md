@@ -30,6 +30,7 @@ node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
 node tools/substitution-scope.js               # how much of the substitution space is unread
+node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works
@@ -76,10 +77,14 @@ statement about 103,737 combos.
 ```bash
 node tools/substitution-scope.js            # how much is unread, and which cards
 node tools/substitution-scope.js 0.8 3      # looser bar, more candidates
+node tools/deck-cards.js deck.txt --unswept # the same question, asked of one deck
 ```
 
-The bottom table is the work queue: cards proposing many unpublished combos that no
-recorded pass has swept. The top is the size of the space.
+The bottom table of the first is the work queue: cards proposing many unpublished
+combos that no recorded pass has swept. The top is the size of the space. `deck-cards.js`
+narrows it to the cards one deck actually holds, ranked by how many published combos name
+them — which is what the substitution method consumes — and flags what the log already
+covers. `/deck-deep-dive` runs the whole pass below against that list.
 
 **The pass itself, in the order that avoids wasted reading:**
 
@@ -107,12 +112,20 @@ rather than reading loosely and claiming `verified`.
 
 ### Asking the question of one deck
 
-There is no tool for this yet — it is the obvious next one. The method is the pass above
-with step 2 restricted to shapes whose cards the deck already holds, which is how the
-lifegain pass found 51 candidates nobody had looked for. Until it exists, the deck-level
-question the page *does* answer is the different one of which existing rows a deck can
-assemble: `matchUnofficial()`, exercised in `test/unofficial.test.js` against the deck
-below. `tools/try-deck.js` does **not** cover the unofficial panel.
+Three different questions, and it is worth not confusing them:
+
+| question | what answers it |
+|---|---|
+| which existing rows can this deck assemble? | `matchUnofficial()`, pinned in `test/unofficial.test.js`. **`try-deck.js` does not cover the unofficial panel.** |
+| which of this deck's cards are worth sweeping? | `tools/deck-cards.js --unswept`, and `/deck-deep-dive` on top of it |
+| which gaps does *this deck* expose? | **nothing yet** |
+
+The third is still unbuilt. It is the pass above with step 2 restricted to shapes whose
+cards the deck already holds — how the lifegain pass found 51 candidates nobody had
+looked for — and it is a genuinely different query from the second: `deck-cards.js`
+chooses *subjects* from a deck and then sweeps each one across the whole database, where
+a deck-scoped sweep would bound the candidate shapes as well. Until it exists,
+`/deck-deep-dive` is the close approximation.
 
 ### The two fixture decks
 
