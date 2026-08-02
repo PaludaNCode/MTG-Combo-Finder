@@ -2208,17 +2208,23 @@ worth knowing about was v3 → v4, which made artifacts immutable and so stopped
 steps uploading under one name; this repo uploads once, from a job that has already
 failed.
 
-One real behaviour change came with it: **`upload-pages-artifact` v4 stopped including
-hidden files**, and this deploy uploads `path: .`. That is safe here — the only tracked
-dotfile is `.gitignore`, neither page references a dot-path, and there is no `.nojekyll`
-to lose, since an Actions-deployed site is served as-is and never sees Jekyll. It also
-stops publishing `.github/` to the live site. If a dotfile ever does need serving, v5
-added an `include-hidden-files` input.
+One real behaviour change came with the Node 24 sweep: **`upload-pages-artifact` v4
+stopped including hidden files**, and this deploy uploads `path: .`. That is safe here
+— the only tracked dotfile is `.gitignore`, neither page references a dot-path, and
+there is no `.nojekyll` to lose, since an Actions-deployed site is served as-is and
+never sees Jekyll. It also stops publishing `.github/` to the live site. If a dotfile
+ever does need serving, v5 added an `include-hidden-files` input.
 
-**CI cannot verify this one.** `checks` never runs the deploy workflow, so a wrong
+**CI cannot verify these.** `checks` never runs the deploy workflow, so a wrong
 version here shows up only on the next push to `main`. A failed deploy leaves the
 previous deployment serving — the site goes stale rather than dark — but the first run
 after a bump is worth watching.
+
+`upload-artifact` in `ci.yml` is unverified for a different reason: its step is behind
+`if: failure()`, so a green run never reaches it. A bump there is proved by the first
+run that goes red, not by the one that follows it — which is the worst moment to
+discover the report no longer uploads, and the reason the version is worth reading
+carefully rather than trusting a green tick.
 
 ## Credits
 
