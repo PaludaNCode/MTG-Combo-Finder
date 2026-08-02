@@ -18,6 +18,14 @@
 //               been swept, a card absent from every entry has not.
 //   cardIds     their Spellbook ids, on the same reasoning as unofficial.js —
 //               null where the published data has no such card
+//   read        THE ORACLE TEXT, VERBATIM, for every card in `cards`. Not a
+//               formality: a pass reasons about what cards do, and the cheapest
+//               mistake available here is recalling a card instead of reading it.
+//               It produces a rule-out that is invisible — no row, no test
+//               failure, no complaint, just a card that looks covered. The Camellia
+//               entry below threw away 35 candidates that way, on a text nobody had
+//               opened. Sixteen entries predate the rule and say UNREAD; the test
+//               caps that number and it may only go down.
 //   method      how candidates were generated, because a pass is only as wide as
 //               the net it threw
 //   proposed    what the method produced before any judgement
@@ -44,6 +52,15 @@ const PASSES = [
       'Cauldron Familiar', 'Warren Soultrader', 'Chatterfang, Squirrel General',
     ],
     cardIds: [6705, 5641, 2308, 3868, 1475, 5670, 3000],
+    read: {
+      'Quina, Qu Gourmet': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Basking Broodscale': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Trudge Garden': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
+      'Cauldron Familiar': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token.',
+      'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
+    },
     date: '2026-07',
     method: 'pairs of cards Spellbook itself puts in the same combo shape elsewhere',
     proposed: 44,
@@ -71,6 +88,16 @@ const PASSES = [
       'Scurry Oak', 'Herd Baloth', 'Basking Broodscale', 'Animation Module',
     ],
     cardIds: [7743, 2919, 3944, 2086, 4186, 3197, 5641, 3490],
+    read: {
+      'Heroic Feast': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Archangel of Thune': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Heliod, Sun-Crowned': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Kitchen Finks': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Scurry Oak': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Herd Baloth': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Basking Broodscale': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Animation Module': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+    },
     date: '2026-07',
     method: 'the same method, pointed at the lifegain-to-counter engines a single deck could build',
     proposed: 51,
@@ -86,6 +113,9 @@ const PASSES = [
     subject: 'Rosie Cotton of South Lane',
     cards: ['Rosie Cotton of South Lane'],
     cardIds: [2433],
+    read: {
+      'Rosie Cotton of South Lane': 'When Rosie Cotton enters, create a Food token. Whenever you create a token, put a +1/+1 counter on target creature you control other than Rosie Cotton.',
+    },
     date: '2026-08-02',
     method: 'every shape where two or more of her token-creation peers are published and she is not',
     proposed: 91,
@@ -106,6 +136,10 @@ const PASSES = [
     subject: 'Necrosynthesis against Sadistic Glee',
     cards: ['Necrosynthesis', 'Sadistic Glee'],
     cardIds: [1628, 2082],
+    read: {
+      'Necrosynthesis': 'Enchant creature. Enchanted creature has \\u201cWhenever another creature dies, put a +1/+1 counter on this creature.\\u201d When enchanted creature dies, look at the top X cards of your library, where X is its power. Put one of them into your hand and the rest on the bottom of your library in a random order.',
+      'Sadistic Glee': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+    },
     date: '2026-08-02',
     method: 'every published Sadistic Glee combo with no Necrosynthesis twin',
     proposed: 30,
@@ -122,6 +156,10 @@ const PASSES = [
     subject: 'Chatterfang, Squirrel General',
     cards: ['Chatterfang, Squirrel General', 'Stridehangar Automaton'],
     cardIds: [3000, 6291],
+    read: {
+      'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
+      'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.',
+    },
     date: '2026-08-02',
     method: 'the three cards that hand a creature back inside a token creation, compared against each other',
     proposed: 1202,
@@ -143,6 +181,10 @@ const PASSES = [
   {
     subject: 'Ashnod’s Altar',
     cards: ["Ashnod's Altar"],
+    read: {
+      "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}. (Phyrexian Altar, the peer this '
+        + 'pass turns on, reads "Sacrifice a creature: Add one mana of any color.")',
+    },
     cardIds: [2034],
     date: '2026-08-02',
     method: 'every shape a scored peer is published in and it is not, split by what the peer actually is',
@@ -173,6 +215,10 @@ const PASSES = [
     subject: 'Camellia, the Seedmiser',
     cards: ['Camellia, the Seedmiser', 'Experimental Confectioner'],
     cardIds: [3868, 2590],
+    read: {
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
+      'Experimental Confectioner': 'When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with \\u201cThis token can\\u2019t block.\\u201d',
+    },
     date: '2026-08-02',
     method: 'her one scored peer, Experimental Confectioner, and every shape it has that she lacks',
     proposed: 37,
@@ -197,9 +243,44 @@ const PASSES = [
       + 'Eater of All + Ninja Pizza with 33 haste enablers behind it.',
   },
   {
+    subject: 'Experimental Confectioner',
+    cards: ['Experimental Confectioner', 'Camellia, the Seedmiser'],
+    cardIds: [2590, 3868],
+    read: {
+      'Experimental Confectioner': '{2}{B} Creature — Human Peasant 2/3. When this creature '
+        + 'enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat '
+        + 'creature token with “This token can’t block.”',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you '
+        + 'sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: '
+        + 'Put a +1/+1 counter on each other Squirrel you control.',
+    },
+    date: '2026-08-02',
+    method: 'the reverse of the Camellia pass — every shape she is published in and he is not',
+    proposed: 4,
+    examined: 0,
+    kept: 0,
+    ruledOut: [],
+    notes: 'The other direction, and the asymmetry is real: he triggers per Food where she '
+      + 'triggers per sacrifice event, so he is the strictly larger effect and should close '
+      + 'anything she closes. Four shapes survive the filters, all of them Ygra, Eater of All '
+      + 'plus a Food-sacrificing outlet — Wicked Wolf (1,525), Mushroom Watchdogs (1,287), Bill '
+      + 'the Pony (169), Glimmer Bairn (164). **They are proposed, not decided.** Concluding '
+      + 'needs Ygra’s text and each outlet’s, and this pass stopped rather than reason from '
+      + 'memory about them — which is the rule this file now enforces, and the one whose breach '
+      + 'cost the Camellia entry above 35 candidates. examined is 0 because that is true. The '
+      + 'two things worth checking first when somebody picks this up: his Rat cannot block where '
+      + 'her Squirrel can, and she is a Squirrel-tribal payoff where he is not, so any shape '
+      + 'turning on the token’s type or its ability to block will not swap.',
+  },
+  {
     subject: 'Cauldron Familiar, Samwise Gamgee and Academy Manufactor',
     cards: ['Cauldron Familiar', 'Samwise Gamgee', 'Academy Manufactor'],
     cardIds: [1475, 4232, 4231],
+    read: {
+      'Cauldron Familiar': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Samwise Gamgee': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Academy Manufactor': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+    },
     date: '2026-08-02',
     method: 'the same peer search, which returned nothing at any threshold down to 0.12',
     proposed: 0,

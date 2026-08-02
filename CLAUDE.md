@@ -68,6 +68,39 @@ in that order (each reads the previous at load time). It does **not** load
 
 ## Researching a card, and recording that you did
 
+> ### Read the oracle text. Every card. Before reasoning about any of it.
+>
+> **Not "recall it". Not "it's obviously". Fetch it and paste it into the log.**
+>
+> This rule exists because it was broken twice in the session that wrote it, and the
+> second time survived review and got committed:
+>
+> - Chatterfang was reasoned about as `{2}{B}{G}`, a Fox Rogue, with a `-X/-X` outlet.
+>   He is `{2}{G}`, a Squirrel Warrior, with `+X/-X`.
+> - Camellia and Experimental Confectioner were ruled out — **all 37 candidates** — on
+>   "they answer *a nontoken creature died* with different tokens, Food against
+>   Squirrel". Both trigger on *sacrificing a Food*; Confectioner makes a **Rat**. The
+>   real difference is that Camellia batches ("one or more Foods") where Confectioner
+>   counts ("a Food"), which rules out **2** of the 37. Thirty-five were thrown away on
+>   a card text nobody had looked at.
+>
+> A wrong rule-out is invisible. It produces no row, no test failure and no complaint —
+> only a card that quietly looks well-covered. It is the single cheapest mistake to make
+> here and the most expensive to find, and remembering a card is how it happens every
+> time.
+>
+> **`research-log.js` will not accept a pass without the text.** Every card in `cards`
+> needs a verbatim entry in `read`, and `test/research-log.test.js` fails without it.
+> That is deliberate: an instruction was already here saying to work from card text, and
+> it was not enough.
+>
+> **Getting the text in this sandbox:** `tools/lookup-card.js` is blocked —
+> `api.scryfall.com` is refused by the network policy, and WebFetch gets 403 on Scryfall
+> too. **WebSearch works** and is the route that works today. If the user pastes the
+> card, use that and record it. Published Spellbook steps (`steps/` on the data branch)
+> are good corroboration for what a loop *does*, but they are not oracle text and do not
+> satisfy this rule.
+
 `research-log.js` is the index of what has been swept. **Before starting a deep dive,
 read it; after finishing one, add to it.** A pass that is not in it did not happen as
 far as anyone can tell, which is exactly the state the file was written to end —
