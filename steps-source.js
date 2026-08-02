@@ -136,30 +136,33 @@
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timer = setTimeout(() => controller && controller.abort(), timeoutMs);
 
-      let res;
+      // The deadline covers reading the body too, not just getting the headers
+      // back. Headers can arrive promptly on a connection that then stalls, and
+      // the panel cannot tell the difference — it just keeps saying "Looking up
+      // the steps…", which is the state this exists to prevent.
       try {
-        res = await doFetch(base + rel, controller ? { signal: controller.signal } : undefined);
+        const res = await doFetch(base + rel, controller ? { signal: controller.signal } : undefined);
+
+        // The whole index, in one status code. A combo Spellbook records no steps
+        // for simply has no file, and that is an answer rather than a failure.
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        const payload = await res.json();
+        if (!payload || typeof payload !== 'object') return null;
+
+        // The id is in the URL, so this can only disagree if a file was published
+        // to the wrong path — but the cost of that going unnoticed is the page
+        // confidently printing another combo's steps, which is the one failure this
+        // project engineers against everywhere else (see the permalink note in
+        // CLAUDE.md). It costs about fifteen bytes a row to make impossible.
+        if (String(payload.id) !== String(id)) {
+          throw new Error('steps file for ' + id + ' holds ' + payload.id);
+        }
+        return payload;
       } finally {
         clearTimeout(timer);
       }
-
-      // The whole index, in one status code. A combo Spellbook records no steps
-      // for simply has no file, and that is an answer rather than a failure.
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
-      const payload = await res.json();
-      if (!payload || typeof payload !== 'object') return null;
-
-      // The id is in the URL, so this can only disagree if a file was published
-      // to the wrong path — but the cost of that going unnoticed is the page
-      // confidently printing another combo's steps, which is the one failure this
-      // project engineers against everywhere else (see the permalink note in
-      // CLAUDE.md). It costs about fifteen bytes a row to make impossible.
-      if (String(payload.id) !== String(id)) {
-        throw new Error('steps file for ' + id + ' holds ' + payload.id);
-      }
-      return payload;
     };
   }
 

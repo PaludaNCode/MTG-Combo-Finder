@@ -157,3 +157,20 @@ test('reader: left alone, it uses the environment\'s fetch', async () => {
     globalThis.fetch = original;
   }
 });
+
+// Headers can come back promptly on a connection that then stalls, and the panel
+// cannot tell that apart from a slow request — it just keeps saying "Looking up
+// the steps…". So the deadline covers reading the body, not only reaching it.
+test('reader: the deadline covers the body, not just the headers', async () => {
+  const read = Source.reader({
+    timeoutMs: 20,
+    fetch: async (url, init) => ({
+      status: 200,
+      ok: true,
+      json: () => new Promise((resolve, reject) => {
+        init.signal.addEventListener('abort', () => reject(new Error('aborted mid-body')));
+      }),
+    }),
+  });
+  await assert.rejects(() => read('1-2'), /aborted mid-body/);
+});

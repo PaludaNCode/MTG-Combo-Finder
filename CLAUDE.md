@@ -24,6 +24,7 @@ npm run test:ui           # Playwright browser tests + axe a11y (desktop + phone
 npm run verify:unofficial # every unofficial row still cites a real published combo
 npm run check:readme      # the README's countable numbers still match the files
 
+node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,737 files
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]

@@ -1,9 +1,9 @@
 # Improvements: where we are
 
-Started as a review of the repository. Eight of its ten technical items are now
-merged and deployed, so this reads top-down as **status first, then the original
-proposals** — kept because each one records what was measured and what it traded
-away, and the sections below are what the commits were written against.
+Started as a review of the repository. Every technical item is settled and F7 has
+shipped, so this reads top-down as **status first, then the original proposals** —
+kept because each one records what was measured and what it traded away, and the
+sections below are what the commits were written against.
 
 Every number was measured against the live `data` branch, not estimated, and the
 figures in the proposals are the *before* readings taken on 2026-08-02.
