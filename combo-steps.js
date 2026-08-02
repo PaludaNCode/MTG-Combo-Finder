@@ -67,7 +67,13 @@
     // A card that could be in any of three zones is not a prerequisite worth
     // printing — it is a card the combo does not care about the position of.
     const where = zones.length === 1 ? zones[0] : '';
-    const state = String(use.battlefieldCardState || use.cardState || '').trim();
+    // A card's state is recorded per zone — battlefield, graveyard, exile, library —
+    // and only the one matching where it has to be is meaningful. They arrive as
+    // empty strings rather than absent, so the first non-empty wins.
+    const state = String(
+      use.battlefieldCardState || use.graveyardCardState || use.exileCardState
+      || use.libraryCardState || use.cardState || ''
+    ).trim();
     const parts = [where, state].filter(Boolean);
 
     // The one exception to "nothing to say means no line": a commander has to be
@@ -90,9 +96,17 @@
   function normalize(raw) {
     if (!raw || typeof raw !== 'object') return null;
 
+    // `notablePrerequisites` then `easyPrerequisites`, in that order: they separate
+    // the conditions worth stopping on from the ones a player assumes, and printing
+    // the notable ones first is the whole value of them having split it.
+    //
+    // `otherPrerequisites` used to be read here and does not exist. It was a guess,
+    // and a guessed field name does not fail — it comes back undefined and the
+    // panel quietly shows one fewer line. tools/peek-variant.js settled it against
+    // the real export; see the README for what a variant really contains.
     const prerequisites = []
       .concat(lines(raw.notablePrerequisites))
-      .concat(lines(raw.otherPrerequisites))
+      .concat(lines(raw.easyPrerequisites))
       .concat(([].concat(raw.uses || [])).map(describeUse).filter(Boolean));
 
     const steps = lines(raw.description || raw.steps);
@@ -154,23 +168,33 @@
   // Everything here is placeholder text for judging the layout — the real panel
   // will show Spellbook's own wording, which is authoritative and this is not.
   const SAMPLE = {
-    // Spike Feeder + Archangel of Thune
+    // Spike Feeder + Archangel of Thune — and this one is *not* hand-written. It is
+    // exactly what Commander Spellbook sends, read out of the bulk export by
+    // tools/peek-variant.js, which is why it reads differently from the two below:
+    // shorter, and in their voice rather than mine.
+    //
+    // Worth keeping as the yardstick. The hand-written version said "remove two
+    // counters to gain 2 life" and theirs says one for one — a difference nobody
+    // would have caught by reading my prose, and a reminder that this panel is
+    // quoting them rather than explaining the cards itself.
     '2290-2919': {
       manaNeeded: '',
+      easyPrerequisites: '',
+      notablePrerequisites: 'Spike Feeder has at least two +1/+1 counters on it.',
       uses: [
-        { card: { name: 'Spike Feeder' }, zoneLocations: ['B'], battlefieldCardState: 'with two +1/+1 counters on it' },
-        { card: { name: 'Archangel of Thune' }, zoneLocations: ['B'] },
+        { card: { name: 'Spike Feeder' }, zoneLocations: ['B'], battlefieldCardState: '' },
+        { card: { name: 'Archangel of Thune' }, zoneLocations: ['B'], battlefieldCardState: '' },
       ],
       description: [
-        'Remove two +1/+1 counters from Spike Feeder to gain 2 life.',
-        'Archangel of Thune triggers on the lifegain and puts a +1/+1 counter on each creature you control, including Spike Feeder.',
-        'Spike Feeder now has two counters again. Repeat from step one as many times as you like.',
+        'Remove a +1/+1 counter from Spike Feeder to gain 1 life.',
+        'Archangel of Thune triggers, putting a +1/+1 counter on each creature you control, including Spike Feeder.',
+        'Repeat for infinite life and infinite +1/+1 counters on all creatures you control, other than Spike Feeder.',
       ].join('\n'),
     },
     // Rosie Cotton of South Lane + Scurry Oak
     '2433-4186': {
       manaNeeded: '',
-      otherPrerequisites: 'You need a way to put the first +1/+1 counter on Scurry Oak, or another creature entering to start the loop.',
+      easyPrerequisites: 'You need a way to put the first +1/+1 counter on Scurry Oak, or another creature entering to start the loop.',
       uses: [
         { card: { name: 'Rosie Cotton of South Lane' }, zoneLocations: ['B'] },
         { card: { name: 'Scurry Oak' }, zoneLocations: ['B'] },
@@ -187,7 +211,7 @@
     // row is holding Necrosynthesis and Hammerhead instead.
     '2082-2438-4186': {
       manaNeeded: '',
-      otherPrerequisites: 'Sadistic Glee has to be attached to Scurry Oak, and you need one creature to sacrifice to get started.',
+      easyPrerequisites: 'Sadistic Glee has to be attached to Scurry Oak, and you need one creature to sacrifice to get started.',
       uses: [
         { card: { name: 'Scurry Oak' }, zoneLocations: ['B'], battlefieldCardState: 'enchanted by Sadistic Glee' },
         { card: { name: 'Sadistic Glee' }, zoneLocations: ['B'] },

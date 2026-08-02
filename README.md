@@ -690,18 +690,52 @@ so the steps name a card the deck does not run. Every such row leads with the sw
 a chained row names both swaps. Unattributed, the page would be quietly printing
 instructions for somebody else's deck.
 
-**Where the text will come from is deliberately not decided yet.** Two options, and
-`setSource()` is one function so that the rest of the file does not know which it got:
+**Fetching from Spellbook directly is ruled out**, and it was ruled out before this
+panel was written: their `CORS_ALLOWED_ORIGIN_REGEXES` allows `*.commanderspellbook.com`
+and localhost, which is [the same restriction that made this project publish data
+instead of querying it](#why-the-data-is-published-not-queried-live). So the source has
+to be **a steps file on the `data` branch**, written by the nightly refresh — no CORS
+question, since `raw.githubusercontent.com` is already in the CSP, at the cost of
+publishing and sharding data the fetcher currently drops. `setSource()` is one function
+so the rest of the file does not know where its text came from.
 
-1. **Commander Spellbook's per-variant endpoint.** One request, always current, nothing
-   for us to publish — and blocked outright if their CORS allowlist refuses this origin,
-   which is [the same restriction that made this project publish data instead of querying
-   it](#why-the-data-is-published-not-queried-live). The honest expectation is that the
-   answer is no. It needs a `connect-src` entry in both pages' CSP if it turns out to be
-   yes.
-2. **A steps file per bucket of combo ids on the `data` branch**, written by the nightly
-   refresh. No CORS question — `raw.githubusercontent.com` is already named in the CSP —
-   at the cost of publishing and sharding data the fetcher currently drops.
+### What a variant actually contains
+
+`normalize()` was written against field names read off Spellbook's website and guessed
+at. **A guessed field name does not fail loudly** — it comes back `undefined` and the
+panel quietly shows one fewer line — and nothing in this repository recorded the real
+ones, because `compact()` keeps six fields and drops the rest without naming them.
+
+It also could not be asked from a laptop: their API refuses browser requests from
+anywhere but their own origin. But `.github/workflows/update-data.yml` streams that same
+bulk export every night on a runner, so CI can see it. `tools/peek-variant.js` prints one
+variant whole, and `.github/workflows/peek-variant.yml` runs it on demand. Run against
+`2290-2919`, it gave:
+
+| field | what it holds |
+| --- | --- |
+| `description` | the steps, one per line — *"Remove a +1/+1 counter from Spike Feeder to gain 1 life.\n…"* |
+| `notablePrerequisites` | the conditions worth stopping on — *"Spike Feeder has at least two +1/+1 counters on it."* |
+| `easyPrerequisites` | the ones a player assumes; often empty |
+| `manaNeeded` / `manaValueNeeded` | mana, as symbols and as a number |
+| `uses[].zoneLocations` | a letter per zone: `B`, `G`, `H`, `E`, `L`, `C` |
+| `uses[].battlefieldCardState` | and `graveyardCardState`, `exileCardState`, `libraryCardState` — one per zone, empty strings rather than absent |
+| `uses[].mustBeCommander`, `quantity` | |
+| `notes`, `spoiler`, `popularity`, `identity` | |
+
+**One guess was wrong**: `otherPrerequisites` does not exist. That was the field
+`normalize()` read for its prose prerequisites, so it had been reading nothing at all.
+The two real fields are now read in the order they are meant to be, notable first.
+
+**And the sample text was wrong about the cards.** The hand-written version of this combo
+said *"remove two +1/+1 counters to gain 2 life"*; Spellbook's own text says one for one.
+Nobody would have caught that by reading the prose, and it is the argument for this panel
+quoting them rather than explaining the cards itself. That sample is now their text
+verbatim, kept as the yardstick the other two are written against.
+
+Deliberately a tool run on demand rather than a test. It asks a live third party a
+question, and a check that fails when somebody else has an outage is a check that gets
+muted. Run it when the shape is in doubt, read the answer, write it down here.
 
 `normalize()` takes Spellbook's own payload shape, so option 1 needs no adapter and
 option 2 can publish that shape untouched. It is tested now, before either source

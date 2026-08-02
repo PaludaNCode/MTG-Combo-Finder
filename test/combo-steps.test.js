@@ -10,6 +10,20 @@ const Steps = require('../combo-steps.js');
 
 test.beforeEach(() => Steps.reset());
 
+// Card state is recorded per zone and the fields arrive as empty strings rather
+// than absent, so the first non-empty one is the meaningful one.
+test('describeUse: state from whichever zone the card has to be in', () => {
+  assert.strictEqual(
+    Steps.describeUse({
+      card: { name: 'Kitchen Finks' },
+      zoneLocations: ['G'],
+      battlefieldCardState: '',
+      graveyardCardState: 'with persist still available',
+    }),
+    'Kitchen Finks — in your graveyard, with persist still available'
+  );
+});
+
 test('describeUse: where the card has to be, and what state it is in', () => {
   assert.strictEqual(
     Steps.describeUse({ card: { name: 'Spike Feeder' }, zoneLocations: ['B'], battlefieldCardState: 'with two +1/+1 counters on it' }),
@@ -56,10 +70,33 @@ test('normalize: steps come back one per line, blank lines dropped', () => {
 test('normalize: mana leads the prerequisites', () => {
   const got = Steps.normalize({
     manaNeeded: '{2}{G}',
-    otherPrerequisites: 'A creature to sacrifice.',
+    easyPrerequisites: 'A creature to sacrifice.',
     description: 'Do the thing.',
   });
   assert.deepStrictEqual(got.prerequisites, ['Mana available: {2}{G}', 'A creature to sacrifice.']);
+});
+
+// The two prerequisite fields Spellbook actually sends, notable first: they split
+// the conditions worth stopping on from the ones a player assumes, and printing
+// them in that order is the whole value of the split.
+test('normalize: notable prerequisites come before easy ones', () => {
+  const got = Steps.normalize({
+    easyPrerequisites: 'All permanents are untapped.',
+    notablePrerequisites: 'Spike Feeder has at least two +1/+1 counters on it.',
+    description: 'Do the thing.',
+  });
+  assert.deepStrictEqual(got.prerequisites, [
+    'Spike Feeder has at least two +1/+1 counters on it.',
+    'All permanents are untapped.',
+  ]);
+});
+
+// `otherPrerequisites` was a guessed field name and does not exist in their export.
+// Pinned so nobody reinstates it: a payload carrying only that would have looked
+// like a combo with no prerequisites at all, which is not the same claim.
+test('normalize: the field that never existed is not read', () => {
+  const got = Steps.normalize({ otherPrerequisites: 'Invented.', description: 'Do the thing.' });
+  assert.deepStrictEqual(got.prerequisites, []);
 });
 
 test('normalize: prose prerequisites come before the per-card ones', () => {
