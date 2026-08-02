@@ -30,6 +30,7 @@ node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
 node tools/substitution-scope.js               # how much of the substitution space is unread
+node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works
@@ -67,6 +68,39 @@ in that order (each reads the previous at load time). It does **not** load
 
 ## Researching a card, and recording that you did
 
+> ### Read the oracle text. Every card. Before reasoning about any of it.
+>
+> **Not "recall it". Not "it's obviously". Fetch it and paste it into the log.**
+>
+> This rule exists because it was broken twice in the session that wrote it, and the
+> second time survived review and got committed:
+>
+> - Chatterfang was reasoned about as `{2}{B}{G}`, a Fox Rogue, with a `-X/-X` outlet.
+>   He is `{2}{G}`, a Squirrel Warrior, with `+X/-X`.
+> - Camellia and Experimental Confectioner were ruled out — **all 37 candidates** — on
+>   "they answer *a nontoken creature died* with different tokens, Food against
+>   Squirrel". Both trigger on *sacrificing a Food*; Confectioner makes a **Rat**. The
+>   real difference is that Camellia batches ("one or more Foods") where Confectioner
+>   counts ("a Food"), which rules out **2** of the 37. Thirty-five were thrown away on
+>   a card text nobody had looked at.
+>
+> A wrong rule-out is invisible. It produces no row, no test failure and no complaint —
+> only a card that quietly looks well-covered. It is the single cheapest mistake to make
+> here and the most expensive to find, and remembering a card is how it happens every
+> time.
+>
+> **`research-log.js` will not accept a pass without the text.** Every card in `cards`
+> needs a verbatim entry in `read`, and `test/research-log.test.js` fails without it.
+> That is deliberate: an instruction was already here saying to work from card text, and
+> it was not enough.
+>
+> **Getting the text in this sandbox:** `tools/lookup-card.js` is blocked —
+> `api.scryfall.com` is refused by the network policy, and WebFetch gets 403 on Scryfall
+> too. **WebSearch works** and is the route that works today. If the user pastes the
+> card, use that and record it. Published Spellbook steps (`steps/` on the data branch)
+> are good corroboration for what a loop *does*, but they are not oracle text and do not
+> satisfy this rule.
+
 `research-log.js` is the index of what has been swept. **Before starting a deep dive,
 read it; after finishing one, add to it.** A pass that is not in it did not happen as
 far as anyone can tell, which is exactly the state the file was written to end —
@@ -76,10 +110,14 @@ statement about 103,737 combos.
 ```bash
 node tools/substitution-scope.js            # how much is unread, and which cards
 node tools/substitution-scope.js 0.8 3      # looser bar, more candidates
+node tools/deck-cards.js deck.txt --unswept # the same question, asked of one deck
 ```
 
-The bottom table is the work queue: cards proposing many unpublished combos that no
-recorded pass has swept. The top is the size of the space.
+The bottom table of the first is the work queue: cards proposing many unpublished
+combos that no recorded pass has swept. The top is the size of the space. `deck-cards.js`
+narrows it to the cards one deck actually holds, ranked by how many published combos name
+them — which is what the substitution method consumes — and flags what the log already
+covers. `/deck-deep-dive` runs the whole pass below against that list.
 
 **The pass itself, in the order that avoids wasted reading:**
 
@@ -107,12 +145,20 @@ rather than reading loosely and claiming `verified`.
 
 ### Asking the question of one deck
 
-There is no tool for this yet — it is the obvious next one. The method is the pass above
-with step 2 restricted to shapes whose cards the deck already holds, which is how the
-lifegain pass found 51 candidates nobody had looked for. Until it exists, the deck-level
-question the page *does* answer is the different one of which existing rows a deck can
-assemble: `matchUnofficial()`, exercised in `test/unofficial.test.js` against the deck
-below. `tools/try-deck.js` does **not** cover the unofficial panel.
+Three different questions, and it is worth not confusing them:
+
+| question | what answers it |
+|---|---|
+| which existing rows can this deck assemble? | `matchUnofficial()`, pinned in `test/unofficial.test.js`. **`try-deck.js` does not cover the unofficial panel.** |
+| which of this deck's cards are worth sweeping? | `tools/deck-cards.js --unswept`, and `/deck-deep-dive` on top of it |
+| which gaps does *this deck* expose? | **nothing yet** |
+
+The third is still unbuilt. It is the pass above with step 2 restricted to shapes whose
+cards the deck already holds — how the lifegain pass found 51 candidates nobody had
+looked for — and it is a genuinely different query from the second: `deck-cards.js`
+chooses *subjects* from a deck and then sweeps each one across the whole database, where
+a deck-scoped sweep would bound the candidate shapes as well. Until it exists,
+`/deck-deep-dive` is the close approximation.
 
 ### The two fixture decks
 

@@ -45,6 +45,81 @@ test('research log: every rule-out gives a reason, and a count only if it has on
   });
 });
 
+// The rule the rest of this file exists to hold up. A pass reasons about card
+// behaviour, and the cheapest way to get it wrong is to recall the card instead of
+// reading it — which produces a rule-out that is invisible: no row, no failure, no
+// complaint, just a card that looks covered. Camellia's first entry threw away 35
+// candidates on a text nobody had opened.
+//
+// So the text is part of the record, not a step somebody is asked to remember. The
+// check is deliberately dumb — every card in `cards` needs a verbatim entry in
+// `read` — because a clever version would be one somebody could argue their way
+// around, and the instruction that used to live here was already argued around once.
+test('research log: no pass reasons about a card whose text it did not record', () => {
+  PASSES.forEach((pass) => {
+    assert.ok(pass.read && typeof pass.read === 'object',
+      pass.subject + ': records no oracle text at all — read the cards');
+    pass.cards.forEach((card) => {
+      const text = pass.read[card];
+      assert.ok(typeof text === 'string' && text.trim().length > 30,
+        pass.subject + ': no oracle text recorded for ' + card
+        + '. Fetch it (WebSearch — Scryfall is blocked here) and paste it in.');
+    });
+  });
+});
+
+// A ratchet, not a gate. Entries written before the rule existed never had their
+// text fetched; pretending otherwise would mean inventing oracle text, which is the
+// one thing worse than admitting the gap. So they carry an explicit UNREAD marker
+// and this caps the number.
+//
+// **The number may go down. It may never go up.** A new pass that cannot be
+// bothered to read its cards fails here, and an old entry gets fixed by fetching
+// the text and deleting a marker. Anyone tempted to raise the cap should read the
+// Camellia entry first — that is what an unread card costs.
+//
+// It went up once, 16 -> 36, as a correction rather than borrowing, then down to 30
+// when Broodscale, Scurry Oak and Herd Baloth were finally read. The
+// first count only covered cards listed in `cards`, so a pass could reason about a
+// dozen *peers* and record none of them — Ashnod's Altar named twelve and had one
+// text. Those twenty were always unread; the number was wrong, not the debt. If it
+// ever rises again, that is the same bug or a new excuse, and neither is allowed.
+const UNREAD_DEBT = 16;
+
+test('research log: the unread backlog only ever shrinks', () => {
+  const unread = [];
+  PASSES.forEach((pass) => {
+    Object.entries(pass.read || {}).forEach(([card, text]) => {
+      if (String(text).startsWith('UNREAD')) unread.push(pass.subject + ' / ' + card);
+    });
+  });
+  assert.ok(unread.length <= UNREAD_DEBT,
+    'the unread backlog grew to ' + unread.length + ' (cap ' + UNREAD_DEBT + '). '
+    + 'A new pass must record real oracle text:\n  ' + unread.join('\n  '));
+  if (unread.length < UNREAD_DEBT) {
+    assert.fail('the backlog is down to ' + unread.length + ' — lower UNREAD_DEBT to '
+      + unread.length + ' so it cannot drift back up');
+  }
+});
+
+// Peers are where the reasoning actually happens: the subject is compared *against*
+// something, and that something's text decides the answer as much as the subject's.
+// Recording only the subject would satisfy the letter of the rule and miss the case
+// that broke — Confectioner was the card misremembered, and he is a peer.
+test('research log: a card named in a rule-out has its text recorded too', () => {
+  PASSES.forEach((pass) => {
+    const known = Object.keys(pass.read || {});
+    const reasons = (pass.ruledOut || []).map((r) => r.reason).join(' ') + ' ' + (pass.notes || '');
+    // Any card this pass claims to have read is fine. What is not fine is naming a
+    // card in `cards` inside a reason without its text — that is reasoning from memory.
+    pass.cards.forEach((card) => {
+      if (!reasons.includes(card.split(',')[0])) return;
+      assert.ok(known.includes(card),
+        pass.subject + ': ' + card + ' is reasoned about in a rule-out but has no recorded text');
+    });
+  });
+});
+
 test('research log: a card is not listed under the same pass twice', () => {
   PASSES.forEach((pass) => {
     const keys = pass.cards.map(nameKey);
