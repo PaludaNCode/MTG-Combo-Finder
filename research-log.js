@@ -60,6 +60,8 @@ const PASSES = [
       'Cauldron Familiar': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
       'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token.',
       'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
+      'Scurry Oak': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Herd Baloth': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
     },
     date: '2026-07',
     method: 'pairs of cards Spellbook itself puts in the same combo shape elsewhere',
@@ -159,6 +161,10 @@ const PASSES = [
     read: {
       'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
       'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.',
+      'Krark-Clan Ironworks': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Arcbound Ravager': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Pitiless Plunderer': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Clock of Omens': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
     },
     date: '2026-08-02',
     method: 'the three cards that hand a creature back inside a token creation, compared against each other',
@@ -182,8 +188,20 @@ const PASSES = [
     subject: 'Ashnod’s Altar',
     cards: ["Ashnod's Altar"],
     read: {
-      "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}. (Phyrexian Altar, the peer this '
-        + 'pass turns on, reads "Sacrifice a creature: Add one mana of any color.")',
+      "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color.',
+      'Gravecrawler': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Reassembling Skeleton': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Forsaken Miner': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Nether Traitor': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Krark-Clan Ironworks': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Scrap Trawler': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Nuka-Cola Vending Machine': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Pitiless Plunderer': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Goblin Bombardment': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Polyraptor': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Broodhatch Nantuko': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Altar of Dementia': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
     },
     cardIds: [2034],
     date: '2026-08-02',
@@ -207,7 +225,9 @@ const PASSES = [
         + 'mill is the win condition, not a side effect. Ashnod’s Altar deals no damage and mills '
         + 'nothing' },
     ],
-    notes: 'The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
+    notes: '**kept: 0 HERE IS PROVISIONAL.** One of its rule-outs is read — Ashnod’s Altar '
+      + 'against Phyrexian Altar, colourless against any colour — and the rest name twelve cards '
+      + 'whose text was never fetched. The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
       + 'scored peers are four different kinds of card and only the free outlets are '
       + 'substitutable at all, which is the clearest case yet for taking peers off the card text.',
   },
@@ -218,6 +238,8 @@ const PASSES = [
     read: {
       'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
       'Experimental Confectioner': 'When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with \\u201cThis token can\\u2019t block.\\u201d',
+      'Peregrin Took': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Savvy Hunter': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
     },
     date: '2026-08-02',
     method: 'her one scored peer, Experimental Confectioner, and every shape it has that she lacks',
