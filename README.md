@@ -2613,13 +2613,21 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **183 candidates have been
+which is exactly where the method is least trustworthy. But **248 candidates have been
 read, out of thousands proposed** — and which 183 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards
 proposing the most that no recorded pass has swept, which is the only form of "how much
 is left" anybody can act on.
+
+**A pass that finds nothing is still a pass**, and three of the eight recorded found
+exactly that. Ashnod's Altar is the largest card in the standing deck by combo count —
+6,063 — and kept none of its 3,316 candidates: its top scored peers are four different
+kinds of card, and only the free sacrifice outlets are substitutable at all. Cauldron
+Familiar, Samwise Gamgee and Academy Manufactor produced **no candidates at any
+threshold**, which is the method being silent rather than the cards being covered. Those
+entries are the ones that stop the next person spending the same afternoon.
 
 Chatterfang is what a *well-covered* card looks like under the same method, and worth
 recording as the counterweight to Rosie: the sweep proposed **1,202** candidates for him

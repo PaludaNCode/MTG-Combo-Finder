@@ -140,6 +140,74 @@ const PASSES = [
       + 'five kept. Worth keeping beside Rosie, who was not well covered, so the next reader '
       + 'knows both outcomes are normal.',
   },
+  {
+    subject: 'Ashnod’s Altar',
+    cards: ["Ashnod's Altar"],
+    cardIds: [2034],
+    date: '2026-08-02',
+    method: 'every shape a scored peer is published in and it is not, split by what the peer actually is',
+    proposed: 3316,
+    examined: 28,
+    kept: 0,
+    ruledOut: [
+      { reason: 'the loop recasts a coloured card and Ashnod’s Altar makes {C}{C}. Phyrexian '
+        + 'Altar makes one mana of any colour, which is the whole of the difference — '
+        + 'Gravecrawler, Reassembling Skeleton, Forsaken Miner and Nether Traitor all need {B} '
+        + 'to come back. This is the same distinction the README already draws in the other '
+        + 'direction, where Ashnod’s two mana carry a loop Phyrexian’s one cannot' },
+      { reason: 'Krark-Clan Ironworks eats *artifacts* and Ashnod’s Altar eats creatures, so the '
+        + 'Scrap Trawler and Nuka-Cola Vending Machine families have nothing for it to sacrifice' },
+      { reason: 'Pitiless Plunderer is not a sacrifice outlet at all — it makes a Treasure when '
+        + 'a creature dies. It scores as a peer because the two co-occur constantly, which is '
+        + 'exactly what a score cannot tell you' },
+      { reason: 'the peer’s rider is load-bearing rather than incidental: Goblin Bombardment’s '
+        + 'damage is what Polyraptor and Broodhatch Nantuko enrage off, and Altar of Dementia’s '
+        + 'mill is the win condition, not a side effect. Ashnod’s Altar deals no damage and mills '
+        + 'nothing' },
+    ],
+    notes: 'The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
+      + 'scored peers are four different kinds of card and only the free outlets are '
+      + 'substitutable at all, which is the clearest case yet for taking peers off the card text.',
+  },
+  {
+    subject: 'Camellia, the Seedmiser',
+    cards: ['Camellia, the Seedmiser', 'Experimental Confectioner'],
+    cardIds: [3868, 2590],
+    date: '2026-08-02',
+    method: 'her one scored peer, Experimental Confectioner, and every shape it has that she lacks',
+    proposed: 37,
+    examined: 37,
+    kept: 0,
+    ruledOut: [
+      { reason: 'both answer "one or more nontoken creatures you control died" but with different '
+        + 'tokens — Confectioner makes a Food, Camellia makes a Squirrel — and every one of these '
+        + 'loops spends the Food. Peregrin Took’s published steps say it outright: his cost is '
+        + '"sacrifice three Foods", and a Squirrel cannot pay it', count: 37 },
+    ],
+    notes: 'A second pass over a card the first sweep had already touched, and it found nothing '
+      + 'either. The rule-out is the same shape as Chatterfang’s — the added token is the wrong '
+      + 'type — which is worth noticing as a pattern: token-adders substitute badly.',
+  },
+  {
+    subject: 'Cauldron Familiar, Samwise Gamgee and Academy Manufactor',
+    cards: ['Cauldron Familiar', 'Samwise Gamgee', 'Academy Manufactor'],
+    cardIds: [1475, 4232, 4231],
+    date: '2026-08-02',
+    method: 'the same peer search, which returned nothing at any threshold down to 0.12',
+    proposed: 0,
+    examined: 0,
+    kept: 0,
+    ruledOut: [
+      { reason: 'no card shares enough combo shapes with any of the three for the substitution '
+        + 'method to propose a single candidate. That is the method being silent, not the cards '
+        + 'being covered — and the distinction matters, because a gap in one of these could only '
+        + 'ever surface by somebody reading the card' },
+    ],
+    notes: 'Logged precisely because it found nothing. Without the entry the next person spends '
+      + 'the same afternoon discovering the same silence, which is the cost this file exists to '
+      + 'stop paying twice. Academy Manufactor sits in 661 combos and Cauldron Familiar in 624, '
+      + 'so this is not obscurity — they simply have no near-twin.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
