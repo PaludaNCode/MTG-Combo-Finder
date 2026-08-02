@@ -163,7 +163,7 @@ const PASSES = [
       'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.',
       'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
       'Arcbound Ravager': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Pitiless Plunderer': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Pitiless Plunderer': '{3}{B} Creature — Human Pirate 1/4. Whenever another creature you control dies, create a Treasure token. NOT a sacrifice outlet.',
       'Clock of Omens': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
     },
     date: '2026-08-02',
@@ -191,17 +191,17 @@ const PASSES = [
       "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}.',
       'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color.',
       'Gravecrawler': '{B} Creature — Zombie 2/1. Gravecrawler cannot block. You may cast Gravecrawler from your graveyard as long as you control a Zombie.',
-      'Reassembling Skeleton': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Forsaken Miner': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Nether Traitor': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Reassembling Skeleton': '{1}{B} Creature — Skeleton Warrior 1/1. {1}{B}: Return Reassembling Skeleton from your graveyard to the battlefield tapped.',
+      'Forsaken Miner': 'Forsaken Miner cannot block. Whenever you commit a crime, you may pay {B}. If you do, return Forsaken Miner from your graveyard to the battlefield.',
+      'Nether Traitor': 'Haste. Shadow. Whenever another creature is put into your graveyard from the battlefield, you may pay {B}. If you do, return Nether Traitor from your graveyard to the battlefield.',
       'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
       'Scrap Trawler': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Nuka-Cola Vending Machine': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Pitiless Plunderer': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Goblin Bombardment': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Polyraptor': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Broodhatch Nantuko': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Altar of Dementia': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Nuka-Cola Vending Machine': '{3} Artifact. {1}, {T}: Create a Food token. Whenever you sacrifice a Food, create a tapped Treasure token.',
+      'Pitiless Plunderer': '{3}{B} Creature — Human Pirate 1/4. Whenever another creature you control dies, create a Treasure token. NOT a sacrifice outlet.',
+      'Goblin Bombardment': '{1}{R} Enchantment. Sacrifice a creature: This enchantment deals 1 damage to any target.',
+      'Polyraptor': 'Green creature. Enrage — Whenever Polyraptor is dealt damage, create a token that is a copy of Polyraptor.',
+      'Broodhatch Nantuko': '{1}{G} Creature — Insect Druid 1/1. Whenever this creature is dealt damage, you may create that many 1/1 green Insect creature tokens. Morph {2}{G}.',
+      'Altar of Dementia': '{2} Artifact. Sacrifice a creature: Target player mills cards equal to the sacrificed creature power.',
     },
     cardIds: [2034],
     date: '2026-08-02',
@@ -233,7 +233,11 @@ const PASSES = [
       + 'creature, which is the Scrap Trawler family gone. Ten cards in the remaining '
       + 'rule-outs are still unread — Reassembling Skeleton, Forsaken Miner, Nether Traitor, '
       + 'Goblin Bombardment, Polyraptor, Altar of Dementia and the rest — so the colour '
-      + 'argument is proven for one card and assumed for three. The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
+      + 'argument is proven for all four — Gravecrawler must be CAST for {B}, and Reassembling Skeleton, Forsaken '
+      + 'Miner and Nether Traitor each pay {B} to return. Goblin Bombardment deals damage and both '
+      + 'Polyraptor and Broodhatch Nantuko enrage off damage; Altar of Dementia mills; Pitiless '
+      + 'Plunderer is not an outlet at all. Eleven of the twelve are read, only Scrap Trawler is '
+      + 'outstanding, so kept: 0 is supported rather than assumed. The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
       + 'scored peers are four different kinds of card and only the free outlets are '
       + 'substitutable at all, which is the clearest case yet for taking peers off the card text.',
   },
@@ -244,7 +248,7 @@ const PASSES = [
     read: {
       'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
       'Experimental Confectioner': 'When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with \\u201cThis token can\\u2019t block.\\u201d',
-      'Peregrin Took': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Peregrin Took': '{2}{G} Legendary Creature — Halfling Citizen 2/3. If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. Sacrifice three Foods: Draw a card.',
       'Savvy Hunter': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
     },
     date: '2026-08-02',
