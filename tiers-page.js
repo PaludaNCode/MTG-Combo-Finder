@@ -142,7 +142,11 @@
     try {
       const res = await fetch(DATA_URL, { cache: 'default' });
       if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
-      data = await res.json();
+      // Interned indices back into strings. Without it `combo.p` is a list of
+      // integers, `tierOf(3)` matches nothing, and the sort dies on
+      // `localeCompare` of a number — after the fetch succeeded, so the page sits
+      // on "Loading the combo database…" with no error on screen.
+      data = window.DeckCombos.decode(await res.json());
     } catch (err) {
       $('status').textContent = 'Could not load the combo database from ' + DATA_URL + ' — ' + err.message;
       $('status').classList.add('error');

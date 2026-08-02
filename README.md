@@ -1683,6 +1683,33 @@ catch it. So the scheme is built so that the failure mode is a slightly larger f
 than as an error. It calls the page's own `rebuildId()` rather than a copy, so the gate
 cannot drift from what readers actually run.
 
+### The fixture is authored readably and served published
+
+`test/fixtures/dataset.js` writes card names and result strings out in full, because a
+fixture nobody can read is a fixture nobody will extend. The published payload is not
+that shape: it interns both into tables, and `DeckCombos.decode()` is what turns one
+into the other.
+
+Serving the readable shape to the browser tests meant **nothing ever exercised the
+shape the pages actually receive** — and that is not a theoretical gap. `tiers.html`
+reads `combos.json` directly, never called `decode()`, and went to production sitting
+on *"Loading the combo database…"*: `combo.p` was a list of integers, `tierOf(3)`
+matched nothing, and the sort died on `localeCompare` of a number — after the fetch
+had succeeded, so no error reached the screen. Both of the layout test's tier runs were
+green throughout, because both were fed strings.
+
+So `asPublished()` interns the fixture on the way out, and both harnesses serve it
+through that. Verified the way a guard should be: with the fix reverted, the two tier
+runs fail and nothing else does.
+
+Combo ids stay literal in the fixture. That is a real published shape — it is what
+happens to a row whose card ids the derivation could not settle, 162 of them in the
+live snapshot — and the harnesses identify particular combos by id, so deriving them
+would couple those assertions to synthetic numbers while saying nothing more about the
+page. The rebuild path is covered where it belongs: `test/decode.test.js` drives
+`rebuildId()` directly, and the encoding was checked against all 103,737 published rows
+before it shipped.
+
 ### Downloading the database once, not once a visit
 
 The published file is **1.7 MB on the wire** (~9 MB parsed, 35 MB in memory once decoded), and

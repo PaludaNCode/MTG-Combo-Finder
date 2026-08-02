@@ -146,4 +146,48 @@ const DECKS = {
   unofficialAlmost: ['1 Scurry Oak', '1 Necrosynthesis'].join('\n'),
 };
 
-module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT };
+// ---- the shape the deploy actually publishes --------------------------------
+//
+// Everything above is authored the readable way: card names and result strings,
+// spelled out. The published payload is not that. It interns both into tables and
+// leaves most rows with no `id` at all, because theirs is rebuilt from `cardIds` —
+// and `DeckCombos.decode()` is what turns one into the other.
+//
+// Serving the readable shape to the browser tests meant nothing ever exercised the
+// shape the pages actually receive. That is not a theoretical gap: tiers.html reads
+// combos.json directly, never called decode(), and went to production stuck on
+// "Loading the combo database…" while every test here passed. The layout test even
+// has two runs dedicated to that page.
+//
+// So the fixture is authored readably and *served* published. A page that forgets
+// to decode now fails in CI instead of in front of a reader.
+function asPublished(fixture) {
+  const data = JSON.parse(JSON.stringify(fixture));
+  const names = [];
+  const results = [];
+  const indexOf = (value, table) => {
+    const at = table.indexOf(value);
+    return at === -1 ? table.push(value) - 1 : at;
+  };
+
+  for (const combo of data.combos || []) {
+    if (Array.isArray(combo.c)) combo.c = combo.c.map((n) => indexOf(n, names));
+    if (Array.isArray(combo.p)) combo.p = combo.p.map((p) => indexOf(p, results));
+  }
+
+  // Every row keeps its literal id, which is a real published shape — it is what
+  // happens to a row whose card ids the derivation could not settle, and 162 of
+  // them look exactly like this in the live snapshot.
+  //
+  // Not dropped here, deliberately. The harnesses identify particular combos by id
+  // (`/\/13\//` on the one-slot-away row, for instance), so deriving them would
+  // couple those assertions to synthetic numbers and say nothing extra about the
+  // page. The rebuild path is covered where it belongs: test/decode.test.js drives
+  // rebuildId() directly, and the encoding was checked against all 103,737 rows of
+  // the published snapshot before it shipped.
+  data.names = names;
+  data.results = results;
+  return data;
+}
+
+module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished };
