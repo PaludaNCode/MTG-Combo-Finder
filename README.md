@@ -1412,7 +1412,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 63 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 107 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -2498,9 +2498,11 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 63 hand-written rows and the one stand-in rule are `verified`. `derived` stays
-in the model because it is the honest label for a row found before its cards have
-been read, and the next one will need it.
+All 107 hand-written rows cite a published combo. 84 of them and the one stand-in rule
+are `verified`; the other 23 are `derived`, which is what that label was being kept for.
+They came from the whole-file sweep below rather than from a question about one card,
+and every one of them is a loop whose two halves Spellbook publishes separately without
+anybody having read the pairing against the cards. The panel says so on each.
 
 `test/unofficial.test.js` enforces the shape of both halves — every hand-written row
 cites a real combo id, every swap is genuinely one card in and one out against the
@@ -2573,10 +2575,21 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **95 candidates have been
-read, out of thousands proposed** — 44 from the first sweep, 51 from the lifegain pass —
-and a page that prints how far the checking went on any one row should be as willing to
-say how far it has got across the file.
+which is exactly where the method is least trustworthy. But **144 candidates have been
+read, out of thousands proposed** — 44 from the first sweep, 51 from the lifegain pass,
+and 49 from the first sweep that started from the file instead of from a card — and a
+page that prints how far the checking went on any one row should be as willing to say
+how far it has got across the file.
+
+That third pass kept 44 of its 49, and they are the two families in `unofficial.js` under
+*the token-creation half of the counter loops*. **Twenty are Rosie Cotton of South Lane**,
+who reads a token being created where the cards Spellbook pairs with these loops read a
+creature entering — the same trigger whenever the creature is a token, which is why she
+closes in two cards what Sadistic Glee needs three for, and why she was missing from every
+loop where the token arrives off a -1/-1 counter. **Twenty-four are Necrosynthesis**, whose
+six existing rows covered three sacrifice outlets and left the rest of Sadistic Glee's
+untouched. Nine of the Rosie rows and twelve of the Necrosynthesis ones were read against
+the cards; the remaining 23 are `derived`.
 
 **A high substitution score is never a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
