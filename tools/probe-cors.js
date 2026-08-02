@@ -75,6 +75,18 @@ const CANDIDATES = [
     what: 'candidate — their text download',
     url: 'https://www.mtggoldfish.com/deck/download/0',
   },
+  // Asked as somebody else, on purpose. Archidekt answers our origin with
+  // `Access-Control-Allow-Origin: http://localhost:3000` and `Vary: Origin`,
+  // which is either an allowlist we are not on or a header pinned to one value
+  // for everyone — and those are different problems. Asking as their own site
+  // separates them: an echo here means an allowlist, and an allowlist means the
+  // refusal above is real rather than an artefact of how this probe asks.
+  {
+    site: 'archidekt-as-themselves',
+    what: 'DIAGNOSTIC — does Archidekt echo any origin, or always name localhost?',
+    url: 'https://archidekt.com/api/decks/1/',
+    origin: 'https://archidekt.com',
+  },
 ];
 
 // What a browser actually puts on a cross-origin GET, as closely as a server-side
@@ -107,7 +119,12 @@ async function probe(candidate) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(candidate.url, { headers: BROWSER_HEADERS, redirect: 'follow', signal: controller.signal });
+    // Per-candidate origin, for the diagnostic rows that deliberately ask as
+    // somebody else. Everything else asks as the deployed page, which is the
+    // only origin whose answer we actually have to live with.
+    const asking = candidate.origin || ORIGIN;
+    const headers = Object.assign({}, BROWSER_HEADERS, { Origin: asking, Referer: asking + '/' });
+    const res = await fetch(candidate.url, { headers, redirect: 'follow', signal: controller.signal });
     const allow = res.headers.get('access-control-allow-origin');
     return {
       status: res.status,
@@ -118,7 +135,8 @@ async function probe(candidate) {
       // deck. Anything else — absent, or some other origin — means the browser
       // discards the response and the page sees a TypeError with no status,
       // which is exactly what describeLoadFailure() in parser.js explains.
-      readable: allow === '*' || (allow || '').toLowerCase() === ORIGIN.toLowerCase(),
+      askedAs: asking,
+      readable: allow === '*' || (allow || '').toLowerCase() === asking.toLowerCase(),
     };
   } catch (err) {
     return { error: err && err.name === 'AbortError' ? 'timed out' : String(err && err.message || err) };
@@ -148,6 +166,7 @@ async function main(argv) {
     console.log(`${candidate.site}`);
     console.log(`  ${candidate.what}`);
     console.log(`  ${candidate.url}`);
+    if (candidate.origin) console.log(`  asked as ${candidate.origin}, NOT as us`);
     if (result.error) {
       console.log(`  → ERROR: ${result.error}`);
     } else {
