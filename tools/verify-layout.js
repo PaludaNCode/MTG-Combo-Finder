@@ -86,7 +86,7 @@ function findBrowser() {
 // The fixture deck and dataset, shared with the Playwright suite in e2e/ — see
 // test/fixtures/dataset.js. Both harnesses drive the real pages against the same
 // made-up deck, so a case added for one is a case the other gets too.
-const { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT } = require('../test/fixtures/dataset.js');
+const { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished } = require('../test/fixtures/dataset.js');
 
 // The page under test is loaded inside an iframe sized to each viewport.
 // Media queries evaluate against the iframe's own width, so the result no
@@ -1167,7 +1167,11 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     return JSON.parse(body);
   }
 
-  const verdicts = await collect(FIXTURE, HARNESS, 'The deck page');
+  // Served the way the deploy publishes it — interned, most ids derived — so a page
+  // that forgets DeckCombos.decode() fails here rather than in production. It did:
+  // tiers.html shipped without the call and sat on "Loading the combo database…",
+  // with both of this file's tier runs green the whole time.
+  const verdicts = await collect(asPublished(FIXTURE), HARNESS, 'The deck page');
 
   let failed = false;
   for (const v of verdicts) {
@@ -2023,7 +2027,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
   }
 
   // ---- the tier review page ----
-  for (const t of await collect(TIERS_FIXTURE, TIERS_HARNESS, 'The tier page')) {
+  for (const t of await collect(asPublished(TIERS_FIXTURE), TIERS_HARNESS, 'The tier page')) {
     if (!t.ok) {
       console.error(`FAIL ${t.name} — ${t.error}`);
       failed = true;

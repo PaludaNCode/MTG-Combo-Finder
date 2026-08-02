@@ -18,7 +18,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { FIXTURE } = require('../test/fixtures/dataset.js');
+const { FIXTURE, asPublished } = require('../test/fixtures/dataset.js');
 
 const ROOT = path.join(__dirname, '..');
 const MIME = {
@@ -36,8 +36,10 @@ const MIME = {
 const { TIERS_FIXTURE } = require('../test/fixtures/dataset.js');
 
 const DATASETS = {
-  '/combos.json': FIXTURE,
-  '/combos-tiers.json': TIERS_FIXTURE,
+  // Served the way the deploy publishes it — interned, most ids derived — so a
+  // page that forgets DeckCombos.decode() fails here rather than in production.
+  '/combos.json': asPublished(FIXTURE),
+  '/combos-tiers.json': asPublished(TIERS_FIXTURE),
 };
 
 const server = http.createServer((req, res) => {

@@ -64,6 +64,9 @@ in that order (each reads the previous at load time). It does **not** load
 `templates.json` and `combos.json` are data: the first is generated and checked in,
 the second is built by CI and lives on the `data` branch. Never commit `combos.json`.
 
+`tiers.html` loads `combos.js` too, for one function: `DeckCombos.decode()`. It reads
+`combos.json` directly, so it needs the decoder exactly as much as the deck page does.
+
 ## Things that will bite you
 
 - **`app.js` and `tiers-page.js` are not covered by the unit tests** — by design.
@@ -103,7 +106,10 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   the fetcher streams the bulk export instead. The README explains what happens if
   you try.
 - **The published payload interns `c` and `p`** into `names`/`results` tables, and
-  most rows carry no `id` at all — it is rebuilt from a `cardIds` table.
+  most rows carry no `id` at all — it is rebuilt from a `cardIds` table. The browser
+  harnesses serve the fixture through `asPublished()` so they receive that shape too;
+  a page that forgets to decode now fails in CI rather than in front of a reader,
+  which is how `tiers.html` reached production stuck on "Loading the combo database…".
   `DeckCombos.decode()` does all of it right after the parse, and every other line
   goes on reading strings. Anything that loads `combos.json` has to call it
   (`search.js` and four tools do). It is a no-op on a payload without the tables,
