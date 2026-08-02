@@ -1546,7 +1546,7 @@ Warden appears in **149** combos, Daxos, Blessed by the Sun **132**, Essence War
 **121**, Lunarch Veteran **90** — four cards that do the same thing, ordered by how
 long they have existed.
 
-Three specific gaps were found by taking each combo of one card, substituting a
+Four specific gaps were found by taking each combo of one card, substituting a
 functional twin, and checking whether that variant exists:
 
 | Missing variant | Published sibling to cite | Confidence |
@@ -1554,6 +1554,7 @@ functional twin, and checking whether that variant exists:
 | Quina, Qu Gourmet + Academy Manufactor + Warren Soultrader | `3000-4231-5670` (Chatterfang version) | **Verified against the cards.** Quina adds a 1/1 Frog to any token creation, so it refuels the sacrifice loop exactly as Chatterfang does |
 | Lunarch Veteran + Heroic Feast + Scurry Oak | `360-4186-7743` (Soul Warden version) | High — Lunarch Veteran's front face is Soul Warden's text, and every other card with that text has the variant |
 | Essence Warden + Hapatra, Vizier of Poisons + Yawgmoth, Thran Physician (×3, with Anointed Procession / Parallel Lives / Doubling Season) | the Soul Warden versions | High — Soul Warden and Essence Warden are functional duplicates |
+| Kitchen Finks + Heroic Feast + any of 15 free sacrifice outlets | the Archangel of Thune versions | **Verified against the cards.** Both turn the Finks' 2 life into the +1/+1 counter that cancels persist; Spellbook publishes all 15 with four other lifegain-to-counter engines and none with this one |
 | Hammerhead, Maggia Boss in 1,889 loops | the Bartolomé del Presidio versions, and the Carrion Feeder ones where Bartolomé has none | **Verified against the cards.** Hammerhead and Bartolomé have one ability each and it is the same sentence. Declared once as a stand-in rule rather than written out — see below |
 
 **A high substitution score is not a verdict.** Two cards filling the same slot in
@@ -1570,6 +1571,38 @@ answer it either way.
 Everything above comes from Spellbook and is shown on their authority. `unofficial.js`
 is the one exception — the surviving output of that substitution audit, rendered in its
 own panel below **Combos in your deck** and never counted among them.
+
+### One shape, fifteen rows: Kitchen Finks and Heroic Feast
+
+Kitchen Finks gains 2 life on entry and has persist, so any free sacrifice outlet
+loops it the moment something puts a +1/+1 counter on it — the counter cancels the
+-1/-1 persist leaves behind, and it can die again.
+
+Spellbook publishes that loop across **15** free outlets, four times over: once each
+for Archangel of Thune, Heliod, Sun-Crowned, Cleric Class and The Destined White
+Mage. Heroic Feast does the same job and has **none** of them.
+
+> **Archangel of Thune** — Whenever you gain life, put a +1/+1 counter on each creature you control.
+>
+> **Heroic Feast** — Whenever you gain life, choose up to that many target creatures you control. Put a +1/+1 counter on each of them.
+
+Two life gained is two targets and the loop needs one. Spellbook already treats the
+pair as interchangeable elsewhere — **152 of Heroic Feast's 167** published combos
+are card sets Archangel of Thune also appears in — which is exactly the signal the
+substitution audit looks for.
+
+**Why these are written out rather than declared as a rule.** The two cards are not
+equivalent: Archangel counters *every* creature you control, Heroic Feast counters up
+to as many as you gained life and has to target. Here that costs nothing. Elsewhere
+it would, and a stand-in rule would have generated 347 rows without knowing which.
+The difference between this and Hammerhead is the difference between two cards that
+do the same job and two cards that are the same card.
+
+**And it costs one result.** Every source combo claims *Infinite +1/+1 counters on
+creatures you control*, which Archangel gives and Heroic Feast does not — the loop
+spends its counter cancelling the persist counter, and the second target only grows
+something if another creature is out, which these three cards do not guarantee. That
+line comes off all 15 rows and nothing replaces it.
 
 ### What this cannot find: a card Spellbook has never used
 
@@ -1712,7 +1745,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All nine hand-written rows and the one stand-in rule are `verified`. `derived` stays
+All 24 hand-written rows and the one stand-in rule are `verified`. `derived` stays
 in the model because it is the honest label for a row found before its cards have
 been read, and the next one will need it.
 

@@ -191,6 +191,366 @@
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',
       ],
     },
+     // ---- one shape, fifteen rows ---------------------------------------------
+    //
+    // Kitchen Finks gains 2 life when it enters and has persist, so a free
+    // sacrifice outlet turns it into a loop as soon as something puts a +1/+1
+    // counter on it: the counter cancels the -1/-1 persist left behind, and the
+    // Finks can die again.
+    //
+    // Spellbook publishes exactly that loop across fifteen free outlets, four
+    // times over — once each for Archangel of Thune, Heliod, Sun-Crowned, Cleric
+    // Class and The Destined White Mage, all of which turn the 2 life into the
+    // counter. Heroic Feast does the same job:
+    //
+    //   Archangel of Thune  Whenever you gain life, put a +1/+1 counter on each
+    //                       creature you control.
+    //   Heroic Feast        Whenever you gain life, choose up to that many target
+    //                       creatures you control. Put a +1/+1 counter on each.
+    //
+    // Two life gained is two targets, and the loop needs one. Spellbook already
+    // treats the two cards as interchangeable — 152 of Heroic Feast's 167
+    // published combos are card sets Archangel of Thune also appears in — and
+    // this is the shape where it did not: nought Kitchen Finks combos against
+    // fifteen apiece for the other four.
+    //
+    // They are not equivalent, which is why these are written out one at a time
+    // rather than declared as a stand-in rule. Archangel counters *every* creature
+    // you control; Heroic Feast counters up to as many as you gained life, and
+    // has to target. Here that difference costs nothing. Elsewhere it would, and
+    // a rule would have generated 347 rows without knowing where.
+    //
+    // What it does cost is the one result these rows drop. Every source combo
+    // claims "Infinite +1/+1 counters on creatures you control", which Archangel
+    // gives you and Heroic Feast does not: the loop spends its counter cancelling
+    // the persist counter, and the second target only grows something if you have
+    // another creature out — which these three cards do not guarantee. So that
+    // line comes off, and nothing replaces it.
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Altar of Dementia',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-5256',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Altar of Dementia',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Altar of Dementia eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite mill', 'Infinite self-mill',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Ashnod\'s Altar', 'Heroic Feast',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-2086-2919',
+        cards: [
+          'Kitchen Finks', 'Ashnod\'s Altar', 'Archangel of Thune',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Ashnod\'s Altar eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Bartolomé del Presidio',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-2921',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Bartolomé del Presidio',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Bartolomé del Presidio eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Blasting Station', 'Heroic Feast',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '413-2086-2919',
+        cards: [
+          'Kitchen Finks', 'Blasting Station', 'Archangel of Thune',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Blasting Station eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite damage',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Bloodflow Connoisseur',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2511-2919',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Bloodflow Connoisseur',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Bloodflow Connoisseur eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Carrion Feeder',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2438-2919',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Carrion Feeder',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Carrion Feeder eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Goblin Bombardment',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-5147',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Goblin Bombardment',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Goblin Bombardment eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite damage',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Phantom Train',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-6797',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Phantom Train',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Phantom Train eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Phyrexian Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-4050',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Phyrexian Altar',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Phyrexian Altar eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Shilgengar, Sire of Famine',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-5686',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Shilgengar, Sire of Famine',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Shilgengar, Sire of Famine eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Thermopod',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-5231',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Thermopod',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Thermopod eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite red mana',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Umbral Collar Zealot',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-6798',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Umbral Collar Zealot',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Umbral Collar Zealot eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite surveil',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Viscera Seer', 'Heroic Feast',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2292-2919',
+        cards: [
+          'Kitchen Finks', 'Viscera Seer', 'Archangel of Thune',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Viscera Seer eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Woe Strider', 'Heroic Feast',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '997-2086-2919',
+        cards: [
+          'Kitchen Finks', 'Woe Strider', 'Archangel of Thune',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Woe Strider eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: [
+        'Kitchen Finks', 'Heroic Feast', 'Yahenni, Undying Partisan',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-3967',
+        cards: [
+          'Kitchen Finks', 'Archangel of Thune', 'Yahenni, Undying Partisan',
+        ],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Yahenni, Undying Partisan eats the Finks for free; persist returns it with a -1/-1 '
+        + 'counter, its entry gains 2 life, and Heroic Feast spends one of those two '
+        + 'targets putting a +1/+1 counter back on it. The two counters cancel, so the '
+        + 'Finks can persist again.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
