@@ -161,7 +161,7 @@ const PASSES = [
     read: {
       'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
       'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.',
-      'Krark-Clan Ironworks': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
       'Arcbound Ravager': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
       'Pitiless Plunderer': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
       'Clock of Omens': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
@@ -190,11 +190,11 @@ const PASSES = [
     read: {
       "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}.',
       'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color.',
-      'Gravecrawler': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Gravecrawler': '{B} Creature — Zombie 2/1. Gravecrawler cannot block. You may cast Gravecrawler from your graveyard as long as you control a Zombie.',
       'Reassembling Skeleton': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
       'Forsaken Miner': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
       'Nether Traitor': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Krark-Clan Ironworks': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
       'Scrap Trawler': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
       'Nuka-Cola Vending Machine': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
       'Pitiless Plunderer': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
@@ -225,9 +225,15 @@ const PASSES = [
         + 'mill is the win condition, not a side effect. Ashnod’s Altar deals no damage and mills '
         + 'nothing' },
     ],
-    notes: '**kept: 0 HERE IS PROVISIONAL.** One of its rule-outs is read — Ashnod’s Altar '
-      + 'against Phyrexian Altar, colourless against any colour — and the rest name twelve cards '
-      + 'whose text was never fetched. The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
+    notes: '**kept: 0 IS STILL PROVISIONAL, but less of it.** Three rule-outs are now read '
+      + 'end to end. Ashnod’s Altar adds {C}{C} where Phyrexian Altar adds one mana of any '
+      + 'colour; Gravecrawler must be CAST from the graveyard and costs {B}, so colourless '
+      + 'mana cannot return it, and that is the biggest candidate here at pop 70,620; and '
+      + 'Krark-Clan Ironworks reads "Sacrifice an ARTIFACT" where Ashnod’s Altar takes a '
+      + 'creature, which is the Scrap Trawler family gone. Ten cards in the remaining '
+      + 'rule-outs are still unread — Reassembling Skeleton, Forsaken Miner, Nether Traitor, '
+      + 'Goblin Bombardment, Polyraptor, Altar of Dementia and the rest — so the colour '
+      + 'argument is proven for one card and assumed for three. The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
       + 'scored peers are four different kinds of card and only the free outlets are '
       + 'substitutable at all, which is the clearest case yet for taking peers off the card text.',
   },
