@@ -460,6 +460,96 @@ function reportNewTemplates(combos, templateData) {
   console.log('Run the "Regenerate template card lists" workflow to pick them up.\n');
 }
 
+// ---- the combo id, which does not need publishing --------------------------
+//
+// A Spellbook variant id is not opaque. It is the combo's card ids in ascending
+// order joined with `-`, then each distinct template id, ascending, prefixed with
+// `--`:
+//
+//   1110-4694-7839--112     three cards, one template slot
+//   215-579--85--181        two cards, two template slots
+//
+// So it is 27.5% of the published payload on the wire spent on something the
+// reader can work out. Dropping it means shipping one card id per distinct card —
+// 7,364 numbers — instead of one composite id per combo, 103,737 times.
+//
+// **Where the card ids come from is the careful part.** Not from upstream: the
+// bulk export's shape is theirs to change, and a card id read from a renamed field
+// would be `undefined` in a link rather than an error in a log. They are recovered
+// from the combo ids we already hold, which cannot disagree with themselves.
+//
+// A card's id must appear in the id of *every* combo that card is in, so
+// intersecting those id sets narrows each card to a few candidates; and an id
+// belongs to exactly one card, so a solved card frees its id from every other
+// candidate set. Three rounds of that settles 7,241 of 7,364 cards.
+//
+// Nothing is trusted on the strength of the algorithm. Every id is rebuilt and
+// compared to the real one, and **a row that does not rebuild exactly keeps its
+// literal id** — so a card left unsolved, a template id the data could not record,
+// or an encoding Spellbook changes tomorrow all cost a few hundred bytes rather
+// than a wrong link. A wrong "View on Commander Spellbook" is worse than a large
+// file, and this is the shape that makes that trade impossible to lose.
+function deriveCardIds(combos) {
+  const candidates = new Map();
+  for (const combo of combos) {
+    // Everything before the first `--` is the card half of the id.
+    const parts = new Set(String(combo.id).split('--')[0].split('-').filter(Boolean));
+    for (const name of combo.c) {
+      const held = candidates.get(name);
+      if (!held) candidates.set(name, new Set(parts));
+      else for (const value of [...held]) if (!parts.has(value)) held.delete(value);
+    }
+  }
+
+  // An id belongs to one card, so every card that is down to one candidate takes
+  // that id away from the others. Bounded rather than `while (changed)`: this runs
+  // on a nightly job, and a data shape that will not settle should stop rather
+  // than spin.
+  for (let round = 0; round < 10; round += 1) {
+    const taken = new Map();
+    for (const [name, set] of candidates) if (set.size === 1) taken.set([...set][0], name);
+    let changed = false;
+    for (const [name, set] of candidates) {
+      if (set.size === 1) continue;
+      for (const value of [...set]) {
+        if (taken.has(value) && taken.get(value) !== name) {
+          set.delete(value);
+          changed = true;
+        }
+      }
+    }
+    if (!changed) break;
+  }
+
+  const solved = new Map();
+  for (const [name, set] of candidates) if (set.size === 1) solved.set(name, Number([...set][0]));
+  return solved;
+}
+
+// The id a row would have, or null if it cannot be built — an unsolved card, or a
+// template requirement whose id the data could not record (compact() writes those
+// as null deliberately, and a null must never become a `0` in a URL).
+function rebuildId(combo, cardIds) {
+  const ids = combo.c.map((name) => cardIds.get(name));
+  if (ids.some((id) => typeof id !== 'number')) return null;
+  const templates = combo.t || [];
+  if (templates.some((t) => typeof t !== 'number')) return null;
+  return ids.slice().sort((a, b) => a - b).join('-')
+    + [...new Set(templates)].sort((a, b) => a - b).map((t) => '--' + t).join('');
+}
+
+// Drop `id` from every row that can be rebuilt exactly. Returns how many kept
+// theirs, which is the number worth watching: it should be a handful, and a jump
+// means the encoding moved under us.
+function dropDerivableIds(combos, cardIds) {
+  let kept = 0;
+  for (const combo of combos) {
+    if (rebuildId(combo, cardIds) === combo.id) delete combo.id;
+    else kept += 1;
+  }
+  return kept;
+}
+
 // Replace the two fields that repeat with indices into a table of their distinct
 // values. `c` holds card names and `p` holds result strings, and across 103,737
 // combos there are only ~7,400 distinct names and ~1,080 distinct results — so
@@ -532,7 +622,15 @@ async function main() {
 
   reportNewTemplates(combos, templateData);
 
+  // Before intern(), which replaces `c` with indices — this reads card names.
+  const cardIdByName = deriveCardIds(combos);
+  const keptIds = dropDerivableIds(combos, cardIdByName);
+
   const { names, results } = intern(combos);
+  // Aligned to `names`, so a row's card index is also its card-id index. A card
+  // the derivation could not settle is published as null, and every row using it
+  // kept its literal id.
+  const cardIds = names.map((name) => (cardIdByName.has(name) ? cardIdByName.get(name) : null));
 
   const payload = {
     updatedAt: new Date().toISOString(),
@@ -557,6 +655,10 @@ async function main() {
     // DeckCombos.decode() resolves both and drops these; see the note there for
     // what it buys and why the rest of the code never sees an integer.
     names,
+    // One id per distinct card, aligned to `names`. Rows carry no `id` of their
+    // own unless it could not be rebuilt from these — see deriveCardIds() above,
+    // and DeckCombos.decode() for the rebuild.
+    cardIds,
     results,
     combos,
   };
@@ -566,6 +668,9 @@ async function main() {
     + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, `
     + `${gameChangers.length} Game Changers, ${mb} MB`);
   console.log(`  interned ${names.length} card names and ${results.length} results`);
+  const unsolved = cardIds.filter((id) => id === null).length;
+  console.log(`  derived ${names.length - unsolved} card ids; ${keptIds} combo(s) kept a literal id`
+    + `${unsolved ? ` (${unsolved} card id(s) unsolved)` : ''}`);
 }
 
 module.exports = {

@@ -1634,6 +1634,55 @@ old copy off readers' disks rather than leaving 26 MB of it there forever.
 `tools/check-snapshot.js` refuses to publish a payload whose indices do not land on
 a string — that failure parses, passes a length check, and renders as nothing.
 
+### The combo id is not published, because it is derivable
+
+After interning, `id` was the biggest single field left: **27.5% of the payload on the
+wire**, spent on something the reader can work out. A Spellbook variant id is not
+opaque — it is the combo's card ids in ascending order joined with `-`, then each
+distinct template id, ascending, prefixed with `--`:
+
+```
+1110-4694-7839--112     three cards, one template slot
+215-579--85--181        two cards, two template slots
+```
+
+So the payload now ships **one card id per distinct card** — 7,364 numbers in a
+`cardIds` table aligned to `names` — instead of one composite id per combo, 103,737
+times. `DeckCombos.rebuildId()` puts them back.
+
+| | file | on the wire |
+| --- | --- | --- |
+| interned, ids published | 9.37 MB | 1.72 MB |
+| ids derived | **7.00 MB** | **1.27 MB** |
+
+Together with the interning above, that is **26.37 MB → 7.00 MB** and **2.73 MB →
+1.27 MB** from where this started.
+
+**Where the card ids come from is the careful part, and it is not upstream.** The bulk
+export's shape belongs to Spellbook, and a card id read from a field they rename would
+arrive as `undefined` inside a URL rather than as an error in a log. They are recovered
+instead from the combo ids we already hold, which cannot disagree with themselves: a
+card's id must appear in the id of *every* combo that card is in, so intersecting those
+sets narrows each card to a few candidates, and since an id belongs to exactly one card,
+a solved card frees its id from every other candidate set. Three rounds of that settles
+**7,241 of 7,364** cards.
+
+**Nothing is trusted on the strength of that.** The fetcher rebuilds every id and
+compares it to the real one, and **a row that does not rebuild exactly keeps its literal
+id**. On the current snapshot that is 162 rows out of 103,737 — the cards the derivation
+could not pin. A card left unsolved, a template requirement whose id the data could not
+record, or an encoding Spellbook changes tomorrow all cost a few hundred bytes instead
+of a wrong link.
+
+That asymmetry is the whole design. A broken page announces itself; **a permalink that
+works and shows somebody a different combo does not**, and no test the reader runs would
+catch it. So the scheme is built so that the failure mode is a slightly larger file.
+
+`tools/check-snapshot.js` enforces the other half before publishing: a row with no `id`
+*and* no way to rebuild one is refused, because that renders as a missing link rather
+than as an error. It calls the page's own `rebuildId()` rather than a copy, so the gate
+cannot drift from what readers actually run.
+
 ### Downloading the database once, not once a visit
 
 The published file is **1.7 MB on the wire** (~9 MB parsed, 35 MB in memory once decoded), and
