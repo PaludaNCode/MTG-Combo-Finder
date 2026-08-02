@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           # 22, not 20: the coverage floors below need --test-coverage-lines,
           # which landed in 22.8, and every other workflow here is already on 22.
@@ -75,12 +75,18 @@ jobs:
 
       # The report is worth having exactly when the step above went red.
       #
-      # v5 rather than v4, for the reason every action in deploy.yml is on its
-      # Node 24 major: the Node 20 runtime is deprecated and every run reported
-      # this one as forced onto 24. v4 → v5 is that runtime bump and nothing
-      # else — the immutable-artifact change that broke uploading twice under one
-      # name was v3 → v4, and this step uploads once, from a job that has already
-      # failed.
+      # v7, and this is the action where the "everything is on Node 24" claim was
+      # not true: v5 still declared `using: node20` — the deprecated runtime the
+      # whole sweep existed to leave. v7 is `node24`, so this bump is the one that
+      # actually delivers what the others were merged for.
+      #
+      # The immutable-artifact change that broke uploading twice under one name was
+      # v3 → v4; this step uploads once, from a job that has already failed. v7 adds
+      # an `archive` input, which nothing here passes.
+      #
+      # Still the least verified line in this file: `if: failure()` means a green
+      # run never reaches it, so a bump here is proved by the first run that goes
+      # red — the worst moment to find out the report no longer uploads.
       - name: Keep the report from a failing run
         if: failure()
         uses: actions/upload-artifact@v7

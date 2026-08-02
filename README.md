@@ -2642,18 +2642,33 @@ than from the HTML, and stamps its own imports out of its query string. Links be
 the two pages are deliberately left alone: `tiers.html` is navigation, and a commit
 SHA in a URL people bookmark is the opposite of the point.
 
-**Action versions are kept on their Node 24 majors.** GitHub deprecated the Node 20
-runtime, and every run was reporting the actions it uses as forced onto 24:
-`checkout@v5`, `setup-node@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`,
-`deploy-pages@v5`, and `upload-artifact@v5` in `ci.yml` — the one place
-`actions/upload-artifact` is named directly, for the Playwright report from a
-failing run. Everywhere else it arrives under `upload-pages-artifact`, so bumping
-that is what moves it.
+**Action versions are kept on a supported Node runtime**, which is what the Node 20
+deprecation was about. `checkout` and `setup-node` are on **v7**, `upload-artifact`
+on **v7**, and Pages' own three — `configure-pages@v6`, `upload-pages-artifact@v5`,
+`deploy-pages@v5` — where they are.
 
-For `upload-artifact`, v4 → v5 is the runtime bump and nothing else. The change
-worth knowing about was v3 → v4, which made artifacts immutable and so stopped two
-steps uploading under one name; this repo uploads once, from a job that has already
-failed.
+**Reviewing the v7 bumps found that this claim had been false.** The runtime an
+action uses is declared in its own `action.yml`, and reading them rather than the
+release notes is the only way to know:
+
+| | v5 | v7 |
+| --- | --- | --- |
+| `actions/checkout` | `node24` | `node24` |
+| `actions/setup-node` | `node24` | `node24` |
+| `actions/upload-artifact` | **`node20`** | `node24` |
+
+So `upload-artifact@v5` was still on the deprecated runtime this section claimed
+everything had left, and v7 is the bump that actually delivers it. For `checkout`
+and `setup-node`, v7 is not a runtime change at all — the reasoning here never
+argued for those, and they were taken on their own merits: no input changes to
+`checkout`, and for `setup-node` an ESM migration plus the removal of `always-auth`,
+which nothing here passed.
+
+**The one `setup-node` change worth checking was its caching.** v5 enabled caching
+by default with package-manager detection; v6 narrowed that to projects declaring
+`packageManager` or `devEngines.packageManager` in `package.json`. This repo declares
+neither and has no lockfile — there is nothing to cache and nothing installed — so
+the narrower behaviour is if anything the safer one.
 
 One real behaviour change came with the Node 24 sweep: **`upload-pages-artifact` v4
 stopped including hidden files**, and this deploy uploads `path: .`. That is safe here
