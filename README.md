@@ -1291,6 +1291,41 @@ Both drive the real files, unbuilt, against the same made-up deck in
 fixtures: a case added to one and not the other is a claim only half the tests
 make.
 
+### The numbers in this file are checked
+
+This README states real counts, and CLAUDE.md has long carried a note asking people
+to remember that when they change a data file. `npm run check:readme` is that note,
+mechanised, and CI runs it.
+
+Seven claims, each anchored on a phrase in the prose and compared to the file it
+describes:
+
+| claim | counted from |
+| --- | --- |
+| `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
+| `All 63 hand-written rows` | `unofficial.js` `COMBOS` |
+| `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
+| `Templates resolved \| 148 \| **134**` | `templates.json` |
+| `**134** (14 skipped)` | `templates.json` |
+| `Cards in the file \| 21,769 \| **12,472**` | `templates.json` |
+| `29 query-less templates are recorded` | `templates.json` |
+
+**A pattern that matches nothing is a failure, not a pass.** That is the half that
+makes it worth having: a checker that finds no claim and exits 0 reports success for
+work it did not do — it turns "nobody verified this" into "this was verified". So
+rewording a sentence out from under a check fails the build and names which claim to
+re-anchor.
+
+**Only what this repository can count.** Everything measured against the published
+database — 103,737 combos, 53 Game Changers, MB on the wire — is a snapshot of
+somebody else's data taken on a particular morning. Pinning those would mean a red
+build every time Spellbook published a combo, so they stay prose, and stay the kind
+of number to re-measure rather than trust.
+
+The stand-in rule is the interesting anchor: it is spelled as a word, not a digit.
+The day there are two, the sentence that has to change is "and the one stand-in
+rule", and a check looking for a digit would never have noticed.
+
 ### The decisions live where a test can reach them
 
 `app.js` is not covered by the unit tests, deliberately: it is the layout test's job,

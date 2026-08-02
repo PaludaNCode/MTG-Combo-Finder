@@ -22,6 +22,7 @@ npm run lint              # ESLint, fetched for the run — no lint dependency i
 npm run verify            # layout smoke test — REQUIRED after any UI change
 npm run test:ui           # Playwright browser tests + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
+npm run check:readme      # the README's countable numbers still match the files
 
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
@@ -94,7 +95,10 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   the combo count and the bracket check, and every row has to name the published
   combo it came from. `test/unofficial.test.js` enforces that shape.
 - **Row and result counts in the README are real measurements.** If you add rows to
-  `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too.
+  `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too —
+  `npm run check:readme` says which, and CI runs it. It also fails if a sentence it
+  anchors on has been reworded, because a check that matches nothing is a check
+  reporting success for work it did not do.
 - **Don't page Spellbook's `/variants` API.** Their rate limit is a cumulative quota;
   the fetcher streams the bulk export instead. The README explains what happens if
   you try.

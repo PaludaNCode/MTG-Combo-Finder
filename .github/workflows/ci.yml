@@ -37,6 +37,13 @@ jobs:
       - name: Unit tests, with coverage floors
         run: npm run test:coverage
 
+      # The README states real counts — tier entries, unofficial rows, templates —
+      # and they move when the files they describe do. This checks the ones this
+      # repository can count; anything measured against the published database is
+      # somebody else's data on a particular morning and stays prose.
+      - name: The README's countable numbers
+        run: npm run check:readme
+
       # Renders the real page at phone/tablet/desktop widths and fails on
       # horizontal overflow, a collapse control that doesn't collapse, or the
       # desktop columns not splitting.
