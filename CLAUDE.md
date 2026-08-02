@@ -94,6 +94,11 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **Don't page Spellbook's `/variants` API.** Their rate limit is a cumulative quota;
   the fetcher streams the bulk export instead. The README explains what happens if
   you try.
+- **The published payload interns `c` and `p`** into `names`/`results` tables —
+  `DeckCombos.decode()` resolves them right after the parse and every other line
+  goes on reading strings. Anything that loads `combos.json` has to call it
+  (`search.js` and four tools do). It is a no-op on a payload without the tables,
+  which is why the fixtures still work.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
 
 ## Conventions

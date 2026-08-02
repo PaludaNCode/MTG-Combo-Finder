@@ -18,14 +18,18 @@ const TEMPLATES_URL = 'https://backend.commanderspellbook.com/templates/?limit=1
 const UA = 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder; template usage)';
 
 const TIERS = require('../result-tiers.js');
+const { decode } = require('../combos.js');
 
 const out = [];
 const say = (line = '') => { out.push(line); console.log(line); };
 
+// decode() resolves the payload's interned card names back into strings — this
+// file prints them. A no-op on anything without the tables, including the
+// templates.json this also fetches.
 async function getJson(url) {
   const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': UA } });
   if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
-  return res.json();
+  return decode(await res.json());
 }
 
 async function allTemplates() {

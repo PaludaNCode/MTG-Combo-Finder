@@ -72,7 +72,7 @@ async function main() {
 
   const res = await fetch(COMBOS_URL, { headers: { Accept: 'application/json', 'User-Agent': UA } });
   if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
-  const data = await res.json();
+  const data = DeckCombos.decode(await res.json());
   say(`Matched against ${data.combos.length.toLocaleString()} combos published ${data.updatedAt}.`);
   say(`${Object.keys(data.templates || {}).length} template card lists, `
     + `${Object.keys(data.templateCards || {}).length} cards fill at least one.`);

@@ -1636,7 +1636,7 @@
   // ---- combo database ------------------------------------------------------
   //
   // Downloading, parsing and matching all happen in search-worker.js. The
-  // published file is ~25 MB of JSON over ~100k combos, and doing that here
+  // published file is ~9 MB of JSON over ~100k combos, and doing that here
   // meant the page stopped responding for as long as it took.
 
   // Everything we learn about a load, kept so a failure can be shown in full

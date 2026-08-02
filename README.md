@@ -1521,9 +1521,56 @@ Consequences worth knowing:
   none of them is recognised, colour filtering is switched off rather than
   guessed at.
 
+### The two fields that repeat are published once each
+
+Of the payload's 26.37 MB, the combos array was 25.23 MB, and two fields made up
+most of it:
+
+| field | was | what it is |
+| --- | --- | --- |
+| `p` | 13.19 MB | the results, e.g. "Infinite storm count" |
+| `c` | 7.76 MB | card names |
+| `id` | 2.30 MB | the Spellbook variant id |
+| `i`, `pop`, `t` | 1.32 MB | colour identity, play count, template slots |
+
+Across 103,737 combos there are **1,079 distinct result strings** and **7,364
+distinct card names**. `"Infinite ETB"` was being written to the file some forty
+thousand times. Both are now published as indices into two tables at the top of the
+payload, `names` and `results`:
+
+| | file | on the wire | heap | parse |
+| --- | --- | --- | --- | --- |
+| before | 26.37 MB | 2.73 MB | 69 MB | 170 ms |
+| after | **9.37 MB** | **1.72 MB** | **35 MB** | 165 ms |
+
+**The heap number is the one that matters, and it is worth being precise about where
+it comes from.** `JSON.parse` builds a separate string for every occurrence, so the
+old payload landed as roughly half a million short strings — 69 MB that the worker
+then holds for the life of the session, deliberately, so the second search is free.
+On a phone that is the kind of resident set a browser reclaims without asking.
+
+`DeckCombos.decode()` resolves the indices once, immediately after the parse, and
+hands back **the same string object** for every occurrence. The arrays end up holding
+pointers to 8,443 strings instead of half a million strings.
+
+**Which is why decoding is not a compromise.** The obvious alternative is to keep the
+indices and teach the thirty-odd call sites in `combos.js` to compare integers.
+Measured: that also lands at 35 MB. The saving is in the sharing, not in the
+integers, so the rest of the code never learns that any of this happened — and
+`matchDeck` was never the bottleneck anyway, at 43–93 ms against the real snapshot.
+
+The parse time barely moves in Node. In the browser it halves, which is what the
+footer's `parse` figure is for.
+
+A payload without the tables is returned untouched, so the test fixtures and any
+older local `combos.json` keep working. `CACHE_NAME` moves to `-v3`, which drops the
+old copy off readers' disks rather than leaving 26 MB of it there forever.
+`tools/check-snapshot.js` refuses to publish a payload whose indices do not land on
+a string — that failure parses, passes a length check, and renders as nothing.
+
 ### Downloading the database once, not once a visit
 
-The published file is **2.9 MB on the wire** (~25 MB parsed), and
+The published file is **1.7 MB on the wire** (~9 MB parsed, 35 MB in memory once decoded), and
 `raw.githubusercontent.com` serves it with `cache-control: max-age=300`. So every visit
 downloaded the whole database again — and so did any reload five minutes into a session,
 to learn that a once-a-day cron had not run since. The parsed copy was held in a variable,
@@ -1531,13 +1578,13 @@ which covers repeat searches in one visit and nothing else.
 
 It is now kept in **Cache Storage**, keyed on the URL. A visit that finds a copy uses it
 and checks for a newer one **in the background**, conditionally: `If-None-Match` against
-the stored ETag, so a 304 costs a few hundred bytes instead of 2.9 MB. When something has
+the stored ETag, so a 304 costs a few hundred bytes instead of 1.7 MB. When something has
 changed, the new copy is stored for next time rather than swapped in mid-session — the data
 refresh runs daily, so a page showing this morning's snapshot instead of this afternoon's
 is not worth a surprise. The footer says which one it is either way.
 
 **An abandoned cache version is deleted, not just ignored.** Bumping `CACHE_NAME` stops the
-page *reading* an old copy; it does not remove it, so the first version's ~28 MB sat in the
+page *reading* an old copy; it does not remove it, so the first version's ~26 MB sat in the
 reader's browser indefinitely and every future shape change would have added another. Every
 cache matching `mtg-combo-finder-data-` that is not the current one is now dropped — once per
 session, alongside the open rather than before it, never awaited, and every failure ignored.
@@ -1557,7 +1604,7 @@ and impossible to notice by hand.
 
 ### The search runs beside the page, not in it
 
-Downloading ~25 MB of JSON, parsing it, and walking ~100k combos all used to happen
+Downloading the database, parsing it, and walking ~100k combos all used to happen
 between one paint and the next. None of it touches the DOM, so `search-worker.js` does
 all three off-thread and posts back only what gets drawn — a few hundred rows, not the
 database. The dataset is parsed once and kept there, so the second search of a session is

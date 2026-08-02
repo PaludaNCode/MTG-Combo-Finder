@@ -118,3 +118,56 @@ test('shape problems fail the comparison even when every count grew', () => {
   for (const r of broken.combos) delete r.p;
   assert.match(fails(compare(broken, snapshot(1000))), /no usable `p`/);
 });
+
+// ---- the interned payload --------------------------------------------------
+//
+// This gate runs on the file as published, where `c` and `p` hold indices into two
+// string tables. Refusing to read that shape would mean the check stops working on
+// the day the payload changes, which is the day it matters most.
+
+const internedSnapshot = (n, extra) => Object.assign({
+  updatedAt: '2026-08-02T06:48:06.618Z',
+  names: ['Basalt Monolith'],
+  results: ['Infinite colorless mana'],
+  combos: Array.from({ length: n }, (_, i) => ({ id: 'id-' + i, c: [0], p: [0], i: 'C' })),
+  cardIdentity: Object.fromEntries(Array.from({ length: n }, (_, i) => ['Card ' + i, 'C'])),
+  gameChangers: ['Sol Ring'],
+  templateCards: { 'Basalt Monolith': [1] },
+}, extra);
+
+test('the interned shape passes on its own terms', () => {
+  assert.deepStrictEqual(checkShape(internedSnapshot(100)), []);
+});
+
+// The failure this is really for. Indices that point past the end of the table
+// parse fine, pass a length check, and render as nothing at all.
+test('an index that lands nowhere is caught', () => {
+  const data = internedSnapshot(3);
+  data.combos[0].c = [7];
+  data.combos[1].p = [9];
+  const problems = checkShape(data).join(' | ');
+  assert.match(problems, /1 row\(s\) with no usable `c`/);
+  assert.match(problems, /1 row\(s\) with no usable `p`/);
+});
+
+// One line, not 103,737 of them: a table going missing takes every row with it.
+test('a missing table is reported once', () => {
+  const data = internedSnapshot(50);
+  delete data.names;
+  const problems = checkShape(data).join(' | ');
+  assert.match(problems, /rows index a `names` table that is not in the payload/);
+});
+
+test('the tables are counted, so one shrinking is noticed', () => {
+  const previous = internedSnapshot(1000);
+  const next = internedSnapshot(1000, { names: [] });
+  assert.match(fails(compare(next, previous)), /interned card names fell 100/);
+});
+
+// The first publish of the new shape compares against a payload that has no tables
+// at all. Gaining a count is not a regression.
+test('gaining the tables is growth, not a drop', () => {
+  const previous = snapshot(1000); // plain strings, no tables
+  const { failures } = compare(internedSnapshot(1000), previous);
+  assert.deepStrictEqual(failures, []);
+});

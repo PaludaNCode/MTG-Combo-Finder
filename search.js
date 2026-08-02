@@ -1,7 +1,7 @@
 // Downloading the combo database and matching a deck against it.
 //
 // Kept out of app.js because neither job belongs on the thread drawing the page:
-// the published file is ~25 MB of JSON and the database is ~100k combos, so
+// the published file is ~9 MB of JSON and the database is ~100k combos, so
 // parsing and matching it in the window means the window stops responding.
 // search-worker.js imports this file and does both off-thread; index.html also
 // loads it, so a browser with no Worker still has a way through (see app.js).
@@ -20,7 +20,11 @@
 
   // Bumping the name is how a payload shape change abandons old copies: a cached
   // response from before a new field existed would otherwise be served forever.
-  const CACHE_NAME = 'mtg-combo-finder-data-v2';
+  // v3: the payload now interns card names and result strings into two tables
+  // (see DeckCombos.decode). A v2 copy has neither, and while decode() would pass
+  // it through untouched, an old cached file is also three times the size for the
+  // same data — so abandoning it is the point rather than a side effect.
+  const CACHE_NAME = 'mtg-combo-finder-data-v3';
   // Which caches are ours to tidy up. Named by prefix rather than by listing the
   // old versions, so bumping the name above is the only step a shape change needs.
   const CACHE_PREFIX = 'mtg-combo-finder-data-';
@@ -74,7 +78,7 @@
   }
 
   // Abandoning a copy is not the same as deleting it. Bumping CACHE_NAME stops us
-  // *reading* the old one and leaves it on the reader's disk for good — a ~28 MB
+  // *reading* the old one and leaves it on the reader's disk for good — a 26 MB
   // orphan, per shape change, that nothing will ever ask for again. So every
   // cache of ours that is not the current one is dropped.
   //
@@ -119,7 +123,7 @@
 
   // Ask whether the copy we hold is still current, without downloading it again.
   // raw.githubusercontent.com sends `cache-control: max-age=300`, so the browser
-  // would otherwise refetch the whole file five minutes into a session — 2.9 MB
+  // would otherwise refetch the whole file five minutes into a session — 1.7 MB
   // on the wire to learn that a once-a-day cron has not run since.
   async function revalidate(cache, url, held) {
     try {
@@ -212,6 +216,12 @@
       diagnostics.likelyCause = 'The combo database is not valid JSON.';
       throw new Error('Could not read the combo database');
     }
+    // Indices into the payload's two string tables become the strings themselves,
+    // sharing one object per distinct value — 69 MB of heap becomes 35 MB, and no
+    // other line in this file or in combos.js has to know. Counted inside the
+    // parse timing on purpose: it is part of the cost of turning bytes into a
+    // dataset, and reporting it separately would invite reading it as optional.
+    DeckCombos.decode(parsed);
     diagnostics.msParse = took(startedParse);
     if (!parsed.combos || !parsed.combos.length) {
       diagnostics.likelyCause = 'The combo database downloaded but contains no combos.';
@@ -223,7 +233,7 @@
   }
 
   // Match a deck and hand back only what the page draws. The dataset itself
-  // stays here: posting 25 MB back to the window every search would undo the
+  // stays here: posting the whole dataset back to the window every search would undo the
   // point of doing the work off-thread.
   function matchAgainst(data, entries) {
     const deckNames = DeckCombos.deckNameSet(entries);

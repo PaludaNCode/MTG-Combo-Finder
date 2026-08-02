@@ -46,27 +46,60 @@ const COUNTS = [
   { key: 'cardIdentity', of: (d) => Object.keys(d.cardIdentity || {}).length, what: 'card identities' },
   { key: 'gameChangers', of: (d) => (d.gameChangers || []).length, what: 'Game Changers' },
   { key: 'templateCards', of: (d) => Object.keys(d.templateCards || {}).length, what: 'template cards' },
+  // The string tables. A table shrinking without the combo count shrinking means
+  // rows are pointing somewhere new, which is a shape change wearing a normal
+  // day's clothes.
+  { key: 'names', of: (d) => (d.names || []).length, what: 'interned card names' },
+  { key: 'results', of: (d) => (d.results || []).length, what: 'interned results' },
 ];
 
 // What the page reads off every row. Checked here rather than trusted, because an
 // upstream field rename does not error — it produces rows the page renders as blank,
 // and the first report of it is somebody looking at an empty combo.
+//
+// This runs on the file as published, so `c` and `p` hold indices into the two
+// string tables rather than the strings themselves — DeckCombos.decode() resolves
+// them on the reader's side. Both shapes are accepted, because a local combos.json
+// from before the tables existed should still be checkable, and because the shape
+// is exactly the thing under test: refusing to read one of them would mean the gate
+// stops working on the day the payload changes, which is the day it matters most.
 function checkShape(data) {
   const problems = [];
   const rows = Array.isArray(data.combos) ? data.combos : [];
   if (!rows.length) problems.push('no combos array');
+
+  const names = Array.isArray(data.names) ? data.names : null;
+  const results = Array.isArray(data.results) ? data.results : null;
+  // An entry is usable if it is a non-empty string, or an index that lands on one.
+  // A row full of integers pointing past the end of the table is the failure this
+  // is really for: it parses, it passes a length check, and it renders as nothing.
+  const usable = (value, table) => (
+    typeof value === 'string'
+      ? Boolean(value)
+      : Number.isInteger(value) && Boolean(table && typeof table[value] === 'string' && table[value])
+  );
+  const allUsable = (list, table) => Array.isArray(list) && list.every((v) => usable(v, table));
 
   // Every row, not a sample. It is one pass over data already in memory, and a
   // sample answers "probably fine", which is not what a publish gate is for.
   const missing = { id: 0, c: 0, i: 0, p: 0 };
   for (const row of rows) {
     if (!row || typeof row.id !== 'string' || !row.id) missing.id += 1;
-    if (!Array.isArray(row && row.c) || !row.c.length) missing.c += 1;
+    if (!Array.isArray(row && row.c) || !row.c.length || !allUsable(row.c, names)) missing.c += 1;
     if (typeof (row && row.i) !== 'string') missing.i += 1;
-    if (!Array.isArray(row && row.p)) missing.p += 1;
+    if (!allUsable(row && row.p, results)) missing.p += 1;
   }
   for (const [field, n] of Object.entries(missing)) {
     if (n) problems.push(`${n} row(s) with no usable \`${field}\``);
+  }
+
+  // A table that has gone missing takes every row with it, so it is worth saying
+  // once rather than 103,737 times.
+  if (rows.some((r) => (r.c || []).some(Number.isInteger)) && !names) {
+    problems.push('rows index a `names` table that is not in the payload');
+  }
+  if (rows.some((r) => (r.p || []).some(Number.isInteger)) && !results) {
+    problems.push('rows index a `results` table that is not in the payload');
   }
 
   if (typeof data.updatedAt !== 'string' || !data.updatedAt) problems.push('no updatedAt');
