@@ -62,6 +62,8 @@ const VIEWPORTS = [
   // Combos we believe in that Spellbook has not published, in their own panel
   // below the published ones.
   { name: 'unofficial combos', width: 1440, height: 900, deck: 'unofficial', kind: 'unofficial' },
+  // And the one row that took two steps to get there, which has to say so.
+  { name: 'unofficial (two swaps)', width: 1440, height: 900, deck: 'chained', kind: 'unofficial', steps: 2 },
 ];
 
 function findBrowser() {
@@ -754,7 +756,12 @@ async function runUnofficial(vp) {
       ok: true,
       name: vp.name,
       requested: vp.width,
+      steps: vp.steps || 1,
       unofficial: {
+        // How many swaps the note spells out, which has to be how many the row
+        // actually took: a two-step row shown as one step is the page claiming
+        // more than the file does.
+        steps: row ? (row.querySelector('.derived-note').textContent.match(/in place of/g) || []).length : 0,
         title: panel ? panel.querySelector('.panel-title').textContent : null,
         count: panel ? panel.querySelector('.panel-count').textContent : null,
         rows: doc.querySelectorAll('#unofficial .combo').length,
@@ -1160,6 +1167,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!['verified', 'derived'].includes(u.badge)) wrong.push(`no confidence badge: "${u.badge}"`);
       if (!(u.badgeClass || '').includes(u.badge)) wrong.push('the badge is not styled by its confidence');
       if (!/in place of/.test(u.note)) wrong.push('the row does not say which card was swapped');
+      // A row two swaps deep has to print both. The claim gets weaker with each
+      // step, and a reader who is only shown the last one cannot see that.
+      const steps = v.steps || 1;
+      if (u.steps !== steps) wrong.push(`the note spells out ${u.steps} swap(s), expected ${steps}`);
       if (u.note.length < 60) wrong.push(`the reasoning is missing: "${u.note}"`);
       // The link goes to the published combo it came from, not to a page for this
       // one — there is no such page, and a dead Spellbook link would be worse than

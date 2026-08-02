@@ -136,6 +136,10 @@ const DECKS = {
   // published combo to find and precisely one of ours. Real card names, because
   // the row being matched is the real one out of unofficial.js.
   unofficial: ['1 Scurry Oak', '1 Necrosynthesis', '1 Viscera Seer'].join('\n'),
+  // The same, for the one row that is two swaps from a published combo rather
+  // than one. A chained row makes a weaker claim than a single swap, so the page
+  // has to spell out both steps rather than quietly showing the last one.
+  chained: ['1 Kitchen Finks', '1 Heroic Feast', '1 Hammerhead, Maggia Boss'].join('\n'),
 };
 
 module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT };

@@ -202,13 +202,18 @@
     if (derived) {
       const note = el('p', 'derived-note');
       note.appendChild(el('span', 'derived-badge ' + derived.confidence, derived.confidence));
-      if (derived.swap) {
-        note.appendChild(document.createTextNode(' '));
-        note.appendChild(el('span', 'card-name', derived.swap.in));
+      // Usually one swap. A row may instead name a chain of them, and then the
+      // reader is owed every step: "B in place of A, then D in place of C" is a
+      // weaker claim than one swap, and hiding the second step would be the one
+      // thing this note exists to prevent.
+      const steps = derived.swaps || (derived.swap ? [derived.swap] : []);
+      steps.forEach((step, i) => {
+        note.appendChild(document.createTextNode(i ? ', then ' : ' '));
+        note.appendChild(el('span', 'card-name', step.in));
         note.appendChild(document.createTextNode(' in place of '));
-        note.appendChild(el('span', 'card-name', derived.swap.out));
-        note.appendChild(document.createTextNode('. '));
-      }
+        note.appendChild(el('span', 'card-name', step.out));
+        if (i === steps.length - 1) note.appendChild(document.createTextNode('. '));
+      });
       note.appendChild(document.createTextNode(derived.why || ''));
       card.appendChild(note);
     }

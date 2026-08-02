@@ -1554,7 +1554,7 @@ functional twin, and checking whether that variant exists:
 | Quina, Qu Gourmet + Academy Manufactor + Warren Soultrader | `3000-4231-5670` (Chatterfang version) | **Verified against the cards.** Quina adds a 1/1 Frog to any token creation, so it refuels the sacrifice loop exactly as Chatterfang does |
 | Lunarch Veteran + Heroic Feast + Scurry Oak | `360-4186-7743` (Soul Warden version) | High — Lunarch Veteran's front face is Soul Warden's text, and every other card with that text has the variant |
 | Essence Warden + Hapatra, Vizier of Poisons + Yawgmoth, Thran Physician (×3, with Anointed Procession / Parallel Lives / Doubling Season) | the Soul Warden versions | High — Soul Warden and Essence Warden are functional duplicates |
-| Kitchen Finks + Heroic Feast + any of 15 free sacrifice outlets | the Archangel of Thune versions | **Verified against the cards.** Both turn the Finks' 2 life into the +1/+1 counter that cancels persist; Spellbook publishes all 15 with four other lifegain-to-counter engines and none with this one |
+| Kitchen Finks + Heroic Feast + any of 15 free sacrifice outlets (and a 16th two steps deep) | the Archangel of Thune versions | **Verified against the cards.** Both turn the Finks' 2 life into the +1/+1 counter that cancels persist; Spellbook publishes all 15 with four other lifegain-to-counter engines and none with this one |
 | Hammerhead, Maggia Boss in 1,889 loops | the Bartolomé del Presidio versions, and the Carrion Feeder ones where Bartolomé has none | **Verified against the cards.** Hammerhead and Bartolomé have one ability each and it is the same sentence. Declared once as a stand-in rule rather than written out — see below |
 
 **A high substitution score is not a verdict.** Two cards filling the same slot in
@@ -1572,7 +1572,7 @@ Everything above comes from Spellbook and is shown on their authority. `unoffici
 is the one exception — the surviving output of that substitution audit, rendered in its
 own panel below **Combos in your deck** and never counted among them.
 
-### One shape, fifteen rows: Kitchen Finks and Heroic Feast
+### One shape, sixteen rows: Kitchen Finks and Heroic Feast
 
 Kitchen Finks gains 2 life on entry and has persist, so any free sacrifice outlet
 loops it the moment something puts a +1/+1 counter on it — the counter cancels the
@@ -1602,7 +1602,32 @@ do the same job and two cards that are the same card.
 creatures you control*, which Archangel gives and Heroic Feast does not — the loop
 spends its counter cancelling the persist counter, and the second target only grows
 something if another creature is out, which these three cards do not guarantee. That
-line comes off all 15 rows and nothing replaces it.
+line comes off.
+
+Four rows get a weaker version back, off the outlet rather than off Heroic Feast:
+Carrion Feeder, Bartolomé del Presidio, Bloodflow Connoisseur and Phantom Train each
+put a +1/+1 counter on *themselves* every time they eat something. Those four accrue
+counters on one creature. The other eleven claim nothing.
+
+**The sixteenth row is the only one in the file that is two swaps deep**, and it is
+allowed because the two steps are not the same kind of claim:
+
+```
+2086-2919-2921   Kitchen Finks + Archangel of Thune + Bartolomé del Presidio
+  → Heroic Feast for Archangel of Thune          a judgement about two cards
+  → Hammerhead for Bartolomé del Presidio        the same sentence, different name
+= Kitchen Finks + Heroic Feast + Hammerhead, Maggia Boss
+```
+
+Chaining an identity onto a judgement leaves exactly the risk the judgement already
+carried; chaining two judgements would not. A row may therefore declare `swaps: [...]`
+instead of `swap`, and the page prints every step — *"Heroic Feast in place of
+Archangel of Thune, then Hammerhead, Maggia Boss in place of Bartolomé del Presidio"* —
+because a weaker claim shown as a stronger one is the single thing that note exists to
+prevent. `test/unofficial.test.js` checks each step finds the card it claims to
+replace, that the chain lands on the row's cards, that no row goes deeper than two,
+and that the second step is a declared stand-in rather than another judgement; the
+layout harness checks the page prints both.
 
 ### What this cannot find: a card Spellbook has never used
 
@@ -1710,9 +1735,17 @@ official or ours, can ever include those.
   data appears to do this on purpose, but the rule cannot prove that and this is
   the shape it would get wrong.
 - **Our own rows.** A rule reads published combos only. Generating from an
-  unofficial row would be a swap on top of a swap, and every row on this page is
-  one step from something Spellbook published. This is why the six Necrosynthesis
-  rows have no Hammerhead versions.
+  unofficial row would be a swap on top of a swap, and all but one row on this page
+  is one step from something Spellbook published. This is why the six Necrosynthesis
+  rows have no Hammerhead versions. Where that second step is worth taking it is
+  written out by hand, with both swaps named — see the Kitchen Finks section above.
+  Three such rows exist in principle and one is in the file:
+
+  | Two steps deep | Step 1 (our judgement) | Step 2 (the identity) | In the file |
+  |---|---|---|---|
+  | Kitchen Finks + Heroic Feast + Hammerhead | Heroic Feast for Archangel of Thune | Hammerhead for Bartolomé | **yes** |
+  | Scurry Oak + Necrosynthesis + Hammerhead | Necrosynthesis for Sadistic Glee | Hammerhead for Carrion Feeder | no |
+  | Herd Baloth + Necrosynthesis + Hammerhead | Necrosynthesis for Sadistic Glee | Hammerhead for Carrion Feeder | no |
 
 **And the evidence is checked, both kinds.** `tools/verify-unofficial.js` reads
 every hand-written row's `from.id` against the live data and fails if it does not
@@ -1745,7 +1778,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 24 hand-written rows and the one stand-in rule are `verified`. `derived` stays
+All 25 hand-written rows and the one stand-in rule are `verified`. `derived` stays
 in the model because it is the honest label for a row found before its cards have
 been read, and the next one will need it.
 

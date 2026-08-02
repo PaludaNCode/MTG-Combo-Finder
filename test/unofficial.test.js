@@ -33,13 +33,43 @@ test('unofficial: every row carries the evidence the page prints', () => {
     assert.ok(['verified', 'derived'].includes(row.confidence), at + ': bad confidence');
     assert.ok(row.from && /^\d+(-\d+)+$/.test(row.from.id), at + ': no published combo cited');
     assert.ok(row.why && row.why.length > 20, at + ': no reasoning given');
-    // The swap has to be a swap: one card out, one in, against the cited combo.
-    assert.ok(row.from.cards.includes(row.swap.out), at + ': the swapped-out card is not in it');
-    assert.ok(row.cards.includes(row.swap.in), at + ': the swapped-in card is not in the result');
+    // Almost every row is one swap. A row may declare a chain instead, and then
+    // the chain is what has to add up: each step has to find the card it claims
+    // to replace, in the list as the step before it left it, and the last step
+    // has to land on the cards the row says it has. A row cannot quietly change
+    // two cards under cover of naming one.
+    const chain = row.swaps || [row.swap];
+    assert.ok(chain.length && chain.every(Boolean), at + ': no swap stated');
+    assert.ok(!(row.swaps && row.swap), at + ': states both a swap and a chain of them');
+    let cards = row.from.cards.slice();
+    chain.forEach((step, i) => {
+      assert.ok(cards.includes(step.out), at + ': step ' + (i + 1) + ' replaces a card that is not there');
+      cards = cards.map((c) => (c === step.out ? step.in : c));
+    });
+    assert.ok(row.cards.includes(chain[chain.length - 1].in), at + ': the last card swapped in is not in the result');
     assert.deepStrictEqual(
-      row.from.cards.map((c) => (c === row.swap.out ? row.swap.in : c)).slice().sort(),
+      cards.slice().sort(),
       row.cards.slice().sort(),
-      at + ': the two card lists differ by more than the stated swap'
+      at + ': the two card lists differ by more than the stated swaps'
+    );
+  });
+});
+
+// A chain is a weaker claim than a single swap and has to look like one on the
+// page, so it is worth knowing how many rows make it. Every extra step is another
+// judgement the reader is being asked to accept at once.
+test('unofficial: a chained row is the exception, not the shape', () => {
+  const chained = COMBOS.filter((r) => r.swaps);
+  assert.ok(chained.length <= 3, chained.length + ' rows are more than one swap deep');
+  chained.forEach((row) => {
+    assert.strictEqual(row.swaps.length, 2, row.cards.join(' + ') + ': deeper than two swaps');
+    // The second step has to be a stand-in rule rather than another judgement:
+    // that is the whole argument for allowing a chain at all.
+    const rule = STAND_INS.find((s) => nameKey(s.card) === nameKey(row.swaps[1].in));
+    assert.ok(rule, row.cards.join(' + ') + ': the second swap is not a declared stand-in');
+    assert.ok(
+      rule.for.some((src) => nameKey(src.card) === nameKey(row.swaps[1].out)),
+      row.cards.join(' + ') + ': ' + rule.card + ' does not stand in for ' + row.swaps[1].out
     );
   });
 });

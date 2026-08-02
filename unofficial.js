@@ -191,7 +191,7 @@
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',
       ],
     },
-     // ---- one shape, fifteen rows ---------------------------------------------
+     // ---- one shape, sixteen rows ---------------------------------------------
     //
     // Kitchen Finks gains 2 life when it enters and has persist, so a free
     // sacrifice outlet turns it into a loop as soon as something puts a +1/+1
@@ -220,12 +220,17 @@
     // has to target. Here that difference costs nothing. Elsewhere it would, and
     // a rule would have generated 347 rows without knowing where.
     //
-    // What it does cost is the one result these rows drop. Every source combo
-    // claims "Infinite +1/+1 counters on creatures you control", which Archangel
-    // gives you and Heroic Feast does not: the loop spends its counter cancelling
-    // the persist counter, and the second target only grows something if you have
-    // another creature out — which these three cards do not guarantee. So that
-    // line comes off, and nothing replaces it.
+    // What it does cost is one result. Every source combo claims "Infinite +1/+1
+    // counters on creatures you control", which Archangel gives you and Heroic
+    // Feast does not: the loop spends its counter cancelling the persist counter,
+    // and the second target only grows something if you have another creature
+    // out, which these three cards do not guarantee. So that line comes off.
+    //
+    // Four rows get a weaker version of it back, off the outlet rather than off
+    // Heroic Feast. Carrion Feeder, Bartolome del Presidio, Bloodflow Connoisseur
+    // and Phantom Train each put a +1/+1 counter on *themselves* every time they
+    // eat something, so those four do accrue counters — on one creature, not on
+    // every creature you control. The other eleven claim nothing.
     {
       cards: [
         'Kitchen Finks', 'Heroic Feast', 'Altar of Dementia',
@@ -289,6 +294,7 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -332,6 +338,7 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -353,6 +360,7 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -396,6 +404,7 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -549,6 +558,42 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+    // The one row that is two swaps deep.
+    //
+    // Every other row in this file is one step from something Spellbook
+    // published, and that rule is what keeps the evidence checkable. This one
+    // takes a second step, and it is allowed because the two steps are not the
+    // same kind of claim. Heroic Feast for Archangel of Thune is a judgement
+    // about two cards that do the same job here — the fifteen rows above are
+    // that judgement. Hammerhead for Bartolome del Presidio is not a judgement
+    // at all: the two cards have one ability each and it is the same sentence,
+    // which is why STAND_INS declares it once for 1,889 combos.
+    //
+    // Chaining an identity onto a judgement leaves exactly the risk the
+    // judgement already carried. Chaining two judgements would not, and the page
+    // shows both steps rather than presenting this as one swap.
+    {
+      cards: ['Kitchen Finks', 'Heroic Feast', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: {
+        id: '2086-2919-2921',
+        cards: ['Kitchen Finks', 'Archangel of Thune', 'Bartolomé del Presidio'],
+      },
+      swaps: [
+        { out: 'Archangel of Thune', in: 'Heroic Feast' },
+        { out: 'Bartolomé del Presidio', in: 'Hammerhead, Maggia Boss' },
+      ],
+      why: 'Hammerhead eats the Finks for free; persist returns it with a -1/-1 counter, '
+        + 'its entry gains 2 life, and Heroic Feast spends one of those two targets putting '
+        + 'a +1/+1 counter back on it, so it can persist again. Hammerhead is Bartolomé del '
+        + 'Presidio\'s ability word for word — and mono-black rather than white-black, which '
+        + 'is the only difference this loop can see.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
   ];
