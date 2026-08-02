@@ -138,6 +138,21 @@ Of the features, only **F7** exists — and it is no longer a prototype: it has 
 
 ## Decisions waiting on you
 
+**Archidekt may have stopped letting us read decks, and it takes you ten seconds to
+settle.** Paste an Archidekt deck URL into the live page. The evidence that it is broken
+is strong but indirect: asked as `https://archidekt.com` they answer
+`Access-Control-Allow-Origin: https://archidekt.com`, and asked as us they answer
+`http://localhost:3000` — an allowlist we are not on, and a browser discards a response
+that names somebody else. The probe that found it proved itself in the same run, since
+Scryfall answered exactly as a browser expects.
+
+Nothing has been changed on the strength of that, because it would mean removing the one
+deck URL the page advertises. If it does fail for you, the fix is small and now has
+somewhere good to point: flip `SITES.archidekt.browserImport` to `false` with a `why`
+that sends people to the file drop, exactly as Moxfield already does. The page's error
+path is already honest in the meantime — it says the browser blocked the request and
+offers the export.
+
 **Dependabot opened three PRs within a minute of the merge**, and they are not a rubber
 stamp:
 
@@ -463,7 +478,16 @@ what £20 unlocks" — turns a ranked list into a shopping decision. Costs a sec
 fetch and a `connect-src` entry, or a join in the nightly job if the price data is
 already reachable from an Action.
 
-### F4 — More ways to get a deck in (**S** each)
+### F4 — More ways to get a deck in (**S** each) — **shipped, and the URL half is closed**
+
+*Both halves answered. The file drop is built and live. The extra deck sites are not
+worth an adapter: `tools/probe-cors.js` asked all of them on 2 Aug 2026 and Deckstats,
+MTGGoldfish and TappedOut's text export all refuse cross-origin reads outright, while
+TappedOut's API allows the read and then demands a login. The README has the table.*
+
+*It also turned up something nobody was looking for: **Archidekt appears to have stopped
+allowing us**, which would mean the one deck URL the page advertises cannot work. Not yet
+confirmed against the live page.*
 
 Only Archidekt loads from a URL, and the README explains convincingly why Moxfield
 never will. But the structure in `parser.js` — the `SITES` table, `fromMoxfield()`,

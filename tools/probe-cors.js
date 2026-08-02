@@ -75,7 +75,43 @@ const CANDIDATES = [
     what: 'candidate — their text download',
     url: 'https://www.mtggoldfish.com/deck/download/0',
   },
+  // Asked as somebody else, on purpose. Archidekt answers our origin with
+  // `Access-Control-Allow-Origin: http://localhost:3000` and `Vary: Origin`,
+  // which is either an allowlist we are not on or a header pinned to one value
+  // for everyone — and those are different problems. Asking as their own site
+  // separates them: an echo here means an allowlist, and an allowlist means the
+  // refusal above is real rather than an artefact of how this probe asks.
+  {
+    site: 'archidekt-as-themselves',
+    what: 'DIAGNOSTIC — does Archidekt echo any origin, or always name localhost?',
+    url: 'https://archidekt.com/api/decks/1/',
+    origin: 'https://archidekt.com',
+  },
 ];
+
+// What a browser actually puts on a cross-origin GET, as closely as a server-side
+// fetch can manage. This is not decoration: the first run of this probe sent bare
+// Node defaults and got a 400 from Scryfall, who require a User-Agent and reject
+// requests without one — an answer about our own request, not about their CORS.
+//
+// The Sec-Fetch-* trio is set by the browser and cannot be forged from a page, so
+// a server is entitled to key on them; sending them is the difference between
+// asking "what do you send a script" and "what do you send a browser", and only
+// the second question is the one being asked here.
+//
+// The User-Agent is this project's own rather than a copied Chrome string. A site
+// that refuses us on that basis is telling us something true, and pretending to be
+// a browser to get a nicer answer would be measuring a request we cannot make.
+const BROWSER_HEADERS = {
+  Origin: ORIGIN,
+  Referer: ORIGIN + '/',
+  Accept: '*/*',
+  'Accept-Language': 'en-GB,en;q=0.9',
+  'User-Agent': 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder)',
+  'Sec-Fetch-Mode': 'cors',
+  'Sec-Fetch-Site': 'cross-site',
+  'Sec-Fetch-Dest': 'empty',
+};
 
 const TIMEOUT_MS = 20000;
 
@@ -83,17 +119,12 @@ async function probe(candidate) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(candidate.url, {
-      headers: {
-        Origin: ORIGIN,
-        // What a browser sends. Not a spoof of one: the point is to be as close
-        // to the real request as a server-side fetch can get, so the answer
-        // transfers.
-        Accept: '*/*',
-      },
-      redirect: 'follow',
-      signal: controller.signal,
-    });
+    // Per-candidate origin, for the diagnostic rows that deliberately ask as
+    // somebody else. Everything else asks as the deployed page, which is the
+    // only origin whose answer we actually have to live with.
+    const asking = candidate.origin || ORIGIN;
+    const headers = Object.assign({}, BROWSER_HEADERS, { Origin: asking, Referer: asking + '/' });
+    const res = await fetch(candidate.url, { headers, redirect: 'follow', signal: controller.signal });
     const allow = res.headers.get('access-control-allow-origin');
     return {
       status: res.status,
@@ -104,7 +135,8 @@ async function probe(candidate) {
       // deck. Anything else — absent, or some other origin — means the browser
       // discards the response and the page sees a TypeError with no status,
       // which is exactly what describeLoadFailure() in parser.js explains.
-      readable: allow === '*' || (allow || '').toLowerCase() === ORIGIN.toLowerCase(),
+      askedAs: asking,
+      readable: allow === '*' || (allow || '').toLowerCase() === asking.toLowerCase(),
     };
   } catch (err) {
     return { error: err && err.name === 'AbortError' ? 'timed out' : String(err && err.message || err) };
@@ -134,6 +166,7 @@ async function main(argv) {
     console.log(`${candidate.site}`);
     console.log(`  ${candidate.what}`);
     console.log(`  ${candidate.url}`);
+    if (candidate.origin) console.log(`  asked as ${candidate.origin}, NOT as us`);
     if (result.error) {
       console.log(`  → ERROR: ${result.error}`);
     } else {
@@ -153,8 +186,19 @@ async function main(argv) {
   const mox = control('moxfield');
   let trustworthy = true;
   if (arch && !arch.result.error && !arch.result.readable) {
-    console.log('CONTROL FAILED: Archidekt came back refused, and the live page loads');
-    console.log('Archidekt decks today. Do not act on this run — the probe or the network is wrong.');
+    console.log('CONTROL FAILED: Archidekt came back refused.');
+    console.log(`  it answered HTTP ${arch.result.status} with Access-Control-Allow-Origin: `
+      + `${arch.result.allow === null ? '(absent)' : arch.result.allow}`);
+    console.log('');
+    console.log('Two things can cause that, and they need different responses:');
+    console.log('  1. This probe is not asking the way a browser asks, so nothing else here');
+    console.log('     can be believed either.');
+    console.log('  2. Archidekt has changed, and loading a deck by URL is broken on the live');
+    console.log('     page right now — in which case parser.js is telling readers something');
+    console.log('     untrue and this run has found a bug rather than failed.');
+    console.log('');
+    console.log('Settle it by hand: open the site and paste an Archidekt deck URL. That takes');
+    console.log('ten seconds and is the only test that is not a proxy for the real thing.');
     trustworthy = false;
   }
   if (mox && !mox.result.error && mox.result.readable) {

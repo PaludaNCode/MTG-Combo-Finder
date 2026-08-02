@@ -142,6 +142,12 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   controls so a broken run cannot be mistaken for a refusal. It has to run on a runner:
   the usual sandbox cannot reach any of those hosts, and a proxy 403 looks exactly like
   a site saying no. `curl` proves nothing either — it does not enforce CORS.
+- **Archidekt may already be unreadable, and nobody has confirmed it.** The probe's own
+  control failed on 2 Aug 2026: Archidekt echo their allowlist (`https://archidekt.com`
+  asked as themselves) and answer everyone else with `http://localhost:3000`, so a
+  browser on `paludancode.github.io` discards the response. `SITES.archidekt` still says
+  `browserImport: true`. Settle it by pasting an Archidekt URL into the live page before
+  changing anything — the README section says what the fix is if it holds.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
 
 ## Conventions
