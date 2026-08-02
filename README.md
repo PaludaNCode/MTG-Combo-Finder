@@ -1743,11 +1743,21 @@ beside the snapshot date that was already there. In the footer rather than in a
 devtools trace on purpose: the machine worth measuring belongs to somebody who is
 never going to open one.
 
-**Only the phases that happened.** The second search of a session has no download and
-no parse — the dataset is already in memory, which is the whole reason the worker
-keeps it — and the line falls back to `ready in 0.1s`. Printing `download 0ms` would
-report a skipped phase as an instant one, which is the opposite of what makes the
-number worth having.
+**The first phase is named for where the bytes came from**, and that detail was
+wrong at first in the direction that matters most. `msFetch` times
+`fetchDatabase()`, which either downloads the database or reads the copy already on
+disk — two operations three orders of magnitude apart — and both were being called
+"download". A first visit read `download 1.5s` and the next read `download 39ms`,
+which says the network got forty times faster rather than that the cache did its
+job. The number was honest and the word was not. It now reads `cache 39ms` on a
+cached load, and an unrecognised source falls back to the neutral "read" rather
+than guessing at "download".
+
+**Only the phases that happened.** The second search *within* one session has no fetch
+and no parse at all — the dataset is already in memory, which is the whole reason the
+worker keeps it — and the line falls back to `ready in 0.1s`. Printing `download 0ms`
+would report a skipped phase as an instant one, which is the opposite of what makes
+the number worth having.
 
 The numbers also land on the diagnostics object, so a failure report carries them
 without a second mechanism. Nothing is sent anywhere: this is a static page with no
@@ -1778,6 +1788,20 @@ visit and never waits again.
 Which is the point of measuring rather than reasoning: the two ideas that looked
 biggest on paper were the two the numbers killed, and the one filed as "optional,
 small, slightly risky" turned out to be the only one worth building.
+
+**And the second visit, from the same phone:**
+
+```
+ready in 0.2s (cache 39ms · parse 43ms · match 71ms)
+```
+
+Which is [the caching](#downloading-the-database-once-not-once-a-visit) proving
+itself: 1.5 s of network becomes 39 ms off disk, and the whole search drops from
+1.6 s to 0.2 s. The snapshot date was still the *previous* one, which is also
+correct — the copy in hand is served and the newer one is picked up next visit,
+exactly as that section describes. Reading that line is what exposed the
+mislabelling above; it was reported as `download 39ms`, and a download is the one
+thing it was not.
 
 ### Colours come from the cards, not from a commander
 

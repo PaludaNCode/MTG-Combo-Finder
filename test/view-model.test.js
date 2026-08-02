@@ -215,9 +215,27 @@ test('the pips say out, floor, open, in that order around the floor', () => {
 
 test('all three phases and a total', () => {
   assert.strictEqual(
-    View.timingSentence({ fetch: 900, parse: 400, match: 60, total: 1400 }),
+    View.timingSentence({ fetch: 900, parse: 400, match: 60, total: 1400 }, 'network'),
     'ready in 1.4s (download 0.9s · parse 0.4s · match 60ms)'
   );
+});
+
+// The two readings that exposed this: a first visit at 1.5s and the next at 39ms,
+// both labelled "download". search.js times fetchDatabase(), which either downloads
+// the database or reads the copy already on disk — and calling both the same thing
+// says the network got forty times faster rather than that the cache did its job.
+test('the first phase is named for where the bytes came from', () => {
+  const t = { fetch: 39, parse: 43, match: 71, total: 153 };
+  assert.strictEqual(View.timingSentence(t, 'cache'), 'ready in 0.2s (cache 39ms · parse 43ms · match 71ms)');
+  assert.strictEqual(View.timingSentence(t, 'network'), 'ready in 0.2s (download 39ms · parse 43ms · match 71ms)');
+});
+
+// "download" is the one word that must never be a guess: it is the claim the reader
+// would act on, and the wrong one hides a cache that is working.
+test('an unknown source gets the neutral word, not "download"', () => {
+  const t = { fetch: 39, parse: 43, match: 71, total: 153 };
+  assert.match(View.timingSentence(t, undefined), /^ready in 0\.2s \(read 39ms/);
+  assert.match(View.timingSentence(t, 'something-new'), /^ready in 0\.2s \(read 39ms/);
 });
 
 // The absence is the measurement, twice over. A second search has no download and
@@ -234,6 +252,12 @@ test('two phases are enough for a breakdown', () => {
     View.timingSentence({ parse: 400, match: 60, total: 470 }),
     'ready in 0.5s (parse 0.4s · match 60ms)'
   );
+});
+
+// `memory` is the second search within one session: no bytes were read at all, so
+// there is no phase to label and the source never comes up.
+test('a search served from memory has no fetch phase to name', () => {
+  assert.strictEqual(View.timingSentence({ match: 64, total: 66 }, 'memory'), 'ready in 66ms');
 });
 
 test('milliseconds under a tenth of a second, seconds above it', () => {

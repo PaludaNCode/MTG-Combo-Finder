@@ -169,16 +169,33 @@
 
   const secs = (ms) => (ms >= 100 ? (ms / 1000).toFixed(1) + 's' : ms + 'ms');
 
-  // "ready in 1.4s (download 0.9s · parse 0.4s · match 0.1s)".
+  // What the first phase is called depends on where the bytes came from, and the
+  // difference is the most interesting thing on the line. `msFetch` in search.js
+  // times fetchDatabase(), which either downloads the database or reads the copy
+  // already on disk — two operations three orders of magnitude apart.
   //
-  // Only the phases that happened. The second search of a session has no download
-  // and no parse — the dataset is already in memory, which is the whole reason the
-  // worker keeps it — and printing "download 0ms" would report a skipped phase as
-  // an instant one, which is the opposite of what makes the number worth having.
-  function timingSentence(t) {
+  // Calling both "download" was wrong, and wrong in the direction that matters:
+  // a first visit read `download 1.5s` and the second read `download 39ms`, which
+  // says the network got forty times faster rather than that the cache did its
+  // job. The number was honest and the word was not.
+  const SOURCE_LABEL = { cache: 'cache', network: 'download' };
+
+  // "ready in 1.4s (download 0.9s · parse 0.4s · match 0.1s)" on a first visit,
+  // "ready in 0.2s (cache 39ms · parse 43ms · match 71ms)" on the next one.
+  //
+  // Only the phases that happened. The second search *within* a session has no
+  // fetch and no parse at all — the dataset is already in memory, which is the
+  // whole reason the worker keeps it — and printing "download 0ms" would report a
+  // skipped phase as an instant one, which is the opposite of what makes the
+  // number worth having.
+  function timingSentence(t, source) {
     if (!t || typeof t.total !== 'number') return '';
     const parts = [];
-    if (typeof t.fetch === 'number') parts.push('download ' + secs(t.fetch));
+    if (typeof t.fetch === 'number') {
+      // An unrecognised source falls back to the neutral word rather than to
+      // "download", which would be a guess in the one place a guess misleads.
+      parts.push((SOURCE_LABEL[source] || 'read') + ' ' + secs(t.fetch));
+    }
     if (typeof t.parse === 'number') parts.push('parse ' + secs(t.parse));
     if (typeof t.match === 'number') parts.push('match ' + secs(t.match));
     // One phase and a total that agrees with it is the same number twice.
