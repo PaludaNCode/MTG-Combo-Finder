@@ -166,6 +166,99 @@ function sqliteReport(rows, dir) {
   };
 }
 
+// ---- H: one blob, an offset table, and a single range request ----------------
+//
+// The strongest competitor to sharding, and the one that could beat SQLite on both
+// counts at once. Publish every combo's steps end to end in one file, plus a table
+// of how long each row is. A reader downloads that table once, adds up the lengths
+// before the row it wants, and asks for exactly those bytes — one request, and only
+// the bytes of the answer.
+//
+// The catch is the table. One entry per combo, downloaded before the first lookup
+// can happen, so its size decides whether the idea is worth anything. Measured
+// three ways: plain, varint-packed, and gzipped, because a 400 KB table would sink
+// it and an 80 KB one would not.
+//
+// The blob itself has to be stored uncompressed: a range request cannot decompress
+// part of a gzip stream. That is the trade — the branch carries 50 MB instead of
+// 11, and readers transfer a fraction of what sharding sends them.
+function offsetIndexReport(rows) {
+  // Sorted, so the reader can find a row's position from the combo ids it already
+  // holds — no id list has to be published alongside.
+  const sorted = rows.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const bodies = sorted.map((r) => Buffer.from(JSON.stringify(r.body)));
+  const lengths = bodies.map((b) => b.length);
+  const blob = lengths.reduce((n, v) => n + v, 0);
+
+  // Plain: four bytes each, the obvious encoding.
+  const plain = lengths.length * 4;
+
+  // Varint: a length under 128 fits in one byte, under 16,384 in two. Step text
+  // runs a few hundred bytes, so nearly every row costs two.
+  const varint = Buffer.concat(lengths.map((n) => {
+    const out = [];
+    let v = n;
+    do { let byte = v & 0x7f; v >>>= 7; if (v) byte |= 0x80; out.push(byte); } while (v);
+    return Buffer.from(out);
+  }));
+
+  return {
+    blob,
+    rows: sorted.length,
+    plain,
+    varint: varint.length,
+    varintGz: zlib.gzipSync(varint).length,
+    // What a lookup costs once the table is in hand.
+    perLookup: Math.round(blob / (sorted.length || 1)),
+  };
+}
+
+// ---- I: Parquet, the other database answer -----------------------------------
+//
+// Columnar formats are built to read one column across millions of rows, which is
+// the opposite of fetching one row. A point lookup has to pull a whole column chunk
+// for the row group the row happens to sit in, so the row-group size decides
+// everything — and at the default the entire table is one group.
+//
+// Claimed as much earlier from first principles. This measures it, because
+// first principles have been wrong repeatedly today.
+function parquetReport(rows, dir) {
+  let version;
+  try {
+    version = execFileSync('duckdb', ['--version'], { encoding: 'utf8' }).trim();
+  } catch (err) {
+    return { skipped: 'duckdb is not on this machine' };
+  }
+
+  const src = path.join(dir, 'steps-for-parquet.json');
+  fs.writeFileSync(src, rows.map((r) => JSON.stringify({ id: r.id, body: JSON.stringify(r.body) })).join('\n'));
+
+  const groups = [];
+  for (const size of [122880, 8192, 2048]) {
+    const out = path.join(dir, `steps-${size}.parquet`);
+    execFileSync('duckdb', ['-c',
+      `COPY (SELECT id, body FROM read_ndjson_auto('${src}')) TO '${out}' `
+      + `(FORMAT PARQUET, COMPRESSION ZSTD, ROW_GROUP_SIZE ${size});`,
+    ], { stdio: ['ignore', 'ignore', 'ignore'] });
+
+    const meta = execFileSync('duckdb', ['-csv', '-c',
+      `SELECT count(DISTINCT row_group_id), max(row_group_num_rows), `
+      + `sum(total_compressed_size) FROM parquet_metadata('${out}');`,
+    ], { encoding: 'utf8' }).trim().split('\n').pop().split(',');
+
+    const rowGroups = Number(meta[0]) || 1;
+    const perGroupRows = Number(meta[1]) || rows.length;
+    const size2 = fs.statSync(out).size;
+    // A point lookup reads the footer to find the row group, then that group's
+    // column chunks. Both columns, since it needs the id to confirm the match.
+    const perGroup = Math.round(size2 / rowGroups);
+    groups.push({ requested: size, rowGroups, perGroupRows, file: size2, perLookup: perGroup });
+    fs.rmSync(out, { force: true });
+  }
+  fs.rmSync(src, { force: true });
+  return { version, groups };
+}
+
 async function main(argv) {
   const keep = argv.includes('--keep');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'steps-'));
@@ -249,12 +342,43 @@ async function main(argv) {
     console.log(`  round trips per lookup       ${s.trips}  →  ${kb(s.bytesPerLookup)} read`);
   }
 
-  console.log('\n=== The comparison ===');
-  const best = shardReport(rows, 256, byHash, 'hash');
-  console.log(`  sharded JSON   1 request,  ${kb(best.median)} typical`);
-  if (!s.skipped) {
-    console.log(`  SQLite/range   ${s.trips} requests, ${kb(s.bytesPerLookup)} typical`);
+  console.log('\n=== H. One blob plus an offset table, one range request ===');
+  const h = offsetIndexReport(rows);
+  console.log(`  blob, stored uncompressed    ${mb(h.blob)}  (a range request cannot un-gzip a slice)`);
+  console.log(`  offset table, 4 bytes each   ${kb(h.plain)}`);
+  console.log(`  varint-packed                ${kb(h.varint)}`);
+  console.log(`  and gzipped                  ${kb(h.varintGz)}   ← downloaded once, then cached`);
+  console.log(`  per lookup                   1 request, ${h.perLookup} bytes`);
+
+  console.log('\n=== I. Parquet, the other database answer ===');
+  const p = parquetReport(rows, dir);
+  if (p.skipped) {
+    console.log('  skipped: ' + p.skipped);
+  } else {
+    console.log(`  duckdb ${p.version}`);
+    console.log('  row group size   groups   file        read per lookup');
+    for (const g of p.groups) {
+      console.log(`  ${String(g.requested).padStart(14)}   ${String(g.rowGroups).padStart(6)}`
+        + `   ${mb(g.file).padStart(9)}   ${kb(g.perLookup)}`);
+    }
+    console.log('  A point lookup pulls the whole row group the row sits in, plus the footer.');
   }
+
+  console.log('\n=== The comparison, one combo opened ===');
+  const at256 = shardReport(rows, 256, byHash, 'hash');
+  const at512 = shardReport(rows, 512, byHash, 'hash');
+  const line = (name, reqs, bytes, note) => console.log(
+    `  ${name.padEnd(22)} ${String(reqs).padStart(2)} request(s)  ${kb(bytes).padStart(9)}   ${note || ''}`
+  );
+  line('sharded JSON, 256', 1, at256.median);
+  line('sharded JSON, 512', 1, at512.median);
+  if (!s.skipped) line('SQLite over range', s.trips, s.bytesPerLookup, 'sequential — each trip decides the next');
+  line('blob + offset table', 1, h.perLookup, `after a one-off ${kb(h.varintGz)} table`);
+  if (!p.skipped) {
+    const smallest = p.groups[p.groups.length - 1];
+    line('Parquet, smallest group', 2, smallest.perLookup, 'footer, then the row group');
+  }
+  line('one file per combo', 1, h.perLookup, `${rows.length.toLocaleString()} files on the branch`);
 
   if (keep) console.log(`\nWorking files kept in ${dir}`);
   else fs.rmSync(dir, { recursive: true, force: true });
