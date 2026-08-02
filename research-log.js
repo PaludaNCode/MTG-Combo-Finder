@@ -179,14 +179,22 @@ const PASSES = [
     examined: 37,
     kept: 0,
     ruledOut: [
-      { reason: 'both answer "one or more nontoken creatures you control died" but with different '
-        + 'tokens — Confectioner makes a Food, Camellia makes a Squirrel — and every one of these '
-        + 'loops spends the Food. Peregrin Took’s published steps say it outright: his cost is '
-        + '"sacrifice three Foods", and a Squirrel cannot pay it', count: 37 },
+      { reason: 'the loop spends more than one Food per cycle and needs that many creatures back. '
+        + 'Camellia reads "whenever you sacrifice ONE OR MORE Foods" — one trigger per event, one '
+        + 'Squirrel however many were spent — where Confectioner reads "whenever you sacrifice A '
+        + 'Food" and triggers per Food. Peregrin Took spends three and Savvy Hunter spends two; '
+        + 'both published step lists say so, and one Squirrel does not sustain either', count: 2 },
     ],
-    notes: 'A second pass over a card the first sweep had already touched, and it found nothing '
-      + 'either. The rule-out is the same shape as Chatterfang’s — the added token is the wrong '
-      + 'type — which is worth noticing as a pattern: token-adders substitute badly.',
+    notes: 'THE FIRST VERSION OF THIS ENTRY WAS WRONG, and the way it was wrong is the reason the '
+      + 'log records reasons rather than verdicts. It said the two cards answer "a nontoken '
+      + 'creature died" with different tokens — Food against Squirrel — and ruled out all 37 on '
+      + 'that. Neither half was true: both trigger on *sacrificing a Food*, and Confectioner '
+      + 'creates a Rat, not a Food. The text was asserted from memory instead of read, which is '
+      + 'exactly the step the process says not to skip. Read properly, the difference is batching '
+      + 'and only 2 of the 37 die to it. **35 candidates survive and are not yet written up** — '
+      + 'kept is 0 because no row exists yet, not because nothing was found. They are two shapes: '
+      + 'Sam, Loyal Attendant + Warren Soultrader + Academy Manufactor (pop 1,278), and Ygra, '
+      + 'Eater of All + Ninja Pizza with 33 haste enablers behind it.',
   },
   {
     subject: 'Cauldron Familiar, Samwise Gamgee and Academy Manufactor',
