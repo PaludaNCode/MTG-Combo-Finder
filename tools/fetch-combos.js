@@ -676,6 +676,11 @@ async function main() {
 module.exports = {
   createVariantScanner, compact, bodyChunks, isRealCard,
   reportNewTemplates, reportGameChangers, GAME_CHANGERS_EXPECTED,
+  // For tools/peek-variant.js, which reads one whole variant to find out what
+  // compact() is throwing away. Exported rather than duplicated: a second copy of
+  // the streaming parser is a second thing to keep right.
+  streamVariants, BULK_URL,
+  deriveCardIds, rebuildId, dropDerivableIds, intern,
 };
 
 if (require.main === module) {

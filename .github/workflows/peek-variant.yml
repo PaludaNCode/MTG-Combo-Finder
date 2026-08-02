@@ -1,0 +1,40 @@
+name: Peek at one variant
+
+# What Commander Spellbook actually sends, for one combo, printed in full.
+#
+# `compact()` keeps six fields and drops the rest, so nothing in this repository
+# records what the rest are called. combo-steps.js was written against field names
+# read off their website and guessed at, and a guessed field name does not fail
+# loudly — it comes back `undefined` and the panel shows nothing.
+#
+# On demand only. This asks a live third party a question; running it nightly would
+# add a dependency on somebody else's uptime to answer something that changes about
+# once a year. Run it when the shape is in doubt, read the answer, write it down in
+# the README, and leave it alone again.
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'Variant id (blank takes the first in the export)'
+        type: string
+        default: '2290-2919'
+
+permissions:
+  contents: read
+
+jobs:
+  peek:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # Into the step summary as well as the log: the whole point is a shape
+      # somebody reads once and writes down, and a summary survives log expiry.
+      - name: Print the variant
+        run: |
+          set -o pipefail
+          node tools/peek-variant.js "${{ inputs.variant }}" | tee -a "$GITHUB_STEP_SUMMARY"
