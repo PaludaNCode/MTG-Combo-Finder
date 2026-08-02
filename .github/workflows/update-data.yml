@@ -9,6 +9,14 @@ on:
         description: 'Publish even if the snapshot is much smaller than the published one'
         type: boolean
         default: false
+      # Everything up to and including the gate, and then stop. The point is to be
+      # able to run this against the real export from a branch: the fetcher's output
+      # is only ever as good as a shape somebody else controls, and the alternative
+      # to checking on demand is finding out at 04:17 on a job that force-pushes.
+      dry_run:
+        description: 'Fetch and check, but publish nothing'
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -47,8 +55,12 @@ jobs:
           # the daily refresh was the one job still on an unsupported runtime.
           node-version: '22'
 
+      # Writes combos.json and, beside it, the steps tree: one small file per
+      # combo, 256 directories deep, at the paths steps-source.js asks for. Both
+      # come out of the same pass over the export, which is the only way the two
+      # can be guaranteed to describe the same snapshot.
       - name: Fetch the combo database
-        run: node tools/fetch-combos.js "$RUNNER_TEMP/combos.json"
+        run: node tools/fetch-combos.js "$RUNNER_TEMP/combos.json" "$RUNNER_TEMP/steps"
 
       # Before the publish, not after. The data branch is one orphan commit that
       # gets force-pushed, so there is no history and nothing to roll back to —
@@ -67,27 +79,45 @@ jobs:
           # a `| tee` would hand back tee's exit code and this gate would report
           # success for every refusal it printed.
           set -o pipefail
-          node tools/check-snapshot.js "$RUNNER_TEMP/combos.json" | tee -a "$GITHUB_STEP_SUMMARY"
+          node tools/check-snapshot.js "$RUNNER_TEMP/combos.json" \
+            --steps "$RUNNER_TEMP/steps" | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Published as a single orphan commit so the data never accumulates
       # history and the repo stays small — same approach as MTG-Pricerunner.
       - name: Publish to the data branch
+        if: ${{ !inputs.dry_run }}
         run: |
           set -euo pipefail
           work="$RUNNER_TEMP/data-branch"
           mkdir -p "$work"
           cp "$RUNNER_TEMP/combos.json" "$work/combos.json"
+          # 103,737 files, and the reason they are affordable is measured rather
+          # than hoped: `git add` of a tree this size is 24s, the commit 1.6s, and
+          # the pack 19.8 MB — inside a job that has just streamed a 512 MB export.
+          # See steps-source.js for why the cost sits here and not on the reader.
+          cp -r "$RUNNER_TEMP/steps" "$work/steps"
           cd "$work"
           git init -q
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -q --orphan data
-          git add combos.json
+          git add combos.json steps
           git commit -q -m "Combo data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git push -q --force \
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
             data
-          echo "Published $(du -h combos.json | cut -f1) to the data branch"
+          echo "Published $(du -h combos.json | cut -f1) combos.json and $(du -sh steps | cut -f1) of steps to the data branch"
+
+      - name: Say what a dry run would have published
+        if: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Dry run — nothing was published"
+            echo ""
+            echo "combos.json: $(du -h "$RUNNER_TEMP/combos.json" | cut -f1)"
+            echo "steps: $(find "$RUNNER_TEMP/steps" -type f | wc -l) files, $(du -sh "$RUNNER_TEMP/steps" | cut -f1)"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # After publishing, not before: a broken citation is a problem with our own
       # file rather than with the data, and holding today's combos back over it
@@ -99,4 +129,5 @@ jobs:
       # not a failure: it is what a row is for, the page already drops it, and
       # this is how anyone finds out it can come out of the file.
       - name: Check the unofficial rows still cite something real
+        if: ${{ !inputs.dry_run }}
         run: node tools/verify-unofficial.js "$RUNNER_TEMP/combos.json" >> "$GITHUB_STEP_SUMMARY"

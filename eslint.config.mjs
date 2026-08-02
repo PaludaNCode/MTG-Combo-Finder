@@ -45,6 +45,10 @@ const BROWSER = {
   // A monotonic clock, in the window and in the worker. search.js times the
   // three phases of a search with it.
   performance: 'readonly',
+  // How steps-source.js puts a deadline on a steps request. Feature-detected
+  // there rather than assumed, because a request with no way to give up leaves
+  // the panel saying "Looking up the steps…" for ever.
+  AbortController: 'readonly',
   globalThis: 'readonly',
   // Worker scope.
   self: 'readonly',
@@ -63,6 +67,7 @@ const PAGE = {
   DeckCombos: 'readonly',
   ComboGraph: 'readonly',
   ComboSteps: 'readonly',
+  StepsSource: 'readonly',
   DeckView: 'readonly',
   ComboSearch: 'readonly',
   ResultTiers: 'readonly',
@@ -83,6 +88,7 @@ const NODE = {
   clearTimeout: 'readonly',
   globalThis: 'readonly',
   performance: 'readonly',
+  AbortController: 'readonly',
 };
 
 // The mistakes worth failing a build over, in both environments.
@@ -124,7 +130,7 @@ export default [
     files: [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
-      'combo-steps.js', 'view-model.js',
+      'combo-steps.js', 'steps-source.js', 'view-model.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

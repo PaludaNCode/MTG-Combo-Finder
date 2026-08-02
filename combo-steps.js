@@ -1,36 +1,22 @@
 // How a combo is actually executed: what has to be true before you start, and
 // the steps in order.
 //
-// PROTOTYPE. The shape of the panel and the way it loads are real; the text it
-// loads is not. See SAMPLE at the bottom — two combos are written out by hand so
-// the interaction can be judged end to end, and every other combo deliberately
-// resolves to "no steps", because how the page behaves when it *cannot* answer is
-// half of what is being prototyped.
-//
 // Why this is fetched at all rather than published with everything else: the
 // combo database is 103,737 rows and 27.65 MB parsed, of which the results field
-// alone is 13 MB. Steps and prerequisites are several times longer than results,
-// so carrying them for every combo would multiply a download the page already
-// works hard to make once (see search.js). The reader only ever wants the steps
-// for a combo they have stopped to look at, so the steps are fetched for that one
-// combo, at the moment they ask.
+// alone is 13 MB. The steps add 51.70 MB of text on top of that — twice the whole
+// rest of the database — so carrying them for every combo would swamp a download
+// the page already works hard to make once (see search.js). The reader only wants the
+// steps for a combo they have stopped to look at, so they are fetched for that one
+// combo, at the moment they ask. steps-source.js is where they come from, and why
+// they come from there; this file only decides what they say.
 //
-// Two sources could serve them, and the choice is deliberately not made here:
-//
-//   1. Commander Spellbook's per-variant endpoint. One request, always current,
-//      nothing for us to publish. Blocked if their CORS allowlist refuses this
-//      origin, which is the same restriction that made this project publish data
-//      instead of querying it — so the likely answer is no. Needs a connect-src
-//      entry in both pages' CSP if it turns out to be yes.
-//   2. A steps file per bucket of combo ids on our own data branch, written by
-//      the nightly refresh. No CORS question — raw.githubusercontent.com is
-//      already named in the CSP — at the cost of publishing and sharding data we
-//      currently drop on the floor.
-//
-// Everything above the source is the same either way, so the source is one
-// function behind setSource() and the rest of this file does not know which one
-// it got. normalize() takes Spellbook's own payload shape, so option 1 needs no
-// adapter and option 2 can publish that shape untouched.
+// The two halves are still kept apart behind setSource(). Not because the source
+// is undecided any more — it is one small file per combo on the data branch — but
+// because normalize() reads Commander Spellbook's own payload shape, so if their
+// CORS allowlist ever admits this origin, their endpoint drops in with no adapter.
+// pick() is the other end of the same idea: it selects the fields normalize()
+// reads and nothing else, so what gets published is a subset of what they send
+// rather than a format of our own that could drift from what the panel expects.
 //
 // Runs in the page and under Node (module.exports) so the parsing is testable
 // without a browser. Deliberately not imported by search-worker.js: like the
@@ -50,6 +36,23 @@
     C: 'in the command zone',
   };
 
+  // A card's state is recorded per zone, and only the one matching where it has to
+  // be is meaningful. They arrive as empty strings rather than absent, so the first
+  // non-empty wins. Named because pick() has to collapse them in exactly this
+  // order for what it publishes to say the same thing as what it was given.
+  const STATE_FIELDS = [
+    'battlefieldCardState', 'graveyardCardState', 'exileCardState',
+    'libraryCardState', 'cardState',
+  ];
+
+  const stateOf = (use) => {
+    for (const field of STATE_FIELDS) {
+      const value = String((use && use[field]) || '').trim();
+      if (value) return value;
+    }
+    return '';
+  };
+
   // What has to be true of one card before the combo starts: where it is, and
   // anything Spellbook notes about the state it is in ("untapped", "with two
   // +1/+1 counters on it"). Returns null when there is nothing to say, so a
@@ -67,14 +70,7 @@
     // A card that could be in any of three zones is not a prerequisite worth
     // printing — it is a card the combo does not care about the position of.
     const where = zones.length === 1 ? zones[0] : '';
-    // A card's state is recorded per zone — battlefield, graveyard, exile, library —
-    // and only the one matching where it has to be is meaningful. They arrive as
-    // empty strings rather than absent, so the first non-empty wins.
-    const state = String(
-      use.battlefieldCardState || use.graveyardCardState || use.exileCardState
-      || use.libraryCardState || use.cardState || ''
-    ).trim();
-    const parts = [where, state].filter(Boolean);
+    const parts = [where, stateOf(use)].filter(Boolean);
 
     // The one exception to "nothing to say means no line": a commander has to be
     // *your* commander, which no zone or state field captures.
@@ -122,6 +118,63 @@
     return { prerequisites, steps };
   }
 
+  // ---- what gets published ---------------------------------------------------
+  //
+  // One variant from Spellbook's bulk export → the record the data branch carries,
+  // or null if the combo has nothing showable and so needs no file at all.
+  //
+  // This is a *subset*, not a translation. Every key it emits is one normalize()
+  // already reads, so the published file is something normalize() could have been
+  // handed straight from their API — which is the property that keeps the two ends
+  // from drifting, and the one test/combo-steps.test.js checks directly:
+  // normalize(pick(v)) deep-equals normalize(v), for any v.
+  //
+  // Worth doing rather than publishing the variant whole: a variant carries card
+  // images, legality, prices and its full result list, and the export is 512 MB.
+  // Worth doing rather than publishing normalize()'s output: the wording of a
+  // prerequisite is a rendering decision, and baking today's into 103,737 files
+  // would mean a change to describeUse() needing a data refresh to take effect.
+  function pick(variant, id) {
+    if (!variant || typeof variant !== 'object') return null;
+
+    const record = { id: String(id) };
+    // Empty fields are dropped rather than published as "": across 103,737 rows
+    // most of these are empty most of the time, and normalize() cannot tell the
+    // difference between absent and blank.
+    const put = (key, value) => {
+      const text = String(value || '').trim();
+      if (text) record[key] = text;
+    };
+    put('manaNeeded', variant.manaNeeded);
+    put('notablePrerequisites', variant.notablePrerequisites);
+    put('easyPrerequisites', variant.easyPrerequisites);
+    put('description', variant.description || variant.steps);
+
+    // Only the cards that produce a line. A card describeUse() says nothing about
+    // contributes nothing to the panel, so publishing it is bytes spent on a row
+    // that will never be drawn — and dropping it cannot change the output, which
+    // is exactly why the equality test can be an equality rather than a subset.
+    const uses = [].concat(variant.uses || []).map((use) => {
+      if (!use) return null;
+      const name = (use.card && use.card.name) || use.name;
+      if (!name) return null;
+      const out = { name };
+      const zones = [].concat(use.zoneLocations || []);
+      if (zones.length) out.zoneLocations = zones;
+      // Collapsed to the one field describeUse() would have reached anyway,
+      // in the order it reaches them.
+      const state = stateOf(use);
+      if (state) out.cardState = state;
+      if (use.mustBeCommander) out.mustBeCommander = true;
+      return describeUse(out) ? out : null;
+    }).filter(Boolean);
+    if (uses.length) record.uses = uses;
+
+    // Asked of the real function rather than reimplemented: a record the panel
+    // would refuse to draw is a file nobody should have to fetch to find that out.
+    return normalize(record) ? record : null;
+  }
+
   // Kept for the life of the page: a reader who collapses a combo and opens it
   // again should not pay for it twice, and the answer cannot change mid-session.
   // A combo with no steps caches too — as null — so a second press does not
@@ -130,9 +183,11 @@
 
   let source = null;
 
-  // Where the steps come from. Replaced at load time by whichever of the two
-  // options above wins; the default reads the sample below so the prototype
-  // works with no network at all.
+  // Where the steps come from. app.js sets it to steps-source.js's reader; the
+  // tests set it to whatever they are testing. With no source at all, every combo
+  // answers "no steps" — deliberately, and deliberately not with sample text: a
+  // fallback that invents three combos' worth of instructions would make a page
+  // that had failed to wire up its data indistinguishable from one that had.
   function setSource(fn) {
     source = typeof fn === 'function' ? fn : null;
     held.clear(); // a new source can give a different answer to the same id
@@ -149,7 +204,7 @@
 
     let answer;
     try {
-      const raw = await (source ? source(key) : Promise.resolve(SAMPLE[key] || null));
+      const raw = await (source ? source(key) : null);
       answer = normalize(raw);
     } catch (err) {
       // Not cached: a fetch that failed because the network was down should be
@@ -161,82 +216,17 @@
     return answer;
   }
 
-  // ---- sample data ---------------------------------------------------------
-  //
-  // Two combos from test/fixtures/deck.txt, in Spellbook's own payload shape so
-  // normalize() is exercised rather than bypassed. Written by hand off the cards.
-  // Everything here is placeholder text for judging the layout — the real panel
-  // will show Spellbook's own wording, which is authoritative and this is not.
-  const SAMPLE = {
-    // Spike Feeder + Archangel of Thune — and this one is *not* hand-written. It is
-    // exactly what Commander Spellbook sends, read out of the bulk export by
-    // tools/peek-variant.js, which is why it reads differently from the two below:
-    // shorter, and in their voice rather than mine.
-    //
-    // Worth keeping as the yardstick. The hand-written version said "remove two
-    // counters to gain 2 life" and theirs says one for one — a difference nobody
-    // would have caught by reading my prose, and a reminder that this panel is
-    // quoting them rather than explaining the cards itself.
-    '2290-2919': {
-      manaNeeded: '',
-      easyPrerequisites: '',
-      notablePrerequisites: 'Spike Feeder has at least two +1/+1 counters on it.',
-      uses: [
-        { card: { name: 'Spike Feeder' }, zoneLocations: ['B'], battlefieldCardState: '' },
-        { card: { name: 'Archangel of Thune' }, zoneLocations: ['B'], battlefieldCardState: '' },
-      ],
-      description: [
-        'Remove a +1/+1 counter from Spike Feeder to gain 1 life.',
-        'Archangel of Thune triggers, putting a +1/+1 counter on each creature you control, including Spike Feeder.',
-        'Repeat for infinite life and infinite +1/+1 counters on all creatures you control, other than Spike Feeder.',
-      ].join('\n'),
-    },
-    // Rosie Cotton of South Lane + Scurry Oak
-    '2433-4186': {
-      manaNeeded: '',
-      easyPrerequisites: 'You need a way to put the first +1/+1 counter on Scurry Oak, or another creature entering to start the loop.',
-      uses: [
-        { card: { name: 'Rosie Cotton of South Lane' }, zoneLocations: ['B'] },
-        { card: { name: 'Scurry Oak' }, zoneLocations: ['B'] },
-      ],
-      description: [
-        'Put a +1/+1 counter on Scurry Oak. It triggers and creates a 1/1 green Squirrel token.',
-        'The Squirrel entering triggers Rosie Cotton of South Lane, which puts a +1/+1 counter on target creature you control — choose Scurry Oak.',
-        'Scurry Oak triggers again. Repeat for as many Squirrels as you want.',
-      ].join('\n'),
-    },
-    // Scurry Oak + Sadistic Glee + Carrion Feeder. Here because two unofficial
-    // rows cite it, so it is what exercises the caveat: the steps below name
-    // Sadistic Glee and Carrion Feeder, and a reader looking at the unofficial
-    // row is holding Necrosynthesis and Hammerhead instead.
-    '2082-2438-4186': {
-      manaNeeded: '',
-      easyPrerequisites: 'Sadistic Glee has to be attached to Scurry Oak, and you need one creature to sacrifice to get started.',
-      uses: [
-        { card: { name: 'Scurry Oak' }, zoneLocations: ['B'], battlefieldCardState: 'enchanted by Sadistic Glee' },
-        { card: { name: 'Sadistic Glee' }, zoneLocations: ['B'] },
-        { card: { name: 'Carrion Feeder' }, zoneLocations: ['B'] },
-      ],
-      description: [
-        'Sacrifice a creature to Carrion Feeder.',
-        'The creature dying triggers Sadistic Glee, which puts a +1/+1 counter on Scurry Oak.',
-        'Scurry Oak triggers on the counter and creates a 1/1 green Squirrel token.',
-        'Sacrifice the Squirrel to Carrion Feeder and repeat from step two.',
-      ].join('\n'),
-    },
-  };
-
   const api = {
     get,
     normalize,
     describeUse,
+    pick,
     setSource,
     // Test support: the cache is deliberately never invalidated in a session.
     reset() {
       held.clear();
       source = null;
     },
-    SAMPLE,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

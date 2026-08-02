@@ -145,3 +145,73 @@ test('a decklist the parser cannot use says so instead of failing quietly', asyn
   // page says something rather than sitting there.
   await expect(page.locator('#status')).not.toBeEmpty();
 });
+
+// ---- the steps, which are the only thing fetched after the search -----------
+//
+// Every other panel is drawn from what the search already returned. The steps are
+// not: they are one small file per combo on the data branch, fetched when someone
+// presses the disclosure and never before (steps-source.js explains why that shape
+// beat the four alternatives that were measured).
+//
+// Which makes this the only test that can catch the publisher and the reader
+// disagreeing about where a combo's steps live. The fixture files are produced by
+// the real ComboSteps.pick() and served at the real StepsSource.pathFor(), so a
+// change to either end that the other does not follow fails here.
+test('a combo row fetches and shows how the combo is actually executed', async ({ page }) => {
+  await pasteDeck(page);
+  await search(page);
+
+  const row = page.locator('#included .combo')
+    .filter({ has: page.locator('a[href*="/combo/1/"]') });
+  await expect(row).toHaveCount(1);
+
+  // Nothing is fetched until it is asked for — the entire reason the steps are
+  // not in the download.
+  await expect(row.locator('.steps')).toBeHidden();
+  const toggle = row.locator('.steps-toggle');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+  await toggle.click();
+  const panel = row.locator('.steps');
+  await expect(panel).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+  // Mana leads the prerequisites, the prose one follows, and the per-card lines
+  // come last — the order normalize() puts them in, all the way through a real
+  // published file rather than an object handed to it in a unit test.
+  await expect(panel).toContainText('Mana available: {2}');
+  await expect(panel).toContainText('Basalt Monolith is untapped.');
+  await expect(panel).toContainText('Kinnan, Bonder Prodigy — on the battlefield');
+  await expect(panel).toContainText('Basalt Monolith — on the battlefield, untapped');
+
+  // A real <ol>: the steps are a sequence and the numbers carry the order.
+  const steps = panel.locator('ol.steps-list li');
+  await expect(steps).toHaveCount(3);
+  await expect(steps.first()).toContainText('Tap Basalt Monolith for three colourless mana.');
+
+  // Collapsing and reopening must not refetch — the answer cannot change
+  // mid-session, and combo-steps.js holds it for the life of the page.
+  await toggle.click();
+  await expect(panel).toBeHidden();
+  await toggle.click();
+  await expect(panel).toContainText('Mana available: {2}');
+});
+
+// A combo Commander Spellbook records nothing for has no file at all: the 404 is
+// the answer, and it is what stands in for the index this design does not have.
+// The panel has to draw that as a note, not as a failure, and keep the link.
+test('a combo with no published steps says so and keeps the link', async ({ page }) => {
+  await pasteDeck(page);
+  await search(page);
+
+  const row = page.locator('#included .combo')
+    .filter({ has: page.locator('a[href*="/combo/6/"]') });
+  await expect(row).toHaveCount(1);
+
+  await row.locator('.steps-toggle').click();
+  const panel = row.locator('.steps');
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText('No steps recorded for this combo yet.');
+  await expect(panel).toHaveClass(/is-note/);
+  await expect(row.getByRole('link', { name: /View on Commander Spellbook/ })).toBeVisible();
+});

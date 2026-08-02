@@ -190,4 +190,48 @@ function asPublished(fixture) {
   return data;
 }
 
-module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished };
+// ---- the steps tree, as the data branch carries it -------------------------
+//
+// Written in Commander Spellbook's variant shape rather than in the shape of the
+// published file, and put through the real ComboSteps.pick() on the way out — so
+// the browser tests are served what tools/fetch-combos.js would have written,
+// down to the path. The same reasoning as asPublished() above, and the same
+// incident behind it: a harness that serves a friendlier shape than production
+// tests a page that does not exist.
+//
+// Combos 6 and 15 are deliberately absent. "No steps recorded for this combo yet"
+// is a state the panel has to be able to draw, and a fixture where every row had
+// steps would never draw it — nor would it ever exercise the 404 that is how the
+// absence of steps is published.
+const STEPS = {
+  1: {
+    manaNeeded: '{2}',
+    notablePrerequisites: 'Basalt Monolith is untapped.',
+    uses: [
+      { card: { name: 'Kinnan, Bonder Prodigy' }, zoneLocations: ['B'], mustBeCommander: true },
+      { card: { name: 'Basalt Monolith' }, zoneLocations: ['B'], battlefieldCardState: 'untapped' },
+    ],
+    description: 'Tap Basalt Monolith for three colourless mana.\n'
+      + 'Kinnan triggers and adds one more.\nUntap Basalt Monolith for three and repeat.',
+  },
+  2: {
+    uses: [{ card: { name: 'Rings of Brighthearth' }, zoneLocations: ['B'] }],
+    description: 'Copy the untap ability with Rings of Brighthearth.\nRepeat.',
+  },
+};
+
+// { '/steps/xx/1.json': '{"id":"1",…}' } — keyed by the URL the page will ask
+// for, because that is the only thing a server needs to know and the only thing
+// that can be wrong.
+function stepsFiles() {
+  const ComboSteps = require('../../combo-steps.js');
+  const StepsSource = require('../../steps-source.js');
+  const out = {};
+  for (const [id, variant] of Object.entries(STEPS)) {
+    const record = ComboSteps.pick(variant, id);
+    if (record) out['/' + StepsSource.pathFor(id)] = JSON.stringify(record);
+  }
+  return out;
+}
+
+module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished, STEPS, stepsFiles };

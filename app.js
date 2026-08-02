@@ -16,6 +16,17 @@
     ? 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json'
     : 'combos.json'; // local checkout / any other host
 
+  // The steps tree sits beside combos.json wherever that is, because the two are
+  // published by the same job in the same run. Derived from DATA_URL rather than
+  // written out twice, so a data branch that moves takes the steps with it.
+  const STEPS_BASE = DATA_URL.replace(/combos\.json$/, '');
+
+  // Wired here rather than inside combo-steps.js so that module stays free of any
+  // opinion about where data lives — the same reason search.js takes a URL.
+  if (typeof ComboSteps !== 'undefined' && typeof StepsSource !== 'undefined') {
+    ComboSteps.setSource(StepsSource.reader({ base: STEPS_BASE }));
+  }
+
   const $ = (id) => document.getElementById(id);
 
   // The deploy rewrites every asset URL in the HTML to carry `?v=<commit sha>`,

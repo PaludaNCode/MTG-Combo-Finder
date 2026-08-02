@@ -3,10 +3,10 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Steps = require('../combo-steps.js');
 
-// The steps panel is a prototype, but the parsing under it is the part that will
-// survive whichever source wins — Spellbook's own endpoint or a file we publish —
-// because both hand over the same payload shape. So it is tested now, before the
-// source exists, which is the only reason it can be: nothing here needs a network.
+// The parsing under the steps panel, and the pick() that decides what gets
+// published for it to parse. Nothing here needs a network: normalize() takes
+// Commander Spellbook's own payload shape, and the whole point of pick() is that
+// what we publish is a subset of that shape rather than a format of our own.
 
 test.beforeEach(() => Steps.reset());
 
@@ -123,14 +123,11 @@ test('normalize: a missing field costs that line only', () => {
   assert.deepStrictEqual(got, { prerequisites: [], steps: ['Do the thing.'] });
 });
 
-test('get: the sample data resolves through normalize', async () => {
-  const got = await Steps.get('2290-2919');
-  assert.ok(got.steps.length >= 3, 'Spike Feeder + Archangel of Thune has its steps');
-  assert.ok(got.prerequisites.some((p) => /Spike Feeder/.test(p)));
-});
-
-test('get: an id with nothing recorded resolves to null', async () => {
-  assert.strictEqual(await Steps.get('no-such-combo'), null);
+// With no source wired up every combo answers "no steps". Deliberately not sample
+// text: a fallback that invented instructions would make a page that had failed to
+// wire up its data look exactly like one that had.
+test('get: with no source, nothing is recorded and nothing is invented', async () => {
+  assert.strictEqual(await Steps.get('2290-2919'), null);
   assert.strictEqual(await Steps.get(''), null);
   assert.strictEqual(await Steps.get(null), null);
 });
@@ -186,25 +183,118 @@ test('setSource: a new source clears what the old one answered', async () => {
   assert.deepStrictEqual((await Steps.get('a')).steps, ['second']);
 });
 
-// reset() drops the source entirely, which puts the sample back — the state the
-// page loads in.
-test('setSource: cleared, the sample answers again', async () => {
+test('setSource: cleared, every combo goes back to answering nothing', async () => {
   Steps.setSource(() => Promise.resolve({ description: 'from a source' }));
   assert.deepStrictEqual((await Steps.get('2290-2919')).steps, ['from a source']);
   Steps.setSource(null);
-  assert.ok((await Steps.get('2290-2919')).steps.length >= 3);
+  assert.strictEqual(await Steps.get('2290-2919'), null);
 });
 
-// The sample is placeholder text, but it has to be placeholder text of the right
-// shape: every entry must survive normalize(), or the prototype demonstrates a
-// panel the real data would never produce.
-test('the sample entries all normalize to something showable', () => {
-  const ids = Object.keys(Steps.SAMPLE);
-  assert.ok(ids.length >= 2);
-  for (const id of ids) {
-    const got = Steps.normalize(Steps.SAMPLE[id]);
-    assert.ok(got, id + ' normalizes');
-    assert.ok(got.steps.length, id + ' has steps');
-    assert.ok(got.prerequisites.length, id + ' has prerequisites');
+// ---- pick(): what the nightly job publishes --------------------------------
+//
+// The record on the data branch has to be something normalize() could have been
+// handed straight from Spellbook's API, because that is the only thing keeping
+// the publisher and the panel from drifting apart. So the test is an equality
+// rather than a spot check: whatever pick() drops, it must not change a single
+// line the reader would have seen.
+
+// A variant as their bulk export really sends one, with every field pick() reads
+// and several it must not carry — the export is 512 MB precisely because of these.
+const VARIANT = {
+  id: '2290-2919',
+  manaNeeded: '{2}{G}',
+  notablePrerequisites: 'Spike Feeder has at least two +1/+1 counters on it.',
+  easyPrerequisites: 'All permanents are untapped.',
+  description: 'Remove a +1/+1 counter from Spike Feeder to gain 1 life.\nArchangel of Thune triggers.',
+  uses: [
+    {
+      card: { name: 'Spike Feeder', oracleText: '…', prices: { tcgplayer: '3.14' }, legalities: {} },
+      zoneLocations: ['B'],
+      battlefieldCardState: 'with two +1/+1 counters on it',
+      graveyardCardState: '',
+      exileCardState: '',
+      libraryCardState: '',
+    },
+    { card: { name: 'Archangel of Thune' }, zoneLocations: ['B'] },
+  ],
+  produces: [{ feature: { name: 'Infinite lifegain' } }],
+  legalities: { commander: true },
+  popularity: 9001,
+};
+
+const permutations = () => {
+  const out = [VARIANT, {}, { description: '' }, { uses: [] }];
+  // Each field on its own, so a rename upstream shows up as one failing case
+  // rather than as the whole suite going red at once.
+  for (const key of ['manaNeeded', 'notablePrerequisites', 'easyPrerequisites', 'description']) {
+    out.push({ [key]: VARIANT[key] });
   }
+  for (const zone of ['B', 'G', 'H', 'E', 'L', 'C', 'Z']) {
+    out.push({ uses: [{ card: { name: 'A Card' }, zoneLocations: [zone] }] });
+  }
+  for (const field of ['battlefieldCardState', 'graveyardCardState', 'exileCardState',
+    'libraryCardState', 'cardState']) {
+    out.push({ uses: [{ card: { name: 'A Card' }, zoneLocations: ['B'], [field]: 'untapped' }] });
+  }
+  out.push({ uses: [{ card: { name: 'A Card' }, zoneLocations: ['B', 'G', 'H'] }] });
+  out.push({ uses: [{ name: 'Flat, no card wrapper' }, { zoneLocations: ['B'] }, null] });
+  out.push({ uses: [{ card: { name: 'Kinnan, Bonder Prodigy' }, mustBeCommander: true }] });
+  out.push({ steps: 'Only the alternate field.\nSecond line.' });
+  return out;
+};
+
+test('pick: publishing a variant cannot change a line the reader would see', () => {
+  for (const variant of permutations()) {
+    const before = Steps.normalize(variant);
+    const record = Steps.pick(variant, '1-2');
+    const after = record ? Steps.normalize(record) : null;
+    assert.deepStrictEqual(after, before, JSON.stringify(variant));
+  }
+});
+
+// The record is what 103,737 files are made of, so what it leaves out is the
+// whole reason publishing them is affordable at all.
+test('pick: carries the fields normalize reads and nothing else', () => {
+  const record = Steps.pick(VARIANT, '2290-2919');
+  assert.deepStrictEqual(Object.keys(record).sort(), [
+    'description', 'easyPrerequisites', 'id', 'manaNeeded', 'notablePrerequisites', 'uses',
+  ]);
+  assert.deepStrictEqual(record.uses[0], {
+    name: 'Spike Feeder',
+    zoneLocations: ['B'],
+    cardState: 'with two +1/+1 counters on it',
+  });
+  assert.deepStrictEqual(record.uses[1], { name: 'Archangel of Thune', zoneLocations: ['B'] });
+  assert.ok(!JSON.stringify(record).includes('tcgplayer'), 'no prices');
+  assert.ok(!JSON.stringify(record).includes('Infinite lifegain'), 'results live in combos.json');
+});
+
+// The id is carried so the reader can check the file it got is the file it asked
+// for. It is fifteen bytes against the page printing another combo's steps.
+test('pick: stamps the id it was published under', () => {
+  assert.strictEqual(Steps.pick(VARIANT, '2290-2919').id, '2290-2919');
+  assert.strictEqual(Steps.pick(VARIANT, 42).id, '42', 'as a string, the way the reader compares it');
+});
+
+// No file at all is how "no steps recorded" is published — steps-source.js reads a
+// 404 as the answer — so a combo with nothing to say must produce no record.
+test('pick: a combo with nothing showable gets no file', () => {
+  assert.strictEqual(Steps.pick({}, '1-2'), null);
+  assert.strictEqual(Steps.pick({ description: '   \n\n ' }, '1-2'), null);
+  assert.strictEqual(Steps.pick({ uses: [{ card: { name: 'Sol Ring' } }] }, '1-2'), null,
+    'a card with no zone and no state says nothing');
+  assert.strictEqual(Steps.pick(null, '1-2'), null);
+  assert.strictEqual(Steps.pick('not an object', '1-2'), null);
+});
+
+// Empty strings are what their export sends for an unset field, and there are
+// four of them on every card. Published as-is they would be most of the file.
+test('pick: empty fields are dropped rather than published blank', () => {
+  const record = Steps.pick({
+    manaNeeded: '', notablePrerequisites: '', easyPrerequisites: '  ',
+    description: 'Do the thing.',
+    uses: [{ card: { name: 'A Card' }, zoneLocations: ['B'], battlefieldCardState: '', cardState: '' }],
+  }, '1-2');
+  assert.deepStrictEqual(Object.keys(record).sort(), ['description', 'id', 'uses']);
+  assert.deepStrictEqual(record.uses, [{ name: 'A Card', zoneLocations: ['B'] }]);
 });

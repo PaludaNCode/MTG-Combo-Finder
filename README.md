@@ -12,10 +12,9 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 
 - **Combos in your deck** — every known combo your current 99 (or 60) can already pull off,
   with what it produces and a link to the combo's Spellbook page for the steps.
-- **How it works** — *(prototype)* the prerequisites and the steps, in order, on the row
-  itself. Fetched for the one combo you open rather than downloaded for all 103,737, and
-  currently answering from hand-written sample text for three of them — see
-  [How a combo is executed](#how-a-combo-is-executed).
+- **How it works** — the prerequisites and the steps, in order, on the row itself.
+  One request and about half a kilobyte for the combo you open, rather than 51.70 MB
+  downloaded for all 103,737 — see [How a combo is executed](#how-a-combo-is-executed).
 - **Suggested additions** — every combo you're *one card away* from, aggregated per missing
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
@@ -647,13 +646,6 @@ the objection: 465 requests and ~23 minutes, on a job that already streams a
 
 ## How a combo is executed
 
-*A prototype, and a narrower one than the map below.* The panel, the four states it
-can be in, and the parsing under it are real and tested. **The text it shows is
-not** — three combos are written out by hand in `combo-steps.js` so the interaction
-can be judged end to end, and every other combo answers "no steps recorded". Which
-of the two sources below fills that gap is the open question, and nothing above the
-source depends on the answer.
-
 Every combo row already answers *what this does* — the result chips — and sends you
 to Commander Spellbook for *how you do it*. Now the same line offers to bring the
 answer here first: **How it works · View on Commander Spellbook → · See all 3 cards**.
@@ -661,13 +653,13 @@ The line that existed only to send people away is the right place for it, and th
 link stays as the way out for every case where the panel cannot answer.
 
 **The steps are not in the download, and that is the whole design.** The database is
-103,737 combos and 27.65 MB parsed, of which the results field alone is 13 MB; steps
-and prerequisites run several times longer than results. Publishing them for every
-combo would multiply a download [the page already works hard to make
-once](#downloading-the-database-once-not-once-a-visit), to answer a question a reader
-asks about two or three combos out of thirty-three. So they are fetched for the one
-combo somebody stopped on, when they ask, and held for the rest of the session — a row
-nobody opens costs nothing.
+103,737 combos and 27.65 MB parsed, of which the results field alone is 13 MB. The
+steps add **51.70 MB** of text on top — twice the whole rest of the database, measured
+rather than guessed — so publishing them for every combo would swamp a download [the page
+already works hard to make once](#downloading-the-database-once-not-once-a-visit), to
+answer a question a reader asks about two or three combos out of thirty-three. So they
+are fetched for the one combo somebody stopped on, when they ask, and held for the rest
+of the session — a row nobody opens costs nothing.
 
 **Collapsed on every row, always.** A list of twenty-two combos is a list. Twenty-two
 sets of steps is a document nobody asked for, and it would bury the ranking the panel
@@ -693,11 +685,84 @@ instructions for somebody else's deck.
 **Fetching from Spellbook directly is ruled out**, and it was ruled out before this
 panel was written: their `CORS_ALLOWED_ORIGIN_REGEXES` allows `*.commanderspellbook.com`
 and localhost, which is [the same restriction that made this project publish data
-instead of querying it](#why-the-data-is-published-not-queried-live). So the source has
-to be **a steps file on the `data` branch**, written by the nightly refresh — no CORS
-question, since `raw.githubusercontent.com` is already in the CSP, at the cost of
-publishing and sharding data the fetcher currently drops. `setSource()` is one function
-so the rest of the file does not know where its text came from.
+instead of querying it](#why-the-data-is-published-not-queried-live). So the steps are
+published on the `data` branch by the nightly refresh — no CORS question, since
+`raw.githubusercontent.com` is already in the CSP. `setSource()` stays a seam anyway,
+so if that allowlist ever admits this origin their endpoint drops in with no adapter.
+
+### One file per combo, and the four cleverer things it beat
+
+Five ways to publish 51.70 MB so a reader can fetch 500 bytes of it were built and
+measured — `tools/measure-steps.js`, run on a runner because it needs the whole bulk
+export. What each costs to open one combo:
+
+| | requests | downloaded | |
+| --- | --- | --- | --- |
+| **one file per combo** | **1** | **0.5 KB** | 103,737 files on the branch |
+| blob + offset table | 1 | 0.5 KB | after a 126.9 KB index |
+| sharded JSON, 512 ways | 1 | 21.7 KB | |
+| SQLite over byte ranges | 4 | 16.0 KB | sequential — each trip decides the next |
+| Parquet, best of three tunings | 2 | 76.0 KB | 51 row groups; larger groups were far worse |
+
+The blob tied on paper and lost on two things that only appeared once the design was
+tested against the actual host rather than reasoned about.
+
+**A range request to `raw.githubusercontent.com` does not address the bytes you think
+it does.** They serve almost everything as `text/plain` and Fastly gzips it, so
+`Range: bytes=1000-1099` returns bytes 1000–1099 *of the gzip stream*. A 100 KB file
+of `A`s reports its total size as 133. A browser cannot opt out — `Accept-Encoding` is
+a [forbidden header](https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_header_name),
+so `fetch()` always offers gzip and always gets it. Of 25 extensions probed, exactly
+one came back uncompressed with honest ranges:
+
+```
+.bin .dat .png .wasm .gz .br .parquet .db .pdf .woff2 .jpg .gif
+.webp .mp4 .7z .tgz .jar .bz2 .xz .zst .tar .ico .epub
+                          → text/plain; charset=utf-8, content-encoding: gzip
+.zip                      → application/zip, no encoding, ranges over the real bytes
+```
+
+Which also means the SQLite figure above measures something a browser cannot do: it
+was taken with `curl`, which sends no `Accept-Encoding` and so gets identity ranges.
+
+**And an offset table has to be keyed on something.** Keyed by row number it is small,
+and it breaks every morning: `search.js` serves a cached `combos.json` for the session
+and revalidates behind it, so on the first visit after a refresh the reader's row
+numbers are yesterday's and the offsets are today's. Keyed by combo id — the only
+stable key — the table has to carry the ids, which makes it big enough to want
+sharding, which costs the extra round trip the blob existed to avoid.
+
+Follow that to the end and **the index disappears into the filename**. If the URL
+contains the id there is nothing to look up: no table to download before the first
+answer, no offsets to keep in step with anything, no dependence on how a CDN feels
+about content encodings, and a 404 is a complete and correct answer meaning "no steps
+recorded". The cost lands on the publisher, which is where it can be measured and
+afforded — 103,737 files is 24s to `git add`, 1.6s to commit and a 19.8 MB pack, in a
+job that already spends minutes streaming a 512 MB export.
+
+As published the tree is **75.01 MB**, not the 51.70 MB of text in it. The difference is
+Spellbook's own field names — `notablePrerequisites` rather than `n` — plus the id on
+every record: 45% overhead, paid deliberately. It is what makes a published file
+something `normalize()` could have been handed straight from their API, and what lets
+`pick()` be tested as an equality rather than as a translation. The CDN gzips it back
+off on the wire; on the branch it is 23 MB in a build artifact nobody clones.
+
+Two details carry the correctness. Ids are hashed into **256 directories**, not for
+the reader — `raw.githubusercontent.com` does not care — but for git, which rewrites a
+directory's tree object whole whenever anything in it changes. And every record is
+**stamped with its own id**, which the reader checks against the one it asked for. The
+id is in the URL, so that can only disagree if a file was published to the wrong path;
+it costs about fifteen bytes a row to make impossible the failure [this project
+engineers against everywhere
+else](#the-combo-id-is-not-published-because-it-is-derivable) — the answer that works
+and is quietly about something else.
+
+Because there is no manifest, nothing downstream can notice a tree that is quietly
+wrong — a reader would press the button, be told there are no steps, and believe it.
+So `tools/check-snapshot.js --steps` computes the manifest instead of publishing one,
+and refuses the publish over coverage collapsing, a file in a bucket no reader will
+look in, a record stamped with someone else's id, or a file for a combo that is not in
+today's snapshot. Every file, not a sample.
 
 ### What a variant actually contains
 
@@ -727,25 +792,32 @@ variant whole, and `.github/workflows/peek-variant.yml` runs it on demand. Run a
 `normalize()` read for its prose prerequisites, so it had been reading nothing at all.
 The two real fields are now read in the order they are meant to be, notable first.
 
-**And the sample text was wrong about the cards.** The hand-written version of this combo
-said *"remove two +1/+1 counters to gain 2 life"*; Spellbook's own text says one for one.
-Nobody would have caught that by reading the prose, and it is the argument for this panel
-quoting them rather than explaining the cards itself. That sample is now their text
-verbatim, kept as the yardstick the other two are written against.
+**And the hand-written sample was wrong about the cards.** While the panel was a
+prototype it answered from three combos written out by hand; that version of this one
+said *"remove two +1/+1 counters to gain 2 life"*, and Spellbook's own text says one
+for one. Nobody would have caught that by reading the prose, and it is the argument for
+this panel quoting them rather than explaining the cards itself. The sample is gone now
+that there is real data — a fallback that invents instructions would make a page that
+had failed to wire up its data look exactly like one that had.
 
 Deliberately a tool run on demand rather than a test. It asks a live third party a
 question, and a check that fails when somebody else has an outage is a check that gets
 muted. Run it when the shape is in doubt, read the answer, write it down here.
 
-`normalize()` takes Spellbook's own payload shape, so option 1 needs no adapter and
-option 2 can publish that shape untouched. It is tested now, before either source
-exists, which is the only reason it can be: none of it needs a network.
+**What gets published is a subset of what they send, not a format of our own.**
+`ComboSteps.pick()` selects exactly the fields `normalize()` reads — dropping card
+images, prices, legalities and the full result list, and collapsing the four per-zone
+state fields into the one `describeUse()` would have reached anyway. The test is an
+equality rather than a spot check: `normalize(pick(v))` must deep-equal `normalize(v)`
+for every variant shape, so whatever `pick()` drops provably cannot change a line the
+reader would have seen. Both ends import the same module, as the publisher and the page
+import the same `pathFor()`.
 
-**What is still rough.** The sample text is placeholder and reads like it. Nothing
-measures what a real fetch costs on a phone — the same gap that makes the data-side
-work in `IMPROVEMENTS.md` hard to rank. And `combo-steps.js` is page-only, like
-`graph.js`: the worker does not import it, because nobody has asked for steps at the
-moment a search runs.
+**What is still rough.** Nothing measures what a real fetch costs on a phone — the same
+gap that makes the data-side work in `IMPROVEMENTS.md` hard to rank, and the numbers in
+the table above are bytes and round trips rather than milliseconds on a train. And
+`combo-steps.js` is page-only, like `graph.js`: the worker does not import it, because
+nobody has asked for steps at the moment a search runs.
 
 ## The combo map
 
