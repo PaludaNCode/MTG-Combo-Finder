@@ -15,6 +15,32 @@ argues for on purpose.
 
 ---
 
+## Status
+
+Eight of the ten technical items are **done** — see the README section named
+against each for what was actually built, and the git history for the order.
+
+| | | what it turned up |
+| --- | --- | --- |
+| T1 | done | 26.37 MB → 9.37 MB, 69 MB → 35 MB of heap |
+| T4 | done | five decisions moved under test; three of my own expectations were wrong |
+| T5 | done | `theme.js` and `favicon.svg` had never been stamped, and the layout test's fixture disagreed with the deploy |
+| T6 | done | ESLint pinned; SHA pins + Dependabot on the one job with `contents: write` |
+| T7 | done | publish gate on four counts and every row's shape |
+| T8 | done | seven claims in the README, checked in CI |
+| T9 | done | four contrast failures, all of them `opacity` over a token |
+| T10 | done | the footer now says what the search cost |
+| T2 | **not done** | deliberately — see below, and T10 for how to decide |
+| T3 | **not done** | same |
+
+T2 and T3 remain open on purpose: both trade the one-file design the README
+defends, and both were justified by numbers nobody had collected. T10 collects
+them now, and T1 has already taken the parse most of the way. Decide from a phone.
+
+Of the features, only **F7** exists, as a prototype.
+
+---
+
 ## Technical
 
 ### T1 — Intern the strings in `combos.json` (**M**, the biggest single win)
