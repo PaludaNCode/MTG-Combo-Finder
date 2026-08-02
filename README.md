@@ -1412,7 +1412,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 107 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 112 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -2526,8 +2526,8 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 107 hand-written rows cite a published combo. 84 of them and the one stand-in rule
-are `verified`; the other 23 are `derived`, which is what that label was being kept for.
+All 112 hand-written rows cite a published combo. 87 of them and the one stand-in rule
+are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
 anybody having read the pairing against the cards. The panel says so on each.
@@ -2603,13 +2603,22 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **144 candidates have been
+which is exactly where the method is least trustworthy. But **149 candidates have been
 read, out of thousands proposed** — 44 from the first sweep, 51 from the lifegain pass,
-and 49 from the first sweep that started from the file instead of from a card — and a
+and 54 from the sweeps that started from the file instead of from a card — and a
 page that prints how far the checking went on any one row should be as willing to say
 how far it has got across the file.
 
-That third pass kept 44 of its 49, and they are the two families in `unofficial.js` under
+Chatterfang is what a *well-covered* card looks like under the same method, and worth
+recording as the counterweight to Rosie: the sweep proposed **1,202** candidates for him
+and **1,197 were ruled out on the card text alone**. Stridehangar Automaton reads only
+*artifact* tokens and adds a Thopter, so its Clock of Omens and Krark-Clan Ironworks
+families turn on the added token being an artifact and a Squirrel is not one; and
+Chatterfang + Pitiless Plunderer is a published *two-card* combo, which makes every
+"Pitiless Plunderer and an outlet" shape a strict superset of something he already does.
+Five survived, and they are in the file.
+
+That third pass kept 49 of its 54, and they are the families in `unofficial.js` under
 *the token-creation half of the counter loops*. **Twenty are Rosie Cotton of South Lane**,
 who reads a token being created where the cards Spellbook pairs with these loops read a
 creature entering — the same trigger whenever the creature is a token, which is why she

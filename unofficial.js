@@ -2239,6 +2239,116 @@
         'Infinite +1/+1 counters on a creature',
       ],
     },
+
+    // ---- Chatterfang, and the two cards that do his job -----------------------
+    //
+    // Three cards hand a creature back inside a token creation, and the sweep found
+    // Chatterfang missing from five loops the other two are published in. He is the
+    // largest of the three — *that many* Squirrels, on *any* token, where Quina adds
+    // one Frog and Stridehangar Automaton adds one Thopter and only ever to artifact
+    // tokens. So anywhere either of them closes a loop, he closes it too.
+    //
+    // Which is also why he is correctly absent from most of Stridehangar’s: those turn
+    // on the added token being an artifact — Clock of Omens, Krark-Clan Ironworks,
+    // Arcbound Ravager — and a Squirrel is not one. That is a rule-out on the card text
+    // rather than on a score, and it is what took 1,202 candidates down to five.
+    {
+      cards: ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Pactdoll Terror'],
+      confidence: 'verified',
+      from: {
+        id: '5670-6291-6830',
+        cards: ['Stridehangar Automaton', 'Warren Soultrader', 'Pactdoll Terror'],
+      },
+      swap: { out: 'Stridehangar Automaton', in: 'Chatterfang, Squirrel General', inId: 3000 },
+      why: 'Warren Soultrader pays 1 life and eats a creature for a Treasure, and Chatterfang hands the creature back inside that creation. Pactdoll Terror reads artifacts entering, and the Treasure is one — so the life comes back whether or not the added token is an artifact. Spellbook publishes this only behind Stridehangar Automaton, whose Thopter is an artifact and triggers it a second time; the loop never needed that second trigger.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite colored mana',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite lifeloss',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Dazzling Angel'],
+      confidence: 'verified',
+      from: {
+        id: '5670-6705-6719',
+        cards: ['Warren Soultrader', 'Quina, Qu Gourmet', 'Dazzling Angel'],
+      },
+      swap: { out: 'Quina, Qu Gourmet', in: 'Chatterfang, Squirrel General', inId: 3000 },
+      why: 'Warren Soultrader pays 1 life and eats a creature for a Treasure; Chatterfang hands the creature straight back inside that same token creation, and the gainer hands the life back as it enters. Only the Treasure count moves. Spellbook publishes this loop with 59 gainers behind Chatterfang and this is not among them, though it is behind the two cards that do the same job.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite colored mana',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Anointer Priest'],
+      confidence: 'verified',
+      from: {
+        id: '1086-5670-6705',
+        cards: ['Warren Soultrader', 'Anointer Priest', 'Quina, Qu Gourmet'],
+      },
+      swap: { out: 'Quina, Qu Gourmet', in: 'Chatterfang, Squirrel General', inId: 3000 },
+      why: 'Warren Soultrader pays 1 life and eats a creature for a Treasure; Chatterfang hands the creature straight back inside that same token creation, and the gainer hands the life back as it enters. Only the Treasure count moves. Spellbook publishes this loop with 59 gainers behind Chatterfang and this is not among them, though it is behind the two cards that do the same job.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite colored mana',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Chatterfang, Squirrel General', 'Kirol, Attentive First-Year', 'Molten Echoes', 'Council of Reeds'],
+      confidence: 'derived',
+      from: {
+        id: '2506-6705-7150-7752',
+        cards: ['Kirol, Attentive First-Year', 'Molten Echoes', 'Quina, Qu Gourmet', 'Council of Reeds'],
+      },
+      swap: { out: 'Quina, Qu Gourmet', in: 'Chatterfang, Squirrel General', inId: 3000 },
+      why: 'Chatterfang adds that many Squirrels to any token creation where the published card adds one creature to it, so he does the same job a size larger. Derived: both halves are published and the loop is unchanged, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite tapped creature tokens',
+      ],
+    },
+    {
+      cards: ['Chatterfang, Squirrel General', 'Survey Mechan', 'Mortuary', 'Ashnod\'s Altar', 'Chalk Outline'],
+      confidence: 'derived',
+      from: {
+        id: '2034-5220-5632-6705-6961',
+        cards: ['Survey Mechan', 'Mortuary', 'Ashnod\'s Altar', 'Chalk Outline', 'Quina, Qu Gourmet'],
+      },
+      swap: { out: 'Quina, Qu Gourmet', in: 'Chatterfang, Squirrel General', inId: 3000 },
+      why: 'Chatterfang adds that many Squirrels to any token creation where the published card adds one creature to it, so he does the same job a size larger. Derived: both halves are published and the loop is unchanged, but this pairing has not been read against the cards.',
+      produces: [
+        'Near-infinite damage',
+        'Infinite card draw',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite ETB',
+        'Infinite draw triggers',
+        'Near-infinite storm count',
+        'Near-infinite LTB',
+        'Near-infinite death triggers',
+        'Near-infinite sacrifice triggers',
+        'Near-infinite Clue tokens',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

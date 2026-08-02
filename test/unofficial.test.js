@@ -5,6 +5,9 @@ const {
   matchUnofficial, standInRows, identityString, deckNameSet, nameKey, expand,
 } = require('../combos.js');
 const { COMBOS, STAND_INS } = require('../unofficial.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const DeckParser = require('../parser.js');
 
 // The one part of the page that is not Commander Spellbook's word. Everything here
 // is about keeping that distinction honest: the rows have to carry their evidence,
@@ -440,6 +443,112 @@ test('citations: a row Spellbook has published is reported as graduated', () => 
 
 test('citations: no data and no rows are not an error', () => {
   assert.deepStrictEqual(check(null, null), { problems: [], graduated: [], counted: 0 });
+});
+
+// ---- a real deck, against the real rows -------------------------------------
+//
+// Every other test here builds a two-card deck to exercise one branch. This one
+// reads a decklist somebody actually plays — 103 cards, built to sit on top of
+// this file — and pins what the panel gives it. That is a different kind of
+// check: not "does matchUnofficial() do what it says" but "does the file, as
+// written today, still reach the deck it was written for".
+//
+// It is deliberately an exact list rather than a count. A count moves when a row
+// is added and says nothing about which; the list fails with the name of whatever
+// appeared or vanished. Adding rows to unofficial.js is *expected* to change it —
+// the five Necrosynthesis rows below are what this session added, and before them
+// the same deck saw 39 — so a diff here is a prompt to read, not a break.
+//
+// The fixture is matched against a small stand-in dataset rather than the real
+// 28 MB one: matchUnofficial() only consults it to drop rows Spellbook has since
+// published, and an empty list of those is the honest state for these rows today.
+// tools/verify-unofficial.js is what checks that claim against the live data.
+const DECK_TEXT = fs.readFileSync(
+  path.join(__dirname, 'fixtures', 'chatterfang-deck.txt'), 'utf8'
+);
+
+test('a real deck: the fixture parses to its 103 maindeck cards, sideboard ignored', () => {
+  const parsed = DeckParser.parseDecklist(DECK_TEXT);
+  const entries = (parsed.commanders || []).concat(parsed.main || []);
+  assert.strictEqual(entries.length, 103);
+  // The sideboard is 27 cards plus two loose lines after it, and none of them
+  // may reach the deck — Nadier's Nightblade sits there precisely because it
+  // would otherwise light up rows the maindeck should not have.
+  const names = deckNameSet(entries);
+  assert.ok(!names.has(nameKey("Nadier's Nightblade")), 'a sideboard card reached the deck');
+  assert.ok(!names.has(nameKey('Elvish Mystic')), 'a sideboard card reached the deck');
+  assert.ok(names.has(nameKey('Chatterfang, Squirrel General')));
+  assert.ok(names.has(nameKey('Lunarch Veteran')), 'the front face of a split card should match');
+});
+
+test('a real deck: the unofficial rows it unlocks are exactly these', () => {
+  const parsed = DeckParser.parseDecklist(DECK_TEXT);
+  const names = deckNameSet((parsed.commanders || []).concat(parsed.main || []));
+  const rows = matchUnofficial({}, COMBOS, names, [], 0)
+    .map((r) => r.c.join(' + ')).sort();
+
+  assert.deepStrictEqual(rows, [
+    "Animation Module + Ashnod's Altar + Heroic Feast + Aunt May",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Case of the Uneaten Feast",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Elas il-Kor, Sadistic Pilgrim",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Essence Warden",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Hinterland Sanctifier",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Lunarch Veteran // Luminous Phantom",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Prosperous Innkeeper",
+    "Animation Module + Ashnod's Altar + Heroic Feast + Soul Warden",
+    'Animation Module + Phyrexian Altar + Heroic Feast + Elas il-Kor, Sadistic Pilgrim',
+    'Animation Module + Phyrexian Altar + Heroic Feast + Lunarch Veteran // Luminous Phantom',
+    'Basking Broodscale + Archangel of Thune + Aunt May',
+    'Basking Broodscale + Archangel of Thune + Elas il-Kor, Sadistic Pilgrim',
+    'Basking Broodscale + Heliod, Sun-Crowned + Aunt May',
+    'Basking Broodscale + Heliod, Sun-Crowned + Elas il-Kor, Sadistic Pilgrim',
+    'Basking Broodscale + Heliod, Sun-Crowned + Lunarch Veteran // Luminous Phantom',
+    'Herd Baloth + Necrosynthesis + Carrion Feeder',
+    'Herd Baloth + Necrosynthesis + Hammerhead, Maggia Boss',
+    'Herd Baloth + Necrosynthesis + Umbral Collar Zealot',
+    'Herd Baloth + Necrosynthesis + Viscera Seer',
+    "Kitchen Finks + Ashnod's Altar + Heroic Feast",
+    'Kitchen Finks + Heroic Feast + Bartolomé del Presidio',
+    'Kitchen Finks + Heroic Feast + Carrion Feeder',
+    'Kitchen Finks + Heroic Feast + Hammerhead, Maggia Boss',
+    'Kitchen Finks + Heroic Feast + Phyrexian Altar',
+    'Kitchen Finks + Heroic Feast + Umbral Collar Zealot',
+    'Kitchen Finks + Viscera Seer + Heroic Feast',
+    // The five this session added that this deck can actually assemble.
+    "Necrosynthesis + Animation Module + Ashnod's Altar",
+    'Necrosynthesis + Animation Module + Phyrexian Altar',
+    'Necrosynthesis + Ghave, Guru of Spores + Phyrexian Altar',
+    'Necrosynthesis + Herd Baloth + Bartolomé del Presidio',
+    'Necrosynthesis + Scurry Oak + Bartolomé del Presidio',
+    'Quina, Qu Gourmet + Warren Soultrader + Academy Manufactor',
+    'Scurry Oak + Heroic Feast + Lunarch Veteran // Luminous Phantom',
+    'Scurry Oak + Necrosynthesis + Carrion Feeder',
+    'Scurry Oak + Necrosynthesis + Hammerhead, Maggia Boss',
+    'Scurry Oak + Necrosynthesis + Umbral Collar Zealot',
+    'Scurry Oak + Necrosynthesis + Viscera Seer',
+    "Trudge Garden + Ashnod's Altar + Aunt May",
+    "Trudge Garden + Ashnod's Altar + Case of the Uneaten Feast",
+    'Trudge Garden + Pitiless Plunderer + Phyrexian Altar + Lunarch Veteran // Luminous Phantom',
+    'Warren Soultrader + Chatterfang, Squirrel General + Aunt May',
+    'Warren Soultrader + Chatterfang, Squirrel General + Case of the Uneaten Feast',
+    'Warren Soultrader + Stridehangar Automaton + Aunt May',
+    'Warren Soultrader + Stridehangar Automaton + Case of the Uneaten Feast',
+  ].sort());
+});
+
+// The Chatterfang rows name cards this deck does not hold, which is the point of
+// checking: a row that fires for every deck is a row matching on something too
+// loose. These need exactly one card each, and the panel says which. Three are
+// the gainers this session added; Virulent Emissary was already here, and it
+// belongs in the list for the same reason the others do.
+test('a real deck: the Chatterfang rows are each one card away', () => {
+  const parsed = DeckParser.parseDecklist(DECK_TEXT);
+  const names = deckNameSet((parsed.commanders || []).concat(parsed.main || []));
+  const away = matchUnofficial({}, COMBOS, names, [], 1)
+    .filter((r) => (r.needs || []).length === 1 && r.c.includes('Chatterfang, Squirrel General'))
+    .map((r) => r.needs[0]).sort();
+  assert.deepStrictEqual(away,
+    ['Anointer Priest', 'Dazzling Angel', 'Pactdoll Terror', 'Virulent Emissary']);
 });
 
 // ---- the card id beside the name -------------------------------------------
