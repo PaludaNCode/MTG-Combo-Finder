@@ -21,8 +21,21 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      # Pinned to commit SHAs rather than to `@v5`, and only in this workflow.
+      #
+      # A tag is a moving pointer the action's owner can repoint at will, so `@v5`
+      # means "whatever that repository decides v5 is on the morning this runs".
+      # Everywhere else here that would cost a broken build. Here it would cost the
+      # `data` branch: this is the only job in the repository with `contents: write`,
+      # and it force-pushes an orphan commit, so whatever runs in it can rewrite
+      # published data that has no history to recover from.
+      #
+      # The comment after each SHA is the tag it was taken from — that is the only
+      # thing making a pin readable, and Dependabot rewrites both together
+      # (.github/dependabot.yml). Bumping one by hand means bumping the comment too,
+      # or the next reader is told something untrue.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           # 22, like every other workflow here. This ran on 20 while ci.yml's own
           # comment claimed everything was already on 22 — and 20 is end-of-life, so
