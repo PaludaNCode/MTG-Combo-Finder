@@ -432,22 +432,23 @@ button:disabled { opacity: .6; cursor: wait; }
   vertical-align: middle;
   white-space: nowrap;
 }
-/* The unofficial count, beside the published one and never inside it.
+/* Whose combos the number above is made of. Sits under the row's total, and only
+ * on the rows that have a split — the badge answers "how many", this answers "on
+ * whose authority", and most rows have only one answer to give.
  *
- * The accent was already the badge colour, so the distinction is carried by the
- * fill rather than by a new hue — outlined where the published badge is solid.
- * That is deliberate on two counts: the page spends green on *win*, khaki on
- * *decisive* and grey on *other*, so a fourth colour in that family would read as
- * a fourth result tier; and an outlined accent pill is exactly what a row in the
- * unofficial panel already wears (.derived-badge), so the same claim looks the
- * same wherever the page makes it. Solid means published, outlined means ours. */
-.badge.ours {
-  margin-left: .35rem;
-  background: none;
-  color: var(--accent);
-  border: 1px solid currentColor;
-  padding: .05rem .45rem;
+ * The unofficial half takes the accent, which is the colour the page already
+ * spends on its own links and buttons: green, khaki and grey are the three result
+ * tiers, and a fourth hue in that family would read as a fourth tier. Quiet
+ * enough not to compete with the badge, since the total is what the column is
+ * ranked by and what a reader scans down. */
+.split-line {
+  margin: .15rem 0 0;
+  color: var(--muted);
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
 }
+.split-line .ours { color: var(--accent); }
+.split-line .dot { opacity: .55; }
 /* Ours below the published ones inside "Combos this unlocks", under a heading
  * that says whose they are before the first one is read. */
 .ours-head {

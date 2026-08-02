@@ -1800,25 +1800,38 @@ ours could not be suggested at all, which is the worst version of the problem: n
 number that is too low, but a card the page cannot mention. Hammerhead unlocks 1,889
 combos and Spellbook has published none of them.
 
-So both panels count both, in **two numbers that never merge**:
+So both panels count both — **one total on the row, and whose it is underneath**:
 
 ```
-Scurry Oak       in 10 combos   +5      ← ten published, five ours
-Hammerhead                      +4      ← no published badge at all, not "in 0 combos"
-Kitchen Finks             +3    +5      ← as a suggestion: three published, five ours
+Scurry Oak                in 15 combos
+                          10 official · 5 unofficial
+
+Basking Broodscale        in 9 combos           ← no split, no second line
+
+Hammerhead, Maggia Boss   in 4 combos
+                          4 unofficial · none published
+
+Kitchen Finks             +8                    ← as a suggestion
+                          +3 official · +5 unofficial
 ```
+
+The badge carries the **total** because these are ranked columns and the question
+each answers — what does cutting this cost, what would adding this give me — is
+answered by the total before anything else is read. Two badges made the reader add
+them up; one badge and no split hid half the answer. The second line appears only on
+the rows that have a split, so on the worked deck seventeen of twenty-two rows are
+exactly what they were.
 
 Ranking is by the two together, because impact is impact and a card you cannot see
 is worse than a card ranked slightly wrong; ties break toward the published count,
 so two cards of equal reach are not ordered by how much of that reach is our claim.
 
-The colour is the accent the page already uses for its own links and buttons — the
-one colour that means "the site talking" rather than "a property of the combo".
-Green, khaki and grey are spent on *win*, *decisive* and *other*, and a fourth hue in
-that family would read as a fourth result tier. Since the accent was already the
-published badge's fill, the distinction is carried by **solid versus outlined**:
-solid means Spellbook published it, outlined means it is ours — the same outlined
-accent pill a row in the unofficial panel already wears.
+The unofficial half takes the accent — the colour the page already spends on its own
+links and buttons, and the one that means "the site talking" rather than "a property
+of the combo". Green, khaki and grey are *win*, *decisive* and *other*, and a fourth
+hue in that family would read as a fourth result tier. The word "unofficial" is
+written out on the row rather than parked in a tooltip: it is the whole claim, and a
+claim a reader has to hover to find is one the page is hiding.
 
 ### Matching the unofficial rows costs one pass, however many rules there are
 

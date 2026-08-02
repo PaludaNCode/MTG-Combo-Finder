@@ -433,21 +433,40 @@
     return a;
   }
 
-  // The count of unofficial combos, wherever one sits beside a published count.
+  // Where a count is part Spellbook's and part ours: one number on the row, and
+  // the split on a quiet second line beneath it.
   //
-  // A separate badge rather than a bigger number, and a separate colour rather
-  // than a footnote. The page spends green on *win*, khaki on *decisive* and grey
-  // on *other*, so a fourth hue in that family would read as a fourth result
-  // tier; this uses the accent the page already uses for its own links and
-  // buttons — the one colour that means "the site talking" rather than "a
-  // property of the combo". The number is never added into the published one.
-  function ourBadge(count, plus) {
-    const badge = el('span', 'badge ours', (plus ? '+' : '') + count);
-    const spoken = count + ' unofficial combo' + (count === 1 ? '' : 's')
-      + ' — not published by Commander Spellbook';
-    badge.title = spoken;
-    badge.setAttribute('aria-label', spoken);
-    return badge;
+  // The badge carries the total because the panels are ranked columns and the
+  // question each answers — what does cutting this cost, what would adding this
+  // give me — is answered by the total before anything else is read. Two badges
+  // made the reader add them up; one badge and no split hid half the answer.
+  //
+  // The line appears only on the rows that have a split, so the majority of rows
+  // are exactly what they were. The unofficial half is in the accent — the colour
+  // the page already spends on its own links and buttons, and the one colour that
+  // means "the site talking" rather than "a property of the combo". Green, khaki
+  // and grey are the result tiers, and a fourth hue in that family would read as
+  // a fourth tier.
+  //
+  // Written out in words rather than parked in a tooltip: "5 unofficial" is the
+  // whole claim, and a claim a reader has to hover to find is one the page is
+  // hiding.
+  function splitLine(official, ours, plus) {
+    if (!ours) return null;
+    const line = el('p', 'split-line');
+    const n = (count) => (plus ? '+' : '') + count;
+    if (official) {
+      line.appendChild(document.createTextNode(n(official) + ' official'));
+      line.appendChild(el('span', 'dot', ' · '));
+    }
+    line.appendChild(el('span', 'ours', n(ours) + ' unofficial'));
+    // A card whose whole case is ours says so, rather than leaving the reader to
+    // infer it from a missing half.
+    if (!official) {
+      line.appendChild(el('span', 'dot', ' · '));
+      line.appendChild(document.createTextNode('none published'));
+    }
+    return line;
   }
 
   // One suggestion, which may be a choice between cards that do the same job.
@@ -464,21 +483,24 @@
     // the size pills beside it do not already say, and it was repeated on every
     // row — but the meaning still has to reach a screen reader, so it moves into
     // the label rather than disappearing.
+    // The total, because a card that would unlock three published combos and five
+    // of ours is an eight-combo decision. What kind of eight it is goes on the
+    // line below.
     const ours = (group.unofficial || []).length;
-    if (group.unlocks.length) {
-      const badge = el('span', 'badge', '+' + group.unlocks.length);
-      const spoken = 'unlocks ' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's');
-      badge.title = spoken;
-      badge.setAttribute('aria-label', spoken);
-      header.appendChild(badge);
-    }
-    // A card can reach this list on our rows alone — Hammerhead unlocks nothing
-    // Spellbook has published and 1,889 combos we believe in — so the second
-    // badge stands on its own when there is no first one.
-    if (ours) header.appendChild(ourBadge(ours, true));
+    const total = group.unlocks.length + ours;
+    const badge = el('span', 'badge', '+' + total);
+    const spoken = 'unlocks ' + total + ' combo' + (total === 1 ? '' : 's');
+    badge.title = spoken;
+    badge.setAttribute('aria-label', spoken);
+    header.appendChild(badge);
     const sizes = sizeRow(group.unlocks.concat(group.unofficial || []));
     if (sizes) header.appendChild(sizes);
     card.appendChild(header);
+
+    // A card can reach this list on our rows alone — Hammerhead unlocks nothing
+    // Spellbook has published and 1,889 combos we believe in.
+    const split = splitLine(group.unlocks.length, ours, true);
+    if (split) card.appendChild(split);
 
     const links = el('p', 'card-links');
     links.appendChild(cardLinks(first));
@@ -611,17 +633,11 @@
     const head = el('div', 'sug-head');
     head.appendChild(el('span', 'rank', rank + '. '));
     head.appendChild(el('span', 'card-name', piece.card));
-    // Omitted rather than printed as zero: a card whose whole case is unofficial
-    // is in this panel now, and "in 0 combos" beside "+4" is a worse answer than
-    // the "+4" alone.
-    if (piece.count) {
-      head.appendChild(el('span', 'badge', 'in ' + piece.count + ' combo' + (piece.count === 1 ? '' : 's')));
-    }
-    // Beside the published number rather than added to it. A card holding up two
-    // of Spellbook's combos and four of ours costs six to cut, and the panel has
-    // to say so — but the six is not one number, because half of it is our word
-    // and half is theirs.
-    if (piece.unofficial) head.appendChild(ourBadge(piece.unofficial));
+    // What cutting the card actually costs, which is both halves: a card holding
+    // up two of Spellbook's combos and four of ours costs six. Whose six it is
+    // goes on the line below.
+    const total = piece.count + piece.unofficial;
+    head.appendChild(el('span', 'badge', 'in ' + total + ' combo' + (total === 1 ? '' : 's')));
     // The same breakdown a suggestion carries, for the same reason: "in 9 combos" is
     // one number covering nine different propositions, and a card holding up three
     // two-card lines is a very different card to cut than one holding up nine
@@ -630,6 +646,9 @@
     const sizes = sizeRow(piece.combos);
     if (sizes) head.appendChild(sizes);
     card.appendChild(head);
+
+    const split = splitLine(piece.count, piece.unofficial);
+    if (split) card.appendChild(split);
 
     const links = el('p', 'card-links');
     links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(piece.card), 'EDHREC'));

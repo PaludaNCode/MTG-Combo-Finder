@@ -766,10 +766,10 @@ async function runUnofficial(vp) {
       // used to answer by leaving the card out.
       pieces: {
         rows: doc.querySelectorAll('#pieces .sug-head').length,
-        ours: doc.querySelectorAll('#pieces .sug-head .badge.ours').length,
-        official: doc.querySelectorAll('#pieces .sug-head .badge:not(.ours)').length,
-        text: (doc.querySelector('#pieces .badge.ours') || {}).textContent || null,
-        label: (doc.querySelector('#pieces .badge.ours') || {}).title || null,
+        ours: doc.querySelectorAll('#pieces .split-line .ours').length,
+        badges: doc.querySelectorAll('#pieces .sug-head .badge').length,
+        text: (doc.querySelector('#pieces .badge') || {}).textContent || null,
+        split: (doc.querySelector('#pieces .split-line') || {}).textContent || null,
       },
       unofficial: {
         // How many swaps the note spells out, which has to be how many the row
@@ -811,7 +811,7 @@ async function runSuggested(vp) {
     await settled(doc, '#suggestions .combo');
 
     const pane = doc.querySelector('#suggestions .tab-pane:not([hidden])');
-    const ours = pane ? pane.querySelectorAll('.badge.ours') : [];
+    const ours = pane ? pane.querySelectorAll('.split-line .ours') : [];
     const row = ours.length ? ours[0].closest('.combo') : null;
     return {
       ok: true,
@@ -821,15 +821,16 @@ async function runSuggested(vp) {
         rows: pane ? pane.querySelectorAll('.combo').length : 0,
         ours: ours.length,
         text: ours.length ? ours[0].textContent : null,
-        label: ours.length ? ours[0].title : null,
-        // The published badge and ours are two badges, never one number.
-        official: row ? row.querySelectorAll('.badge:not(.ours)').length : 0,
+        split: row ? row.querySelector('.split-line').textContent : null,
+        // One badge on the row, carrying the total.
+        badges: row ? row.querySelectorAll('.badge').length : 0,
+        total: row ? row.querySelector('.badge').textContent : null,
         // ...and the combos behind them are listed under a heading that says so.
         heading: row && row.querySelector('.ours-head') ? row.querySelector('.ours-head').textContent : null,
+        // The unofficial half has to be visibly its own claim: a colour of its
+        // own against the muted text around it, rather than the same grey.
         colour: ours.length ? win.getComputedStyle(ours[0]).color : null,
-        published: ours.length ? win.getComputedStyle(
-          row.querySelector('.badge:not(.ours)') || ours[0]
-        ).backgroundColor : null,
+        muted: row ? win.getComputedStyle(row.querySelector('.split-line')).color : null,
         overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
@@ -1211,11 +1212,11 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const wrong = [];
       if (!g.rows) wrong.push('nothing was suggested at all');
       if (!g.ours) wrong.push('no unofficial count on any suggestion');
-      if (g.text !== '+1') wrong.push(`the unofficial count reads "${g.text}"`);
-      if (!/not published/i.test(g.label || '')) wrong.push(`the count is unlabelled: "${g.label}"`);
-      // No published unlocks for this card, so there must be no published badge
-      // beside ours — the two numbers are separate claims, not one total.
-      if (g.official) wrong.push(`${g.official} published badge(s) on a suggestion with no published unlocks`);
+      if (g.text !== '+1 unofficial') wrong.push(`the unofficial half reads "${g.text}"`);
+      // One badge, carrying the total; the split says what the total is made of.
+      if (g.badges !== 1) wrong.push(`${g.badges} badges on the row, expected 1`);
+      if (g.total !== '+1') wrong.push(`the total reads "${g.total}"`);
+      if (!/none published/.test(g.split || '')) wrong.push(`the split reads "${g.split}"`);
       if (!/Spellbook has not published/.test(g.heading || '')) {
         wrong.push(`the combos are not marked as ours: "${g.heading}"`);
       }
@@ -1223,13 +1224,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // page spends its other colours on result tiers, and a fourth would read as
       // one. If this ever computes to the same treatment, the distinction is gone.
       if (!g.colour) wrong.push('the unofficial count has no colour of its own');
+      if (g.colour === g.muted) wrong.push(`the unofficial half is the same colour as the line it sits in (${g.colour})`);
       if (g.overflow) wrong.push('the panel overflows horizontally');
       if (wrong.length) {
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
-        console.log(`ok   ${v.name} — ${g.rows} suggestion(s), ${g.ours} carrying `
-          + `"${g.text}" in ${g.colour}, published badges beside them: ${g.official}`);
+        console.log(`ok   ${v.name} — ${g.rows} suggestion(s), ${g.ours} split, `
+          + `top row "${g.total}" then "${g.split}" in ${g.colour}`);
       }
       continue;
     }
@@ -1273,10 +1275,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // only Spellbook's would leave every one of them out, or say nothing.
       const pc = v.pieces || {};
       if (pc.rows !== 3) wrong.push(`${pc.rows} cards in "carrying your combos", expected 3`);
-      if (pc.ours !== 3) wrong.push(`${pc.ours} of them carry an unofficial count, expected 3`);
-      if (pc.official) wrong.push(`${pc.official} published counts on a deck with no published combos`);
-      if (pc.text !== '1') wrong.push(`the unofficial count reads "${pc.text}"`);
-      if (!/not published/i.test(pc.label || '')) wrong.push(`the count is unlabelled: "${pc.label}"`);
+      if (pc.ours !== 3) wrong.push(`${pc.ours} of them break the count down, expected 3`);
+      // One badge per row carrying the total, never two for the reader to add up.
+      if (pc.badges !== 3) wrong.push(`${pc.badges} badges across 3 rows`);
+      if (pc.text !== 'in 1 combo') wrong.push(`the total reads "${pc.text}"`);
+      // Nothing published for this deck, so the line says so in words rather than
+      // leaving the reader to infer it from a missing half.
+      if (!/1 unofficial/.test(pc.split || '')) wrong.push(`the split reads "${pc.split}"`);
+      if (!/none published/.test(pc.split || '')) wrong.push(`the split hides that nothing is published: "${pc.split}"`);
       if (wrong.length) {
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
