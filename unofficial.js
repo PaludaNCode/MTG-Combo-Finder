@@ -13,7 +13,8 @@
 // and any combo that names one but not the other is a candidate. Most candidates
 // are not gaps: the cards turn out to differ in a way that matters to that
 // particular loop, and the audit in the README lists the 35 of 44 that were ruled
-// out and why.
+// out and why, alongside the 15 of 51 thrown out by the later pass over the
+// lifegain loops.
 //
 // The rest by reading a card that substitution could never have proposed. A card
 // Spellbook has never used in a single combo has nothing to be measured against,
@@ -652,6 +653,854 @@
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite +1/+1 counters on a creature',
+      ],
+    },
+
+    // ---- one loop, twenty-seven gainers, nine holes ---------------------------
+    //
+    // A creature entering gains you life, the life puts a +1/+1 counter on a
+    // creature, the counter makes a token, and the token entering is the next
+    // creature. Scurry Oak, Herd Baloth and Basking Broodscale each make the token;
+    // Archangel of Thune, Heliod, Sun-Crowned and Heroic Feast each turn the life
+    // into the counter; and some 27 published cards turn the token back into the life.
+    //
+    // Three makers times three payoffs times the nine of those gainers this deck
+    // holds is 81 combinations, and 11 of them are missing from the data while
+    // their siblings are in it. Two are already in this file. These are the nine.
+    //
+    // That is the shape of a gap rather than a judgement, because the card being
+    // swapped in is the card being swapped out with a rider on it. Every one of
+    // them reads "whenever another creature you control enters, you gain 1 life" —
+    // Hinterland Sanctifier's sentence, which the published row already trusts —
+    // and then adds deathtouch, or disturb, or a Spider clause, or a drain on
+    // death, none of which this loop ever asks about.
+    {
+      cards: ['Scurry Oak', 'Archangel of Thune', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '2919-4186-6097',
+        cards: ['Archangel of Thune', 'Scurry Oak', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Archangel of Thune puts a +1/+1 counter on Scurry Oak, the counter makes a 1/1 '
+        + 'Squirrel, and the token entering is another creature entering — which Virulent '
+        + 'Emissary turns into a life gained, and the life into the next counter. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white, so nothing in the loop can tell the '
+        + 'two apart. Spellbook publishes Archangel of Thune and Scurry Oak with 27 other cards '
+        + 'that turn the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Scurry Oak', 'Heliod, Sun-Crowned', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '1274-4186-6097',
+        cards: ['Heliod, Sun-Crowned', 'Scurry Oak', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Scurry Oak, the counter makes a 1/1 '
+        + 'Squirrel, and the token entering is another creature entering — which Virulent '
+        + 'Emissary turns into a life gained, and the life into the next counter. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white, so nothing in the loop can tell the '
+        + 'two apart. Spellbook publishes Heliod, Sun-Crowned and Scurry Oak with 27 other '
+        + 'cards that turn the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Herd Baloth', 'Archangel of Thune', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '2919-3197-6097',
+        cards: ['Archangel of Thune', 'Herd Baloth', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Archangel of Thune puts a +1/+1 counter on Herd Baloth, the counter makes a 4/4 '
+        + 'Beast, and the token entering is another creature entering — which Virulent Emissary '
+        + 'turns into a life gained, and the life into the next counter. Virulent Emissary’s '
+        + 'trigger is Hinterland Sanctifier’s sentence word for word — “whenever another '
+        + 'creature you control enters, you gain 1 life” — with deathtouch as its only rider, '
+        + 'and green where the Sanctifier is white, so nothing in the loop can tell the two '
+        + 'apart. Spellbook publishes Archangel of Thune and Herd Baloth with 27 other cards '
+        + 'that turn the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Herd Baloth', 'Heliod, Sun-Crowned', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '1274-3197-6097',
+        cards: ['Heliod, Sun-Crowned', 'Herd Baloth', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Herd Baloth, the counter makes a 4/4 '
+        + 'Beast, and the token entering is another creature entering — which Virulent Emissary '
+        + 'turns into a life gained, and the life into the next counter. Virulent Emissary’s '
+        + 'trigger is Hinterland Sanctifier’s sentence word for word — “whenever another '
+        + 'creature you control enters, you gain 1 life” — with deathtouch as its only rider, '
+        + 'and green where the Sanctifier is white, so nothing in the loop can tell the two '
+        + 'apart. Spellbook publishes Heliod, Sun-Crowned and Herd Baloth with 27 other cards '
+        + 'that turn the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Archangel of Thune', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '2919-5641-6097',
+        cards: ['Basking Broodscale', 'Archangel of Thune', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Archangel of Thune puts a +1/+1 counter on Basking Broodscale, the counter makes an '
+        + 'Eldrazi Spawn, and the token entering is another creature entering — which Virulent '
+        + 'Emissary turns into a life gained, and the life into the next counter. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white, so nothing in the loop can tell the '
+        + 'two apart. Spellbook publishes Archangel of Thune and Basking Broodscale with 26 '
+        + 'other cards that turn the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite LTB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Archangel of Thune', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '2919-5641-6097',
+        cards: ['Basking Broodscale', 'Archangel of Thune', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      why: 'Archangel of Thune puts a +1/+1 counter on Basking Broodscale, the counter makes an '
+        + 'Eldrazi Spawn, and the token entering is another creature entering — which Aunt May '
+        + 'turns into a life gained, and the life into the next counter. Aunt May’s trigger is '
+        + 'Hinterland Sanctifier’s sentence word for word, plus a rider that reads only Spiders '
+        + 'and never fires here, so nothing in the loop can tell the two apart. Spellbook '
+        + 'publishes Archangel of Thune and Basking Broodscale with 26 other cards that turn '
+        + 'the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite LTB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'verified',
+      from: {
+        id: '1274-5641-6097',
+        cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Lunarch Veteran // Luminous Phantom' },
+      why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Basking Broodscale, the counter makes an '
+        + 'Eldrazi Spawn, and the token entering is another creature entering — which Lunarch '
+        + 'Veteran turns into a life gained, and the life into the next counter. Lunarch '
+        + 'Veteran’s trigger is Hinterland Sanctifier’s sentence word for word, with disturb as '
+        + 'its only rider, so nothing in the loop can tell the two apart. Spellbook publishes '
+        + 'Heliod, Sun-Crowned and Basking Broodscale with 25 other cards that turn the token '
+        + 'entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB',
+        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '1274-5641-6097',
+        cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Elas il-Kor, Sadistic Pilgrim' },
+      why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Basking Broodscale, the counter makes an '
+        + 'Eldrazi Spawn, and the token entering is another creature entering — which Elas '
+        + 'il-Kor, Sadistic Pilgrim turns into a life gained, and the life into the next '
+        + 'counter. Elas il-Kor gains the life on exactly the Sanctifier’s terms — “whenever '
+        + 'another creature you control enters, you gain 1 life” — and adds deathtouch and a '
+        + 'drain on death, so nothing in the loop can tell the two apart. Spellbook publishes '
+        + 'Heliod, Sun-Crowned and Basking Broodscale with 25 other cards that turn the token '
+        + 'entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB',
+        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '1274-5641-6097',
+        cards: ['Basking Broodscale', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      why: 'Heliod, Sun-Crowned puts a +1/+1 counter on Basking Broodscale, the counter makes an '
+        + 'Eldrazi Spawn, and the token entering is another creature entering — which Aunt May '
+        + 'turns into a life gained, and the life into the next counter. Aunt May’s trigger is '
+        + 'Hinterland Sanctifier’s sentence word for word, plus a rider that reads only Spiders '
+        + 'and never fires here, so nothing in the loop can tell the two apart. Spellbook '
+        + 'publishes Heliod, Sun-Crowned and Basking Broodscale with 25 other cards that turn '
+        + 'the token entering into life, and leaves this one out.',
+      produces: [
+        'Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB',
+        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana',
+      ],
+    },
+    // ---- Animation Module, and the altar nobody wrote down: eleven rows -------
+    //
+    // The same trade in a different loop. Animation Module reads "whenever one or
+    // more +1/+1 counters are put on a permanent you control, you may pay {1}. If
+    // you do, create a 1/1 colorless Servo artifact creature token", so a card that
+    // turns life into a counter and a card that turns a creature entering into life
+    // close a circle around it, and an altar eats each Servo to pay for the next.
+    //
+    // Spellbook publishes that loop 31 times over with Archangel of Thune, 30 with
+    // Heliod, Sun-Crowned, and 25 with Heroic Feast — but every Heroic Feast row
+    // uses Phyrexian Altar. With Ashnod's Altar there are none at all, for any of
+    // the cards that can gain the life, which is the hole the first seven rows fill.
+    //
+    // Ashnod's Altar is the freer of the two altars here: {C}{C} a Servo against a
+    // cost of {1}, where Phyrexian Altar makes one coloured mana and the loop breaks
+    // even. So these rows carry a line the Phyrexian Altar rows cannot — infinite
+    // colorless mana — and it is the same line every published Ashnod's Altar
+    // version of the loop already claims.
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Hinterland Sanctifier'],
+      confidence: 'verified',
+      from: {
+        id: '3490-4050-6097-7743',
+        cards: ['Animation Module', 'Phyrexian Altar', 'Hinterland Sanctifier', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Hinterland Sanctifier, and Heroic Feast spends that life on one '
+        + 'target — which is the next counter. The altar is there to eat the Servo and pay for '
+        + 'the next one, and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where '
+        + 'Phyrexian Altar makes one coloured mana, against a cost of {1} either way. Spellbook '
+        + 'publishes the Phyrexian Altar version of this loop for 25 cards that turn it into '
+        + 'life and the Ashnod’s Altar version for none of them — while publishing Ashnod’s '
+        + 'Altar in the same loop 31 times over with Archangel of Thune in Heroic Feast’s '
+        + 'place. The spare mana is the one line this row adds: two made against one spent is '
+        + 'infinite colorless mana, which every published Ashnod’s Altar version of the loop '
+        + 'claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '3490-4050-7173-7743',
+        cards: ['Animation Module', 'Phyrexian Altar', 'Virulent Emissary', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Virulent Emissary, and Heroic Feast spends that life on one target '
+        + '— which is the next counter. The altar is there to eat the Servo and pay for the '
+        + 'next one, and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where '
+        + 'Phyrexian Altar makes one coloured mana, against a cost of {1} either way. Spellbook '
+        + 'publishes the Phyrexian Altar version of this loop for 25 cards that turn it into '
+        + 'life and the Ashnod’s Altar version for none of them — while publishing Ashnod’s '
+        + 'Altar in the same loop 31 times over with Archangel of Thune in Heroic Feast’s '
+        + 'place. The spare mana is the one line this row adds: two made against one spent is '
+        + 'infinite colorless mana, which every published Ashnod’s Altar version of the loop '
+        + 'claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '3490-4050-6823-7743',
+        cards: ['Animation Module', 'Phyrexian Altar', 'Aunt May', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Aunt May, and Heroic Feast spends that life on one target — which '
+        + 'is the next counter. The altar is there to eat the Servo and pay for the next one, '
+        + 'and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where Phyrexian Altar '
+        + 'makes one coloured mana, against a cost of {1} either way. Spellbook publishes the '
+        + 'Phyrexian Altar version of this loop for 25 cards that turn it into life and the '
+        + 'Ashnod’s Altar version for none of them — while publishing Ashnod’s Altar in the '
+        + 'same loop 31 times over with Archangel of Thune in Heroic Feast’s place. The spare '
+        + 'mana is the one line this row adds: two made against one spent is infinite colorless '
+        + 'mana, which every published Ashnod’s Altar version of the loop claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Prosperous Innkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '3490-4050-4716-7743',
+        cards: ['Animation Module', 'Phyrexian Altar', 'Prosperous Innkeeper', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Prosperous Innkeeper, and Heroic Feast spends that life on one '
+        + 'target — which is the next counter. The altar is there to eat the Servo and pay for '
+        + 'the next one, and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where '
+        + 'Phyrexian Altar makes one coloured mana, against a cost of {1} either way. Spellbook '
+        + 'publishes the Phyrexian Altar version of this loop for 25 cards that turn it into '
+        + 'life and the Ashnod’s Altar version for none of them — while publishing Ashnod’s '
+        + 'Altar in the same loop 31 times over with Archangel of Thune in Heroic Feast’s '
+        + 'place. The spare mana is the one line this row adds: two made against one spent is '
+        + 'infinite colorless mana, which every published Ashnod’s Altar version of the loop '
+        + 'claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Soul Warden'],
+      confidence: 'verified',
+      from: {
+        id: '360-3490-4050-7743',
+        cards: ['Animation Module', 'Soul Warden', 'Phyrexian Altar', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Soul Warden, and Heroic Feast spends that life on one target — '
+        + 'which is the next counter. The altar is there to eat the Servo and pay for the next '
+        + 'one, and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where Phyrexian '
+        + 'Altar makes one coloured mana, against a cost of {1} either way. Spellbook publishes '
+        + 'the Phyrexian Altar version of this loop for 25 cards that turn it into life and the '
+        + 'Ashnod’s Altar version for none of them — while publishing Ashnod’s Altar in the '
+        + 'same loop 31 times over with Archangel of Thune in Heroic Feast’s place. The spare '
+        + 'mana is the one line this row adds: two made against one spent is infinite colorless '
+        + 'mana, which every published Ashnod’s Altar version of the loop claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Essence Warden'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3490-4050-7743',
+        cards: ['Animation Module', 'Essence Warden', 'Phyrexian Altar', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Essence Warden, and Heroic Feast spends that life on one target — '
+        + 'which is the next counter. The altar is there to eat the Servo and pay for the next '
+        + 'one, and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where Phyrexian '
+        + 'Altar makes one coloured mana, against a cost of {1} either way. Spellbook publishes '
+        + 'the Phyrexian Altar version of this loop for 25 cards that turn it into life and the '
+        + 'Ashnod’s Altar version for none of them — while publishing Ashnod’s Altar in the '
+        + 'same loop 31 times over with Archangel of Thune in Heroic Feast’s place. The spare '
+        + 'mana is the one line this row adds: two made against one spent is infinite colorless '
+        + 'mana, which every published Ashnod’s Altar version of the loop claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Case of the Uneaten Feast'],
+      confidence: 'verified',
+      from: {
+        id: '3490-4050-6720-7743',
+        cards: ['Animation Module', 'Phyrexian Altar', 'Case of the Uneaten Feast', 'Heroic Feast'],
+      },
+      swap: { out: 'Phyrexian Altar', in: 'Ashnod\'s Altar' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, the Servo entering '
+        + 'gains 1 life off Case of the Uneaten Feast, and Heroic Feast spends that life on one '
+        + 'target — which is the next counter. The altar is there to eat the Servo and pay for '
+        + 'the next one, and that is the whole of the swap: Ashnod’s Altar makes {C}{C} where '
+        + 'Phyrexian Altar makes one coloured mana, against a cost of {1} either way. Spellbook '
+        + 'publishes the Phyrexian Altar version of this loop for 25 cards that turn it into '
+        + 'life and the Ashnod’s Altar version for none of them — while publishing Ashnod’s '
+        + 'Altar in the same loop 31 times over with Archangel of Thune in Heroic Feast’s '
+        + 'place. The spare mana is the one line this row adds: two made against one spent is '
+        + 'infinite colorless mana, which every published Ashnod’s Altar version of the loop '
+        + 'claims too.',
+      produces: [
+        'Infinite +1/+1 counters on creatures you control', 'Infinite ETB', 'Infinite LTB',
+        'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite colorless mana',
+      ],
+    },
+    // The four that go the other way: Heroic Feast in Archangel of Thune's place,
+    // for the two lifegain-on-entry cards Spellbook's Heroic Feast rows skip.
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2811-2919-3490',
+        cards: ['Animation Module', 'Ashnod\'s Altar', 'Elas il-Kor, Sadistic Pilgrim', 'Archangel of Thune'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Ashnod\'s Altar eats the '
+        + 'Servo to pay for the next one, and Elas il-Kor, Sadistic Pilgrim gains 1 life every '
+        + 'time one enters. Heroic Feast does Archangel of Thune’s job here: one life gained is '
+        + 'one target, and one counter on any permanent you control is all Animation Module '
+        + 'asks for. Spellbook publishes the Heroic Feast version of this loop, with Phyrexian '
+        + 'Altar, for 25 cards that turn it into life — and Elas il-Kor, Sadistic Pilgrim is '
+        + 'not one of them.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite lifeloss',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heroic Feast', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'verified',
+      from: {
+        id: '1939-2034-2919-3490',
+        cards: ['Animation Module', 'Ashnod\'s Altar', 'Archangel of Thune', 'Lunarch Veteran // Luminous Phantom'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Ashnod\'s Altar eats the '
+        + 'Servo to pay for the next one, and Lunarch Veteran gains 1 life every time one '
+        + 'enters. Heroic Feast does Archangel of Thune’s job here: one life gained is one '
+        + 'target, and one counter on any permanent you control is all Animation Module asks '
+        + 'for. Spellbook publishes the Heroic Feast version of this loop, with Phyrexian '
+        + 'Altar, for 25 cards that turn it into life — and Lunarch Veteran is not one of them.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Phyrexian Altar', 'Heroic Feast', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-2919-3490-4050',
+        cards: ['Animation Module', 'Elas il-Kor, Sadistic Pilgrim', 'Archangel of Thune', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Phyrexian Altar eats '
+        + 'the Servo to pay for the next one, and Elas il-Kor, Sadistic Pilgrim gains 1 life '
+        + 'every time one enters. Heroic Feast does Archangel of Thune’s job here: one life '
+        + 'gained is one target, and one counter on any permanent you control is all Animation '
+        + 'Module asks for. Spellbook publishes the Heroic Feast version of this loop, with '
+        + 'Phyrexian Altar, for 25 cards that turn it into life — and Elas il-Kor, Sadistic '
+        + 'Pilgrim is not one of them.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Phyrexian Altar', 'Heroic Feast', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'verified',
+      from: {
+        id: '1939-2919-3490-4050',
+        cards: ['Animation Module', 'Archangel of Thune', 'Lunarch Veteran // Luminous Phantom', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Heroic Feast' },
+      why: 'Animation Module turns a +1/+1 counter into a Servo for {1}, Phyrexian Altar eats '
+        + 'the Servo to pay for the next one, and Lunarch Veteran gains 1 life every time one '
+        + 'enters. Heroic Feast does Archangel of Thune’s job here: one life gained is one '
+        + 'target, and one counter on any permanent you control is all Animation Module asks '
+        + 'for. Spellbook publishes the Heroic Feast version of this loop, with Phyrexian '
+        + 'Altar, for 25 cards that turn it into life — and Lunarch Veteran is not one of them.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    // ---- Virulent Emissary, four more times ----------------------------------
+    //
+    // Virulent Emissary is the card this audit kept arriving at: 54 published
+    // combos against Hinterland Sanctifier's 106, for a trigger that is the same
+    // sentence written twice. Deathtouch is the only rider, and green rather than
+    // white is the only difference that reaches the table — which is the whole of
+    // why a Golgari deck cares. These are the Animation Module loops where
+    // Spellbook wrote the Sanctifier down and not him.
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Archangel of Thune', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2919-3490-6097',
+        cards: ['Animation Module', 'Ashnod\'s Altar', 'Archangel of Thune', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Archangel of Thune turns each life gained into a +1/+1 counter, Animation Module '
+        + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
+        + 'Emissary gains the life for; Ashnod\'s Altar eats the Servo to pay the {1}. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white — and the life on entry is the only '
+        + 'thing the loop asks of it. Spellbook publishes these three cards with 31 other cards '
+        + 'that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Phyrexian Altar', 'Archangel of Thune', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '2919-3490-4050-6097',
+        cards: ['Animation Module', 'Archangel of Thune', 'Phyrexian Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Archangel of Thune turns each life gained into a +1/+1 counter, Animation Module '
+        + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
+        + 'Emissary gains the life for; Phyrexian Altar eats the Servo to pay the {1}. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white — and the life on entry is the only '
+        + 'thing the loop asks of it. Spellbook publishes these three cards with 31 other cards '
+        + 'that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Ashnod\'s Altar', 'Heliod, Sun-Crowned', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '1274-2034-3490-6097',
+        cards: ['Animation Module', 'Ashnod\'s Altar', 'Heliod, Sun-Crowned', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Heliod, Sun-Crowned turns each life gained into a +1/+1 counter, Animation Module '
+        + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
+        + 'Emissary gains the life for; Ashnod\'s Altar eats the Servo to pay the {1}. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white — and the life on entry is the only '
+        + 'thing the loop asks of it. Spellbook publishes these three cards with 30 other cards '
+        + 'that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Phyrexian Altar', 'Heliod, Sun-Crowned', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '1274-3490-4050-6097',
+        cards: ['Animation Module', 'Heliod, Sun-Crowned', 'Phyrexian Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Heliod, Sun-Crowned turns each life gained into a +1/+1 counter, Animation Module '
+        + 'turns the counter into a Servo for {1}, and the Servo entering is what Virulent '
+        + 'Emissary gains the life for; Phyrexian Altar eats the Servo to pay the {1}. Virulent '
+        + 'Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — “whenever '
+        + 'another creature you control enters, you gain 1 life” — with deathtouch as its only '
+        + 'rider, and green where the Sanctifier is white — and the life on entry is the only '
+        + 'thing the loop asks of it. Spellbook publishes these three cards with 30 other cards '
+        + 'that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    // Amalia's version of the same loop: the life sends her exploring rather than
+    // straight to a counter, and the counter she takes from it is what the Module
+    // reads.
+    {
+      cards: ['Amalia Benavides Aguirre', 'Animation Module', 'Ashnod\'s Altar', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '2034-3490-6097-6283',
+        cards: ['Amalia Benavides Aguirre', 'Animation Module', 'Ashnod\'s Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Every life gained sends Amalia Benavides Aguirre exploring, which puts a +1/+1 '
+        + 'counter on her; Animation Module turns that counter into a Servo for {1}; and the '
+        + 'Servo entering is the life. Ashnod\'s Altar eats the Servo to pay for the next one. '
+        + 'Virulent Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — '
+        + '“whenever another creature you control enters, you gain 1 life” — with deathtouch as '
+        + 'its only rider, and green where the Sanctifier is white, which is the only card this '
+        + 'row changes — Spellbook publishes the other three with 31 cards that turn the loop '
+        + 'into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite creature tokens',
+        'Destroy all creatures opponents control', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Amalia Benavides Aguirre', 'Animation Module', 'Phyrexian Altar', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '3490-4050-6097-6283',
+        cards: ['Amalia Benavides Aguirre', 'Animation Module', 'Phyrexian Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Every life gained sends Amalia Benavides Aguirre exploring, which puts a +1/+1 '
+        + 'counter on her; Animation Module turns that counter into a Servo for {1}; and the '
+        + 'Servo entering is the life. Phyrexian Altar eats the Servo to pay for the next one. '
+        + 'Virulent Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — '
+        + '“whenever another creature you control enters, you gain 1 life” — with deathtouch as '
+        + 'its only rider, and green where the Sanctifier is white, which is the only card this '
+        + 'row changes — Spellbook publishes the other three with 31 cards that turn the loop '
+        + 'into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Destroy all creatures opponents control', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    // ---- Warren Soultrader and a token doubler: seven rows -------------------
+    //
+    // Soultrader's ability costs a creature and a life: "Pay 1 life, sacrifice
+    // another creature: create a Treasure token." A card that adds a token to every
+    // token creation hands the creature back, and a card that gains 1 life when a
+    // creature enters hands the life back, so the only number that moves is the
+    // Treasure count. Spellbook publishes it with 59 such cards behind Chatterfang,
+    // 57 behind Stridehangar Automaton and 59 behind Quina — and this deck's Aunt
+    // May, Case of the Uneaten Feast and Virulent Emissary fall in the gaps.
+    {
+      cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '3000-5670-6097',
+        cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      why: 'Warren Soultrader pays 1 life and eats a Squirrel to make a Treasure, Chatterfang '
+        + 'puts a Squirrel back into that creation, and Aunt May gains the 1 life back as it '
+        + 'enters. The token count and the life total both end where they started; the '
+        + 'Treasures do not. Aunt May’s trigger is Hinterland Sanctifier’s sentence word for '
+        + 'word, plus a rider that reads only Spiders and never fires here. Spellbook publishes '
+        + 'these two cards with 59 other cards that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Case of the Uneaten Feast'],
+      confidence: 'verified',
+      from: {
+        id: '3000-5670-6097',
+        cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast' },
+      why: 'Warren Soultrader pays 1 life and eats a Squirrel to make a Treasure, Chatterfang '
+        + 'puts a Squirrel back into that creation, and Case of the Uneaten Feast gains the 1 '
+        + 'life back as it enters. The token count and the life total both end where they '
+        + 'started; the Treasures do not. Case of the Uneaten Feast gains the life on a '
+        + 'creature you control entering rather than on *another* one, which is the '
+        + 'Sanctifier’s trigger with the restriction taken off. Spellbook publishes these two '
+        + 'cards with 59 other cards that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '3000-5670-6097',
+        cards: ['Warren Soultrader', 'Chatterfang, Squirrel General', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Warren Soultrader pays 1 life and eats a Squirrel to make a Treasure, Chatterfang '
+        + 'puts a Squirrel back into that creation, and Virulent Emissary gains the 1 life back '
+        + 'as it enters. The token count and the life total both end where they started; the '
+        + 'Treasures do not. Virulent Emissary’s trigger is Hinterland Sanctifier’s sentence '
+        + 'word for word — “whenever another creature you control enters, you gain 1 life” — '
+        + 'with deathtouch as its only rider, and green where the Sanctifier is white. '
+        + 'Spellbook publishes these two cards with 59 other cards that turn the loop into '
+        + 'life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Warren Soultrader', 'Stridehangar Automaton', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '5670-6097-6291',
+        cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Stridehangar Automaton'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      why: 'Warren Soultrader pays 1 life and eats a Thopter to make a Treasure, Stridehangar '
+        + 'Automaton puts a Thopter back into that creation, and Aunt May gains the 1 life back '
+        + 'as it enters. The token count and the life total both end where they started; the '
+        + 'Treasures do not. Aunt May’s trigger is Hinterland Sanctifier’s sentence word for '
+        + 'word, plus a rider that reads only Spiders and never fires here. Spellbook publishes '
+        + 'these two cards with 57 other cards that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Warren Soultrader', 'Stridehangar Automaton', 'Case of the Uneaten Feast'],
+      confidence: 'verified',
+      from: {
+        id: '5670-6097-6291',
+        cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Stridehangar Automaton'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast' },
+      why: 'Warren Soultrader pays 1 life and eats a Thopter to make a Treasure, Stridehangar '
+        + 'Automaton puts a Thopter back into that creation, and Case of the Uneaten Feast '
+        + 'gains the 1 life back as it enters. The token count and the life total both end '
+        + 'where they started; the Treasures do not. Case of the Uneaten Feast gains the life '
+        + 'on a creature you control entering rather than on *another* one, which is the '
+        + 'Sanctifier’s trigger with the restriction taken off. Spellbook publishes these two '
+        + 'cards with 57 other cards that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Warren Soultrader', 'Stridehangar Automaton', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '5670-6097-6291',
+        cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Stridehangar Automaton'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Warren Soultrader pays 1 life and eats a Thopter to make a Treasure, Stridehangar '
+        + 'Automaton puts a Thopter back into that creation, and Virulent Emissary gains the 1 '
+        + 'life back as it enters. The token count and the life total both end where they '
+        + 'started; the Treasures do not. Virulent Emissary’s trigger is Hinterland '
+        + 'Sanctifier’s sentence word for word — “whenever another creature you control enters, '
+        + 'you gain 1 life” — with deathtouch as its only rider, and green where the Sanctifier '
+        + 'is white. Spellbook publishes these two cards with 57 other cards that turn the loop '
+        + 'into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Warren Soultrader', 'Quina, Qu Gourmet', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '5670-6097-6705',
+        cards: ['Warren Soultrader', 'Hinterland Sanctifier', 'Quina, Qu Gourmet'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Virulent Emissary' },
+      why: 'Warren Soultrader pays 1 life and eats a Frog to make a Treasure, Quina puts a Frog '
+        + 'back into that creation, and Virulent Emissary gains the 1 life back as it enters. '
+        + 'The token count and the life total both end where they started; the Treasures do '
+        + 'not. Virulent Emissary’s trigger is Hinterland Sanctifier’s sentence word for word — '
+        + '“whenever another creature you control enters, you gain 1 life” — with deathtouch as '
+        + 'its only rider, and green where the Sanctifier is white. Spellbook publishes these '
+        + 'two cards with 59 other cards that turn the loop into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite Treasure tokens',
+      ],
+    },
+    // ---- Trudge Garden: three rows -------------------------------------------
+    //
+    // Trudge Garden makes a 4/4 for {2} every time you gain life, which is why the
+    // audit in the README threw out eighteen candidates for it: this loop needs mana
+    // out of the sacrifice, and a free outlet gives it none. These three keep the
+    // mana. Ashnod's Altar makes the {2} by itself; Phyrexian Altar makes half and
+    // Pitiless Plunderer's Treasure the other half, which is the four-card version
+    // Spellbook publishes 31 times over. What is missing is only ever the card that
+    // gains the life.
+    {
+      cards: ['Trudge Garden', 'Ashnod\'s Altar', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2308-6097',
+        cards: ['Trudge Garden', 'Ashnod\'s Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Aunt May' },
+      why: 'A 4/4 Fungus Beast enters, Aunt May gains 1 life for it, and Trudge Garden pays {2} '
+        + 'off that trigger for the next 4/4 — the {2} Ashnod’s Altar has already made by '
+        + 'eating the last one. Aunt May’s trigger is Hinterland Sanctifier’s sentence word for '
+        + 'word, plus a rider that reads only Spiders and never fires here, and the loop asks '
+        + 'nothing else of it. Spellbook publishes Trudge Garden and Ashnod’s Altar with 62 '
+        + 'other cards that turn the token into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+    {
+      cards: ['Trudge Garden', 'Ashnod\'s Altar', 'Case of the Uneaten Feast'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2308-6097',
+        cards: ['Trudge Garden', 'Ashnod\'s Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Case of the Uneaten Feast' },
+      why: 'A 4/4 Fungus Beast enters, Case of the Uneaten Feast gains 1 life for it, and Trudge '
+        + 'Garden pays {2} off that trigger for the next 4/4 — the {2} Ashnod’s Altar has '
+        + 'already made by eating the last one. Case of the Uneaten Feast gains the life on a '
+        + 'creature you control entering rather than on *another* one, which is the '
+        + 'Sanctifier’s trigger with the restriction taken off, and the loop asks nothing else '
+        + 'of it. Spellbook publishes Trudge Garden and Ashnod’s Altar with 62 other cards that '
+        + 'turn the token into life.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+      ],
+    },
+
+    {
+      cards: ['Trudge Garden', 'Pitiless Plunderer', 'Phyrexian Altar', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'verified',
+      from: {
+        id: '2308-4050-4871-6097',
+        cards: ['Trudge Garden', 'Pitiless Plunderer', 'Phyrexian Altar', 'Hinterland Sanctifier'],
+      },
+      swap: { out: 'Hinterland Sanctifier', in: 'Lunarch Veteran // Luminous Phantom' },
+      why: 'Phyrexian Altar eats the 4/4 Fungus Beast for one mana and Pitiless Plunderer’s '
+        + 'Treasure makes the second, which is the {2} Trudge Garden charges for the next one — '
+        + 'and Lunarch Veteran gains the 1 life that triggers it as the token enters. Lunarch '
+        + 'Veteran’s trigger is Hinterland Sanctifier’s sentence word for word, with disturb as '
+        + 'its only rider, so this is the Sanctifier row with a different white one-drop. '
+        + 'Spellbook publishes the other three with 31 cards that turn the loop into life.',
+      produces: [
+        'Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite sacrifice triggers',
       ],
     },
   ];

@@ -1642,6 +1642,87 @@ replace, that the chain lands on the row's cards, that no row goes deeper than t
 and that the second step is a declared stand-in rather than another judgement; the
 layout harness checks the page prints both.
 
+### The lifegain families: thirty-six rows
+
+Kitchen Finks was one shape with one card missing from it. Asking the same question of
+every lifegain loop a single Golgari-white deck could assemble turned up something
+larger: **five shapes, 36 card sets that Spellbook does not publish while publishing
+their siblings** — and in each of them the card that is absent is the card that gains
+the life.
+
+The method is the substitution audit, narrowed to one deck so the answer is checkable:
+take every published combo whose cards that deck holds, find the one that names exactly
+one member of a group of interchangeable cards, and ask whether the version naming each
+*other* member is published too.
+
+Three groups did the work:
+
+| Group | In the deck | Published combos apiece |
+|---|---|---|
+| gains life when a creature enters | Soul Warden · Essence Warden · Lunarch Veteran · Prosperous Innkeeper · Elas il-Kor · Case of the Uneaten Feast · Aunt May · Hinterland Sanctifier · Virulent Emissary | 54–149 |
+| turns life into a +1/+1 counter | Archangel of Thune · Heliod, Sun-Crowned · Heroic Feast | 167–348 |
+| eats a creature for mana | Ashnod's Altar · Phyrexian Altar | 6,063 and 5,167 |
+
+**The loop, three cards at a time.** A counter on Scurry Oak, Herd Baloth or Basking
+Broodscale makes a token; the token entering gains a life; the life puts the next
+counter on. Three makers times three payoffs times the deck's nine gainers is 81
+combinations, of which **11 are absent** while the rest are published. Two were already
+in the file. The other nine are the first block.
+
+**The loop, with Animation Module.** *Whenever one or more +1/+1 counters are put on a
+permanent you control, you may pay `{1}`: create a 1/1 Servo* — so the same two cards
+close a circle round it, and an altar eats each Servo to pay for the next. Spellbook
+publishes that **31 times with Archangel of Thune, 30 with Heliod, and 25 with Heroic
+Feast — every Heroic Feast row using Phyrexian Altar.** With Ashnod's Altar there is not
+one, for any gainer at all. Seven rows fill that hole; four more give Heroic Feast the
+two gainers its published rows skip; four more are the Virulent Emissary versions, two
+of those going through Amalia Benavides Aguirre's explore trigger rather than straight
+to the counter.
+
+Those seven rows carry one line their source does not — *Infinite colorless mana* —
+because Ashnod's Altar makes `{C}{C}` against a cost of `{1}` where Phyrexian Altar
+makes one coloured mana and the loop breaks even. It is the line the published Ashnod's
+Altar versions of the same loop already claim.
+
+**Warren Soultrader and a token doubler.** *Pay 1 life, sacrifice another creature:
+create a Treasure token.* Chatterfang, Stridehangar Automaton or Quina hands the
+creature back inside the same token creation, a gainer hands the life back, and only the
+Treasure count moves. Published with 59, 57 and 59 gainers respectively — and seven of
+the combinations this deck can build are not among them.
+
+**Trudge Garden**, whose loop needs `{2}` out of the sacrifice — the reason the earlier
+audit threw out eighteen candidates for it. Ashnod's Altar makes that `{2}` alone;
+Phyrexian Altar makes half and Pitiless Plunderer's Treasure the other half. Three rows,
+each one a missing gainer rather than a missing outlet.
+
+**Virulent Emissary is the card this pass kept arriving at**, in 15 of the 36 rows:
+
+| | | |
+|---|---|---|
+| **Hinterland Sanctifier** | `{W}` 1/2 | Whenever another creature you control enters, you gain 1 life. |
+| **Virulent Emissary** | `{G}` 1/1 | Deathtouch<br>Whenever another creature you control enters, you gain 1 life. |
+
+The same sentence, one rider, and green rather than white — which is exactly the
+difference that decides whether this deck can run the line. It is in **54** published
+combos where the Sanctifier is in 106, so unlike Hammerhead it is not invisible to the
+audit — it is simply written into some of these loops and not others. That is why these
+are rows and not a stand-in rule: deathtouch means the two cards are not one card under
+two names, and *Cleric* against *Elf Assassin* is a difference some other combo will
+care about even though none of these do.
+
+**What this pass ruled out**, and why the count is 36 rather than 51:
+
+- **15 — Trudge Garden again.** Seven candidates swapped Ashnod's Altar for Phyrexian
+  Altar, which makes one mana where the loop spends `{2}`; that is why Spellbook's
+  Phyrexian Altar version needs Pitiless Plunderer as a fourth card. The other eight
+  went the other way and were **supersets**: Trudge Garden + Ashnod's Altar + a gainer is
+  already a published three-card combo, so adding Pitiless Plunderer to it is a card
+  Spellbook would never print.
+
+Everything else the sweep proposed was outside the lifegain question — Ghave and
+Camellia mana swaps, Basking Broodscale sacrifice-outlet supersets the first audit had
+already closed — and was left alone rather than half-answered.
+
 ### What this cannot find: a card Spellbook has never used
 
 The audit works by substitution *between two published cards*: it takes a combo
@@ -1933,6 +2014,11 @@ them were only settled by reading the cards — which is why the panel prints ho
 checking went rather than asking to be believed. The 1,889 Hammerhead rows are not
 part of that count and never were: the audit could not have proposed a single one of
 them, because it works by comparing two published cards and Hammerhead is not one.
+
+Those 44 were the candidates that first sweep proposed. Pointing the same method at the
+lifegain loops of one deck later proposed 51 more and kept 36 of them — the five shapes
+in *The lifegain families* above, with the 15 rule-outs written up there. The method did
+not change; what changed is which loops it was asked about.
 
 **A high substitution score is never a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
