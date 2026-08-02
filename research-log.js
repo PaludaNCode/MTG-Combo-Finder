@@ -253,24 +253,35 @@ const PASSES = [
       'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you '
         + 'sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: '
         + 'Put a +1/+1 counter on each other Squirrel you control.',
+      'Ygra, Eater of All': '{3}{B}{G} Legendary Creature — Elemental Cat 6/6. Ward—Sacrifice a '
+        + 'Food. Other creatures are Food artifacts in addition to their other types and have '
+        + '“{2}, {T}, Sacrifice this permanent: You gain 3 life.” Whenever a Food is put into a '
+        + 'graveyard from the battlefield, put two +1/+1 counters on Ygra.',
+      'Wicked Wolf': 'When this creature enters, it fights up to one target creature you don’t '
+        + 'control. Sacrifice a Food: Put a +1/+1 counter on this creature. It gains '
+        + 'indestructible until end of turn. Tap it.',
+      'Mushroom Watchdogs': 'Sacrifice a Food: Put a +1/+1 counter on this creature. It gains '
+        + 'vigilance until end of turn. Activate only as a sorcery.',
+      'Bill the Pony': '{3}{W} Legendary Creature — Horse 1/4. When Bill the Pony enters, create '
+        + 'two Food tokens. Sacrifice a Food: Until end of turn, target creature you control '
+        + 'assigns combat damage equal to its toughness rather than its power.',
+      'Glimmer Bairn': 'Sacrifice a token: This creature gets +2/+2 until end of turn.',
     },
     date: '2026-08-02',
     method: 'the reverse of the Camellia pass — every shape she is published in and he is not',
     proposed: 4,
-    examined: 0,
-    kept: 0,
+    examined: 4,
+    kept: 4,
     ruledOut: [],
     notes: 'The other direction, and the asymmetry is real: he triggers per Food where she '
-      + 'triggers per sacrifice event, so he is the strictly larger effect and should close '
-      + 'anything she closes. Four shapes survive the filters, all of them Ygra, Eater of All '
-      + 'plus a Food-sacrificing outlet — Wicked Wolf (1,525), Mushroom Watchdogs (1,287), Bill '
-      + 'the Pony (169), Glimmer Bairn (164). **They are proposed, not decided.** Concluding '
-      + 'needs Ygra’s text and each outlet’s, and this pass stopped rather than reason from '
-      + 'memory about them — which is the rule this file now enforces, and the one whose breach '
-      + 'cost the Camellia entry above 35 candidates. examined is 0 because that is true. The '
-      + 'two things worth checking first when somebody picks this up: his Rat cannot block where '
-      + 'her Squirrel can, and she is a Squirrel-tribal payoff where he is not, so any shape '
-      + 'turning on the token’s type or its ability to block will not swap.',
+      + 'triggers per sacrifice event, so he is the strictly larger effect and closes anything '
+      + 'she closes. All four survived reading and are rows. The loop is the same in each — Ygra '
+      + 'makes every other creature a Food, the outlet eats one for free, the Confectioner '
+      + 'answers with a Rat, and the Rat is itself a Food to eat next. Glimmer Bairn is the one '
+      + 'worth a second look: it sacrifices a *token* rather than a Food, and only works here '
+      + 'because Ygra makes the Rat token a Food as well, which is what the Confectioner reads. '
+      + 'Logged first as proposed-but-undecided, then finished once the five card texts were '
+      + 'actually fetched — which is the shape this file is meant to make normal.'
   },
   {
     subject: 'Cauldron Familiar, Samwise Gamgee and Academy Manufactor',
