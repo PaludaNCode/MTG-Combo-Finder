@@ -1,0 +1,39 @@
+name: Measure the combo steps
+
+# How big the steps really are, and what the right way to publish them is.
+#
+# The only figure this project has ever had for the steps was an extrapolation
+# from one combo — ~320 characters times 103,737 — and every design question
+# downstream turns on it: how many shards, how big a shard, whether SQLite over
+# range requests earns the WASM and the CSP relaxation it would cost.
+#
+# One pass over their 578 MB export, then every scenario measured off it. On
+# demand rather than scheduled: this asks a live third party a large question, and
+# nothing here should depend on their uptime. Run it, read the answer, decide, and
+# leave it alone again.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # Scenario G builds a real SQLite database rather than asserting what one
+      # would cost. Every ubuntu runner has the CLI; the tool skips that section
+      # and says so if it ever does not.
+      - name: Check sqlite3 is here
+        run: sqlite3 --version
+
+      - name: Measure
+        run: |
+          set -o pipefail
+          node tools/measure-steps.js | tee -a "$GITHUB_STEP_SUMMARY"
