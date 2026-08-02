@@ -22,6 +22,8 @@ const path = require('node:path');
 // talks to, and a synchronous child would block the event loop so those
 // requests were never answered — including the one carrying the verdict.
 const { execFile } = require('node:child_process');
+// The deploy's asset rewrite, shared rather than reimplemented — see stampedIndex().
+const { rewriteAssets } = require('./stamp-assets.js');
 
 const ROOT = path.join(__dirname, '..');
 const MIME = {
@@ -1052,7 +1054,10 @@ const STAMP = '?v=layout-test';
 // assertion already catches.
 function stampedIndex() {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  const stamped = html.replace(/(src|href)="([\w-]+\.(?:js|css))"/g, `$1="/stamped/$2${STAMP}"`);
+  // Through the deploy's own rewrite, not a second regex beside it. This fixture
+  // exists to prove the deploy's stamping works; built from a different rule, it
+  // would eventually prove that a rule nobody ships works.
+  const stamped = rewriteAssets(html, (url) => `/stamped/${url}${STAMP}`);
   const n = stamped.split(STAMP).length - 1;
   if (n < 6) {
     console.error(`stampedIndex() stamped ${n} asset URLs, expected at least 6 — the fixture is not testing what it claims.`);

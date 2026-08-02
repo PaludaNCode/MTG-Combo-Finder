@@ -2267,6 +2267,32 @@ admins can push directly in a pinch (escape hatch — prefer PRs).
 to `main`. Note: GitHub Pages on a **private** repo requires a paid GitHub plan —
 either make the repo public or run the page locally until then.
 
+**Asset URLs are stamped with the commit SHA, and nothing is listed by name.**
+Pages' CDN caches by full URL and a deploy purges nothing, so an unversioned URL can
+serve a stale file — or worse, new HTML with old JS — for up to ~20 minutes.
+`tools/stamp-assets.js` reads whatever each page references, stamps all of it, re-reads
+the file, and fails the deploy if anything local is left bare.
+
+That inversion is the point. The `sed` this replaces carried a hand-written list of
+filenames and a hand-written count per page, and asserted the count — which catches a
+*rename*, and cannot catch an *addition*: a script added to the page and not to the
+list ships unstamped while the count still matches. `unofficial.js` and `graph.js`
+each shipped that bug, and it is invisible outside production, because an unstamped
+URL resolves perfectly well — it just serves whatever the CDN cached last.
+
+**Writing it caught two more.** The list had nine entries; the pages actually
+reference eleven. `theme.js` — which runs in `<head>`, before the stylesheet, to stop
+a white flash on a dark page — and `favicon.svg` were never stamped at all. Worse,
+`tools/verify-layout.js` built its stamped-page fixture from its own regex, which
+*did* match `theme.js`: the test proved a stamped page worked while production served
+one that wasn't. Both now go through `rewriteAssets()` in the same file, so the
+fixture cannot drift from the deploy again.
+
+`search-worker.js` needs no entry and never did — it is loaded from `app.js` rather
+than from the HTML, and stamps its own imports out of its query string. Links between
+the two pages are deliberately left alone: `tiers.html` is navigation, and a commit
+SHA in a URL people bookmark is the opposite of the point.
+
 **Action versions are kept on their Node 24 majors.** GitHub deprecated the Node 20
 runtime, and every run was reporting the actions it uses as forced onto 24:
 `checkout@v5`, `setup-node@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`,

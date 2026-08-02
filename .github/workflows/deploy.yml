@@ -28,29 +28,19 @@ jobs:
       # unversioned URLs can serve a stale page — or worse, new HTML with old
       # JS — for up to ~20 minutes. index.html itself stays cacheable; this
       # only guarantees the HTML and its assets always match.
+      # No list of filenames and no expected count: the script reads whatever the
+      # page references, stamps all of it, and fails if anything local is left
+      # bare. The list-and-count version this replaces could only catch a rename
+      # — an added script went out unstamped while the count still matched, which
+      # is how unofficial.js and graph.js each shipped a stale-JS bug that only
+      # production could show. Adding a script to a page is now just adding a
+      # script to a page.
+      #
+      # search-worker.js needs no entry here and never did: it is loaded from
+      # app.js rather than from the HTML, and stamps its own imports out of its
+      # query string. See ASSET_VERSION in app.js.
       - name: Cache-bust asset URLs with the commit SHA
-        run: |
-          assets='href="style\.css\|src="parser\.js\|src="result-tiers\.js\|src="combos\.js\|src="unofficial\.js\|src="graph\.js\|src="combo-steps\.js\|src="search\.js\|src="app\.js\|src="tiers-page\.js'
-          # index.html loads nine of them, tiers.html three. Both counts are
-          # asserted: a rename should fail the deploy, not quietly publish the
-          # old URLs.
-          #
-          # A file added to the page and *not* to this list is the quieter half
-          # of the same mistake, and the half this check cannot catch: the new
-          # file goes out unstamped while the count still matches, which is a
-          # stale-JS bug that only ever appears in production. unofficial.js and
-          # graph.js both arrived that way, which is why this sentence is here —
-          # adding a script to either page means adding it above and bumping the
-          # count beside it.
-          #
-          # search-worker.js is deliberately absent: it is loaded from app.js
-          # rather than from the HTML, and it stamps its own imports out of its
-          # query string. See ASSET_VERSION in app.js.
-          for page in "index.html 9" "tiers.html 3"; do
-            set -- $page
-            sed -i "s/\($assets\)\"/\1?v=${GITHUB_SHA}\"/g" "$1"
-            test "$(grep -c "?v=${GITHUB_SHA}" "$1")" = "$2"
-          done
+        run: node tools/stamp-assets.js "${GITHUB_SHA}" index.html tiers.html
 
       - name: Stamp the build id so the pages say what they are running
         run: |

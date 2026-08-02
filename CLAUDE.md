@@ -69,13 +69,15 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **Load order is load-bearing.** `combos.js` reads the tier inventory at load time
   and `search.js` reads `combos.js` the same way. Adding a script means adding it in
   the right place in `index.html` *and* in `search-worker.js`.
-- **The deploy stamps `?v=<sha>` onto asset URLs** with a `sed` over the HTML, and
-  asserts the hit count per page (8 for `index.html`, 3 for `tiers.html`). Adding a
-  `<script>` to either page means adding it to the `assets` list in
-  `.github/workflows/deploy.yml` *and* bumping that count — otherwise the new file
-  ships unstamped and can serve stale from the Pages CDN, a bug that only appears in
-  production. `unofficial.js` and `graph.js` both arrived that way. The worker is
-  deliberately absent from the list: it stamps its own imports from its query string.
+- **The deploy stamps `?v=<sha>` onto asset URLs**, via `tools/stamp-assets.js`, which
+  reads whatever the page references rather than a list — so adding a `<script>` to a
+  page is just adding a `<script>` to a page. It fails the deploy if anything local is
+  left unstamped, which is the check that matters: an unstamped URL resolves fine and
+  serves whatever the CDN cached, so the bug is invisible outside production.
+  `unofficial.js`, `graph.js`, and for a long time `theme.js`, all shipped that way.
+  The worker is not in the HTML and stamps its own imports from its query string.
+  `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
+  so the test and the deploy cannot disagree — they did, for a while.
 - **Both HTML files carry a CSP** (`default-src 'none'`, `script-src 'self'`). No
   inline scripts, no CDN, no remote fonts or icons. `connect-src` names only
   `raw.githubusercontent.com` and Archidekt.
