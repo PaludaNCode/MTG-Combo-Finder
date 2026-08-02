@@ -16,52 +16,72 @@ purpose.
 
 ## Where we are — 2026-08-02
 
-**Merged and deployed.** PR [#58](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/58),
-twelve commits, `main` at `7edb4a5`. Merging to `main` is the release.
+**All ten technical items are settled.** Nine shipped; two were closed by a
+measurement rather than built. Three PRs — [#58](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/58),
+[#62](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/62),
+[#63](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/63) — each merged only after
+CI. Merging to `main` is the release, so all of it is deployed.
 
-Verified after the merge, from the workflow runs and the `data` branch itself:
+### What the payload costs now
 
-| | |
-| --- | --- |
-| CI on `main` | success |
-| Deploy site | success — first run of the derived asset stamping |
-| Update combo data | success — and it ran *immediately*, because `tools/fetch-combos.js` changed |
-| `check-snapshot.js` | passed, on its first real comparison against a published snapshot |
-| The SHA-pinned actions | resolved and ran |
+| | on the wire | parsed | heap |
+| --- | --- | --- | --- |
+| before any of this | 2.73 MB | 26.37 MB | 69 MB |
+| after interning (T1) | 1.72 MB | 9.37 MB | 35 MB |
+| after dropping the id (T1a) | **1.28 MB** | **7.00 MB** | 35 MB |
 
-**The interned payload is already live.** The refresh fired on the merge rather than
-waiting for the 04:17 cron, so the `data` branch blob is now **9,821,807 bytes**, down
-from 27,652,055 — matching the local measurement exactly.
+Measured off the live URL, not locally. The published blob is 7,345,151 bytes and
+serves as 1,344,989 on the wire.
 
-Two things worth knowing about the changeover:
+**Verified end to end.** Decoding the live payload yields **103,737 usable combo ids,
+none missing**, and the first row's id is `413-4094-4559-7839` — byte-identical to what
+it was before any of this work, but now rebuilt from a table rather than downloaded.
+7,241 card ids derived, 123 unsolved, and the 162 rows that could not be rebuilt kept
+their literal id.
 
-- `raw.githubusercontent.com` served the previous copy for several minutes after the
-  publish (`max-age=300`). Nothing breaks in the meantime: `decode()` is a no-op on
-  the old shape, so a reader mid-changeover gets correct results either way, and picks
-  the new file up on their next visit through the ETag revalidation.
-- `CACHE_NAME` moved to `-v3`, so every returning reader downloads the database once
-  more. That is the intended cost — the copy they were holding is nearly three times
-  the size for the same data.
+### The reading that decided the last two
 
-**Not verified: the live page itself.** The environment this work ran in cannot reach
-`paludancode.github.io`, so every claim above comes from workflow conclusions and the
-published blob rather than from loading the site. One look in a browser would close
-that gap — and the footer now tells you what the search cost while you are there.
+The footer went in (T10) so the data-side ideas could be argued from the device that
+pays for them. From a real phone, cold:
 
-### The eight, and what each turned up
+```
+ready in 1.6s (download 1.5s · parse 61ms · match 64ms)
+```
+
+That killed both remaining proposals and promoted the one filed as "optional, small,
+slightly risky" — which is the entire case for measuring before building.
+
+### Not verified
+
+**The live page itself.** The environment this ran in cannot reach
+`paludancode.github.io`, so every claim here comes from workflow conclusions and the
+published blob rather than from loading the site. The phone reading above is the
+closest thing to a real end-to-end confirmation, and it came from you, not from here.
+
+One measurement still missing: the same footer line on a **second** visit. It should
+show no download at all — roughly `ready in 0.1s (match 64ms)`. If it does not, the
+Cache Storage design is not doing what it claims, which would matter more than
+anything shipped here.
+
+### All ten, and what each turned up
 
 | | | |
 | --- | --- | --- |
-| T1 | done | 26.37 → 9.37 MB, 2.73 → 1.72 MB on the wire, **69 → 35 MB of heap** |
-| T4 | done | five decisions under test; three of my own expectations were wrong |
-| T5 | done | `theme.js` and `favicon.svg` had **never** been stamped, and the layout test disagreed with the deploy |
-| T6 | done | ESLint pinned; SHA pins + Dependabot on the one job with `contents: write` |
-| T7 | done | publish gate on four counts and every row's shape |
-| T8 | done | seven claims in the README, checked in CI |
-| T9 | done | four contrast failures, all `opacity` stacked on a token |
-| T10 | done | the footer says what the search cost |
-| T2 | **open** | on purpose — see stoppers |
-| T3 | **open** | on purpose — see stoppers |
+| T1 | shipped | 26.37 → 9.37 MB, and **69 → 35 MB of heap** |
+| T1a | shipped | the id was 27.5% of the wire and derivable — 1.72 → 1.28 MB |
+| T4 | shipped | five decisions under test; three of my own expectations were wrong |
+| T5 | shipped | `theme.js` and `favicon.svg` had **never** been stamped, and the layout test disagreed with the deploy |
+| T6 | shipped | ESLint pinned; SHA pins + Dependabot on the one job with `contents: write` |
+| T7 | shipped | publish gate on four counts and every row's shape |
+| T8 | shipped | seven claims in the README, checked in CI |
+| T9 | shipped | four contrast failures, all `opacity` stacked on a token |
+| T10 | shipped | the footer says what the search cost — and then decided T2 and T3 |
+| T2 | **closed** | the download does dominate, but it is a cold-load cost the cache already handles, and T1a took 26% off it for one field |
+| T3 | **closed** | it existed to skip a parse that is now 61 ms on a phone |
+
+Closing two is the result worth keeping. Both were substantial work, both looked
+compelling on paper, and both were justified by numbers nobody had collected — the
+instrument that collected them cost an afternoon and an eleven-line function.
 
 Of the features, only **F7** exists, and only as a prototype.
 
@@ -69,41 +89,29 @@ Of the features, only **F7** exists, and only as a prototype.
 
 ## Stoppers
 
-**1. F7 has no real data source, and one question decides its shape.**
-Does Commander Spellbook's per-variant endpoint send CORS headers that allow
-`paludancode.github.io`? It could not be answered here — this environment's network
-policy blocks their hosts and Scryfall outright. It takes one `fetch()` in the console
-on the live site to find out.
+One left, and it is a question rather than a task.
 
-- *Yes* → wire `setSource()` to their endpoint, add one `connect-src` entry to both
-  pages' CSP, done.
-- *No* (the likely answer, and the same restriction that made this project publish
-  data in the first place) → publish steps to the `data` branch, sharded by combo id.
-  More work, no CORS question, and `normalize()` already takes the payload shape.
+**F7 has no real data source.** Does Commander Spellbook's per-variant endpoint send
+CORS headers that allow `paludancode.github.io`? It could not be answered here — this
+environment's network policy blocks their hosts and Scryfall outright. One `fetch()` in
+the console on the live site settles it.
+
+- *Yes* → wire `setSource()` to their endpoint and add one `connect-src` entry to both
+  pages' CSP.
+- *No*, the likely answer, and the same restriction that made this project publish data
+  in the first place → publish steps to the `data` branch, sharded by combo id.
+  `normalize()` already takes that payload shape.
 
 Until then the panel answers "no steps recorded" for every combo but the three written
 out by hand.
 
-**2. T2 and T3 are blocked on a number from a real phone.**
-The instrument shipped — the footer now reads `ready in 1.4s (download 0.9s · parse
-0.4s · match 0.1s)`. What is needed is somebody loading the live site on a mid-range
-phone and reading it. The decision rule:
+**Cleared since the last update:**
 
-- If download and parse still cost seconds *after* T1, **T2** (shard the payload) is
-  worth its complexity.
-- If they do not, neither T2 nor T3 is, and both should be closed rather than left
-  open forever.
-
-Deciding this from a laptop is exactly the mistake the instrument exists to prevent.
-
-**3. Nothing in CI exercises `update-data.yml`.**
-It ran on the merge and passed, which is the best evidence available and better than
-none — but the daily 04:17 UTC run is unattended, and it is the one job that can
-force-push the `data` branch. A failure there is not an outage: the site keeps serving
-the last good snapshot, so the symptom is staleness, and the footer's date is where it
-shows.
-
----
+- *T2 and T3 needed a number from a real phone.* They got one. Both closed — see above.
+- *Nothing in CI exercises `update-data.yml`.* Still true of CI, but the workflow has
+  now run three times on merges, published twice, and passed its gate each time. The
+  daily 04:17 UTC run remains unattended, and a failure there shows up as staleness in
+  the footer's date rather than as an outage.
 
 ## Decisions waiting on you
 
