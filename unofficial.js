@@ -1503,6 +1503,742 @@
         'Infinite lifegain triggers', 'Infinite sacrifice triggers',
       ],
     },
+
+    // ---- the token-creation half of the counter loops ------------------------
+    //
+    // Everything above came from a question about one card. These came from asking
+    // the same question of the whole file: tools/substitution-scope.js points the
+    // method at every card rather than the one being asked about, and these are the
+    // two families that survived reading.
+    //
+    // Rosie Cotton reads *a token being created* where the cards Spellbook pairs
+    // with these loops read *a creature entering*. It is the same trigger wherever
+    // the creature entering is a token, which in all twenty of her rows it is — and
+    // it is why she needs no sacrifice outlet: the token creation is already the
+    // event, so she closes in two cards what Sadistic Glee closes in three.
+    {
+      cards: ['Rosie Cotton of South Lane', 'Devoted Druid', 'Nest of Scarabs'],
+      confidence: 'verified',
+      from: {
+        id: '2760-4762-7325',
+        cards: ['Mighty Mutanimals', 'Devoted Druid', 'Nest of Scarabs'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+        'Infinite green mana',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Devoted Druid', 'Hapatra, Vizier of Poisons'],
+      confidence: 'verified',
+      from: {
+        id: '2228-4762-7325',
+        cards: ['Mighty Mutanimals', 'Devoted Druid', 'Hapatra, Vizier of Poisons'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+        'Infinite green mana',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Devoted Druid', 'Flourishing Defenses'],
+      confidence: 'verified',
+      from: {
+        id: '1084-4762-7325',
+        cards: ['Mighty Mutanimals', 'Devoted Druid', 'Flourishing Defenses'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+        'Infinite green mana',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Cinderhaze Wretch', 'Nest of Scarabs'],
+      confidence: 'verified',
+      from: {
+        id: '1242-2760-7325',
+        cards: ['Mighty Mutanimals', 'Cinderhaze Wretch', 'Nest of Scarabs'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Cinderhaze Wretch', 'Hapatra, Vizier of Poisons'],
+      confidence: 'verified',
+      from: {
+        id: '1242-2228-7325',
+        cards: ['Mighty Mutanimals', 'Cinderhaze Wretch', 'Hapatra, Vizier of Poisons'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Cinderhaze Wretch', 'Flourishing Defenses'],
+      confidence: 'verified',
+      from: {
+        id: '1084-1242-7325',
+        cards: ['Mighty Mutanimals', 'Flourishing Defenses', 'Cinderhaze Wretch'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Barrenton Medic', 'Nest of Scarabs'],
+      confidence: 'verified',
+      from: {
+        id: '2335-2760-7325',
+        cards: ['Mighty Mutanimals', 'Barrenton Medic', 'Nest of Scarabs'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Barrenton Medic', 'Hapatra, Vizier of Poisons'],
+      confidence: 'verified',
+      from: {
+        id: '2228-2335-7325',
+        cards: ['Mighty Mutanimals', 'Hapatra, Vizier of Poisons', 'Barrenton Medic'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Barrenton Medic', 'Flourishing Defenses'],
+      confidence: 'verified',
+      from: {
+        id: '1084-2335-7325',
+        cards: ['Mighty Mutanimals', 'Flourishing Defenses', 'Barrenton Medic'],
+      },
+      swap: { out: 'Mighty Mutanimals', in: 'Rosie Cotton of South Lane' },
+      why: 'Nest of Scarabs, Hapatra and Flourishing Defenses all answer a -1/-1 counter with a token, and the token is what Rosie reads. She puts the +1/+1 counter back on the creature that just counted itself down, the two annihilate, and the untap is free again. Mighty Mutanimals closes it the same way for one counter on one target creature; Rosie differs only in needing that creature to be a token, which every one of these makes.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ghave, Guru of Spores', 'Utopia Mycon'],
+      confidence: 'derived',
+      from: {
+        id: '4214-4535-5189',
+        cards: ['Ghave, Guru of Spores', 'Utopia Mycon', 'Good-Fortune Unicorn'],
+      },
+      swap: { out: 'Good-Fortune Unicorn', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ghave, Guru of Spores', 'Cryptic Trilobite'],
+      confidence: 'derived',
+      from: {
+        id: '4535-4929-5189',
+        cards: ['Ghave, Guru of Spores', 'Cryptic Trilobite', 'Good-Fortune Unicorn'],
+      },
+      swap: { out: 'Good-Fortune Unicorn', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ghave, Guru of Spores', 'Earthcraft'],
+      confidence: 'derived',
+      from: {
+        id: '2757-2850-5189',
+        cards: ['Ghave, Guru of Spores', 'Earthcraft', 'Ivy Lane Denizen'],
+      },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana basic lands you control can produce',
+        'Infinite untap of basic lands you control',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Marath, Will of the Wild', 'Ashnod\'s Altar'],
+      confidence: 'derived',
+      from: {
+        id: '1335-2034-2850',
+        cards: ['Marath, Will of the Wild', 'Ivy Lane Denizen', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Marath, Will of the Wild', 'Mana Echoes'],
+      confidence: 'derived',
+      from: {
+        id: '1335-2440-2850',
+        cards: ['Marath, Will of the Wild', 'Mana Echoes', 'Ivy Lane Denizen'],
+      },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite ETB',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Utopia Mycon'],
+      confidence: 'derived',
+      from: {
+        id: '2744-3192-4214',
+        cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Utopia Mycon'],
+      },
+      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Ashnod\'s Altar'],
+      confidence: 'derived',
+      from: {
+        id: '2034-2850-3192',
+        cards: ['Ulasht, the Hate Seed', 'Ivy Lane Denizen', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Mana Echoes'],
+      confidence: 'derived',
+      from: {
+        id: '2440-2850-3192',
+        cards: ['Ulasht, the Hate Seed', 'Ivy Lane Denizen', 'Mana Echoes'],
+      },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite ETB',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Phyrexian Altar'],
+      confidence: 'derived',
+      from: {
+        id: '2744-3192-4050',
+        cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane' },
+      why: 'Ghave, Ulasht and Marath each pay {1} and remove a +1/+1 counter to make a token, and the outlet eats that token to refund the {1}. Rosie supplies the counter the activation spent — she reads the token being created, where the published version reads the creature entering. Derived: both halves are published and the loop is the one she already runs with Presence of Gond, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Xavier Sal, Infested Captain', 'Intruder Alarm'],
+      confidence: 'derived',
+      from: {
+        id: '1636-2850-3143',
+        cards: ['Xavier Sal, Infested Captain', 'Intruder Alarm', 'Ivy Lane Denizen'],
+      },
+      swap: { out: 'Ivy Lane Denizen', in: 'Rosie Cotton of South Lane' },
+      why: 'Intruder Alarm untaps the mana creatures that pay for the next token, and the token is what Rosie reads — she puts the +1/+1 counter on a creature, which is what the published third card does when a creature enters. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+        'Infinite untap of creatures',
+        'Infinite mana creatures you control can produce',
+        'Infinite copies of creature tokens you control',
+      ],
+    },
+    {
+      cards: ['Rosie Cotton of South Lane', 'Animation Module', 'Intruder Alarm'],
+      confidence: 'derived',
+      from: {
+        id: '1636-2744-3490',
+        cards: ['Animation Module', 'Intruder Alarm', 'Cathars\' Crusade'],
+      },
+      swap: { out: 'Cathars\' Crusade', in: 'Rosie Cotton of South Lane' },
+      why: 'Intruder Alarm untaps the mana creatures that pay for the next token, and the token is what Rosie reads — she puts the +1/+1 counter on a creature, which is what the published third card does when a creature enters. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Animation Module', 'Ashnod\'s Altar'],
+      confidence: 'derived',
+      from: {
+        id: '2034-2082-3490',
+        cards: ['Sadistic Glee', 'Animation Module', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Ghave, Guru of Spores', 'Utopia Mycon'],
+      confidence: 'derived',
+      from: {
+        id: '2082-4214-5189',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Utopia Mycon'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Animation Module', 'Phyrexian Altar'],
+      confidence: 'derived',
+      from: {
+        id: '2082-3490-4050',
+        cards: ['Sadistic Glee', 'Animation Module', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite sacrifice triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Ghave, Guru of Spores', 'Phyrexian Altar'],
+      confidence: 'derived',
+      from: {
+        id: '2082-4050-5189',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Scurry Oak', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-2082-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Woe Strider'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite scry 1',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Herd Baloth', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-2082-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Woe Strider'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite scry 1',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Scurry Oak', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2921-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Scurry Oak', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3967-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Scurry Oak', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2511-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Evolution Witness', 'Blood Pet'],
+      confidence: 'derived',
+      from: {
+        id: '2082-3944-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Blood Pet'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite storm count',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Herd Baloth', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-3967',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Herd Baloth', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2511-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Animation Module', 'Krark-Clan Ironworks'],
+      confidence: 'derived',
+      from: {
+        id: '2082-3490-4659',
+        cards: ['Sadistic Glee', 'Animation Module', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Herd Baloth', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2921-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Scurry Oak', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-5231',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite red mana',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Evolution Witness', 'Wild Cantor'],
+      confidence: 'derived',
+      from: {
+        id: '1497-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Wild Cantor'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite storm count',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Ulasht, the Hate Seed', 'Utopia Mycon'],
+      confidence: 'derived',
+      from: {
+        id: '2082-3192-4214',
+        cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Utopia Mycon'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Ulasht, the Hate Seed', 'Phyrexian Altar'],
+      confidence: 'derived',
+      from: {
+        id: '2082-3192-4050',
+        cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Evolution Witness', 'Reckless Barbarian'],
+      confidence: 'derived',
+      from: {
+        id: '1947-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Reckless Barbarian'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Herd Baloth', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-5686',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Scurry Oak', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-5686',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Ulasht, the Hate Seed', 'Thermopod'],
+      confidence: 'derived',
+      from: {
+        id: '2082-3192-5231',
+        cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Ghave, Guru of Spores', 'Thermopod'],
+      confidence: 'derived',
+      from: {
+        id: '2082-5189-5231',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The engine spends a +1/+1 counter to make a token, the outlet eats the token for the mana that pays for the next one, and the death puts the counter back. Necrosynthesis wants "another creature" to die and the token always is one. Derived: both halves are published, but this pairing has not been read against the cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Necrosynthesis', 'Herd Baloth', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-5231',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+      why: 'The counter makes a token, the outlet eats it, the death puts on the next counter. Necrosynthesis says "another creature dies" where Sadistic Glee says "a creature", and the creature dying here is the token, never the enchanted one. Read against all three cards.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite red mana',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
