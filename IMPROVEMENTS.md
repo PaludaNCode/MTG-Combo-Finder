@@ -1,45 +1,158 @@
-# Improvement suggestions
+# Improvements: where we are
 
-A review of the repository as it stands, split into technical work and features.
-Nothing here is a bug report — the tests pass, the CI gates are real, and the
-README already explains most of what is here better than a review could. These
-are the places where the next hour of work would buy the most.
+Started as a review of the repository. Eight of its ten technical items are now
+merged and deployed, so this reads top-down as **status first, then the original
+proposals** — kept because each one records what was measured and what it traded
+away, and the sections below are what the commits were written against.
 
-Every number below was measured against the live `data` branch snapshot
-(103,737 combos, 27.65 MB) on 2026-08-02, not estimated. The measurements are
-reproducible with the snippets quoted alongside them.
+Every number was measured against the live `data` branch, not estimated, and the
+figures in the proposals are the *before* readings taken on 2026-08-02.
 
 Each item carries a rough size (**S** / **M** / **L**) and a note on what it
-trades away, because several of these are in tension with things the README
-argues for on purpose.
+trades away, because several are in tension with things the README argues for on
+purpose.
 
 ---
 
-## Status
+## Where we are — 2026-08-02
 
-Eight of the ten technical items are **done** — see the README section named
-against each for what was actually built, and the git history for the order.
+**Merged and deployed.** PR [#58](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/58),
+twelve commits, `main` at `7edb4a5`. Merging to `main` is the release.
 
-| | | what it turned up |
+Verified after the merge, from the workflow runs and the `data` branch itself:
+
+| | |
+| --- | --- |
+| CI on `main` | success |
+| Deploy site | success — first run of the derived asset stamping |
+| Update combo data | success — and it ran *immediately*, because `tools/fetch-combos.js` changed |
+| `check-snapshot.js` | passed, on its first real comparison against a published snapshot |
+| The SHA-pinned actions | resolved and ran |
+
+**The interned payload is already live.** The refresh fired on the merge rather than
+waiting for the 04:17 cron, so the `data` branch blob is now **9,821,807 bytes**, down
+from 27,652,055 — matching the local measurement exactly.
+
+Two things worth knowing about the changeover:
+
+- `raw.githubusercontent.com` served the previous copy for several minutes after the
+  publish (`max-age=300`). Nothing breaks in the meantime: `decode()` is a no-op on
+  the old shape, so a reader mid-changeover gets correct results either way, and picks
+  the new file up on their next visit through the ETag revalidation.
+- `CACHE_NAME` moved to `-v3`, so every returning reader downloads the database once
+  more. That is the intended cost — the copy they were holding is nearly three times
+  the size for the same data.
+
+**Not verified: the live page itself.** The environment this work ran in cannot reach
+`paludancode.github.io`, so every claim above comes from workflow conclusions and the
+published blob rather than from loading the site. One look in a browser would close
+that gap — and the footer now tells you what the search cost while you are there.
+
+### The eight, and what each turned up
+
+| | | |
 | --- | --- | --- |
-| T1 | done | 26.37 MB → 9.37 MB, 69 MB → 35 MB of heap |
-| T4 | done | five decisions moved under test; three of my own expectations were wrong |
-| T5 | done | `theme.js` and `favicon.svg` had never been stamped, and the layout test's fixture disagreed with the deploy |
+| T1 | done | 26.37 → 9.37 MB, 2.73 → 1.72 MB on the wire, **69 → 35 MB of heap** |
+| T4 | done | five decisions under test; three of my own expectations were wrong |
+| T5 | done | `theme.js` and `favicon.svg` had **never** been stamped, and the layout test disagreed with the deploy |
 | T6 | done | ESLint pinned; SHA pins + Dependabot on the one job with `contents: write` |
 | T7 | done | publish gate on four counts and every row's shape |
 | T8 | done | seven claims in the README, checked in CI |
-| T9 | done | four contrast failures, all of them `opacity` over a token |
-| T10 | done | the footer now says what the search cost |
-| T2 | **not done** | deliberately — see below, and T10 for how to decide |
-| T3 | **not done** | same |
+| T9 | done | four contrast failures, all `opacity` stacked on a token |
+| T10 | done | the footer says what the search cost |
+| T2 | **open** | on purpose — see stoppers |
+| T3 | **open** | on purpose — see stoppers |
 
-T2 and T3 remain open on purpose: both trade the one-file design the README
-defends, and both were justified by numbers nobody had collected. T10 collects
-them now, and T1 has already taken the parse most of the way. Decide from a phone.
-
-Of the features, only **F7** exists, as a prototype.
+Of the features, only **F7** exists, and only as a prototype.
 
 ---
+
+## Stoppers
+
+**1. F7 has no real data source, and one question decides its shape.**
+Does Commander Spellbook's per-variant endpoint send CORS headers that allow
+`paludancode.github.io`? It could not be answered here — this environment's network
+policy blocks their hosts and Scryfall outright. It takes one `fetch()` in the console
+on the live site to find out.
+
+- *Yes* → wire `setSource()` to their endpoint, add one `connect-src` entry to both
+  pages' CSP, done.
+- *No* (the likely answer, and the same restriction that made this project publish
+  data in the first place) → publish steps to the `data` branch, sharded by combo id.
+  More work, no CORS question, and `normalize()` already takes the payload shape.
+
+Until then the panel answers "no steps recorded" for every combo but the three written
+out by hand.
+
+**2. T2 and T3 are blocked on a number from a real phone.**
+The instrument shipped — the footer now reads `ready in 1.4s (download 0.9s · parse
+0.4s · match 0.1s)`. What is needed is somebody loading the live site on a mid-range
+phone and reading it. The decision rule:
+
+- If download and parse still cost seconds *after* T1, **T2** (shard the payload) is
+  worth its complexity.
+- If they do not, neither T2 nor T3 is, and both should be closed rather than left
+  open forever.
+
+Deciding this from a laptop is exactly the mistake the instrument exists to prevent.
+
+**3. Nothing in CI exercises `update-data.yml`.**
+It ran on the merge and passed, which is the best evidence available and better than
+none — but the daily 04:17 UTC run is unattended, and it is the one job that can
+force-push the `data` branch. A failure there is not an outage: the site keeps serving
+the last good snapshot, so the symptom is staleness, and the footer's date is where it
+shows.
+
+---
+
+## Decisions waiting on you
+
+**Dependabot opened three PRs within a minute of the merge**, and they are not a rubber
+stamp:
+
+| | |
+| --- | --- |
+| [#59](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/59) | `actions/checkout` 5 → 7 |
+| [#60](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/60) | `actions/upload-artifact` 5 → 7 |
+| [#61](https://github.com/PaludaNCode/MTG-Combo-Finder/pull/61) | `actions/setup-node` 5.0.0 → 7.0.0 |
+
+All three jump two majors past the Node 24 versions the README documents and explains
+at length. Worth reading that section before merging any of them. Note also that the
+config covers every workflow, not only the SHA-pinned `update-data.yml` — that was the
+simple choice, and narrowing it is a one-line change if the noise is unwelcome.
+
+**Whether this file stays.** Most of it has shipped, and the README now carries the
+reasoning for each piece in the section that owns it. This is now a status page more
+than a proposal.
+
+---
+
+## Watch items
+
+- **`combo-steps.js` ships placeholder text** for three combos. It reads like
+  placeholder text, deliberately.
+- **The README's numbers are checked in CI now.** Rewording one of the seven anchored
+  sentences fails the build and names the claim — that is the design, not a bug.
+- **`--faint` is only safe on `--bg`.** 4.8:1 there, 4.3:1 on a panel. Anything quieter
+  than `--muted` on a panel has nowhere to go.
+
+---
+
+## What is next
+
+Nine features remain untouched. The ranking from the original review still holds, and
+**F1** is still the recommendation: `tools/combos-with.js` already answers the question
+players actually ask, it is CLI-only, and the worker is holding the whole database in
+memory by the time anyone would ask it.
+
+---
+
+## The original review
+
+What follows is the review as written, before any of it was built. The numbers are
+the *before* readings; the "what it costs" notes are what the work was judged
+against. Where an item shipped, the README section named in its commit is the
+current account of it.
 
 ## Technical
 
@@ -381,7 +494,7 @@ more entry in `MAP_VIEWS` and one more class on the SVG.
 
 ---
 
-## Ranked, if only a few get done
+## Ranked, if only a few get done (as originally written)
 
 1. **T1** — intern the payload. Transfer, parse and memory, in one contained change.
 2. **T5** — derive the deploy's asset list. Small, and removes a footgun that has
