@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '17 4 * * *' # daily; GitHub's scheduler is best-effort
   workflow_dispatch:
+    inputs:
+      allow_shrink:
+        description: 'Publish even if the snapshot is much smaller than the published one'
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -44,6 +49,25 @@ jobs:
 
       - name: Fetch the combo database
         run: node tools/fetch-combos.js "$RUNNER_TEMP/combos.json"
+
+      # Before the publish, not after. The data branch is one orphan commit that
+      # gets force-pushed, so there is no history and nothing to roll back to —
+      # the previous snapshot is gone the moment a worse one lands. The fetcher's
+      # own guards catch a file that is wrong on its own terms; this catches one
+      # that is only wrong beside yesterday's.
+      #
+      # A real shrink is possible, so there is a way to say so: re-run from the
+      # Actions tab with allow_shrink ticked. The override is a person deciding,
+      # which is the right shape for a judgement this script cannot make.
+      - name: Refuse a snapshot that lost a chunk of the database
+        env:
+          ALLOW_SHRINK: ${{ inputs.allow_shrink }}
+        run: |
+          # pipefail explicitly: Actions runs `bash -e`, which does not set it, so
+          # a `| tee` would hand back tee's exit code and this gate would report
+          # success for every refusal it printed.
+          set -o pipefail
+          node tools/check-snapshot.js "$RUNNER_TEMP/combos.json" | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Published as a single orphan commit so the data never accumulates
       # history and the repo stays small — same approach as MTG-Pricerunner.

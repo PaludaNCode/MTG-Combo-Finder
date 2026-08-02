@@ -1649,6 +1649,45 @@ at 78, with two full minutes of backoff never clearing it. Fewer, larger request
 is both the only thing that works and the neighbourly way to consume someone else's
 database.
 
+### The publish is gated on yesterday's snapshot
+
+The `data` branch is a single orphan commit, force-pushed. That keeps the repository
+small and it means **there is nothing to roll back to** — the moment a worse snapshot
+lands, the good one is gone.
+
+`tools/fetch-combos.js` has two guards of its own: refuse to write zero combos, and
+refuse to publish with fewer than 1,000 card identities. The second exists because
+that failure already happened once, silently. Neither compares today against
+yesterday, so a half-published upstream export — or a schema change that makes
+`compact()` drop most rows — produces a file that passes both and then overwrites
+the good one.
+
+`tools/check-snapshot.js` runs between the fetch and the publish and compares four
+counts against the published copy: combos, card identities, Game Changers, and
+template cards. Each is a subsystem that goes quietly dark rather than loudly wrong —
+no identities means no colour filtering, no Game Changers means every bracket check
+silently downgrades, no template cards means every slot stops resolving. A fall of
+more than **10%** in any of them stops the publish. Ten per cent of 103,737 is ten
+thousand combos disappearing overnight, which is not churn.
+
+It also checks the shape of every row, not a sample: `id`, a non-empty `c`, a string
+`i`, an array `p`. An upstream field rename does not error — it produces rows the
+page renders blank, and the first report of it is somebody looking at an empty combo.
+
+Three things it deliberately does **not** do. It does not block the first publish:
+with nothing on the data branch yet there is nothing to compare against, and it says
+so and passes. It does not fail when it cannot reach the published copy — being
+unable to compare is not evidence the new file is bad, and the refresh should not
+acquire a second network dependency. And it does not decide that a real shrink is
+impossible: re-run the workflow from the Actions tab with **allow_shrink** ticked
+when Spellbook has genuinely retired a family of combos. The override is a person
+deciding, which is the right shape for a judgement a script cannot make.
+
+**It runs before the publish, unlike `verify-unofficial.js`, which runs after.** That
+one checks our own citations, and holding today's combos back over a stale citation
+would be the wrong end of the stick. This one asks whether today's combos are worth
+publishing at all.
+
 ### Colour identity comes from Scryfall
 
 Commander Spellbook's `CardSerializer` exposes name, images and type line but
