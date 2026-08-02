@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7.0.0
         with:
           # 22, not 20: the coverage floors below need --test-coverage-lines,
           # which landed in 22.8, and every other workflow here is already on 22.
