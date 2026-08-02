@@ -78,12 +78,13 @@ test('research log: no pass reasons about a card whose text it did not record', 
 // the text and deleting a marker. Anyone tempted to raise the cap should read the
 // Camellia entry first — that is what an unread card costs.
 //
-// It went up once, 16 -> 36, and that was a correction rather than borrowing. The
+// It went up once, 16 -> 36, as a correction rather than borrowing, then down to 30
+// when Broodscale, Scurry Oak and Herd Baloth were finally read. The
 // first count only covered cards listed in `cards`, so a pass could reason about a
 // dozen *peers* and record none of them — Ashnod's Altar named twelve and had one
 // text. Those twenty were always unread; the number was wrong, not the debt. If it
 // ever rises again, that is the same bug or a new excuse, and neither is allowed.
-const UNREAD_DEBT = 36;
+const UNREAD_DEBT = 30;
 
 test('research log: the unread backlog only ever shrinks', () => {
   const unread = [];

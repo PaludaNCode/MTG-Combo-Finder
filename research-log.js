@@ -54,14 +54,14 @@ const PASSES = [
     cardIds: [6705, 5641, 2308, 3868, 1475, 5670, 3000],
     read: {
       'Quina, Qu Gourmet': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
-      'Basking Broodscale': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Basking Broodscale': 'Devoid. {1}{G}: Adapt 1. Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 COLORLESS Eldrazi Spawn creature token with \u201cSacrifice this token: Add {C}.\u201d 2/2 for {1}{G}.',
       'Trudge Garden': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
       'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
       'Cauldron Familiar': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
       'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token.',
       'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
-      'Scurry Oak': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
-      'Herd Baloth': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 GREEN Squirrel creature token. 1/2 for {2}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 GREEN Beast creature token. 4/4 for {3}{G}{G}.',
     },
     date: '2026-07',
     method: 'pairs of cards Spellbook itself puts in the same combo shape elsewhere',
@@ -95,9 +95,9 @@ const PASSES = [
       'Archangel of Thune': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
       'Heliod, Sun-Crowned': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
       'Kitchen Finks': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
-      'Scurry Oak': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
-      'Herd Baloth': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
-      'Basking Broodscale': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 GREEN Squirrel creature token. 1/2 for {2}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 GREEN Beast creature token. 4/4 for {3}{G}{G}.',
+      'Basking Broodscale': 'Devoid. {1}{G}: Adapt 1. Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 COLORLESS Eldrazi Spawn creature token with \u201cSacrifice this token: Add {C}.\u201d 2/2 for {1}{G}.',
       'Animation Module': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
     },
     date: '2026-07',
@@ -329,6 +329,42 @@ const PASSES = [
       + 'the same afternoon discovering the same silence, which is the cost this file exists to '
       + 'stop paying twice. Academy Manufactor sits in 661 combos and Cauldron Familiar in 624, '
       + 'so this is not obscurity — they simply have no near-twin.',
+  },
+  {
+    subject: 'Basking Broodscale and Spike Feeder',
+    cards: ['Basking Broodscale', 'Spike Feeder'],
+    cardIds: [5641, 2290],
+    read: {
+      'Basking Broodscale': 'Devoid. {1}{G}: Adapt 1. Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 COLORLESS Eldrazi Spawn creature token with “Sacrifice this token: Add {C}.” 2/2 for {1}{G}.',
+      'Spike Feeder': 'Enters with two +1/+1 counters on it. {2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature. Remove a +1/+1 counter from this creature: You gain 2 life. 0/0 for {1}{G}{G}.',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 GREEN Squirrel creature token. 1/2 for {2}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 GREEN Beast creature token. 4/4 for {3}{G}{G}.',
+      'Ivy Lane Denizen': 'Whenever another GREEN creature you control enters, put a +1/+1 counter on target creature. 2/3 for {3}{G}.',
+    },
+    date: '2026-08-02',
+    method: 'shapes the two counter-to-token peers are published in and Broodscale is not; the same search for Spike Feeder returned no peer at all',
+    proposed: 148,
+    examined: 12,
+    kept: 0,
+    ruledOut: [
+      { reason: 'the Eldrazi Spawn is COLOURLESS where the Squirrel and the Beast are green. '
+        + 'Ivy Lane Denizen reads "whenever another GREEN creature you control enters", so it '
+        + 'never sees the Spawn — and Scurry Oak + Ivy Lane Denizen is the biggest candidate '
+        + 'here at pop 28,108. Read against both cards', count: 1 },
+      { reason: 'Scurry Oak has EVOLVE and Broodscale does not, so a loop that feeds the Oak its '
+        + 'own counters from a bigger token has nothing to feed Broodscale. Coat of Arms '
+        + '(pop 3,912) is that shape', count: 1 },
+      { reason: 'the remaining 136 were not read. The peers are otherwise a near-exact match — '
+        + 'same trigger, same "one or more" batching, same "you may" — so those survivors are '
+        + 'plausible rather than dismissed, and this pass stopped instead of guessing' },
+    ],
+    notes: 'Spike Feeder has 83 published combos and NO peer at any threshold — the fourth card '
+      + 'in this deck the method is simply silent about. Broodscale is the opposite: two '
+      + 'near-twins and 148 candidates, and both that were read died on differences the card '
+      + 'text makes obvious and a similarity score cannot see — the token colour and an evolve '
+      + 'trigger. **kept: 0 is provisional on the 136 nobody read.** Clearing the UNREAD markers '
+      + 'on Broodscale, Scurry Oak and Herd Baloth in the two older passes took the backlog '
+      + '36 -> 30, which is what a debt entry is for.',
   },
 ];
 
