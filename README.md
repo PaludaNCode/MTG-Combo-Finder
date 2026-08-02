@@ -1753,10 +1753,31 @@ The numbers also land on the diagnostics object, so a failure report carries the
 without a second mechanism. Nothing is sent anywhere: this is a static page with no
 analytics, and the measurement is for whoever is looking at the screen.
 
-**This is what the data-side decisions were missing.** `IMPROVEMENTS.md` argues for
-shrinking the payload and for keeping a decoded copy in IndexedDB, and both are
-substantial work justified entirely by numbers nobody had collected. Now they can be
-argued from a phone instead of from a laptop.
+**This is what the data-side decisions were missing**, and it settled them the day it
+shipped. `IMPROVEMENTS.md` argued for sharding the payload and for keeping a decoded
+copy in IndexedDB, both substantial work justified entirely by numbers nobody had
+collected. The first reading off a real phone, cold:
+
+```
+ready in 1.6s (download 1.5s · parse 61ms · match 64ms)
+```
+
+**The parse was 61 ms.** Keeping a decoded copy in IndexedDB existed to skip that, on
+the stated worry that "phones are several times worse" at parsing — measured, they are
+not, because interning had already taken the parse from ~340 ms on a laptop to nothing
+worth naming on a phone. That idea is closed, and closed by a number rather than by an
+argument.
+
+**The download was 94% of the search**, which is why the combo id stopped being
+published: one field, 27.5% of the wire, no change to the design. Sharding the payload
+would go after the same third and cost the one-file property the section above defends
+— and it would go after a *cold* load only. Cache Storage serves every later visit and
+revalidates in the background, so the same phone waits about 125 ms on its second
+visit and never waits again.
+
+Which is the point of measuring rather than reasoning: the two ideas that looked
+biggest on paper were the two the numbers killed, and the one filed as "optional,
+small, slightly risky" turned out to be the only one worth building.
 
 ### Colours come from the cards, not from a commander
 
