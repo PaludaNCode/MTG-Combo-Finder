@@ -654,8 +654,8 @@ link stays as the way out for every case where the panel cannot answer.
 
 **The steps are not in the download, and that is the whole design.** The database is
 103,737 combos and 27.65 MB parsed, of which the results field alone is 13 MB. The
-steps add **51.70 MB** on top — twice the whole rest of the database, measured rather
-than guessed — so publishing them for every combo would swamp a download [the page
+steps add **51.70 MB** of text on top — twice the whole rest of the database, measured
+rather than guessed — so publishing them for every combo would swamp a download [the page
 already works hard to make once](#downloading-the-database-once-not-once-a-visit), to
 answer a question a reader asks about two or three combos out of thirty-three. So they
 are fetched for the one combo somebody stopped on, when they ask, and held for the rest
@@ -739,6 +739,13 @@ about content encodings, and a 404 is a complete and correct answer meaning "no 
 recorded". The cost lands on the publisher, which is where it can be measured and
 afforded — 103,737 files is 24s to `git add`, 1.6s to commit and a 19.8 MB pack, in a
 job that already spends minutes streaming a 512 MB export.
+
+As published the tree is **75.01 MB**, not the 51.70 MB of text in it. The difference is
+Spellbook's own field names — `notablePrerequisites` rather than `n` — plus the id on
+every record: 45% overhead, paid deliberately. It is what makes a published file
+something `normalize()` could have been handed straight from their API, and what lets
+`pick()` be tested as an equality rather than as a translation. The CDN gzips it back
+off on the wire; on the branch it is 23 MB in a build artifact nobody clones.
 
 Two details carry the correctness. Ids are hashed into **256 directories**, not for
 the reader — `raw.githubusercontent.com` does not care — but for git, which rewrites a

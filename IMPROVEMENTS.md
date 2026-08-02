@@ -83,29 +83,44 @@ Closing two is the result worth keeping. Both were substantial work, both looked
 compelling on paper, and both were justified by numbers nobody had collected — the
 instrument that collected them cost an afternoon and an eleven-line function.
 
-Of the features, only **F7** exists, and only as a prototype.
+Of the features, only **F7** exists — and it is no longer a prototype: it has real data, one request and about half a kilobyte per combo opened.
 
 ---
 
 ## Stoppers
 
-One left, and it is a question rather than a task.
-
-**F7 has no real data source.** Does Commander Spellbook's per-variant endpoint send
-CORS headers that allow `paludancode.github.io`? It could not be answered here — this
-environment's network policy blocks their hosts and Scryfall outright. One `fetch()` in
-the console on the live site settles it.
-
-- *Yes* → wire `setSource()` to their endpoint and add one `connect-src` entry to both
-  pages' CSP.
-- *No*, the likely answer, and the same restriction that made this project publish data
-  in the first place → publish steps to the `data` branch, sharded by combo id.
-  `normalize()` already takes that payload shape.
-
-Until then the panel answers "no steps recorded" for every combo but the three written
-out by hand.
+**None.** The last one — F7 having no real data source — is closed.
 
 **Cleared since the last update:**
+
+- *F7 had no data source.* It has one. The nightly refresh now publishes a steps file
+  per combo beside `combos.json`, and the page fetches the one combo somebody opened:
+  **one request, about half a kilobyte.** Five designs were built and measured; the
+  two that decided it are worth knowing about, because neither showed up in the
+  arithmetic.
+
+  **A range request to `raw.githubusercontent.com` does not address the bytes you
+  think it does.** They serve 24 of 25 probed extensions as `text/plain` and Fastly
+  gzips it, so `Range: bytes=1000-1099` returns bytes 1000–1099 *of the gzip stream* —
+  a 100 KB file reports its total size as 133. `Accept-Encoding` is a forbidden header,
+  so a browser cannot opt out. Only `.zip` came back with honest ranges. That also
+  means the SQLite figure in the comparison measured something a browser cannot do:
+  it was taken with `curl`, which sends no `Accept-Encoding`.
+
+  **And an offset table keyed by row number breaks every morning.** `search.js` serves
+  a cached `combos.json` for the session and revalidates behind it, so on the first
+  visit after a refresh the reader's row numbers are yesterday's and the offsets are
+  today's. Keyed by combo id — the only stable key — the table has to carry the ids,
+  which makes it want sharding, which costs the round trip the blob existed to avoid.
+
+  Follow that to the end and the index disappears into the filename. The cost lands on
+  the publisher, measured: 103,737 files is 24s to `git add`, 1.6s to commit and a
+  19.8 MB pack, inside a job that already streams a 512 MB export.
+
+- *Spellbook's endpoint was never the answer.* Their `CORS_ALLOWED_ORIGIN_REGEXES`
+  allows `*.commanderspellbook.com` and localhost — the same restriction that made
+  this project publish data in the first place. `setSource()` stays a seam anyway, so
+  if that ever changes their endpoint drops in with no adapter.
 
 - *T2 and T3 needed a number from a real phone.* They got one. Both closed — see above.
 - *Nothing in CI exercises `update-data.yml`.* Still true of CI, but the workflow has
@@ -129,6 +144,11 @@ at length. Worth reading that section before merging any of them. Note also that
 config covers every workflow, not only the SHA-pinned `update-data.yml` — that was the
 simple choice, and narrowing it is a one-line change if the noise is unwelcome.
 
+**Whether text search across combo descriptions is wanted.** It is the one feature
+that would change the answer above: searching 51.70 MB of prose is what a database is
+actually for, and none of the five designs measured can do it. Worth saying before
+anyone builds on the current shape.
+
 **Whether this file stays.** Most of it has shipped, and the README now carries the
 reasoning for each piece in the section that owns it. This is now a status page more
 than a proposal.
@@ -137,8 +157,16 @@ than a proposal.
 
 ## Watch items
 
-- **`combo-steps.js` ships placeholder text** for three combos. It reads like
-  placeholder text, deliberately.
+- **The steps tree has no manifest, on purpose.** The id *is* the URL and a 404 means
+  "none recorded" — which is what makes it cheap, and also what would make a wrong tree
+  invisible: a reader would press the button, be told there are no steps, and believe
+  it. `tools/check-snapshot.js --steps` computes the manifest instead of publishing
+  one, over every file rather than a sample.
+- **The tree is 75.01 MB across 103,737 files**, against 51.70 MB of actual text —
+  the gap is Spellbook's field names and the id on each record, kept on purpose so
+  what is published is a subset of what they send. If the branch weight ever becomes
+  the problem, shorter keys give back 23 MB and sharding 512 ways is the fallback that
+  needs no new ideas at all: 1 request, 21.7 KB, measured.
 - **The README's numbers are checked in CI now.** Rewording one of the seven anchored
   sentences fails the build and names the claim — that is the design, not a bug.
 - **`--faint` is only safe on `--bg`.** 4.8:1 there, 4.3:1 on a panel. Anything quieter
@@ -465,7 +493,11 @@ puts the found combos and top suggestions on the clipboard as plain text or mark
 — for a Discord message, or the deck's own description field on whatever site it
 lives — is one function over the result object that is already in hand.
 
-### F7 — What the combo actually does, without leaving the page (**M**, may not be possible)
+### F7 — What the combo actually does, without leaving the page (**M**, may not be possible) — **shipped**
+
+*As written, below. The "may not be possible" was right about the endpoint and wrong
+about the conclusion: the answer was to publish, not to link out. See Stoppers above,
+and the README section for what the five candidate designs each cost.*
 
 Rows carry results (`"Infinite storm count"`) but not prerequisites or steps, so
 "how do I actually do this" is a click through to Spellbook. Shipping the steps for
@@ -477,6 +509,9 @@ all depends on Spellbook's CORS allowlist, which is the same restriction that ca
 this project to publish data in the first place, so the honest expectation is that
 the answer is no. Worth a fifteen-minute spike to find out; if it fails, the current
 link-out is the correct design and should stay.
+
+*The steps turned out to be 51.70 MB rather than "longer than 13 MB", and the fetch
+costs one request and about half a kilobyte.*
 
 ### F8 — Remember more than one deck (**S**)
 

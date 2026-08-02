@@ -3,9 +3,9 @@
 //
 // Why this is fetched at all rather than published with everything else: the
 // combo database is 103,737 rows and 27.65 MB parsed, of which the results field
-// alone is 13 MB. The steps add 51.70 MB on top of that — twice the whole rest of
-// the database — so carrying them for every combo would swamp a download the page
-// already works hard to make once (see search.js). The reader only ever wants the
+// alone is 13 MB. The steps add 51.70 MB of text on top of that — twice the whole
+// rest of the database — so carrying them for every combo would swamp a download
+// the page already works hard to make once (see search.js). The reader only wants the
 // steps for a combo they have stopped to look at, so they are fetched for that one
 // combo, at the moment they ask. steps-source.js is where they come from, and why
 // they come from there; this file only decides what they say.

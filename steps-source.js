@@ -8,10 +8,10 @@
 //
 // ---- why a file per combo, and not the four cleverer things ------------------
 //
-// The steps are 51.70 MB across 103,737 combos — median 459 bytes each — which is
-// far too much to add to a download the page already works hard to make once. So
-// the reader fetches one combo's worth, on request. Five designs were built and
-// measured (tools/measure-steps.js); what each costs to open one combo:
+// The steps are 51.70 MB of text across 103,737 combos — median 459 bytes each —
+// which is far too much to add to a download the page already works hard to make
+// once. So the reader fetches one combo's worth, on request. Five designs were built
+// and measured (tools/measure-steps.js); what each costs to open one combo:
 //
 //   one file per combo        1 request     0.5 KB
 //   blob + offset table       1 request     0.5 KB   after a 126.9 KB index
@@ -45,9 +45,17 @@
 // how a CDN feels about content encodings, and a 404 is a complete and correct
 // answer meaning "no steps recorded".
 //
-// The cost lands on the publisher, which is where it can be measured and
-// afforded: 103,737 files is 24s to `git add`, 1.6s to commit and a 19.8 MB pack.
-// The nightly job already spends minutes streaming a 512 MB export.
+// The cost lands on the publisher, which is where it can be measured and afforded:
+// 103,737 files is 24s to `git add`, 1.6s to commit and a 19.8 MB pack, in a job that
+// already streams a 512 MB export.
+//
+// As published the tree is **75.01 MB**, not the 51.70 MB of text it carries. The
+// difference is Spellbook's own field names — `notablePrerequisites` rather than `n` —
+// plus the id stamped on every record. That is 45% overhead, paid deliberately: it is
+// what makes the published file something normalize() could have been handed straight
+// from their API, and what lets pick() be tested as an equality rather than a
+// translation. On the wire the CDN gzips it back off; on the branch it is 23 MB in a
+// build artifact nobody clones.
 (function (global) {
   'use strict';
 
