@@ -35,6 +35,7 @@ const parse = (text) => Number(String(text).replace(/,/g, ''));
 function claims() {
   const unofficial = require('../unofficial.js');
   const tiers = require('../result-tiers.js');
+  const research = require('../research-log.js');
   const templates = JSON.parse(fs.readFileSync(path.join(ROOT, 'templates.json'), 'utf8'));
 
   return [
@@ -51,6 +52,20 @@ function claims() {
       // "All 63 hand-written rows and the one stand-in rule are `verified`."
       find: /All ([\d,]+) hand-written rows/g,
       source: 'unofficial.js COMBOS',
+    },
+    {
+      what: 'candidates read across every recorded pass',
+      is: research.totals().examined,
+      // "**183 candidates have been read, out of thousands proposed**"
+      //
+      // The number the whole "nothing remains open" correction turns on, so it is
+      // the last one that should be allowed to drift. It now comes from
+      // research-log.js rather than from somebody adding up prose, which means a
+      // pass that gets logged moves the README and a pass that does not, cannot.
+      // \s+ because the sentence wraps mid-phrase in the README, which the first
+      // version of this anchor did not survive — and said so, correctly.
+      find: /\*\*([\d,]+) candidates have been\s+read/g,
+      source: 'research-log.js PASSES',
     },
     {
       what: 'stand-in rules',

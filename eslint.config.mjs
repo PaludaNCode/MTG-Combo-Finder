@@ -162,7 +162,12 @@ export default [
     // silence. theme.js, unofficial.js and graph.js sat outside both for a while
     // and a misspelled global in any of them would have gone to production
     // green. There is a test below that fails if a file is orphaned again.
-    files: ['tools/**/*.js', 'test/**/*.js', 'playwright.config.js', 'e2e/server.js'],
+    // research-log.js sits with the tools rather than with the shipped files above:
+    // the browser never loads it, so it is a plain CommonJS module and is linted as one.
+    files: [
+      'tools/**/*.js', 'test/**/*.js', 'playwright.config.js', 'e2e/server.js',
+      'research-log.js',
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'commonjs',
