@@ -460,6 +460,45 @@ function reportNewTemplates(combos, templateData) {
   console.log('Run the "Regenerate template card lists" workflow to pick them up.\n');
 }
 
+// Replace the two fields that repeat with indices into a table of their distinct
+// values. `c` holds card names and `p` holds result strings, and across 103,737
+// combos there are only ~7,400 distinct names and ~1,080 distinct results — so
+// "Infinite ETB" was being written to the file some forty thousand times.
+//
+// 27.65 MB becomes 9.37 MB, and 2.30 MB becomes 1.72 MB gzipped. The larger prize
+// is on the reader's side: JSON.parse builds a separate string per occurrence, so
+// the old shape landed as half a million short strings and 69 MB of heap held for
+// the life of the worker. Resolved through a table it is 35 MB, measured, because
+// every occurrence is then the same string object.
+//
+// Mutates the rows, which is safe here — they were built by compact() a moment ago
+// and nothing else has seen them.
+function intern(combos) {
+  const names = [];
+  const results = [];
+  const nameIndex = new Map();
+  const resultIndex = new Map();
+  const indexOf = (value, table, index) => {
+    let at = index.get(value);
+    if (at === undefined) {
+      at = table.length;
+      table.push(value);
+      index.set(value, at);
+    }
+    return at;
+  };
+
+  for (const combo of combos) {
+    // Order within a row is preserved. It carries nothing for `c` — the page
+    // sorts card names itself, deliberately, because Spellbook lists them in
+    // authoring order — but `p` is ranked, and reordering it would quietly
+    // change which result a row leads with.
+    if (combo.c) combo.c = combo.c.map((n) => indexOf(n, names, nameIndex));
+    if (combo.p) combo.p = combo.p.map((p) => indexOf(p, results, resultIndex));
+  }
+  return { names, results };
+}
+
 async function main() {
   console.log('Downloading the combo database from', BULK_URL);
 
@@ -493,6 +532,8 @@ async function main() {
 
   reportNewTemplates(combos, templateData);
 
+  const { names, results } = intern(combos);
+
   const payload = {
     updatedAt: new Date().toISOString(),
     source: 'https://commanderspellbook.com/',
@@ -511,6 +552,12 @@ async function main() {
     // tools/try-deck.js already reads this field.
     unresolvable: templateData.unresolvable || {},
     templateCards,
+    // The two string tables `c` and `p` index into. Ahead of the combos so a
+    // reader of the raw file meets them before the rows that need them.
+    // DeckCombos.decode() resolves both and drops these; see the note there for
+    // what it buys and why the rest of the code never sees an integer.
+    names,
+    results,
     combos,
   };
   fs.writeFileSync(OUT, JSON.stringify(payload));
@@ -518,6 +565,7 @@ async function main() {
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, `
     + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, `
     + `${gameChangers.length} Game Changers, ${mb} MB`);
+  console.log(`  interned ${names.length} card names and ${results.length} results`);
 }
 
 module.exports = {

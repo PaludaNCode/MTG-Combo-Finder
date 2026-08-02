@@ -1,0 +1,25 @@
+# Dependabot, for the one thing this repository has to keep up to date.
+#
+# There is no npm ecosystem entry because there are no npm dependencies: ESLint and
+# Playwright are fetched per run rather than installed, and package.json pins the
+# exact version of each by hand. A `package-ecosystem: npm` block here would find no
+# lockfile and nothing to do.
+#
+# What it is for is the SHA pins in .github/workflows/update-data.yml. A pinned SHA
+# is safer than a tag and staler by the same amount — nothing repoints it when the
+# action ships a fix, and an unmaintained pin is its own kind of risk. Dependabot
+# rewrites the SHA and the `# v5.1.0` comment beside it together, which is the only
+# reason pinning by SHA is maintainable at all.
+#
+# Monthly, not weekly: this repository has four or five action references and the
+# point is to be told when one moves, not to spend a pull request a week on it.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'ci'
+    labels:
+      - dependencies

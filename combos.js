@@ -24,6 +24,45 @@
     return set;
   }
 
+  // ---- the published payload's string tables --------------------------------
+  //
+  // combos.json interns the two fields that repeat: card names in `c` and result
+  // strings in `p`. There are 103,737 combos and only 7,364 distinct card names
+  // and 1,079 distinct results between them — "Infinite ETB" was being written to
+  // the file some forty thousand times. Published as indices into two tables at
+  // the top of the payload, the file goes from 27.65 MB to 9.37 MB, and 2.30 MB
+  // to 1.72 MB on the wire.
+  //
+  // The bigger win is memory, and it is worth being precise about where it comes
+  // from. JSON.parse builds a separate string for every occurrence, so the old
+  // payload landed as ~500,000 short strings and 69 MB of heap that the worker
+  // then holds for the life of the session. Resolving indices through a table
+  // hands back the *same* string object each time, so the arrays hold pointers to
+  // 8,443 strings instead: 35 MB, measured, for identical data.
+  //
+  // Which is why decoding here rather than teaching thirty call sites to read an
+  // integer is not a compromise. Measured both ways: keeping the indices and
+  // resolving lazily also lands at 35 MB. The saving is in the sharing, not in
+  // the integers, so the rest of this file never learns that any of this happened.
+  //
+  // Mutates in place — building a copy would need both shapes in memory at once,
+  // which is the one thing this is for. Idempotent: the tables are dropped on the
+  // way out, so a second call finds nothing to do. A payload with no tables is
+  // returned untouched, which is what makes the test fixtures and any older local
+  // combos.json keep working.
+  function decode(data) {
+    if (!data || !Array.isArray(data.names)) return data;
+    const names = data.names;
+    const results = Array.isArray(data.results) ? data.results : [];
+    for (const combo of data.combos || []) {
+      if (Array.isArray(combo.c)) combo.c = combo.c.map((i) => names[i]);
+      if (Array.isArray(combo.p)) combo.p = combo.p.map((i) => results[i]);
+    }
+    delete data.names;
+    delete data.results;
+    return data;
+  }
+
   function variantCardNames(variant) {
     return ((variant && variant.uses) || [])
       .map((u) => (u.card && u.card.name) || u.name)
@@ -1164,6 +1203,7 @@
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
     comboSize, sizeBreakdown, bracketCheck,
+    decode,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

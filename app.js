@@ -125,7 +125,128 @@
     return DeckCombos.orderComboNames(DeckCombos.variantCardNames(variant), { lead, trail });
   }
 
-  function comboCard(variant, deckNames, lead, trail) {
+  // ---- how a combo is actually executed ------------------------------------
+  //
+  // A disclosure on the combo row: pressed, it fetches the steps for that one
+  // combo and draws them underneath. Collapsed by default and collapsed on every
+  // row — a list of twenty-two combos is a list, and twenty-two sets of steps is
+  // a document nobody asked for.
+  //
+  // Four states, and the last two matter as much as the first two: the steps are
+  // fetched, so they can be slow, they can fail, and Spellbook can simply not have
+  // written any. Each says what happened and leaves the link beside the control as
+  // the way out. See combo-steps.js for where the text comes from.
+  let disclosureSeq = 0;
+
+  function stepsList(data, derived) {
+    const body = el('div', 'steps-body');
+
+    // An unofficial row borrows the published combo's steps, and the whole point
+    // of the row is that one card has been swapped — so the steps name a card the
+    // reader does not have. Saying so is not optional: unattributed, this panel
+    // would be the page quietly printing instructions that do not match the deck.
+    const swaps = derived ? (derived.swaps || (derived.swap ? [derived.swap] : [])) : [];
+    if (swaps.length) {
+      const caveat = el('p', 'steps-caveat');
+      caveat.appendChild(document.createTextNode('These are the published combo’s steps. Read '));
+      swaps.forEach((step, i) => {
+        if (i > 0) caveat.appendChild(document.createTextNode(', and '));
+        caveat.appendChild(el('span', 'card-name', step.out));
+        caveat.appendChild(document.createTextNode(' as '));
+        caveat.appendChild(el('span', 'card-name', step.in));
+      });
+      caveat.appendChild(document.createTextNode('.'));
+      body.appendChild(caveat);
+    }
+
+    if (data.prerequisites.length) {
+      body.appendChild(el('h4', 'steps-head', 'Before you start'));
+      const ul = el('ul', 'steps-pre');
+      data.prerequisites.forEach((line) => ul.appendChild(el('li', null, line)));
+      body.appendChild(ul);
+    }
+
+    if (data.steps.length) {
+      body.appendChild(el('h4', 'steps-head', 'Then, in order'));
+      // A real <ol>: these are a sequence, the numbers carry the order, and a
+      // reader who loses their place mid-loop needs them.
+      const ol = el('ol', 'steps-list');
+      data.steps.forEach((line) => ol.appendChild(el('li', null, line)));
+      body.appendChild(ol);
+    }
+
+    return body;
+  }
+
+  function stepsDisclosure(comboId, derived) {
+    // Optional, like the unofficial rows are to search.js: if the file did not
+    // arrive, the row keeps its link and loses a control it never had.
+    if (typeof ComboSteps === 'undefined' || !ComboSteps) return null;
+
+    const id = 'steps-' + (disclosureSeq += 1);
+    const control = el('button', 'steps-toggle');
+    control.type = 'button';
+    control.setAttribute('aria-expanded', 'false');
+    control.setAttribute('aria-controls', id);
+    control.appendChild(el('span', 'chev', '▸'));
+    control.appendChild(document.createTextNode('How it works'));
+
+    const panel = el('div', 'steps');
+    panel.id = id;
+    panel.hidden = true;
+
+    let loaded = false;
+    // Waiting, failed and "there aren't any" all go here. The panel drops its
+    // quoted-block styling for them: a line saying there is nothing to read
+    // should not occupy the page as heavily as three steps that there are.
+    const say = (className, text) => {
+      panel.textContent = '';
+      panel.classList.add('is-note');
+      panel.appendChild(el('p', className, text));
+    };
+
+    control.addEventListener('click', () => {
+      const open = panel.hidden;
+      panel.hidden = !open;
+      control.setAttribute('aria-expanded', String(open));
+      control.classList.toggle('is-open', open);
+      if (!open || loaded) return;
+
+      // Only fetched once, and only when someone asks. A row nobody opens costs
+      // nothing, which is the entire reason the steps are not in the download.
+      loaded = true;
+      say('steps-pending', 'Looking up the steps…');
+      ComboSteps.get(comboId).then((data) => {
+        if (data && data.error) {
+          // Retryable, unlike a combo with no steps — so the next press asks again.
+          loaded = false;
+          say('steps-note', 'Could not load the steps: ' + data.error
+            + '. The link beside this one goes to the combo’s own page, which has them.');
+          return;
+        }
+        if (!data) {
+          say('steps-note', 'No steps recorded for this combo yet.');
+          return;
+        }
+        panel.textContent = '';
+        panel.classList.remove('is-note');
+        panel.appendChild(stepsList(data, derived));
+      });
+    });
+
+    return { control, panel };
+  }
+
+  // `opts.steps` puts the "How it works" disclosure on the row. Off by default,
+  // and deliberately not on every row that draws a combo: the steps are how you
+  // execute a line you have, so they belong on the two panels that answer "what
+  // can this deck do" — the combos found and the unofficial ones — and nowhere
+  // else. A suggestion is a combo the deck cannot assemble yet, a one-slot-away
+  // row is the same, and the pieces panel relists combos the found panel has
+  // already offered them on, once per card in each. Left on all four, a page
+  // carried 429 controls, most of them a second or third way to ask the same
+  // question.
+  function comboCard(variant, deckNames, lead, trail, opts) {
     const card = el('article', 'combo');
 
     const header = el('h3');
@@ -163,10 +284,13 @@
     // who wants the steps or the card images should not have to scroll past a wall of
     // result chips to find the way out.
     //
-    // No "how it works" here on purpose. Spellbook writes one, but the fetcher
-    // does not publish it (test/scanner.test.js pins that): a description for
-    // every one of ~100k combos would multiply the download the page already
-    // makes. The link below goes to the combo's own page, which has the steps.
+    // The steps are not published with the combos — a description for every one of
+    // ~100k combos would multiply the download the page already makes, and
+    // test/scanner.test.js pins that the fetcher drops them. They are fetched for
+    // the one combo a reader stops on, by combo-steps.js, from this same line: the
+    // line that used to exist only to send people away now offers to bring the
+    // answer here first, and keeps the link as the way out when it cannot.
+    //
     // An unofficial row has no page of its own to link to — that is what makes it
     // unofficial. It links to the published combo it was derived from instead, which
     // is also the evidence for it, so a reader can go and judge the swap.
@@ -174,6 +298,11 @@
     const linkId = derived ? derived.from && derived.from.id : variant.id;
     if (linkId) {
       const p = el('p', 'combo-link');
+      const steps = opts && opts.steps ? stepsDisclosure(linkId, derived) : null;
+      if (steps) {
+        p.appendChild(steps.control);
+        p.appendChild(document.createTextNode(' · '));
+      }
       p.appendChild(link(
         SPELLBOOK_COMBO_URL + encodeURIComponent(linkId) + '/',
         derived ? 'View the published combo this came from →' : 'View on Commander Spellbook →'
@@ -195,6 +324,9 @@
         p.appendChild(compare);
       }
       card.appendChild(p);
+      // Directly under the control that opens it. A disclosure that opens
+      // somewhere else on the row reads as something else happening.
+      if (steps) card.appendChild(steps.panel);
     }
 
     // Why we think this one works, on the row rather than in a footnote. A combo
@@ -227,7 +359,7 @@
   // shown as a choice rather than as separate combos. The variants are real and
   // still reachable — each keeps its own link to Spellbook.
   function comboGroupCard(group) {
-    if (group.choices.length < 2) return comboCard(group.variants[0], null);
+    if (group.choices.length < 2) return comboCard(group.variants[0], null, null, null, { steps: true });
 
     const card = el('article', 'combo');
 
@@ -270,7 +402,7 @@
     // The interchangeable cards go last in every version, so each row reads in the
     // same shape as the heading above them — the shared cards, then the one that
     // makes this version this version.
-    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices)));
+    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices, { steps: true })));
     card.appendChild(details);
 
     return card;
@@ -363,32 +495,21 @@
   // "Suggested additions", does not need a caption telling the reader it is about
   // combo sizes — and a caption repeated on every row is 80 of them.
   function sizeRow(variants) {
-    const breakdown = DeckCombos.sizeBreakdown(variants);
-    if (!breakdown.length) return null;
+    // Slate pills, deliberately not the green/yellow/grey a result uses: those say
+    // what a combo achieves, and "2-card" must not read as "this wins". What each
+    // pill says, and which one is marked easiest, is DeckView.sizePills().
+    const pills = DeckView.sizePills(DeckCombos.sizeBreakdown(variants));
+    if (!pills.length) return null;
 
     const row = el('span', 'sizes');
-    // A single combo needs no multiplier: "2-card" says it.
-    const only = breakdown.length === 1 && breakdown[0].count === 1;
-    breakdown.forEach(({ size, count }) => {
-      // Two cards is as small as a combo gets, so a two-card pill is the easiest
-      // thing on the page and the one worth marking. Filling whichever pill
-      // happens to be smallest on its row would instead mark "smallest of one
-      // size" — a card whose seven combos all need three would light up for it.
-      const easiest = size <= 2;
-      // Slate, deliberately not the green/yellow/grey a result uses: those say
-      // what a combo achieves, and "2-card" must not read as "this wins".
-      const label = only ? size + '-card' : count + ' × ' + size + '-card';
-      const pill = el('span', 'size' + (easiest ? ' is-easiest' : ''), label);
-      pill.title = count === 1
-        ? `One combo needing ${size} cards on the table`
-        : `${count} combos needing ${size} cards on the table`;
+    pills.forEach((p) => {
+      const pill = el('span', 'size' + (p.easiest ? ' is-easiest' : ''), p.label);
+      pill.title = p.title;
       row.appendChild(pill);
     });
     return row;
   }
 
-  // One interchangeable card: its name, where to read about it, and a way to take
-  // it. Two lists render these — the first few, and the folded-away remainder.
   function alternativeItem(name) {
     const li = el('li');
     // The name is the column that gives way when the row is too narrow, clipped with
@@ -452,26 +573,21 @@
   // whole claim, and a claim a reader has to hover to find is one the page is
   // hiding.
   function splitLine(official, ours, plus) {
-    if (!ours) return null;
+    const parts = DeckView.splitParts(official, ours, plus);
+    if (!parts) return null;
     const line = el('p', 'split-line');
-    const n = (count) => (plus ? '+' : '') + count;
-    if (official) {
-      line.appendChild(document.createTextNode(n(official) + ' official'));
+    if (parts.official) {
+      line.appendChild(document.createTextNode(parts.official));
       line.appendChild(el('span', 'dot', ' · '));
     }
-    line.appendChild(el('span', 'ours', n(ours) + ' unofficial'));
-    // A card whose whole case is ours says so, rather than leaving the reader to
-    // infer it from a missing half.
-    if (!official) {
+    line.appendChild(el('span', 'ours', parts.ours));
+    if (parts.none) {
       line.appendChild(el('span', 'dot', ' · '));
-      line.appendChild(document.createTextNode('none published'));
+      line.appendChild(document.createTextNode(parts.none));
     }
     return line;
   }
 
-  // One suggestion, which may be a choice between cards that do the same job.
-  // Grouping them matters: four cards each claiming "+7 combos" is four ways of
-  // describing one decision, and reads as four decisions.
   function suggestionCard(group, rank, deckNames) {
     const card = el('article', 'combo suggestion');
     const [first, ...rest] = group.cards;
@@ -776,7 +892,7 @@
     // Already expanded by search.js, like every other list here. Expanding twice
     // reads `c` and `p` off a row that no longer has them and quietly renders a
     // combo with no cards and no results.
-    rows.forEach((row) => body.appendChild(comboCard(row, null)));
+    rows.forEach((row) => body.appendChild(comboCard(row, null, null, null, { steps: true })));
   }
 
   function renderPieces(container, included, unofficial) {
@@ -861,60 +977,6 @@
     });
     select('all');
     return row;
-  }
-
-  // How many of the cards they all combo with to name before the number speaks
-  // for itself.
-  const SHARED_NAMED = 3;
-
-  // What picking these cards out found, in a sentence. Every number in it is
-  // counted rather than estimated — see compare() in graph.js — and the last one
-  // is the one worth the feature: what cutting the lot would actually cost, which
-  // is not the sum of their combo counts, because a combo whose slot another of
-  // your cards can fill survives losing this one.
-  function pickedSentence(found) {
-    const names = found.cards;
-    const list = names.length === 1 ? names[0]
-      : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
-    const plural = names.length > 2 ? 'all three' : 'both';
-
-    if (names.length === 1) {
-      const parts = [list + ' is in ' + found.inAll + ' of your combos'];
-      if (found.shared.length) {
-        parts.push('with ' + found.shared.length + ' other '
-          + (found.shared.length === 1 ? 'card' : 'cards'));
-      }
-      let text = parts.join(', ') + '. ';
-      text += found.lost
-        ? 'Cutting it would cost ' + found.lost + ' of them'
-          + (found.saved ? '; the other ' + found.saved + ' have a stand-in' : '')
-        : 'Cutting it costs nothing — every one of them has a stand-in in your deck';
-      return text + '. Pick another card to compare the two.';
-    }
-
-    const relation = [];
-    if (found.inAll) relation.push(found.inAll + ' need ' + plural);
-    if (found.interchangeable) {
-      relation.push(found.interchangeable + ' take any one of them in the same slot');
-    }
-    if (!relation.length) relation.push('no combo of yours needs them together or takes one for another');
-
-    // "3 of your combos need both, 4 take any one of them" — what the numbers
-    // count is said once, on the first of them, whichever that turns out to be.
-    let text = list + ': ' + relation.join(', ').replace(/^(\d+)/, '$1 of your combos') + '. ';
-    if (found.shared.length) {
-      const named = found.shared.slice(0, SHARED_NAMED).join(', ');
-      const more = found.shared.length - SHARED_NAMED;
-      text += (names.length > 2 ? 'All three' : 'Both') + ' combo with ' + named
-        + (more > 0 ? ' and ' + more + ' more' : '') + '. ';
-    }
-    text += found.lost
-      ? 'Cut ' + plural + ' and ' + found.lost + ' of the ' + found.atRisk
-        + ' combos they appear in would go'
-        + (found.saved ? '; the other ' + found.saved + ' have a stand-in' : '')
-      : 'Cut ' + plural + ' and none of the ' + found.atRisk
-        + ' combos they appear in would go — each has a stand-in in your deck';
-    return text + '.';
   }
 
   function mapLegend() {
@@ -1161,7 +1223,7 @@
     };
 
     const describe = () => {
-      summary.textContent = picked.length ? pickedSentence(ComboGraph.compare(graph, picked)) : '';
+      summary.textContent = picked.length ? DeckView.pickedSentence(ComboGraph.compare(graph, picked)) : '';
       summary.classList.toggle('is-empty', !picked.length);
       groups.forEach((g, id) => g.setAttribute('aria-pressed', String(picked.includes(id))));
     };
@@ -1326,7 +1388,6 @@
   //
   // Wizards' own words for each bracket, so a number on the page is followed by
   // the name people actually use for it.
-  const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
 
   // The five brackets as a row of pips, in the shape of the colour identity line
   // above it: a label, a compact visual, no prose. Brackets the list has ruled
@@ -1344,7 +1405,6 @@
   // that the panel has to carry everything a reader needed in order not to be misled
   // — the reasoning, the Game Changers *with their links*, the combos behind the
   // floor, and the criteria nobody checked — rather than being a summary of it.
-  const BRACKET_STEPS = [1, 2, 3, 4, 5];
 
   function renderBracket(container, bracket) {
     container.textContent = '';
@@ -1352,9 +1412,15 @@
     // check is worse than none, so nothing is drawn.
     if (!bracket) return;
 
+    // The words, the reasoning and which pip is in which state are all
+    // DeckView.bracketProse() — every one of them a claim about what a deck is
+    // allowed to be, and every one of them able to be wrong while rendering
+    // perfectly. This function draws what it returns.
+    const prose = DeckView.bracketProse(bracket);
+    if (!prose) return;
     const changers = bracket.gameChangers || [];
     const wins = bracket.twoCardWins || [];
-    const floor = bracket.floor;
+    const named = prose.named;
 
     const line = el('p', 'bracket-line');
     line.appendChild(el('span', 'bracket-label', 'Bracket'));
@@ -1362,11 +1428,6 @@
     // The pips and their explanation share a wrapper: the panel is positioned
     // against it, and shown while anything inside it is hovered or focused.
     const wrap = el('span', 'bracket-wrap');
-
-    const headline = floor > 2
-      ? `Bracket ${floor}${floor === 4 ? '' : ' at the earliest'}`
-      : 'Nothing here rules out bracket 2';
-    const named = headline + ' — ' + BRACKET_NAMES[floor];
 
     const scale = el('button', 'bracket-scale');
     scale.type = 'button';
@@ -1376,9 +1437,8 @@
     // than nothing. The pips are decorative; the button carries the answer.
     scale.setAttribute('aria-label', named + '. Why this bracket?');
     scale.title = named;
-    BRACKET_STEPS.forEach((n) => {
-      const state = n < floor ? ' out' : n === floor ? ' floor' : ' open';
-      const pip = el('span', 'step' + state, String(n));
+    prose.steps.forEach((step) => {
+      const pip = el('span', 'step ' + step.state, String(step.n));
       pip.setAttribute('aria-hidden', 'true');
       scale.appendChild(pip);
     });
@@ -1388,21 +1448,7 @@
     why.id = 'bracket-why';
     why.appendChild(el('p', 'why-floor', named));
 
-    const counts = [];
-    if (changers.length) {
-      counts.push(changers.length + ' Game Changer' + (changers.length === 1 ? '' : 's'));
-    }
-    if (wins.length) {
-      counts.push(wins.length === 1
-        ? '1 two-card combo that ends the game'
-        : wins.length + ' two-card combos that end the game');
-    }
-    const reason = floor === 4
-      ? `${counts.join(' · ')}. Bracket 3 allows three Game Changers, so a list with more sits at 4.`
-      : floor === 3
-        ? `${counts.join(' · ')}. Brackets 1 and 2 allow neither, so 3 is the floor.`
-        : 'No Game Changers, and no two-card combo that says it ends the game.';
-    why.appendChild(el('p', 'why-reason', reason));
+    why.appendChild(el('p', 'why-reason', prose.reason));
 
     // Named and still linked. These are the cards the answer rests on, and a name
     // you cannot look up is a claim the reader has to take on trust.
@@ -1504,7 +1550,7 @@
   // ---- combo database ------------------------------------------------------
   //
   // Downloading, parsing and matching all happen in search-worker.js. The
-  // published file is ~25 MB of JSON over ~100k combos, and doing that here
+  // published file is ~9 MB of JSON over ~100k combos, and doing that here
   // meant the page stopped responding for as long as it took.
 
   // Everything we learn about a load, kept so a failure can be shown in full
@@ -1793,6 +1839,8 @@
     line.appendChild(document.createTextNode(
       ` · ${(meta.count || 0).toLocaleString()} combos · refreshed daily`
     ));
+    const timing = DeckView.timingSentence(meta.timing);
+    if (timing) line.appendChild(el('span', 'timing', ' · ' + timing));
     line.dataset.source = meta.source || 'network';
     line.dataset.via = lastVia || 'unknown';
     line.title = meta.source === 'cache'

@@ -404,3 +404,48 @@ test('a near-miss row Spellbook already publishes does not appear twice', () => 
   );
   assert.strictEqual(out.almostIncludedByAddingColors.length, 1);
 });
+
+// ---- what the search cost --------------------------------------------------
+//
+// The three phases are timed because the alternative is guessing which of them
+// dominates, and the answer depends entirely on the device. These tests do not
+// assert durations — a fake fetch resolving from memory takes no measurable time,
+// and a test that demanded otherwise would be a flake. What they pin is the
+// *shape*: which phases are reported, and which are deliberately absent.
+
+test('a first search reports all three phases and a total', async () => {
+  setup({});
+  stubFetch([new Response(payload('net'))]);
+  const out = await ComboSearch.run(URL_A, DECK);
+  for (const phase of ['fetch', 'parse', 'match', 'total']) {
+    assert.strictEqual(typeof out.meta.timing[phase], 'number', phase + ' is timed');
+    assert.ok(out.meta.timing[phase] >= 0, phase + ' is not negative');
+  }
+  assert.strictEqual(out.meta.timing.bytes, payload('net').length);
+});
+
+// The absence is the measurement. A zero would read as "the download was instant"
+// rather than "there was no download", and the second search of a session is the
+// case the in-memory dataset exists to make free.
+test('a second search reports no download and no parse', async () => {
+  setup({});
+  stubFetch([new Response(payload('net'))]);
+  await ComboSearch.run(URL_A, DECK);
+  const again = await ComboSearch.run(URL_A, DECK);
+  assert.strictEqual(again.meta.source, 'memory');
+  assert.strictEqual(again.meta.timing.fetch, undefined);
+  assert.strictEqual(again.meta.timing.parse, undefined);
+  assert.strictEqual(typeof again.meta.timing.match, 'number');
+  assert.strictEqual(typeof again.meta.timing.total, 'number');
+});
+
+test('the timings are on the diagnostics too, where a failure report reads them', async () => {
+  setup({});
+  stubFetch([new Response(payload('net'))]);
+  await ComboSearch.run(URL_A, DECK);
+  const diag = ComboSearch.diagnostics();
+  assert.strictEqual(typeof diag.msFetch, 'number');
+  assert.strictEqual(typeof diag.msParse, 'number');
+  assert.strictEqual(typeof diag.msMatch, 'number');
+  assert.strictEqual(typeof diag.msTotal, 'number');
+});

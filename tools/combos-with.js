@@ -63,7 +63,7 @@ async function main() {
 
   const res = await fetch(COMBOS_URL, { headers: { Accept: 'application/json', 'User-Agent': UA } });
   if (!res.ok) throw Object.assign(new Error('HTTP ' + res.status), { status: res.status });
-  const data = await res.json();
+  const data = DeckCombos.decode(await res.json());
 
   const wanted = names.map((n) => DeckCombos.nameKey(n));
   const deckFile = process.env.DECK_FILE || DEFAULT_DECK;

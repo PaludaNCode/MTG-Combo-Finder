@@ -31,7 +31,7 @@
 
 const fs = require('node:fs');
 const { COMBOS, STAND_INS } = require('../unofficial.js');
-const { nameKey } = require('../combos.js');
+const { nameKey, decode } = require('../combos.js');
 
 const COMBOS_URL = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
 
@@ -124,11 +124,14 @@ function checkStandIns(data, rules) {
   return { problems, summaries };
 }
 
+// decode() turns the payload's interned card names and result strings back into
+// strings; it is a no-op on a payload that has no tables, so a local copy in
+// either shape reads the same.
 async function load(path) {
-  if (path) return JSON.parse(fs.readFileSync(path, 'utf8'));
+  if (path) return decode(JSON.parse(fs.readFileSync(path, 'utf8')));
   const res = await fetch(COMBOS_URL);
   if (!res.ok) throw new Error('the data branch answered HTTP ' + res.status);
-  return res.json();
+  return decode(await res.json());
 }
 
 async function main() {

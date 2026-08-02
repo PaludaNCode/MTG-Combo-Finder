@@ -1,6 +1,6 @@
 // The combo search, off the thread that draws the page.
 //
-// Downloading ~25 MB of JSON, parsing it and walking ~100k combos are all
+// Downloading the combo database, parsing it and walking ~100k combos are all
 // things the window used to do between one paint and the next, which is why a
 // search on a phone felt like the tab had died. None of it touches the DOM, so
 // none of it needs to be there.

@@ -3,6 +3,13 @@
 // the page has no build, and a node_modules that only a linter needs would be the
 // first entry in it.
 //
+// The version in package.json is pinned exactly, not to `eslint@9`. Fetching per run
+// is a choice about what to install; it should not also be a choice to run whatever
+// was published this morning. On a floating major, a new rule or a changed default
+// turns a day nobody touched this repository into a red build, from a release nobody
+// here decided to take. Playwright is pinned the same way and for the same reason —
+// bump both deliberately, in a commit that says so.
+//
 // `node --check` already catches syntax. What it cannot catch is the class of
 // mistake that parses perfectly: a misspelled global (`documnet`), a variable left
 // behind by a refactor, a duplicate object key, a `case` that falls through. Those
@@ -35,6 +42,9 @@ const BROWSER = {
   btoa: 'readonly',
   console: 'readonly',
   getComputedStyle: 'readonly',
+  // A monotonic clock, in the window and in the worker. search.js times the
+  // three phases of a search with it.
+  performance: 'readonly',
   globalThis: 'readonly',
   // Worker scope.
   self: 'readonly',
@@ -52,6 +62,8 @@ const PAGE = {
   DeckParser: 'readonly',
   DeckCombos: 'readonly',
   ComboGraph: 'readonly',
+  ComboSteps: 'readonly',
+  DeckView: 'readonly',
   ComboSearch: 'readonly',
   ResultTiers: 'readonly',
 };
@@ -70,6 +82,7 @@ const NODE = {
   setTimeout: 'readonly',
   clearTimeout: 'readonly',
   globalThis: 'readonly',
+  performance: 'readonly',
 };
 
 // The mistakes worth failing a build over, in both environments.
@@ -111,6 +124,7 @@ export default [
     files: [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
+      'combo-steps.js', 'view-model.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

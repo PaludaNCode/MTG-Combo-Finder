@@ -37,6 +37,13 @@ jobs:
       - name: Unit tests, with coverage floors
         run: npm run test:coverage
 
+      # The README states real counts — tier entries, unofficial rows, templates —
+      # and they move when the files they describe do. This checks the ones this
+      # repository can count; anything measured against the published database is
+      # somebody else's data on a particular morning and stays prose.
+      - name: The README's countable numbers
+        run: npm run check:readme
+
       # Renders the real page at phone/tablet/desktop widths and fails on
       # horizontal overflow, a collapse control that doesn't collapse, or the
       # desktop columns not splitting.
@@ -49,6 +56,11 @@ jobs:
       # presses, a real touchscreen, a reload, a shared link opened in a second
       # tab. See "Two browser test suites" in the README for which check belongs
       # in which of the two.
+      #
+      # e2e/a11y.spec.js runs in here too, on the same browsers, because it needs
+      # exactly what this step already pays for: a real engine computing real
+      # colours over a page that has actually been searched. It fetches axe-core
+      # alongside Playwright — pinned, like everything else fetched per run.
       #
       # Only Chromium is installed. Three engines would triple a step that is
       # already the longest in this job, and nothing here is engine-specific —

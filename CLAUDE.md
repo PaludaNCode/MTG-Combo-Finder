@@ -20,8 +20,9 @@ npm test                  # unit tests, node:test, zero deps (~370 tests, ~1s)
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change
-npm run test:ui           # Playwright browser tests (desktop + phone profiles)
+npm run test:ui           # Playwright browser tests + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
+npm run check:readme      # the README's countable numbers still match the files
 
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
@@ -51,6 +52,8 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `search.js` | `ComboSearch` | download, Cache Storage, running a search |
 | `graph.js` | `ComboGraph` | the combo map's arithmetic — no DOM |
 | `theme.js` | `DeckTheme` | light/dark resolution, loaded from `<head>` |
+| `combo-steps.js` | `ComboSteps` | a combo's prerequisites and steps, fetched on demand |
+| `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
 | `app.js` | — | the only file that touches the DOM of `index.html` |
 | `tiers-page.js` | — | the same for `tiers.html` |
 
@@ -65,17 +68,26 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 
 - **`app.js` and `tiers-page.js` are not covered by the unit tests** — by design.
   They are the layout test's job. Logic you want tested belongs in one of the
-  DOM-free modules.
+  DOM-free modules. If getting it wrong would produce a page that looks right and
+  says something false — a count, a pluralisation, a bracket's reasoning — it is a
+  decision, and it belongs in `view-model.js`, where `node --test` can reach it.
 - **Load order is load-bearing.** `combos.js` reads the tier inventory at load time
   and `search.js` reads `combos.js` the same way. Adding a script means adding it in
   the right place in `index.html` *and* in `search-worker.js`.
-- **The deploy stamps `?v=<sha>` onto asset URLs** with a `sed` over the HTML, and
-  asserts the hit count per page (8 for `index.html`, 3 for `tiers.html`). Adding a
-  `<script>` to either page means adding it to the `assets` list in
-  `.github/workflows/deploy.yml` *and* bumping that count — otherwise the new file
-  ships unstamped and can serve stale from the Pages CDN, a bug that only appears in
-  production. `unofficial.js` and `graph.js` both arrived that way. The worker is
-  deliberately absent from the list: it stamps its own imports from its query string.
+- **The deploy stamps `?v=<sha>` onto asset URLs**, via `tools/stamp-assets.js`, which
+  reads whatever the page references rather than a list — so adding a `<script>` to a
+  page is just adding a `<script>` to a page. It fails the deploy if anything local is
+  left unstamped, which is the check that matters: an unstamped URL resolves fine and
+  serves whatever the CDN cached, so the bug is invisible outside production.
+  `unofficial.js`, `graph.js`, and for a long time `theme.js`, all shipped that way.
+  The worker is not in the HTML and stamps its own imports from its query string.
+  `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
+  so the test and the deploy cannot disagree — they did, for a while.
+- **Colour is a token, and `opacity` is not a way to make one quieter.** Opacity is
+  applied after the colour is chosen, so it spends a contrast budget already
+  allocated, invisibly — four rules did exactly that and three were a couple of
+  hundredths under AA. `e2e/a11y.spec.js` catches it now. `--faint` exists for text
+  below `--muted`, and is only safe on `--bg`.
 - **Both HTML files carry a CSP** (`default-src 'none'`, `script-src 'self'`). No
   inline scripts, no CDN, no remote fonts or icons. `connect-src` names only
   `raw.githubusercontent.com` and Archidekt.
@@ -83,10 +95,18 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   the combo count and the bracket check, and every row has to name the published
   combo it came from. `test/unofficial.test.js` enforces that shape.
 - **Row and result counts in the README are real measurements.** If you add rows to
-  `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too.
+  `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too —
+  `npm run check:readme` says which, and CI runs it. It also fails if a sentence it
+  anchors on has been reworded, because a check that matches nothing is a check
+  reporting success for work it did not do.
 - **Don't page Spellbook's `/variants` API.** Their rate limit is a cumulative quota;
   the fetcher streams the bulk export instead. The README explains what happens if
   you try.
+- **The published payload interns `c` and `p`** into `names`/`results` tables —
+  `DeckCombos.decode()` resolves them right after the parse and every other line
+  goes on reading strings. Anything that loads `combos.json` has to call it
+  (`search.js` and four tools do). It is a no-op on a payload without the tables,
+  which is why the fixtures still work.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
 
 ## Conventions

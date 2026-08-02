@@ -1,7 +1,7 @@
 // Downloading the combo database and matching a deck against it.
 //
 // Kept out of app.js because neither job belongs on the thread drawing the page:
-// the published file is ~25 MB of JSON and the database is ~100k combos, so
+// the published file is ~9 MB of JSON and the database is ~100k combos, so
 // parsing and matching it in the window means the window stops responding.
 // search-worker.js imports this file and does both off-thread; index.html also
 // loads it, so a browser with no Worker still has a way through (see app.js).
@@ -20,7 +20,11 @@
 
   // Bumping the name is how a payload shape change abandons old copies: a cached
   // response from before a new field existed would otherwise be served forever.
-  const CACHE_NAME = 'mtg-combo-finder-data-v2';
+  // v3: the payload now interns card names and result strings into two tables
+  // (see DeckCombos.decode). A v2 copy has neither, and while decode() would pass
+  // it through untouched, an old cached file is also three times the size for the
+  // same data — so abandoning it is the point rather than a side effect.
+  const CACHE_NAME = 'mtg-combo-finder-data-v3';
   // Which caches are ours to tidy up. Named by prefix rather than by listing the
   // old versions, so bumping the name above is the only step a shape change needs.
   const CACHE_PREFIX = 'mtg-combo-finder-data-';
@@ -29,6 +33,28 @@
   // than reduced to "it didn't work".
   let diagnostics = {};
   let dataset = null; // parsed once per worker, reused for every search
+
+  // How long each third of a search took, in milliseconds, on the machine that
+  // ran it. Collected because the alternative is guessing: the download is a few
+  // MB, the parse builds tens of thousands of objects, and the match walks all of
+  // them, and which of the three dominates depends entirely on the device. A
+  // laptop says one thing and a five-year-old phone says another, and only one of
+  // those is the reader.
+  //
+  // This is the number that says whether the data-side work is worth doing at
+  // all. Kept beside the diagnostics rather than in a devtools trace, because the
+  // machine worth measuring belongs to somebody who is not going to open one.
+  //
+  // performance.now() where there is one — a monotonic clock, unaffected by the
+  // system time changing mid-search — and Date.now() under Node, where the tests
+  // run and the precision does not matter.
+  const now = () => (typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now());
+
+  // Rounded on the way in. These are reported to a person, and a tenth of a
+  // millisecond of a JSON parse is noise dressed as precision.
+  const took = (from) => Math.round(now() - from);
 
   const caches = () => (global.caches && typeof global.caches.open === 'function' ? global.caches : null);
 
@@ -52,7 +78,7 @@
   }
 
   // Abandoning a copy is not the same as deleting it. Bumping CACHE_NAME stops us
-  // *reading* the old one and leaves it on the reader's disk for good — a ~28 MB
+  // *reading* the old one and leaves it on the reader's disk for good — a 26 MB
   // orphan, per shape change, that nothing will ever ask for again. So every
   // cache of ours that is not the current one is dropped.
   //
@@ -97,7 +123,7 @@
 
   // Ask whether the copy we hold is still current, without downloading it again.
   // raw.githubusercontent.com sends `cache-control: max-age=300`, so the browser
-  // would otherwise refetch the whole file five minutes into a session — 2.9 MB
+  // would otherwise refetch the whole file five minutes into a session — 1.7 MB
   // on the wire to learn that a once-a-day cron has not run since.
   async function revalidate(cache, url, held) {
     try {
@@ -170,10 +196,18 @@
   async function loadDataset(url) {
     if (dataset) {
       diagnostics.source = 'memory';
+      // No download and no parse to report. The absence is the measurement: the
+      // second search of a session is a walk over data already in hand, and a
+      // zero here would read as "it was instant" rather than "it did not happen".
       return dataset;
     }
 
+    const startedFetch = now();
     const raw = await fetchDatabase(url, diagnostics);
+    diagnostics.msFetch = took(startedFetch);
+    diagnostics.bytes = raw.length;
+
+    const startedParse = now();
     let parsed;
     try {
       parsed = JSON.parse(raw);
@@ -182,6 +216,13 @@
       diagnostics.likelyCause = 'The combo database is not valid JSON.';
       throw new Error('Could not read the combo database');
     }
+    // Indices into the payload's two string tables become the strings themselves,
+    // sharing one object per distinct value — 69 MB of heap becomes 35 MB, and no
+    // other line in this file or in combos.js has to know. Counted inside the
+    // parse timing on purpose: it is part of the cost of turning bytes into a
+    // dataset, and reporting it separately would invite reading it as optional.
+    DeckCombos.decode(parsed);
+    diagnostics.msParse = took(startedParse);
     if (!parsed.combos || !parsed.combos.length) {
       diagnostics.likelyCause = 'The combo database downloaded but contains no combos.';
       throw new Error('Combo database is empty');
@@ -192,7 +233,7 @@
   }
 
   // Match a deck and hand back only what the page draws. The dataset itself
-  // stays here: posting 25 MB back to the window every search would undo the
+  // stays here: posting the whole dataset back to the window every search would undo the
   // point of doing the work off-thread.
   function matchAgainst(data, entries) {
     const deckNames = DeckCombos.deckNameSet(entries);
@@ -257,8 +298,22 @@
   // included, as { card, quantity } — the shape DeckParser produces.
   async function run(url, entries) {
     diagnostics = { endpoint: url, method: 'GET' };
+    const started = now();
     const data = await loadDataset(url);
+    const startedMatch = now();
     const out = matchAgainst(data, entries);
+    diagnostics.msMatch = took(startedMatch);
+    // Not the sum of the three: the total is what the reader waited, and the
+    // difference between it and the parts is worth being able to see rather than
+    // arithmetic away.
+    diagnostics.msTotal = took(started);
+    out.meta.timing = {
+      fetch: diagnostics.msFetch,
+      parse: diagnostics.msParse,
+      match: diagnostics.msMatch,
+      total: diagnostics.msTotal,
+      bytes: diagnostics.bytes,
+    };
     out.diagnostics = diagnostics;
     return out;
   }

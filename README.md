@@ -12,6 +12,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 
 - **Combos in your deck** — every known combo your current 99 (or 60) can already pull off,
   with what it produces and a link to the combo's Spellbook page for the steps.
+- **How it works** — *(prototype)* the prerequisites and the steps, in order, on the row
+  itself. Fetched for the one combo you open rather than downloaded for all 103,737, and
+  currently answering from hand-written sample text for three of them — see
+  [How a combo is executed](#how-a-combo-is-executed).
 - **Suggested additions** — every combo you're *one card away* from, aggregated per missing
   card and ranked: "add Rings of Brighthearth → unlocks 4 combos". Each suggestion links to
   the card's EDHREC and Scryfall pages and expands to show exactly which combos it enables.
@@ -641,6 +645,74 @@ not error, it silently yields a card list that is slightly wrong. Cost was never
 the objection: 465 requests and ~23 minutes, on a job that already streams a
 578 MB export.
 
+## How a combo is executed
+
+*A prototype, and a narrower one than the map below.* The panel, the four states it
+can be in, and the parsing under it are real and tested. **The text it shows is
+not** — three combos are written out by hand in `combo-steps.js` so the interaction
+can be judged end to end, and every other combo answers "no steps recorded". Which
+of the two sources below fills that gap is the open question, and nothing above the
+source depends on the answer.
+
+Every combo row already answers *what this does* — the result chips — and sends you
+to Commander Spellbook for *how you do it*. Now the same line offers to bring the
+answer here first: **How it works · View on Commander Spellbook → · See all 3 cards**.
+The line that existed only to send people away is the right place for it, and the
+link stays as the way out for every case where the panel cannot answer.
+
+**The steps are not in the download, and that is the whole design.** The database is
+103,737 combos and 27.65 MB parsed, of which the results field alone is 13 MB; steps
+and prerequisites run several times longer than results. Publishing them for every
+combo would multiply a download [the page already works hard to make
+once](#downloading-the-database-once-not-once-a-visit), to answer a question a reader
+asks about two or three combos out of thirty-three. So they are fetched for the one
+combo somebody stopped on, when they ask, and held for the rest of the session — a row
+nobody opens costs nothing.
+
+**Collapsed on every row, always.** A list of twenty-two combos is a list. Twenty-two
+sets of steps is a document nobody asked for, and it would bury the ranking the panel
+above it spent so much effort getting right.
+
+**Four states, and the last two are the ones worth building carefully.** The steps are
+fetched, so they can be slow, they can fail, and Spellbook can simply never have
+written any. Waiting says so; a failure names what went wrong and points at the link
+beside it; "no steps recorded for this combo yet" is an answer rather than an empty
+box. The panel drops its quoted-block styling for all three — a line saying there is
+nothing to read should not occupy the row as heavily as three steps that there are.
+A failure is also **not cached**, unlike the other two: the network being down when
+somebody pressed the button says nothing about whether the combo has steps, so the
+next press asks again instead of being told "no" forever.
+
+**An unofficial row borrows the published combo's steps, and says so.** That is the
+one place this panel could mislead: the row exists *because* a card has been swapped,
+so the steps name a card the deck does not run. Every such row leads with the swap —
+*"These are the published combo's steps. Read Sadistic Glee as Necrosynthesis"* — and
+a chained row names both swaps. Unattributed, the page would be quietly printing
+instructions for somebody else's deck.
+
+**Where the text will come from is deliberately not decided yet.** Two options, and
+`setSource()` is one function so that the rest of the file does not know which it got:
+
+1. **Commander Spellbook's per-variant endpoint.** One request, always current, nothing
+   for us to publish — and blocked outright if their CORS allowlist refuses this origin,
+   which is [the same restriction that made this project publish data instead of querying
+   it](#why-the-data-is-published-not-queried-live). The honest expectation is that the
+   answer is no. It needs a `connect-src` entry in both pages' CSP if it turns out to be
+   yes.
+2. **A steps file per bucket of combo ids on the `data` branch**, written by the nightly
+   refresh. No CORS question — `raw.githubusercontent.com` is already named in the CSP —
+   at the cost of publishing and sharding data the fetcher currently drops.
+
+`normalize()` takes Spellbook's own payload shape, so option 1 needs no adapter and
+option 2 can publish that shape untouched. It is tested now, before either source
+exists, which is the only reason it can be: none of it needs a network.
+
+**What is still rough.** The sample text is placeholder and reads like it. Nothing
+measures what a real fetch costs on a phone — the same gap that makes the data-side
+work in `IMPROVEMENTS.md` hard to rank. And `combo-steps.js` is page-only, like
+`graph.js`: the worker does not import it, because nobody has asked for steps at the
+moment a search runs.
+
 ## The combo map
 
 *A prototype.* It draws, it keeps up with the deck, and it is tested — the rough
@@ -1219,6 +1291,120 @@ Both drive the real files, unbuilt, against the same made-up deck in
 fixtures: a case added to one and not the other is a claim only half the tests
 make.
 
+### The numbers in this file are checked
+
+This README states real counts, and CLAUDE.md has long carried a note asking people
+to remember that when they change a data file. `npm run check:readme` is that note,
+mechanised, and CI runs it.
+
+Seven claims, each anchored on a phrase in the prose and compared to the file it
+describes:
+
+| claim | counted from |
+| --- | --- |
+| `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
+| `All 63 hand-written rows` | `unofficial.js` `COMBOS` |
+| `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
+| `Templates resolved \| 148 \| **134**` | `templates.json` |
+| `**134** (14 skipped)` | `templates.json` |
+| `Cards in the file \| 21,769 \| **12,472**` | `templates.json` |
+| `29 query-less templates are recorded` | `templates.json` |
+
+**A pattern that matches nothing is a failure, not a pass.** That is the half that
+makes it worth having: a checker that finds no claim and exits 0 reports success for
+work it did not do — it turns "nobody verified this" into "this was verified". So
+rewording a sentence out from under a check fails the build and names which claim to
+re-anchor.
+
+**Only what this repository can count.** Everything measured against the published
+database — 103,737 combos, 53 Game Changers, MB on the wire — is a snapshot of
+somebody else's data taken on a particular morning. Pinning those would mean a red
+build every time Spellbook published a combo, so they stay prose, and stay the kind
+of number to re-measure rather than trust.
+
+The stand-in rule is the interesting anchor: it is spelled as a word, not a digit.
+The day there are two, the sentence that has to change is "and the one stand-in
+rule", and a check looking for a digit would never have noticed.
+
+### The decisions live where a test can reach them
+
+`app.js` is not covered by the unit tests, deliberately: it is the layout test's job,
+and that is the right call for DOM wiring. It is a much weaker call for the parts of
+`app.js` that are not DOM wiring at all.
+
+The layout test proves a panel is not empty. It cannot prove the panel is telling the
+truth, because **a wrong number renders exactly as happily as a right one**. "3 of
+your combos need both" and "4 of your combos need both" are both perfectly good HTML,
+and so is "Bracket 3" on a list whose floor is 4.
+
+So `view-model.js` holds the decisions — pure functions of a search result, no
+`document` anywhere in the file:
+
+| | what it decides |
+| --- | --- |
+| `pickedSentence()` | what picking two or three cards out of the map found, in a sentence |
+| `bracketProse()` | the headline, the reasoning, and which of the five pips is in which state |
+| `sizePills()` | "3 × 2-card", and which pill counts as the easiest |
+| `splitParts()` | "+4 official · +1 unofficial", or "none published" |
+| `timingSentence()` | what the search cost, and which phases to name |
+
+`app.js` turns what they return into elements and does nothing else with it. The rule
+for what belongs there: **if getting it wrong would produce a page that looks right
+and says something false, it is a decision.**
+
+`pickedSentence()` is the case that makes the argument. Forty lines of pluralisation —
+"both" against "all three", "card" against "cards", a list joined as "A and B" or "A,
+B and C", and a regex that inserts "of your combos" after whichever number happens to
+lead — none of which any test could see. It now has fourteen.
+
+### The accessibility check, and the four things it found
+
+`e2e/a11y.spec.js` runs axe-core over both pages, in both themes, empty and after a
+search, and again with each control that builds DOM on press opened. WCAG 2.1 AA and
+nothing else — axe also ships "best practice" rules, which are advice, and a suite
+that cries wolf gets muted.
+
+It is in the Playwright suite rather than the layout test because it needs what that
+step already pays for: a real engine computing real colours on a page that has
+actually been searched. axe is injected with `page.evaluate()` rather than
+`addScriptTag()`, so the page keeps the exact `script-src 'self'` it ships with — a
+tag would be refused, correctly.
+
+The accessibility work here was already careful — `aria-pressed` on every map node, a
+tablist with roving tabindex, `role="status"` on the summary, labelled mana pips, a
+`<title>` inside the SVG. What it was not was *checked*, and the first run found four
+contrast failures, all of them the same mistake:
+
+| Where | Was | Measured |
+| --- | --- | --- |
+| The build stamp in the footer | `--muted` at `opacity: .75` | 4.43:1 |
+| The map legend's footnote | `--muted` at `opacity: .85` | 4.1:1 |
+| A tier filter chip switched off | `--muted` at `opacity: .5` | 2.5:1 |
+| The map's two inactive view chips | the same rule, reaching further than it looked | 2.5:1 |
+
+**Opacity is the common cause, and it is worth naming.** Every colour on these pages
+is a token, chosen against a background and checked once. `opacity` is applied
+*after* that choice, so it spends a contrast budget that has already been allocated
+— and it does so invisibly, because the declaration says `.75`, not "and now this
+text is below AA". Three of the four were a couple of hundredths under. The fourth
+was half.
+
+The last row is a second lesson. `.chip[aria-pressed="false"] { opacity: .5 }` was
+written for the tier filter; the map's view filter happens to share `.chip` and set
+`aria-pressed` for its own unrelated reasons, so a rule about one control was dimming
+another. Off is now signalled by the tier colour and border reverting, and by the
+dot going hollow — which is a better cue anyway, since it does not rest on colour.
+
+The fix added one token, `--faint`, for the build stamp: quieter than `--muted` and
+still legible. **It is only safe on `--bg`** — 4.8:1 there, 4.3:1 on a panel — which
+is why the legend's footnote went back to `--muted` instead. There is less headroom
+under `--muted` than it looks: it is 7:1 on the page background, `--faint` is 4.8:1,
+and below that there is nothing left to have.
+
+Two of the four only appear in a state a page load never reaches — a filter switched
+off, a disclosure opened — so the spec presses them. A check that only ever sees the
+default state would have found half of this.
+
 ### What the layout test proves
 
 Fifteen runs. Four are layout at 390/768/1440/1920px, two are the tier page, three
@@ -1401,9 +1587,56 @@ Consequences worth knowing:
   none of them is recognised, colour filtering is switched off rather than
   guessed at.
 
+### The two fields that repeat are published once each
+
+Of the payload's 26.37 MB, the combos array was 25.23 MB, and two fields made up
+most of it:
+
+| field | was | what it is |
+| --- | --- | --- |
+| `p` | 13.19 MB | the results, e.g. "Infinite storm count" |
+| `c` | 7.76 MB | card names |
+| `id` | 2.30 MB | the Spellbook variant id |
+| `i`, `pop`, `t` | 1.32 MB | colour identity, play count, template slots |
+
+Across 103,737 combos there are **1,079 distinct result strings** and **7,364
+distinct card names**. `"Infinite ETB"` was being written to the file some forty
+thousand times. Both are now published as indices into two tables at the top of the
+payload, `names` and `results`:
+
+| | file | on the wire | heap | parse |
+| --- | --- | --- | --- | --- |
+| before | 26.37 MB | 2.73 MB | 69 MB | 170 ms |
+| after | **9.37 MB** | **1.72 MB** | **35 MB** | 165 ms |
+
+**The heap number is the one that matters, and it is worth being precise about where
+it comes from.** `JSON.parse` builds a separate string for every occurrence, so the
+old payload landed as roughly half a million short strings — 69 MB that the worker
+then holds for the life of the session, deliberately, so the second search is free.
+On a phone that is the kind of resident set a browser reclaims without asking.
+
+`DeckCombos.decode()` resolves the indices once, immediately after the parse, and
+hands back **the same string object** for every occurrence. The arrays end up holding
+pointers to 8,443 strings instead of half a million strings.
+
+**Which is why decoding is not a compromise.** The obvious alternative is to keep the
+indices and teach the thirty-odd call sites in `combos.js` to compare integers.
+Measured: that also lands at 35 MB. The saving is in the sharing, not in the
+integers, so the rest of the code never learns that any of this happened — and
+`matchDeck` was never the bottleneck anyway, at 43–93 ms against the real snapshot.
+
+The parse time barely moves in Node. In the browser it halves, which is what the
+footer's `parse` figure is for.
+
+A payload without the tables is returned untouched, so the test fixtures and any
+older local `combos.json` keep working. `CACHE_NAME` moves to `-v3`, which drops the
+old copy off readers' disks rather than leaving 26 MB of it there forever.
+`tools/check-snapshot.js` refuses to publish a payload whose indices do not land on
+a string — that failure parses, passes a length check, and renders as nothing.
+
 ### Downloading the database once, not once a visit
 
-The published file is **2.9 MB on the wire** (~25 MB parsed), and
+The published file is **1.7 MB on the wire** (~9 MB parsed, 35 MB in memory once decoded), and
 `raw.githubusercontent.com` serves it with `cache-control: max-age=300`. So every visit
 downloaded the whole database again — and so did any reload five minutes into a session,
 to learn that a once-a-day cron had not run since. The parsed copy was held in a variable,
@@ -1411,13 +1644,13 @@ which covers repeat searches in one visit and nothing else.
 
 It is now kept in **Cache Storage**, keyed on the URL. A visit that finds a copy uses it
 and checks for a newer one **in the background**, conditionally: `If-None-Match` against
-the stored ETag, so a 304 costs a few hundred bytes instead of 2.9 MB. When something has
+the stored ETag, so a 304 costs a few hundred bytes instead of 1.7 MB. When something has
 changed, the new copy is stored for next time rather than swapped in mid-session — the data
 refresh runs daily, so a page showing this morning's snapshot instead of this afternoon's
 is not worth a surprise. The footer says which one it is either way.
 
 **An abandoned cache version is deleted, not just ignored.** Bumping `CACHE_NAME` stops the
-page *reading* an old copy; it does not remove it, so the first version's ~28 MB sat in the
+page *reading* an old copy; it does not remove it, so the first version's ~26 MB sat in the
 reader's browser indefinitely and every future shape change would have added another. Every
 cache matching `mtg-combo-finder-data-` that is not the current one is now dropped — once per
 session, alongside the open rather than before it, never awaited, and every failure ignored.
@@ -1437,7 +1670,7 @@ and impossible to notice by hand.
 
 ### The search runs beside the page, not in it
 
-Downloading ~25 MB of JSON, parsing it, and walking ~100k combos all used to happen
+Downloading the database, parsing it, and walking ~100k combos all used to happen
 between one paint and the next. None of it touches the DOM, so `search-worker.js` does
 all three off-thread and posts back only what gets drawn — a few hundred rows, not the
 database. The dataset is parsed once and kept there, so the second search of a session is
@@ -1447,6 +1680,34 @@ A browser with no `Worker`, or a worker that fails to start or dies mid-search, 
 to searching in the page: slower, but working, and the same code either way — `search.js`
 is loaded both ways rather than duplicated. The layout test runs one viewport with `Worker`
 deleted from the page to prove the fallback isn't a branch nobody has ever executed.
+
+### What the search cost, in the footer
+
+Three phases — download, parse, match — and until now nothing measured any of them.
+Which one dominates depends entirely on the device: the download is a few MB, the
+parse builds tens of thousands of objects, and the match walks all of them. A laptop
+answers one way and a five-year-old phone another, and only one of those is the
+reader.
+
+So the footer says. **`ready in 1.4s (download 0.9s · parse 0.4s · match 0.1s)`**,
+beside the snapshot date that was already there. In the footer rather than in a
+devtools trace on purpose: the machine worth measuring belongs to somebody who is
+never going to open one.
+
+**Only the phases that happened.** The second search of a session has no download and
+no parse — the dataset is already in memory, which is the whole reason the worker
+keeps it — and the line falls back to `ready in 0.1s`. Printing `download 0ms` would
+report a skipped phase as an instant one, which is the opposite of what makes the
+number worth having.
+
+The numbers also land on the diagnostics object, so a failure report carries them
+without a second mechanism. Nothing is sent anywhere: this is a static page with no
+analytics, and the measurement is for whoever is looking at the screen.
+
+**This is what the data-side decisions were missing.** `IMPROVEMENTS.md` argues for
+shrinking the payload and for keeping a decoded copy in IndexedDB, and both are
+substantial work justified entirely by numbers nobody had collected. Now they can be
+argued from a phone instead of from a laptop.
 
 ### Colours come from the cards, not from a commander
 
@@ -1500,6 +1761,45 @@ their rate limit is a **cumulative quota, not a per-second throttle**: walking i
 at 78, with two full minutes of backoff never clearing it. Fewer, larger requests
 is both the only thing that works and the neighbourly way to consume someone else's
 database.
+
+### The publish is gated on yesterday's snapshot
+
+The `data` branch is a single orphan commit, force-pushed. That keeps the repository
+small and it means **there is nothing to roll back to** — the moment a worse snapshot
+lands, the good one is gone.
+
+`tools/fetch-combos.js` has two guards of its own: refuse to write zero combos, and
+refuse to publish with fewer than 1,000 card identities. The second exists because
+that failure already happened once, silently. Neither compares today against
+yesterday, so a half-published upstream export — or a schema change that makes
+`compact()` drop most rows — produces a file that passes both and then overwrites
+the good one.
+
+`tools/check-snapshot.js` runs between the fetch and the publish and compares four
+counts against the published copy: combos, card identities, Game Changers, and
+template cards. Each is a subsystem that goes quietly dark rather than loudly wrong —
+no identities means no colour filtering, no Game Changers means every bracket check
+silently downgrades, no template cards means every slot stops resolving. A fall of
+more than **10%** in any of them stops the publish. Ten per cent of 103,737 is ten
+thousand combos disappearing overnight, which is not churn.
+
+It also checks the shape of every row, not a sample: `id`, a non-empty `c`, a string
+`i`, an array `p`. An upstream field rename does not error — it produces rows the
+page renders blank, and the first report of it is somebody looking at an empty combo.
+
+Three things it deliberately does **not** do. It does not block the first publish:
+with nothing on the data branch yet there is nothing to compare against, and it says
+so and passes. It does not fail when it cannot reach the published copy — being
+unable to compare is not evidence the new file is bad, and the refresh should not
+acquire a second network dependency. And it does not decide that a real shrink is
+impossible: re-run the workflow from the Actions tab with **allow_shrink** ticked
+when Spellbook has genuinely retired a family of combos. The override is a person
+deciding, which is the right shape for a judgement a script cannot make.
+
+**It runs before the publish, unlike `verify-unofficial.js`, which runs after.** That
+one checks our own citations, and holding today's combos back over a stale citation
+would be the wrong end of the stick. This one asks whether today's combos are worth
+publishing at all.
 
 ### Colour identity comes from Scryfall
 
@@ -2194,6 +2494,32 @@ admins can push directly in a pinch (escape hatch — prefer PRs).
 `.github/workflows/deploy.yml` publishes the repo root to GitHub Pages on every push
 to `main`. Note: GitHub Pages on a **private** repo requires a paid GitHub plan —
 either make the repo public or run the page locally until then.
+
+**Asset URLs are stamped with the commit SHA, and nothing is listed by name.**
+Pages' CDN caches by full URL and a deploy purges nothing, so an unversioned URL can
+serve a stale file — or worse, new HTML with old JS — for up to ~20 minutes.
+`tools/stamp-assets.js` reads whatever each page references, stamps all of it, re-reads
+the file, and fails the deploy if anything local is left bare.
+
+That inversion is the point. The `sed` this replaces carried a hand-written list of
+filenames and a hand-written count per page, and asserted the count — which catches a
+*rename*, and cannot catch an *addition*: a script added to the page and not to the
+list ships unstamped while the count still matches. `unofficial.js` and `graph.js`
+each shipped that bug, and it is invisible outside production, because an unstamped
+URL resolves perfectly well — it just serves whatever the CDN cached last.
+
+**Writing it caught two more.** The list had nine entries; the pages actually
+reference eleven. `theme.js` — which runs in `<head>`, before the stylesheet, to stop
+a white flash on a dark page — and `favicon.svg` were never stamped at all. Worse,
+`tools/verify-layout.js` built its stamped-page fixture from its own regex, which
+*did* match `theme.js`: the test proved a stamped page worked while production served
+one that wasn't. Both now go through `rewriteAssets()` in the same file, so the
+fixture cannot drift from the deploy again.
+
+`search-worker.js` needs no entry and never did — it is loaded from `app.js` rather
+than from the HTML, and stamps its own imports out of its query string. Links between
+the two pages are deliberately left alone: `tiers.html` is navigation, and a commit
+SHA in a URL people bookmark is the opposite of the point.
 
 **Action versions are kept on their Node 24 majors.** GitHub deprecated the Node 20
 runtime, and every run was reporting the actions it uses as forced onto 24:
