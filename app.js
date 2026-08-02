@@ -1946,6 +1946,108 @@
     $('decklist').focus();
   }
 
+  // ---- a deck that arrives as a file -----------------------------------------
+  //
+  // Every deck site exports a text file, including the ones whose API a browser
+  // can never read — so this is the one import path that works everywhere, and it
+  // needs no CORS, no API and no new origin in the CSP.
+  //
+  // Both ways in, because they are not interchangeable: dragging is the obvious
+  // one on a desktop and impossible on a phone or from a keyboard, and the file
+  // picker is the one screen readers can drive.
+  //
+  // Only the wiring is here. Whether a file is worth reading (parser.js
+  // acceptDeckFile/looksLikeText) and what the page then says (view-model.js
+  // fileLoaded/fileRefusal) live where `node --test` can reach them.
+  function refuse(reason, name) {
+    setStatus(DeckView.fileRefusal(reason, name, DeckParser.MAX_DECK_FILE_BYTES), true);
+  }
+
+  function useDeckFile(file) {
+    const verdict = DeckParser.acceptDeckFile(file);
+    if (!verdict.ok) {
+      refuse(verdict.reason, verdict.name);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => refuse('unreadable', file.name);
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      // The check that matters, and the only honest one: a .txt extension is a
+      // claim, and this is the test. A binary file decoded as UTF-8 arrives full
+      // of replacement characters and would otherwise land in the box as a wall
+      // of lines the parser silently threw away.
+      if (!DeckParser.looksLikeText(text)) {
+        refuse('unreadable', file.name);
+        return;
+      }
+      const parsed = DeckParser.parseDecklist(text);
+      if (!parsed.main.length && !parsed.commanders.length) {
+        refuse('no-cards', file.name);
+        return;
+      }
+
+      // Into the box rather than straight into a search: the reader can see what
+      // arrived, fix a line, and press the button themselves. It also means a
+      // dropped file behaves exactly like a paste from here on.
+      $('decklist').value = text.trim();
+      // Commanders marked inline (*CMDR*) are the parser's business and stay in
+      // the list; the separate box is only cleared so a previous deck's
+      // commanders cannot survive into this one.
+      $('commanders').value = '';
+      saveDeck();
+      setStatus(DeckView.fileLoaded(file.name, {
+        main: parsed.main.length,
+        commanders: parsed.commanders.length,
+        skipped: (parsed.skipped || []).length,
+      }));
+    };
+    reader.readAsText(file);
+  }
+
+  function wireDeckFiles() {
+    const box = $('decklist');
+    const picker = $('deck-file');
+    const zone = $('deck-form');
+
+    if (picker) {
+      picker.addEventListener('change', () => {
+        if (picker.files && picker.files[0]) useDeckFile(picker.files[0]);
+        // Cleared so choosing the same file twice fires `change` again — without
+        // this, fixing the file and re-picking it does nothing at all.
+        picker.value = '';
+      });
+      const button = $('choose-file');
+      if (button) button.addEventListener('click', () => picker.click());
+    }
+
+    if (!zone) return;
+    // dragover must be cancelled or the browser navigates to the file and the
+    // page is simply gone, decklist and all.
+    const over = (on) => (e) => {
+      if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') === -1) return;
+      e.preventDefault();
+      box.classList.toggle('dropping', on);
+    };
+    zone.addEventListener('dragover', over(true));
+    zone.addEventListener('dragenter', over(true));
+    zone.addEventListener('dragleave', over(false));
+    zone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length) return;
+      e.preventDefault();
+      box.classList.remove('dropping');
+      // One deck at a time. Silently reading the first of five would look like
+      // the other four failed.
+      if (files.length > 1) {
+        setStatus('Drop one decklist at a time — ' + files.length + ' files arrived together.', true);
+        return;
+      }
+      useDeckFile(files[0]);
+    });
+  }
+
   let saveTimer = null;
   function saveDeckSoon() {
     clearTimeout(saveTimer);
@@ -1957,6 +2059,7 @@
   $('decklist').addEventListener('input', saveDeckSoon);
   $('commanders').addEventListener('input', saveDeckSoon);
   $('clear-deck').addEventListener('click', clearDeck);
+  wireDeckFiles();
   $('copy-link').addEventListener('click', () => {
     const button = $('copy-link');
     if (!$('decklist').value.trim() && !$('commanders').value.trim()) {

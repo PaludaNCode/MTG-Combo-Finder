@@ -230,6 +230,16 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .form-actions button:hover { color: var(--text); }
 
+/* The decklist box while a file is over the form. A solid accent border rather
+   than a tint: this has to read at a glance mid-drag, and `opacity` on a token
+   spends a contrast budget that has already been allocated — see e2e/a11y.spec.js
+   for the four rules that made that lesson worth writing down. */
+#decklist.dropping {
+  border-color: var(--accent);
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
 #status { min-height: 1.5em; color: var(--muted); }
 #status.error { color: var(--error); }
 

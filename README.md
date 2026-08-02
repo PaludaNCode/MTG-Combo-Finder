@@ -51,8 +51,11 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   deck is credited with.
 - **Outside your color identity** — the same ranking for cards that would require changing
   your deck's colors, shown separately.
-- **Deck import** — paste an Archidekt deck URL, or paste any site's text export
-  (Moxfield, Arena, MTGO `SB:` lines, TappedOut/Deckstats/MTGGoldfish plain exports).
+- **Deck import** — paste an Archidekt deck URL, drop or choose an exported deck
+  file, or paste any site's text export (Moxfield, Arena, MTGO `SB:` lines,
+  TappedOut/Deckstats/MTGGoldfish plain exports). The file path works for every
+  site, including the ones a browser can never read an API from — see
+  [Why Moxfield URLs can't be loaded](#why-moxfield-urls-cant-be-loaded).
 - **Cards carrying your combos** — every card that takes part in a combo you can
   already assemble, ranked by how many, each with the same size breakdown a
   suggestion carries (*in 5 combos · 3 × 2-card · 1 × 3-card · 1 × 4-card*). A list
@@ -2600,6 +2603,49 @@ instead of burning a request that cannot succeed. Routing through a public CORS 
 circumvent that policy and put user decklists through an unrelated third party, so we don't.
 Loading Moxfield decks properly would need a small server of our own with a whitelisted
 User-Agent — a real option, but it ends the zero-backend design.
+
+### Getting a deck in from a site we can't read
+
+Which is most of them, and the reason the file path exists. Every deck site exports a
+text file, and a file needs no CORS, no API and no new origin in the CSP — so
+**dropping an exported deck on the form, or picking it with the button, works for
+Moxfield and for every site nobody has written an adapter for.**
+
+Both entry points, because they are not interchangeable: dragging is what a desktop
+reaches for and is impossible on a phone or from a keyboard, and the file picker is
+the one a screen reader can drive.
+
+The care is all in refusing well. An extension is a claim, so the contents are the
+evidence: a file is read, then checked for the replacement characters and control
+bytes that mean *this was binary and we decoded it anyway* — otherwise a screenshot
+dropped on the box would land as a wall of lines the parser silently threw away.
+Files over 1 MB are refused unread, which is not about our limits but so that
+dropping a video fails as a sentence rather than as a locked-up tab. Every refusal
+names the file, says what is wrong with it, and ends with the way out, because
+"invalid file" tells nobody anything. And the text goes *into the box* rather than
+straight into a search, so a reader can see what arrived and fix a line first.
+
+The decisions live where `node --test` can reach them — `acceptDeckFile()` and
+`looksLikeText()` in `parser.js`, `fileLoaded()` and `fileRefusal()` in
+`view-model.js` — and `app.js` only wires them up. A sentence that miscounts, or says
+"cards" when it loaded one, is exactly the kind of wrong that looks right.
+
+### Whether another site could be a URL, and how that gets decided
+
+Deckstats, TappedOut and MTGGoldfish are each one adapter plus one `connect-src`
+entry — *if* a browser may read them. That is one header, `Access-Control-Allow-Origin`,
+and it is not a thing to guess at: Moxfield is unsupported precisely because somebody
+guessed.
+
+It cannot be answered from a terminal either. `curl` does not enforce CORS, so a 200
+there says nothing about what a page can do. `tools/probe-cors.js` asks each site with
+the deployed page's `Origin` and reports the one header that decides it, carrying
+**Archidekt and Moxfield as controls** — Archidekt must come back readable, because the
+live page loads Archidekt decks today, and if it doesn't then the run is wrong and none
+of its other answers should be believed. It runs from
+`.github/workflows/probe-cors.yml`, on demand, because a runner is the only place with
+unrestricted network and because a check that fails during somebody else's outage is a
+check that gets muted.
 
 ## Commands
 

@@ -45,6 +45,16 @@ const BROWSER = {
   // A monotonic clock, in the window and in the worker. search.js times the
   // three phases of a search with it.
   performance: 'readonly',
+  // Reading a dropped decklist. The one browser API here that touches a file the
+  // reader chose, and it never leaves the page — no upload, no new origin.
+  FileReader: 'readonly',
+  // The rest of the drag-and-drop surface. app.js only ever reads `dataTransfer`
+  // off an event it was handed, but e2e/deck.spec.js has to *construct* a drop
+  // inside page.evaluate() — there is no other way to test that the page cancels
+  // it, and an uncancelled drop navigates away and takes the decklist with it.
+  DataTransfer: 'readonly',
+  DragEvent: 'readonly',
+  File: 'readonly',
   // How steps-source.js puts a deadline on a steps request. Feature-detected
   // there rather than assumed, because a request with no way to give up leaves
   // the panel saying "Looking up the steps…" for ever.

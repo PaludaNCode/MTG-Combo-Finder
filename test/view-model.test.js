@@ -270,3 +270,65 @@ test('no timing at all is no sentence', () => {
   assert.strictEqual(View.timingSentence(null), '');
   assert.strictEqual(View.timingSentence({}), '');
 });
+
+// ---- a deck that arrived as a file -----------------------------------------
+//
+// Dropping a file is the one way into this page that fails for reasons the reader
+// can fix, so each refusal has to name what happened and what to do instead.
+
+test('fileLoaded: counts the cards, and says "card" when it means one', () => {
+  assert.strictEqual(
+    View.fileLoaded('deck.txt', { main: 99, commanders: 1 }),
+    'Loaded 99 cards + 1 commander from “deck.txt”.'
+  );
+  assert.strictEqual(
+    View.fileLoaded('tiny.txt', { main: 1 }),
+    'Loaded 1 card from “tiny.txt”.'
+  );
+  assert.strictEqual(
+    View.fileLoaded('duo.txt', { main: 60, commanders: 2 }),
+    'Loaded 60 cards + 2 commanders from “duo.txt”.'
+  );
+});
+
+// The reader chose this file. Silently throwing away a third of it is the sort of
+// thing they should hear from us rather than notice in the results.
+test('fileLoaded: lines the parser threw away are reported, not swallowed', () => {
+  assert.match(View.fileLoaded('deck.txt', { main: 90, skipped: 4 }), /4 lines skipped\.$/);
+  assert.match(View.fileLoaded('deck.txt', { main: 90, skipped: 1 }), /1 line skipped\.$/);
+  assert.doesNotMatch(View.fileLoaded('deck.txt', { main: 90, skipped: 0 }), /skipped/);
+});
+
+test('fileLoaded: a missing count is nothing, not NaN', () => {
+  assert.strictEqual(View.fileLoaded('d.txt', {}), 'Loaded 0 cards from “d.txt”.');
+  assert.strictEqual(View.fileLoaded('d.txt'), 'Loaded 0 cards from “d.txt”.');
+});
+
+// "Invalid file" tells nobody anything. Every refusal names the file, says what
+// is wrong with it, and gives the way out — which is always "paste it below".
+test('fileRefusal: each reason names the file and what to do instead', () => {
+  const cases = {
+    'too-big': /is too big to be a decklist \(over 1 MB\)/,
+    empty: /is empty/,
+    'not-text': /isn’t a text file/,
+    unreadable: /could not be read as text/,
+    'no-cards': /No card lines found/,
+  };
+  for (const [reason, shape] of Object.entries(cases)) {
+    const said = View.fileRefusal(reason, 'holiday.mov', 1024 * 1024);
+    assert.match(said, shape, reason);
+    assert.match(said, /holiday\.mov/, reason + ' names the file');
+  }
+});
+
+// An unknown reason must still produce advice rather than "undefined".
+test('fileRefusal: an unrecognised reason still says something useful', () => {
+  const said = View.fileRefusal('something-new', 'deck.txt', 1024 * 1024);
+  assert.match(said, /could not be read as text/);
+  assert.doesNotMatch(said, /undefined/);
+});
+
+test('fileRefusal: a file with no name is still a sentence', () => {
+  const said = View.fileRefusal('empty', '', 1024 * 1024);
+  assert.match(said, /^That file is empty/);
+});
