@@ -29,6 +29,7 @@ node tools/try-deck.js [deck.txt]              # what would the page show for th
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
+node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works

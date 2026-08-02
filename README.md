@@ -2555,7 +2555,7 @@ survivors, because each is a way a "functionally identical" card turns out not t
   *one* Frog to a creation however many tokens it made. A loop that needs the Treasures
   doubled does not get them.
 
-**Nothing remains open.** The nine that survived are in `unofficial.js`, and seven of
+**Nothing remains open of those 44.** The nine that survived are in `unofficial.js`, and seven of
 them were only settled by reading the cards — which is why the panel prints how far the
 checking went rather than asking to be believed. The 1,889 Hammerhead rows are not
 part of that count and never were: the audit could not have proposed a single one of
@@ -2565,6 +2565,18 @@ Those 44 were the candidates that first sweep proposed. Pointing the same method
 lifegain loops of one deck later proposed 51 more and kept 36 of them — the five shapes
 in *The lifegain families* above, with the 15 rule-outs written up there. The method did
 not change; what changed is which loops it was asked about.
+
+**Which makes this file a record of the cards somebody asked about, and nothing wider.**
+That is worth a number rather than an apology, so `tools/substitution-scope.js` points
+the same method at every card in the database instead of at one. At the strict bar —
+0.90 shared shapes, where Soul Warden and Essence Warden sit at 0.975 — it proposes
+**1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
+it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
+and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
+which is exactly where the method is least trustworthy. But **95 candidates have been
+read, out of thousands proposed** — 44 from the first sweep, 51 from the lifegain pass —
+and a page that prints how far the checking went on any one row should be as willing to
+say how far it has got across the file.
 
 **A high substitution score is never a verdict.** Two cards filling the same slot in
 1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
@@ -2751,7 +2763,7 @@ npx serve .   # or python3 -m http.server
 
 ### Answering questions from the data
 
-Four read-only tools, each also a manual workflow, for the questions that keep
+Five read-only tools, each also a manual workflow, for the questions that keep
 coming up. They exist because guessing at these has been wrong more than once.
 
 ```bash
@@ -2769,6 +2781,10 @@ node tools/template-users.js ["Persist Creature"]
 
 # What does this card actually say? Straight from Scryfall.
 node tools/lookup-card.js "Camellia, the Seedmiser"
+
+# How much of the substitution space has nobody looked at? The method behind
+# unofficial.js, pointed at every card instead of at the one being asked about.
+node tools/substitution-scope.js [jaccard] [minShared]
 ```
 
 `tools/research-sources.js` and `tools/research-coverage.js` are kept for the
