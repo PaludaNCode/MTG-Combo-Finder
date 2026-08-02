@@ -2640,12 +2640,49 @@ guessed.
 It cannot be answered from a terminal either. `curl` does not enforce CORS, so a 200
 there says nothing about what a page can do. `tools/probe-cors.js` asks each site with
 the deployed page's `Origin` and reports the one header that decides it, carrying
-**Archidekt and Moxfield as controls** — Archidekt must come back readable, because the
-live page loads Archidekt decks today, and if it doesn't then the run is wrong and none
-of its other answers should be believed. It runs from
-`.github/workflows/probe-cors.yml`, on demand, because a runner is the only place with
-unrestricted network and because a check that fails during somebody else's outage is a
-check that gets muted.
+**Archidekt and Moxfield as controls**. It runs from `.github/workflows/probe-cors.yml`,
+on demand, because a runner is the only place with unrestricted network and because a
+check that fails during somebody else's outage is a check that gets muted.
+
+**Asked, on 2 August 2026.** The answer is that there is nothing to add:
+
+| site | HTTP | `Access-Control-Allow-Origin` | |
+| --- | --- | --- | --- |
+| Scryfall | 200 | `*` | readable — *and the run's evidence that the probe works* |
+| Archidekt | 200 | `http://localhost:3000` | **refused** — see below |
+| Moxfield | 403 | absent | refused, as documented above |
+| Deckstats | 403 | absent | refused |
+| TappedOut (`/api/`) | 401 | `*` | CORS fine, but it needs a login |
+| TappedOut (`?fmt=txt`) | 404 | absent | refused |
+| MTGGoldfish (download) | 404 | absent | refused |
+
+So Deckstats, MTGGoldfish and TappedOut's text view all refuse outright, and TappedOut's
+API allows the read but demands authentication a static page has no way to hold: every
+byte this site ships is public, so a credential in it is a published credential. None of
+the three is worth an adapter, which is exactly why the file path above is the whole feature.
+
+The first run of this probe got a 400 from Scryfall and drew no conclusions from it,
+correctly: Node's `fetch` sends no `User-Agent`, Scryfall require one, and the answer was
+about the request rather than about their policy. The probe now sends what a browser
+sends, and Scryfall's flip to `200` / `*` is what shows it is asking properly.
+
+### Archidekt may no longer be readable either
+
+The Archidekt row above is the control that was supposed to come back allowed. It did
+not, and the diagnostic explains why: asked as `https://archidekt.com` they answer
+`Access-Control-Allow-Origin: https://archidekt.com`, and asked as us they answer
+`http://localhost:3000`. With `Vary: Origin`, that is a server echoing origins on an
+allowlist and falling back to a default for everyone else. **We are not on the list**,
+and a browser discards a response whose `Access-Control-Allow-Origin` names somebody
+else.
+
+Measured, not confirmed against the live page — this repository is usually edited from a
+sandbox that cannot reach `paludancode.github.io`. If it holds, `SITES.archidekt` in
+`parser.js` says `browserImport: true` about something that cannot work, and the honest
+fix is to flip it to `false` with a `why` that points at the file drop, exactly as
+Moxfield already does. The page fails gracefully in the meantime: `describeLoadFailure()`
+reports a blocked cross-origin read as *"Your browser blocked the request to Archidekt"*
+and offers the export hint, which happens to be the truth.
 
 ## Commands
 
