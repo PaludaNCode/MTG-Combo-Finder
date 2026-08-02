@@ -117,6 +117,14 @@ Of the features, only **F7** exists — and it is no longer a prototype: it has 
   the publisher, measured: 103,737 files is 24s to `git add`, 1.6s to commit and a
   19.8 MB pack, inside a job that already streams a 512 MB export.
 
+- *Text search across combo descriptions is **not** wanted — asked and answered.*
+  It was the one thing that would have changed the design: searching 51.70 MB of
+  prose is what a database is for, and none of the five candidates can do it. The
+  deck list is always the entry point, which is what makes one request and half a
+  kilobyte affordable in the first place — by the time anybody presses "How it
+  works" the deck has already narrowed 103,737 combos to a few dozen. Settled, so
+  nobody reopens it on the strength of the comparison table.
+
 - *Spellbook's endpoint was never the answer.* Their `CORS_ALLOWED_ORIGIN_REGEXES`
   allows `*.commanderspellbook.com` and localhost — the same restriction that made
   this project publish data in the first place. `setSource()` stays a seam anyway, so
@@ -143,11 +151,6 @@ All three jump two majors past the Node 24 versions the README documents and exp
 at length. Worth reading that section before merging any of them. Note also that the
 config covers every workflow, not only the SHA-pinned `update-data.yml` — that was the
 simple choice, and narrowing it is a one-line change if the noise is unwelcome.
-
-**Whether text search across combo descriptions is wanted.** It is the one feature
-that would change the answer above: searching 51.70 MB of prose is what a database is
-actually for, and none of the five designs measured can do it. Worth saying before
-anyone builds on the current shape.
 
 **Whether this file stays.** Most of it has shipped, and the README now carries the
 reasoning for each piece in the section that owns it. This is now a status page more
