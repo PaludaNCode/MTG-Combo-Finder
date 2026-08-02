@@ -164,6 +164,69 @@ test('stand-in: nothing is generated for a deck without the card', () => {
   assert.deepStrictEqual(standInRows(OUTLET, [RULE], deck('Scurry Oak', 'Sadistic Glee')), []);
 });
 
+// The rules are a list somebody will add to, and the combo list is 100,000 long.
+// A per-rule scan would make every new rule cost another sweep of the database on
+// every search anybody runs — so the walk happens once and the rules are indexed
+// by the cards they stand in for. This counts the walks rather than trusting the
+// comment: the dataset hands out a counting iterator.
+test('stand-in: the combo list is walked once, whatever the rules cost', () => {
+  let passes = 0;
+  const counting = Object.assign({}, OUTLET, {
+    combos: {
+      length: OUTLET.combos.length,
+      [Symbol.iterator]() {
+        passes += 1;
+        return OUTLET.combos[Symbol.iterator]();
+      },
+    },
+  });
+  const names = deck('Copycat', 'Understudy', 'Gravecrawler', 'Scurry Oak', 'Sadistic Glee');
+
+  standInRows(counting, [RULE], names);
+  assert.strictEqual(passes, 1, 'one rule took more than one pass');
+
+  passes = 0;
+  const many = [RULE].concat(Array.from({ length: 9 }, (unused, i) => ({
+    card: 'Understudy',
+    confidence: 'verified',
+    for: [{ card: 'Twin ' + String.fromCharCode(65 + i), why: 'Another rule, for the count.' }],
+  })));
+  standInRows(counting, many, names);
+  assert.strictEqual(passes, 1, 'ten rules took ' + passes + ' passes over the combo list');
+});
+
+// The suggestions half. A row the deck is one card short of is not a combo it
+// has — it is a reason to add that card — so it is built only when asked for and
+// comes back naming what it needs.
+test('stand-in: with one card of slack, a combo the deck is short of comes back', () => {
+  const rows = standInRows(OUTLET, [RULE], deck('Copycat', 'Scurry Oak'), null, 1);
+  const row = rowFor(rows, 'Copycat', 'Scurry Oak', 'Sadistic Glee');
+  assert.ok(row, 'the near miss was not generated');
+  assert.strictEqual(row.from.id, '1-2-3');
+  // matchUnofficial is what works out what is missing, from the row's own cards.
+  assert.deepStrictEqual(
+    matchUnofficial(OUTLET, [row], deck('Copycat', 'Scurry Oak'), [], 1)[0].needs,
+    ['Sadistic Glee']
+  );
+});
+
+// Hammerhead's own case, and the reason a deck without the stand-in cannot simply
+// be skipped: the card worth suggesting is the stand-in itself.
+test('stand-in: a deck without the card is told to add it', () => {
+  const names = deck('Scurry Oak', 'Sadistic Glee', 'Gravecrawler');
+  assert.deepStrictEqual(standInRows(OUTLET, [RULE], names), [], 'built without being asked');
+  const rows = standInRows(OUTLET, [RULE], names, null, 1);
+  const row = rowFor(rows, 'Copycat', 'Scurry Oak', 'Sadistic Glee');
+  assert.ok(row, 'the deck was not told to add the stand-in');
+  assert.deepStrictEqual(matchUnofficial(OUTLET, [row], names, [], 1)[0].needs, ['Copycat']);
+});
+
+test('stand-in: two cards short is still nothing, with slack or without', () => {
+  const names = deck('Copycat');
+  assert.deepStrictEqual(standInRows(OUTLET, [RULE], names, null, 1)
+    .filter((r) => r.cards.filter((c) => !names.has(nameKey(c))).length > 1), []);
+});
+
 test('stand-in: a combo the deck is short of is not generated', () => {
   // Sadistic Glee missing, so the Scurry Oak lines are out of reach; Gravecrawler
   // is present, so that one still comes through.

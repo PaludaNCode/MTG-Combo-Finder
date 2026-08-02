@@ -140,6 +140,10 @@ const DECKS = {
   // than one. A chained row makes a weaker claim than a single swap, so the page
   // has to spell out both steps rather than quietly showing the last one.
   chained: ['1 Kitchen Finks', '1 Heroic Feast', '1 Hammerhead, Maggia Boss'].join('\n'),
+  // One card short of an unofficial row and of nothing else, so the suggestion
+  // for that card is carried entirely by combos nobody published — the case the
+  // page could not express at all until the second count existed.
+  unofficialAlmost: ['1 Scurry Oak', '1 Necrosynthesis'].join('\n'),
 };
 
 module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT };

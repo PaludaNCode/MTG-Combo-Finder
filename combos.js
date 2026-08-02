@@ -48,26 +48,51 @@
   // deckNames: Set from deckNameSet() of every card already in the deck.
   // Returns [{ card, unlocks: [variant, ...] }], most combos unlocked first and
   // the most-played combos breaking the ties.
-  function computeSuggestions(variants, deckNames) {
+  //
+  // `unofficial` is the same question asked of the rows in unofficial.js, and the
+  // answer is kept in its own list rather than merged into `unlocks`. A card that
+  // unlocks nothing published and four of ours still belongs here — Hammerhead
+  // unlocks 1,889 combos and was, until this existed, a card the page could not
+  // mention — but "+4" and "+4 of our own" are different claims and the row says
+  // which. Ranking is by the two together, because impact is impact.
+  function computeSuggestions(variants, deckNames, unofficial) {
     const byCard = new Map();
+    const at = (name) => {
+      const key = nameKey(name);
+      let entry = byCard.get(key);
+      if (!entry) {
+        entry = { card: name.split('//')[0].trim(), unlocks: [], unofficial: [] };
+        byCard.set(key, entry);
+      }
+      return entry;
+    };
+
     for (const variant of variants || []) {
       const missing = variantCardNames(variant).filter((n) => !deckNames.has(nameKey(n)));
       if (missing.length !== 1) continue; // only "one card away" combos count
-      const key = nameKey(missing[0]);
-      let entry = byCard.get(key);
-      if (!entry) {
-        entry = { card: missing[0].split('//')[0].trim(), unlocks: [] };
-        byCard.set(key, entry);
-      }
-      entry.unlocks.push(variant);
+      at(missing[0]).unlocks.push(variant);
+    }
+    // These arrive already knowing what they are short of: matchUnofficial worked
+    // it out against the same deck, and a row that is short of nothing is a combo
+    // the deck has rather than a reason to add anything.
+    for (const variant of unofficial || []) {
+      const needs = variant.needs || [];
+      if (needs.length !== 1) continue;
+      at(needs[0]).unofficial.push(variant);
     }
     // Smallest first — the size breakdown printed on the row above says the same,
     // and a 4-card line at the top of that list reads as a recommendation to build
     // the harder combo — then alphabetically, so a reader can find a card in the
     // list. Popularity still ranks the suggestions themselves; see bySizeThenName.
-    for (const entry of byCard.values()) entry.unlocks.sort(bySizeThenName);
+    for (const entry of byCard.values()) {
+      entry.unlocks.sort(bySizeThenName);
+      entry.unofficial.sort(bySizeThenName);
+    }
     return [...byCard.values()].sort(
-      (a, b) => b.unlocks.length - a.unlocks.length
+      (a, b) => (b.unlocks.length + b.unofficial.length) - (a.unlocks.length + a.unofficial.length)
+        // Published unlocks break the tie, so two cards of equal reach are not
+        // ordered by how much of that reach is our own claim.
+        || b.unlocks.length - a.unlocks.length
         || bestPopularity(b.unlocks) - bestPopularity(a.unlocks)
         || a.card.localeCompare(b.card)
     );
@@ -170,20 +195,25 @@
   function groupSuggestions(suggestions, deckNames) {
     const groups = new Map();
     for (const suggestion of suggestions || []) {
-      const signature = suggestion.unlocks
+      // The unofficial unlocks are part of the signature, not an afterthought:
+      // two cards opening the same published combos but different rows of ours
+      // are not the same suggestion, and merging them would print one card's
+      // count against the other's list.
+      const signature = suggestion.unlocks.concat(suggestion.unofficial || [])
         .map((v) => variantSignature(v, deckNames))
         .sort()
         .join('#');
       let group = groups.get(signature);
       if (!group) {
-        group = { cards: [], unlocks: suggestion.unlocks };
+        group = { cards: [], unlocks: suggestion.unlocks, unofficial: suggestion.unofficial || [] };
         groups.set(signature, group);
       }
       group.cards.push(suggestion.card);
     }
     for (const group of groups.values()) group.cards.sort((a, b) => a.localeCompare(b));
     return [...groups.values()].sort(
-      (a, b) => b.unlocks.length - a.unlocks.length
+      (a, b) => (b.unlocks.length + b.unofficial.length) - (a.unlocks.length + a.unofficial.length)
+        || b.unlocks.length - a.unlocks.length
         || bestPopularity(b.unlocks) - bestPopularity(a.unlocks)
         || a.cards[0].localeCompare(b.cards[0])
     );
@@ -255,13 +285,28 @@
   // it on the real card's key — which zeroed the identity of 1,901 real cards,
   // Sam, Loyal Attendant among them. The fetcher drops tokens now, but this also
   // repairs data published before it did.
+  // Kept per dataset, because building it is a walk over every card Spellbook
+  // knows — 34,715 of them — and the callers ask for it once per *row* rather
+  // than once per search. That was affordable while there were seven unofficial
+  // rows and stopped being affordable at fifty-eight: the rebuild was costing
+  // about 20 ms a row, or two and a half seconds a search, all of it spent
+  // computing the same index over and over. The dataset is parsed once per worker
+  // and never mutated, so a WeakMap on it is a safe place to keep the answer, and
+  // a second dataset (the tests use several) gets its own.
+  const identityIndexes = new WeakMap();
+
   function identityIndex(cardIdentity) {
+    if (!cardIdentity) return Object.create(null);
+    const held = identityIndexes.get(cardIdentity);
+    if (held) return held;
+
     const byKey = Object.create(null);
-    for (const name of Object.keys(cardIdentity || {})) {
+    for (const name of Object.keys(cardIdentity)) {
       const key = nameKey(name);
       if (byKey[key] && !cardIdentity[name]) continue;
       byKey[key] = cardIdentity[name];
     }
+    identityIndexes.set(cardIdentity, byKey);
     return byKey;
   }
 
@@ -569,8 +614,16 @@
   // own authority, and showing our copy beside it would be the same combo listed
   // twice — one of them stale. So a row that has been published drops out here and
   // the entry graduates to the official list without anyone editing this file.
-  function matchUnofficial(dataset, rows, deckNames, included) {
+  //
+  // `allowMissing` is 0 for the panel and 1 for the suggestions: a row the deck is
+  // one card short of is not a combo it has, it is a reason to add that card, and
+  // the card it is short of comes back on the row as `needs`. When it is 1 the
+  // caller has to widen `included` to match — a published combo one card away sits
+  // in `almostIncluded`, not in `included`, and a row checked against the wrong
+  // set would print our copy of something Spellbook already suggests.
+  function matchUnofficial(dataset, rows, deckNames, included, allowMissing) {
     if (!Array.isArray(rows) || !deckNames) return [];
+    const short = Math.max(0, Number(allowMissing) || 0);
     const published = new Set(
       (included || []).map((c) => (c.c || []).map(nameKey).sort().join('|'))
     );
@@ -585,13 +638,17 @@
     for (const row of rows) {
       const cards = (row && row.cards) || [];
       if (!cards.length) continue;
-      if (!cards.every((name) => deckNames.has(nameKey(name)))) continue;
+      const needs = cards.filter((name) => !deckNames.has(nameKey(name)));
+      if (needs.length > short) continue;
 
       const key = cards.map(nameKey).sort().join('|');
       if (published.has(key) || seen.has(key)) continue;
       seen.add(key);
 
       out.push({
+        // Which cards the deck does not have. Empty for a combo it can assemble,
+        // and that is the difference between the two panels this feeds.
+        needs: needs.length ? needs.slice() : undefined,
         id: 'unofficial:' + key,
         c: cards.slice(),
         p: (row.produces || []).slice(),
@@ -626,10 +683,10 @@
   // than typed, so it cannot cite a combo that has been retired — if the source
   // leaves the data, the row it produced leaves with it.
   //
-  // Only rows this deck could actually assemble are built. That is not an
-  // optimisation, it is the reason this is affordable at all: matchUnofficial()
-  // would discard the rest anyway, and a deck without the stand-in card in it
-  // never walks the combo list at all.
+  // Rows are built for what this deck can reach, and no further: a combo it can
+  // assemble outright, or — when `allowMissing` is 1 — one it is a single card
+  // short of, which is a reason to add that card rather than a combo it has. That
+  // bound is not an optimisation, it is the reason this is affordable at all.
   //
   // A combo with a template slot — "any Persist Creature" — is included the same
   // way matchDeck() includes one: the deck has to fill every slot, and the row
@@ -637,82 +694,131 @@
   // the deck *minus the stand-in*, because a card cannot both be the swap and fill
   // a slot beside itself.
   //
+  // **The combo list is walked exactly once, whatever the rules cost.** Every
+  // rule's source cards go into one index first, so a second or a twentieth rule
+  // adds work proportional to what it *matches* rather than another pass over
+  // 100,000 combos. Written that way on purpose: the rules are a list somebody
+  // will add to, and a per-rule scan would make each addition cost another sweep
+  // of the database on every search anybody runs. test/unofficial.test.js counts
+  // the passes and holds them at one.
+  //
   // One thing is deliberately left out, and visibly rather than silently — see
   // tools/verify-unofficial.js: a rule reads published combos only. Generating
-  // from an unofficial row would put a swap on top of a swap, and every row on
-  // this page is one step from something Spellbook published.
-  function standInRows(dataset, standIns, deckNames, deckEntries) {
+  // from an unofficial row would put a swap on top of a swap, and all but three
+  // rows on this page are one step from something Spellbook published. Those
+  // three are written out by hand, with both steps named.
+  function standInRows(dataset, standIns, deckNames, deckEntries, allowMissing) {
     const combos = (dataset && dataset.combos) || [];
     if (!Array.isArray(standIns) || !deckNames || !combos.length) return [];
+    const short = Math.max(0, Number(allowMissing) || 0);
     const templateNames = Object.assign(
       {},
       (dataset && dataset.unresolvable) || {},
       (dataset && dataset.templates) || {}
     );
-    const best = new Map();
 
-    for (const rule of standIns || []) {
+    // Every rule, indexed by the cards it stands in for, so one walk of the combo
+    // list serves all of them. `rank` is position in the rule's own `for` list:
+    // the first source named is the one whose text matches most closely, and a
+    // row cites the best source available to it.
+    const bySource = new Map();
+    const rules = [];
+    for (const rule of standIns) {
       const inKey = nameKey(rule && rule.card);
-      // The whole rule is about a card being in the deck. Checked before the
-      // combo list is walked, so a deck that does not run it pays nothing.
-      if (!inKey || !deckNames.has(inKey)) continue;
+      if (!inKey || !(rule.for || []).length) continue;
+      // A deck without the stand-in can still be told to add it — that is the
+      // whole of Hammerhead's case — so this is a rule that needs one more card
+      // rather than a rule to skip, and only when the caller allows one.
+      const held = deckNames.has(inKey);
+      if (!held && !short) continue;
 
-      // The stand-in is going into the combo by name, so it is not also available
-      // to fill one of that combo's slots — that would be the same card twice.
+      // The stand-in goes into the combo by name, so it is not also available to
+      // fill one of that combo's slots: that would be the same card twice.
       const others = new Set(deckNames);
       others.delete(inKey);
-      const byTemplate = deckTemplateIndex(dataset, others, deckEntries);
-
-      // Order is preference, not just membership: the first source listed is the
-      // one whose text matches most closely, and a row cites the best source it
-      // has. Ties never happen — a combo names at most one of them.
-      const sources = new Map();
+      const entry = {
+        rule,
+        inKey,
+        held,
+        byTemplate: deckTemplateIndex(dataset, others, deckEntries),
+        sources: new Map(),
+      };
       (rule.for || []).forEach((src, rank) => {
         const key = nameKey(src && src.card);
-        if (key) sources.set(key, { rank, src });
+        if (!key) return;
+        entry.sources.set(key, { rank, src });
+        if (!bySource.has(key)) bySource.set(key, []);
+        bySource.get(key).push(entry);
       });
-      if (!sources.size) continue;
+      if (entry.sources.size) rules.push(entry);
+    }
+    if (!rules.length) return [];
 
-      // One pass per combo over ~100k of them, so it is written as a loop that
-      // gives up on the first disqualifying card rather than as three passes of
-      // map/filter/every: almost every combo fails on its first or second name,
-      // and the arrays those would allocate are the whole cost.
-      for (const combo of combos) {
-        const names = combo.c || [];
-        let outKey = null;
+    const best = new Map();
+    // The one pass. Written as a loop that gives up on the first disqualifying
+    // card rather than as map/filter/every: almost every combo fails on its first
+    // or second name, and the arrays those would allocate are the whole cost.
+    for (const combo of combos) {
+      const names = combo.c || [];
+      let candidates = null; // rules this combo could serve, found on the way past
+      let missing = null;    // cards the deck does not have, source cards aside
+      let overrun = false;
+
+      for (let i = 0; i < names.length; i++) {
+        const key = nameKey(names[i]);
+        const here = bySource.get(key);
+        if (here) {
+          if (!candidates) candidates = new Map();
+          for (const entry of here) candidates.set(entry, key);
+        }
+        if (deckNames.has(key)) continue;
+        if (here) continue; // a source card is the one being swapped out
+        (missing || (missing = [])).push(names[i]);
+        // Nothing can come back from two cards short even before the stand-in.
+        if (missing.length > short) { overrun = true; break; }
+      }
+      if (overrun || !candidates) continue;
+
+      for (const [entry, sourceKey] of candidates) {
+        // Exactly one of a rule's sources may appear: a combo naming two of them
+        // is not one swap, and the row would have to say which.
         let hits = 0;
-        let ok = true;
+        let named = false;
         for (let i = 0; i < names.length; i++) {
           const key = nameKey(names[i]);
-          if (key === inKey) { ok = false; break; }
-          if (sources.has(key)) { hits += 1; outKey = key; continue; }
-          if (!deckNames.has(key)) { ok = false; break; }
+          if (key === entry.inKey) { named = true; break; }
+          if (entry.sources.has(key)) hits += 1;
         }
-        if (!ok || hits !== 1) continue;
+        if (named || hits !== 1) continue;
+
+        const needs = entry.held ? (missing || []) : (missing || []).concat(entry.rule.card);
+        if (needs.length > short) continue;
 
         // Left until last: the cheap name checks throw out all but a handful of
         // combos, and this is the only part that allocates.
-        const fills = combo.t ? fillTemplates(combo, byTemplate, templateNames) : [];
+        const fills = combo.t ? fillTemplates(combo, entry.byTemplate, templateNames) : [];
         if (!fills) continue;
 
-        const cards = names.filter((name) => nameKey(name) !== outKey).concat(rule.card);
+        const cards = names.filter((name) => nameKey(name) !== sourceKey).concat(entry.rule.card);
         const key = cards.map(nameKey).sort().join('|');
-        const { rank, src } = sources.get(outKey);
+        const { rank, src } = entry.sources.get(sourceKey);
         const held = best.get(key);
-        if (held && held.rank <= rank) continue;
+        // A row the deck can assemble beats the same row it is a card short of,
+        // whichever rule or source produced them.
+        if (held && (held.needs <= needs.length && held.rank <= rank)) continue;
 
         best.set(key, {
           rank,
+          needs: needs.length,
           row: {
             cards,
-            confidence: rule.confidence,
+            confidence: entry.rule.confidence,
             from: { id: combo.id, cards: names.slice() },
-            swap: { out: names.find((name) => nameKey(name) === outKey), in: rule.card },
+            swap: { out: names.find((name) => nameKey(name) === sourceKey), in: entry.rule.card },
             why: src.why,
-            // Carried across untouched. Both cards put a +1/+1 counter on
-            // themselves for the same cost, so a loop that was infinite with one
-            // of them produces the same list with the other; inventing an extra
-            // line here would be a claim the source combo never made.
+            // Carried across untouched. A loop that was infinite with one of two
+            // cards that share an ability is infinite with the other; inventing
+            // an extra line here would be a claim the source combo never made.
             produces: (combo.p || []).slice(),
             // Which of your cards was credited with each of the source combo's
             // slots, so the page can show it rather than asking for trust.
@@ -752,6 +858,9 @@
       // derived from, and how far the checking went. The renderer keys the whole
       // "unofficial" treatment off this field being there.
       unofficial: combo.unofficial || undefined,
+      // Which card an unofficial row is short of, for the suggestion built out of
+      // it. Distinct from `gaps`, which is a template slot rather than a card.
+      needs: combo.needs || undefined,
       // And which slot it is short of, for the combos it cannot assemble.
       gaps: combo.gaps || undefined,
     };
@@ -777,18 +886,29 @@
   // already assemble each one takes part in. A list of combos doesn't make this
   // obvious — cutting a card that turns up in four of them costs four combos,
   // and that is exactly the thing you want to know before trimming a deck.
-  function comboPieces(variants) {
+  //
+  // `unofficial` is counted beside the published combos rather than into them.
+  // The panel's question is what cutting a card costs, and a card holding up two
+  // published combos and four of ours costs six — so the ranking is by the total,
+  // while the two numbers stay apart on the row. Leaving ours out entirely was
+  // the older behaviour and it answered the question wrong: a card that carries
+  // nothing but unofficial combos was absent from the panel altogether.
+  function comboPieces(variants, unofficial) {
     const byCard = new Map();
-    for (const variant of variants || []) {
-      for (const [key, name] of comboCardIndex(variant)) {
-        let entry = byCard.get(key);
-        if (!entry) {
-          entry = { card: name, combos: [] };
-          byCard.set(key, entry);
+    const add = (list, field) => {
+      for (const variant of list || []) {
+        for (const [key, name] of comboCardIndex(variant)) {
+          let entry = byCard.get(key);
+          if (!entry) {
+            entry = { card: name, combos: [], unofficial: [] };
+            byCard.set(key, entry);
+          }
+          entry[field].push(variant);
         }
-        entry.combos.push(variant);
       }
-    }
+    };
+    add(variants, 'combos');
+    add(unofficial, 'unofficial');
     // The cards stay ranked by how many combos each holds up — that is this panel's
     // whole question, since cutting a card that appears in four costs four. The
     // combos *under* each card are re-sorted rather than left in the order they
@@ -796,8 +916,15 @@
     // eleven rows ordered by play count read as unsorted to anyone scanning them for
     // a card name.
     return [...byCard.values()]
-      .map((e) => ({ card: e.card, count: e.combos.length, combos: e.combos.slice().sort(bySizeThenName) }))
-      .sort((a, b) => b.count - a.count || a.card.localeCompare(b.card));
+      .map((e) => ({
+        card: e.card,
+        count: e.combos.length,
+        unofficial: e.unofficial.length,
+        combos: e.combos.concat(e.unofficial).sort(bySizeThenName),
+      }))
+      .sort((a, b) => (b.count + b.unofficial) - (a.count + a.unofficial)
+        || b.count - a.count
+        || a.card.localeCompare(b.card));
   }
 
   // ---- what a combo actually gives you ------------------------------------

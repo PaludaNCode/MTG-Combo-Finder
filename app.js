@@ -433,6 +433,23 @@
     return a;
   }
 
+  // The count of unofficial combos, wherever one sits beside a published count.
+  //
+  // A separate badge rather than a bigger number, and a separate colour rather
+  // than a footnote. The page spends green on *win*, khaki on *decisive* and grey
+  // on *other*, so a fourth hue in that family would read as a fourth result
+  // tier; this uses the accent the page already uses for its own links and
+  // buttons — the one colour that means "the site talking" rather than "a
+  // property of the combo". The number is never added into the published one.
+  function ourBadge(count, plus) {
+    const badge = el('span', 'badge ours', (plus ? '+' : '') + count);
+    const spoken = count + ' unofficial combo' + (count === 1 ? '' : 's')
+      + ' — not published by Commander Spellbook';
+    badge.title = spoken;
+    badge.setAttribute('aria-label', spoken);
+    return badge;
+  }
+
   // One suggestion, which may be a choice between cards that do the same job.
   // Grouping them matters: four cards each claiming "+7 combos" is four ways of
   // describing one decision, and reads as four decisions.
@@ -447,12 +464,19 @@
     // the size pills beside it do not already say, and it was repeated on every
     // row — but the meaning still has to reach a screen reader, so it moves into
     // the label rather than disappearing.
-    const badge = el('span', 'badge', '+' + group.unlocks.length);
-    const spoken = 'unlocks ' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's');
-    badge.title = spoken;
-    badge.setAttribute('aria-label', spoken);
-    header.appendChild(badge);
-    const sizes = sizeRow(group.unlocks);
+    const ours = (group.unofficial || []).length;
+    if (group.unlocks.length) {
+      const badge = el('span', 'badge', '+' + group.unlocks.length);
+      const spoken = 'unlocks ' + group.unlocks.length + ' combo' + (group.unlocks.length === 1 ? '' : 's');
+      badge.title = spoken;
+      badge.setAttribute('aria-label', spoken);
+      header.appendChild(badge);
+    }
+    // A card can reach this list on our rows alone — Hammerhead unlocks nothing
+    // Spellbook has published and 1,889 combos we believe in — so the second
+    // badge stands on its own when there is no first one.
+    if (ours) header.appendChild(ourBadge(ours, true));
+    const sizes = sizeRow(group.unlocks.concat(group.unofficial || []));
     if (sizes) header.appendChild(sizes);
     card.appendChild(header);
 
@@ -498,14 +522,21 @@
 
     const details = el('details');
     details.appendChild(el('summary', null, 'Combos this unlocks'));
-    group.unlocks.forEach((v) => {
-      // The card being suggested is the one this deck does not hold. Read per
-      // variant rather than taken from the group: a group of interchangeable
-      // cards has a different one of them in each of its combos.
-      const missing = DeckCombos.variantCardNames(v)
-        .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
-      details.appendChild(comboCard(v, deckNames, missing));
-    });
+    // The card being suggested is the one this deck does not hold. Read per
+    // variant rather than taken from the group: a group of interchangeable
+    // cards has a different one of them in each of its combos.
+    const shortOf = (v) => DeckCombos.variantCardNames(v)
+      .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
+    group.unlocks.forEach((v) => details.appendChild(comboCard(v, deckNames, shortOf(v))));
+    // Ours below the published ones and under their own heading, for the same
+    // reason they get their own panel rather than a badge: the difference is not
+    // a property of a row, it is whether somebody published it.
+    if (ours) {
+      details.appendChild(el('p', 'ours-head', ours === 1
+        ? 'And one this project believes in, which Spellbook has not published:'
+        : 'And ' + ours + ' this project believes in, which Spellbook has not published:'));
+      group.unofficial.forEach((v) => details.appendChild(comboCard(v, deckNames, shortOf(v))));
+    }
     card.appendChild(details);
 
     return card;
@@ -580,7 +611,17 @@
     const head = el('div', 'sug-head');
     head.appendChild(el('span', 'rank', rank + '. '));
     head.appendChild(el('span', 'card-name', piece.card));
-    head.appendChild(el('span', 'badge', 'in ' + piece.count + ' combo' + (piece.count === 1 ? '' : 's')));
+    // Omitted rather than printed as zero: a card whose whole case is unofficial
+    // is in this panel now, and "in 0 combos" beside "+4" is a worse answer than
+    // the "+4" alone.
+    if (piece.count) {
+      head.appendChild(el('span', 'badge', 'in ' + piece.count + ' combo' + (piece.count === 1 ? '' : 's')));
+    }
+    // Beside the published number rather than added to it. A card holding up two
+    // of Spellbook's combos and four of ours costs six to cut, and the panel has
+    // to say so — but the six is not one number, because half of it is our word
+    // and half is theirs.
+    if (piece.unofficial) head.appendChild(ourBadge(piece.unofficial));
     // The same breakdown a suggestion carries, for the same reason: "in 9 combos" is
     // one number covering nine different propositions, and a card holding up three
     // two-card lines is a very different card to cut than one holding up nine
@@ -719,12 +760,12 @@
     rows.forEach((row) => body.appendChild(comboCard(row, null)));
   }
 
-  function renderPieces(container, included) {
-    if (!included.length) {
+  function renderPieces(container, included, unofficial) {
+    if (!included.length && !(unofficial || []).length) {
       container.textContent = '';
       return;
     }
-    const pieces = DeckCombos.comboPieces(included);
+    const pieces = DeckCombos.comboPieces(included, unofficial);
     const body = panel(container, 'pieces', 'Cards carrying your combos', pieces.length);
     // The per-card count says this already; a sentence restating it for the
     // top card is just noise above the list.
@@ -1423,12 +1464,19 @@
 
     renderSlots($('slots'), results.oneSlotAway || [], results.slotCandidates || {});
 
-    renderPieces($('pieces'), included);
+    // Both halves, because the question this panel asks — what does cutting this
+    // card cost me — has the same answer whoever published the combo. The two
+    // numbers stay apart on the row; see ourBadge().
+    renderPieces($('pieces'), included, results.unofficial || []);
 
     renderSuggestions(
       $('suggestions'),
-      DeckCombos.groupSuggestions(DeckCombos.computeSuggestions(results.almostIncluded, deckNames), deckNames),
-      DeckCombos.groupSuggestions(DeckCombos.computeSuggestions(results.almostIncludedByAddingColors, deckNames), deckNames),
+      DeckCombos.groupSuggestions(DeckCombos.computeSuggestions(
+        results.almostIncluded, deckNames, results.unofficialAlmost
+      ), deckNames),
+      DeckCombos.groupSuggestions(DeckCombos.computeSuggestions(
+        results.almostIncludedByAddingColors, deckNames, results.unofficialAlmostByAddingColors
+      ), deckNames),
       deckNames,
       results.identity
     );

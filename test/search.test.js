@@ -313,3 +313,94 @@ test('a deck without the stand-in is told nothing extra', () => {
   assert.strictEqual(out.included.length, 1);
   assert.deepStrictEqual(out.unofficial, []);
 });
+
+// The two halves of the unofficial match, which are the same rows asked a
+// different question: what can this deck assemble, and what is it one card short
+// of. Only the second feeds the suggestions, and only the first is a combo.
+test('unofficial rows split into what the deck has and what it is one card from', () => {
+  const data = {
+    updatedAt: '2026-01-01T00:00:00Z',
+    cardIdentity: {
+      'Bartolomé del Presidio': 'WB', 'Hammerhead, Maggia Boss': 'B',
+      'Scurry Oak': 'G', 'Sadistic Glee': 'B', 'Gravecrawler': 'B',
+    },
+    combos: [
+      { id: '1-1-1', c: ['Scurry Oak', 'Sadistic Glee', 'Bartolomé del Presidio'], p: ['Infinite ETB'], i: 'WBG' },
+      { id: '2-2-2', c: ['Gravecrawler', 'Bartolomé del Presidio'], p: ['Infinite death triggers'], i: 'WB' },
+    ],
+  };
+  // Hammerhead plus one whole line, and one card short of the other.
+  const out = ComboSearch.matchAgainst(data, [
+    { card: 'Hammerhead, Maggia Boss', quantity: 1 },
+    { card: 'Scurry Oak', quantity: 1 },
+    { card: 'Sadistic Glee', quantity: 1 },
+  ]);
+
+  // Asserted by name rather than by count: matchAgainst reads the real
+  // unofficial.js, so a hand-written row this deck happens to be one card short
+  // of turns up here too, and it is not this test's business.
+  const named = (rows, ...cards) => rows.find(
+    (r) => r.uses.map((u) => u.card.name).sort().join('|') === cards.slice().sort().join('|')
+  );
+
+  const held = named(out.unofficial, 'Scurry Oak', 'Sadistic Glee', 'Hammerhead, Maggia Boss');
+  assert.ok(held, 'the combo the deck can assemble is missing');
+  assert.strictEqual(held.needs, undefined, 'a combo the deck has says it needs something');
+
+  const nearly = out.unofficialAlmost.concat(out.unofficialAlmostByAddingColors);
+  const short = named(nearly, 'Gravecrawler', 'Hammerhead, Maggia Boss');
+  assert.ok(short, 'the near miss is missing');
+  assert.deepStrictEqual(short.needs, ['Gravecrawler']);
+  // A combo the deck has must not also be offered as a reason to add a card.
+  assert.ok(!named(nearly, 'Scurry Oak', 'Sadistic Glee', 'Hammerhead, Maggia Boss'));
+  // Mono-black card, black-green deck: in colour, split the same way the
+  // published near-misses are.
+  assert.ok(named(out.unofficialAlmost, 'Gravecrawler', 'Hammerhead, Maggia Boss'));
+});
+
+// The deck does not hold the stand-in at all, and the card worth suggesting is
+// the stand-in itself. Hammerhead's whole case, and the reason the scan cannot
+// simply skip a deck that does not run him.
+test('a deck missing only the stand-in is told to add it', () => {
+  const data = {
+    updatedAt: '2026-01-01T00:00:00Z',
+    cardIdentity: { 'Bartolomé del Presidio': 'WB', 'Hammerhead, Maggia Boss': 'B', Gravecrawler: 'B' },
+    combos: [{ id: '2-2-2', c: ['Gravecrawler', 'Bartolomé del Presidio'], p: ['Infinite death triggers'], i: 'WB' }],
+  };
+  const out = ComboSearch.matchAgainst(data, [{ card: 'Gravecrawler', quantity: 1 }]);
+  assert.deepStrictEqual(out.unofficial, []);
+  const nearly = out.unofficialAlmost.concat(out.unofficialAlmostByAddingColors);
+  assert.strictEqual(nearly.length, 1);
+  assert.deepStrictEqual(nearly[0].needs, ['Hammerhead, Maggia Boss']);
+});
+
+// Graduation, for the half that was easy to get wrong: a row the deck is one card
+// short of collides with the published combos that are also one card short, not
+// with the ones it can assemble. Checked against the wrong set, the page would
+// suggest a card twice — once on Spellbook's authority and once on ours.
+test('a near-miss row Spellbook already publishes does not appear twice', () => {
+  const data = {
+    updatedAt: '2026-01-01T00:00:00Z',
+    cardIdentity: { 'Bartolomé del Presidio': 'WB', 'Hammerhead, Maggia Boss': 'B', Gravecrawler: 'B' },
+    combos: [
+      { id: '2-2-2', c: ['Gravecrawler', 'Bartolomé del Presidio'], p: ['Infinite death triggers'], i: 'WB' },
+      // Spellbook has caught up: the swap we would have proposed is published.
+      { id: '3-3-3', c: ['Gravecrawler', 'Hammerhead, Maggia Boss'], p: ['Infinite death triggers'], i: 'B' },
+    ],
+  };
+  const out = ComboSearch.matchAgainst(data, [{ card: 'Gravecrawler', quantity: 1 }]);
+  const nearly = out.unofficialAlmost.concat(out.unofficialAlmostByAddingColors);
+  assert.deepStrictEqual(
+    nearly.map((r) => r.uses.map((u) => u.card.name).join(' + ')),
+    [],
+    'our copy of a published suggestion is still being offered'
+  );
+  // ...and Spellbook's own version is the one suggesting the card. Mono-black, so
+  // it is in this deck's colours; the Bartolomé version is not and sits behind
+  // the other tab.
+  assert.deepStrictEqual(
+    out.almostIncluded.map((r) => r.uses.map((u) => u.card.name).join(' + ')),
+    ['Gravecrawler + Hammerhead, Maggia Boss']
+  );
+  assert.strictEqual(out.almostIncludedByAddingColors.length, 1);
+});

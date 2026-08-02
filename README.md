@@ -1779,10 +1779,73 @@ reach, and for a rule, the sign it is on its way to being unnecessary.
 The difference is not a property of a row, it is the difference between *somebody
 published this* and *we worked this out*. A reader deciding whether to trust a line
 needs that before they read the cards, not after — so it is a heading, and the panel
-opens by saying what it is. The same reasoning keeps these rows out of three other
-places: the combo count, **Cards carrying your combos**, and the bracket check. The
-bracket in particular is a claim about what a deck is *allowed to be*, and it should
-rest on published data rather than on a swap we made ourselves.
+opens by saying what it is. The same reasoning keeps these rows out of the combo
+count and the bracket check. The bracket in particular is a claim about what a deck
+is *allowed to be*, and it should rest on published data rather than on a swap we
+made ourselves.
+
+### Where the second number goes, and why it is a second number
+
+Two panels used to be on that list and are not any more, because leaving our rows
+out of them answered their own questions wrong.
+
+**Cards carrying your combos** asks what cutting a card costs. Measured on the
+worked deck below, it was under-reporting eleven cards — Scurry Oak by five,
+Necrosynthesis by four — and Hammerhead, who holds up four of that deck's combos,
+was **absent from the panel entirely**. A panel that exists to price a cut cannot
+price it at zero.
+
+**Suggested additions** asks what one card would unlock. A card whose whole case is
+ours could not be suggested at all, which is the worst version of the problem: not a
+number that is too low, but a card the page cannot mention. Hammerhead unlocks 1,889
+combos and Spellbook has published none of them.
+
+So both panels count both, in **two numbers that never merge**:
+
+```
+Scurry Oak       in 10 combos   +5      ← ten published, five ours
+Hammerhead                      +4      ← no published badge at all, not "in 0 combos"
+Kitchen Finks             +3    +5      ← as a suggestion: three published, five ours
+```
+
+Ranking is by the two together, because impact is impact and a card you cannot see
+is worse than a card ranked slightly wrong; ties break toward the published count,
+so two cards of equal reach are not ordered by how much of that reach is our claim.
+
+The colour is the accent the page already uses for its own links and buttons — the
+one colour that means "the site talking" rather than "a property of the combo".
+Green, khaki and grey are spent on *win*, *decisive* and *other*, and a fourth hue in
+that family would read as a fourth result tier. Since the accent was already the
+published badge's fill, the distinction is carried by **solid versus outlined**:
+solid means Spellbook published it, outlined means it is ours — the same outlined
+accent pill a row in the unofficial panel already wears.
+
+### Matching the unofficial rows costs one pass, however many rules there are
+
+The rows are matched against the decklist after the published ones, and with one
+card of slack — a row the deck can assemble is a combo it has, a row it is one card
+short of is a reason to add that card. Both come out of one call.
+
+The part written for scale is `standInRows()`. A rule could be implemented as "scan
+the combo list for this card", and with one rule nobody would notice; with twenty it
+would be twenty sweeps of a 100,000-row database on every search anybody runs. So
+every rule's source cards go into one index first and the list is walked **once**,
+whatever the rules cost. `test/unofficial.test.js` counts the passes with a counting
+iterator and holds them at one for ten rules as well as for one.
+
+Two of the numbers moved while this was built, and both are worth writing down:
+
+| | before | after |
+|---|---|---|
+| whole search, worked deck | ~470 ms | **~180 ms** |
+| unofficial matching alone | ~300 ms | ~75 ms |
+
+The search got faster while gaining a feature because of a bug this work exposed:
+`identityIndex()` rebuilt an index over all 34,715 cards Spellbook knows **on every
+call**, and the callers ask for it once per row rather than once per search. At seven
+rows that was ~300 ms nobody had measured; at fifty-eight it would have been two and
+a half seconds. It is memoised on the dataset now, which is parsed once per worker
+and never mutated.
 
 ### What each row has to carry
 

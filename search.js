@@ -198,6 +198,35 @@
     const deckNames = DeckCombos.deckNameSet(entries);
     const matched = DeckCombos.matchDeck(data, deckNames, entries);
     const included = matched.included.map(DeckCombos.expand);
+
+    // The unofficial rows are matched against the deck after the published ones,
+    // and with one card of slack: a row the deck can assemble is a combo it has,
+    // and a row it is one card short of is a reason to add that card. Both come
+    // out of the same call, split here on what each turned out to need.
+    //
+    // Checked against the published combos it could conflict with, which is not
+    // the same set for the two halves — a row the deck can assemble graduates
+    // against `included`, while one it is a card short of graduates against the
+    // combos that are also a card short. Handing the wrong set to either would
+    // print our copy of something Spellbook already says.
+    const rows = ((Unofficial && Unofficial.COMBOS) || []).concat(
+      // Hand-written rows go first: where both name the same cards,
+      // matchUnofficial() keeps the first, and a row somebody reasoned about by
+      // name beats the same row produced by a rule.
+      DeckCombos.standInRows(data, (Unofficial && Unofficial.STAND_INS) || [], deckNames, entries, 1)
+    );
+    const unofficial = DeckCombos.matchUnofficial(data, rows, deckNames, matched.included);
+    const nearly = DeckCombos.matchUnofficial(
+      data,
+      rows,
+      deckNames,
+      matched.included
+        .concat(matched.almostIncluded)
+        .concat(matched.almostIncludedByAddingColors),
+      1
+    ).filter((row) => row.needs);
+    const inColour = (row) => DeckCombos.withinIdentity(row, matched.identity);
+
     return {
       meta: {
         updatedAt: data.updatedAt || null,
@@ -212,17 +241,11 @@
       // Spellbook has published rather than on a swap we worked out ourselves.
       bracket: DeckCombos.bracketCheck(data, deckNames, included),
       included,
-      // Hand-written rows first, then the ones a stand-in rule works out from the
-      // data: where both name the same cards, matchUnofficial() keeps the first,
-      // and the row somebody reasoned about by name is the better of the two.
-      unofficial: DeckCombos.matchUnofficial(
-        data,
-        ((Unofficial && Unofficial.COMBOS) || []).concat(
-          DeckCombos.standInRows(data, (Unofficial && Unofficial.STAND_INS) || [], deckNames, entries)
-        ),
-        deckNames,
-        matched.included
-      ).map(DeckCombos.expand),
+      unofficial: unofficial.map(DeckCombos.expand),
+      // Split on colour the same way the published near-misses are, so a card the
+      // deck could not legally run lands behind the same tab either way.
+      unofficialAlmost: nearly.filter(inColour).map(DeckCombos.expand),
+      unofficialAlmostByAddingColors: nearly.filter((r) => !inColour(r)).map(DeckCombos.expand),
       oneSlotAway: matched.oneSlotAway.map(DeckCombos.expand),
       slotCandidates: matched.slotCandidates,
       almostIncluded: matched.almostIncluded.map(DeckCombos.expand),

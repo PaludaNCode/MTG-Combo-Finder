@@ -64,6 +64,9 @@ const VIEWPORTS = [
   { name: 'unofficial combos', width: 1440, height: 900, deck: 'unofficial', kind: 'unofficial' },
   // And the one row that took two steps to get there, which has to say so.
   { name: 'unofficial (two swaps)', width: 1440, height: 900, deck: 'chained', kind: 'unofficial', steps: 2 },
+  // A deck one card short of an unofficial row and of nothing else: the whole
+  // suggestion rests on combos nobody published, and both counts have to say so.
+  { name: 'unofficial (suggested)', width: 1440, height: 900, deck: 'unofficialAlmost', kind: 'suggested' },
 ];
 
 function findBrowser() {
@@ -757,6 +760,17 @@ async function runUnofficial(vp) {
       name: vp.name,
       requested: vp.width,
       steps: vp.steps || 1,
+      // "Cards carrying your combos" counts both now, in two numbers rather than
+      // one. This deck has no published combos at all, so every card in that
+      // panel is there on our authority — which is precisely the case the panel
+      // used to answer by leaving the card out.
+      pieces: {
+        rows: doc.querySelectorAll('#pieces .sug-head').length,
+        ours: doc.querySelectorAll('#pieces .sug-head .badge.ours').length,
+        official: doc.querySelectorAll('#pieces .sug-head .badge:not(.ours)').length,
+        text: (doc.querySelector('#pieces .badge.ours') || {}).textContent || null,
+        label: (doc.querySelector('#pieces .badge.ours') || {}).title || null,
+      },
       unofficial: {
         // How many swaps the note spells out, which has to be how many the row
         // actually took: a two-step row shown as one step is the page claiming
@@ -784,7 +798,48 @@ async function runUnofficial(vp) {
   }
 }
 
+// A card suggested on the strength of unofficial combos alone. The panel has
+// always been able to say "+7"; what it could not say until now is "+0 published,
+// +4 of ours", and a card whose whole case is ours was simply absent from it.
+async function runSuggested(vp) {
+  try {
+    const { win, doc } = await load('/index.html', vp.width);
+    win.localStorage.clear();
+    doc.getElementById('commanders').value = '';
+    doc.getElementById('decklist').value = DECKS[vp.deck];
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await settled(doc, '#suggestions .combo');
+
+    const pane = doc.querySelector('#suggestions .tab-pane:not([hidden])');
+    const ours = pane ? pane.querySelectorAll('.badge.ours') : [];
+    const row = ours.length ? ours[0].closest('.combo') : null;
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      suggested: {
+        rows: pane ? pane.querySelectorAll('.combo').length : 0,
+        ours: ours.length,
+        text: ours.length ? ours[0].textContent : null,
+        label: ours.length ? ours[0].title : null,
+        // The published badge and ours are two badges, never one number.
+        official: row ? row.querySelectorAll('.badge:not(.ours)').length : 0,
+        // ...and the combos behind them are listed under a heading that says so.
+        heading: row && row.querySelector('.ours-head') ? row.querySelector('.ours-head').textContent : null,
+        colour: ours.length ? win.getComputedStyle(ours[0]).color : null,
+        published: ours.length ? win.getComputedStyle(
+          row.querySelector('.badge:not(.ours)') || ours[0]
+        ).backgroundColor : null,
+        overflow: doc.documentElement.scrollWidth > vp.width,
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
 function runOne(vp) {
+  if (vp.kind === 'suggested') return runSuggested(vp);
   if (vp.kind === 'theme') return runTheme(vp);
   if (vp.kind === 'share') return runShare(vp);
   if (vp.kind === 'stamped') return runStamped(vp);
@@ -1148,6 +1203,37 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       continue;
     }
 
+    // A suggestion whose case is entirely ours. The number has to be there — a
+    // card with real impact that the page cannot mention is the bug this fixes —
+    // and it has to be visibly a different claim from the published count.
+    if (v.suggested) {
+      const g = v.suggested;
+      const wrong = [];
+      if (!g.rows) wrong.push('nothing was suggested at all');
+      if (!g.ours) wrong.push('no unofficial count on any suggestion');
+      if (g.text !== '+1') wrong.push(`the unofficial count reads "${g.text}"`);
+      if (!/not published/i.test(g.label || '')) wrong.push(`the count is unlabelled: "${g.label}"`);
+      // No published unlocks for this card, so there must be no published badge
+      // beside ours — the two numbers are separate claims, not one total.
+      if (g.official) wrong.push(`${g.official} published badge(s) on a suggestion with no published unlocks`);
+      if (!/Spellbook has not published/.test(g.heading || '')) {
+        wrong.push(`the combos are not marked as ours: "${g.heading}"`);
+      }
+      // Outlined in the accent rather than filled like the published badge: the
+      // page spends its other colours on result tiers, and a fourth would read as
+      // one. If this ever computes to the same treatment, the distinction is gone.
+      if (!g.colour) wrong.push('the unofficial count has no colour of its own');
+      if (g.overflow) wrong.push('the panel overflows horizontally');
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — ${g.rows} suggestion(s), ${g.ours} carrying `
+          + `"${g.text}" in ${g.colour}, published badges beside them: ${g.official}`);
+      }
+      continue;
+    }
+
     // The unofficial run is about a claim, not a layout: that the page keeps our
     // own combos visibly apart from Commander Spellbook's and shows the working
     // for each. Every assertion here is something that, if it broke, would leave
@@ -1182,6 +1268,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (u.cards.length !== 3) wrong.push(`the row names ${u.cards.length} cards`);
       if (!u.chips) wrong.push('the row shows no results');
       if (u.overflow) wrong.push('the panel overflows horizontally');
+      // "Cards carrying your combos" answers what cutting a card costs, and this
+      // deck's cards hold up nothing but our own row — so a panel that counted
+      // only Spellbook's would leave every one of them out, or say nothing.
+      const pc = v.pieces || {};
+      if (pc.rows !== 3) wrong.push(`${pc.rows} cards in "carrying your combos", expected 3`);
+      if (pc.ours !== 3) wrong.push(`${pc.ours} of them carry an unofficial count, expected 3`);
+      if (pc.official) wrong.push(`${pc.official} published counts on a deck with no published combos`);
+      if (pc.text !== '1') wrong.push(`the unofficial count reads "${pc.text}"`);
+      if (!/not published/i.test(pc.label || '')) wrong.push(`the count is unlabelled: "${pc.label}"`);
       if (wrong.length) {
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
