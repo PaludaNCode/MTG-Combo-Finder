@@ -1604,13 +1604,26 @@ spends its counter cancelling the persist counter, and the second target only gr
 something if another creature is out, which these three cards do not guarantee. That
 line comes off.
 
-Four rows get a weaker version back, off the outlet rather than off Heroic Feast:
-Carrion Feeder, Bartolomé del Presidio, Bloodflow Connoisseur and Phantom Train each
-put a +1/+1 counter on *themselves* every time they eat something. Those four accrue
-counters on one creature. The other eleven claim nothing.
+What replaces it turns on reading the trigger closely. Two life is **two targets, not
+two counters on one creature** — *"choose up to that many target creatures you
+control. Put a +1/+1 counter on each of them"* — and the targets have to be different
+objects. So one counter goes on the Finks to cancel persist and the second goes
+anywhere else, which means the loop grows something for good whenever a second
+creature is on the battlefield.
 
-**The sixteenth row is the only one in the file that is two swaps deep**, and it is
-allowed because the two steps are not the same kind of claim:
+For **ten of the fifteen the outlet is itself a creature**, so the three cards
+guarantee that second body between them. Those ten claim *Infinite +1/+1 counters on
+a creature* — singular, one creature rather than all of them. The five whose outlet
+is an artifact or an enchantment (Altar of Dementia, Ashnod's Altar, Blasting Station,
+Goblin Bombardment, Phyrexian Altar) leave the Finks as the only creature the combo
+promises, so they claim no counters at all.
+
+Phantom Train is counted among the ten deliberately: it is a Vehicle rather than a
+creature, but its own ability turns it into one for the turn as it eats, and it puts
+the counter on itself regardless.
+
+**The sixteenth row is two swaps deep**, one of three in the file, and it is allowed
+because the two steps are not the same kind of claim:
 
 ```
 2086-2919-2921   Kitchen Finks + Archangel of Thune + Bartolomé del Presidio
@@ -1739,13 +1752,17 @@ official or ours, can ever include those.
   is one step from something Spellbook published. This is why the six Necrosynthesis
   rows have no Hammerhead versions. Where that second step is worth taking it is
   written out by hand, with both swaps named — see the Kitchen Finks section above.
-  Three such rows exist in principle and one is in the file:
+  Three such rows exist and all three are in the file — the complete set, found by
+  applying every stand-in rule to every hand-written row:
 
-  | Two steps deep | Step 1 (our judgement) | Step 2 (the identity) | In the file |
-  |---|---|---|---|
-  | Kitchen Finks + Heroic Feast + Hammerhead | Heroic Feast for Archangel of Thune | Hammerhead for Bartolomé | **yes** |
-  | Scurry Oak + Necrosynthesis + Hammerhead | Necrosynthesis for Sadistic Glee | Hammerhead for Carrion Feeder | no |
-  | Herd Baloth + Necrosynthesis + Hammerhead | Necrosynthesis for Sadistic Glee | Hammerhead for Carrion Feeder | no |
+  | Two steps deep | Step 1 (our judgement) | Step 2 (the identity) |
+  |---|---|---|
+  | Kitchen Finks + Heroic Feast + Hammerhead | Heroic Feast for Archangel of Thune | Hammerhead for Bartolomé del Presidio |
+  | Scurry Oak + Necrosynthesis + Hammerhead | Necrosynthesis for Sadistic Glee | Hammerhead for Carrion Feeder |
+  | Herd Baloth + Necrosynthesis + Hammerhead | Necrosynthesis for Sadistic Glee | Hammerhead for Carrion Feeder |
+
+  A test holds that number down: nothing may go deeper than two steps, and the second
+  step must be a declared stand-in rather than another judgement.
 
 **And the evidence is checked, both kinds.** `tools/verify-unofficial.js` reads
 every hand-written row's `from.id` against the live data and fails if it does not
@@ -1778,7 +1795,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 25 hand-written rows and the one stand-in rule are `verified`. `derived` stays
+All 27 hand-written rows and the one stand-in rule are `verified`. `derived` stays
 in the model because it is the honest label for a row found before its cards have
 been read, and the next one will need it.
 

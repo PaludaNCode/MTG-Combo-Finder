@@ -108,7 +108,7 @@
       ],
     },
 
-    // ---- one shape, six rows -------------------------------------------------
+    // ---- one shape, eight rows -----------------------------------------------
     //
     // Necrosynthesis gives the creature it enchants “whenever another creature dies,
     // put a +1/+1 counter on this creature”. Enchant a token maker with it and any
@@ -119,6 +119,9 @@
     // Spellbook publishes the same six with Sadistic Glee, and publishes both token
     // makers with Necrosynthesis for five other outlets — so both halves of every swap
     // are already there. Only the pairing is missing.
+    //
+    // Two more follow the six, and they are a step further out: Hammerhead standing
+    // in for Carrion Feeder on top of our own swap. See the note above them.
     {
       cards: ['Scurry Oak', 'Necrosynthesis', 'Viscera Seer'],
       confidence: 'verified',
@@ -191,7 +194,45 @@
         'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil',
       ],
     },
-     // ---- one shape, sixteen rows ---------------------------------------------
+     // Two more that are two swaps deep, from the same six above. Necrosynthesis
+    // for Sadistic Glee is our judgement; Hammerhead for Carrion Feeder is the
+    // identity STAND_INS declares — one ability each, the same sentence. The rule
+    // itself will not produce these, because it reads published combos only, so
+    // they are written out with both steps named.
+    {
+      cards: ['Scurry Oak', 'Necrosynthesis', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: { id: '2082-2438-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'] },
+      swaps: [
+        { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss' },
+      ],
+      why: 'The counter makes a Squirrel, Hammerhead eats it for free, and the death puts '
+        + 'on the next counter. He eats creatures on the same terms Carrion Feeder does — '
+        + 'the same sentence, one card less restrictive — and takes a +1/+1 counter of his '
+        + 'own each time.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Herd Baloth', 'Necrosynthesis', 'Hammerhead, Maggia Boss'],
+      confidence: 'verified',
+      from: { id: '2082-2438-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'] },
+      swaps: [
+        { out: 'Sadistic Glee', in: 'Necrosynthesis' },
+        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss' },
+      ],
+      why: 'The same loop as the Scurry Oak row, with 4/4 Beasts instead of Squirrels: the '
+        + 'counter makes a token, Hammerhead eats it, the death puts on the next counter.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite +1/+1 counters on a creature',
+      ],
+    },
+
+    // ---- one shape, sixteen rows ---------------------------------------------
     //
     // Kitchen Finks gains 2 life when it enters and has persist, so a free
     // sacrifice outlet turns it into a loop as soon as something puts a +1/+1
@@ -220,17 +261,28 @@
     // has to target. Here that difference costs nothing. Elsewhere it would, and
     // a rule would have generated 347 rows without knowing where.
     //
-    // What it does cost is one result. Every source combo claims "Infinite +1/+1
-    // counters on creatures you control", which Archangel gives you and Heroic
-    // Feast does not: the loop spends its counter cancelling the persist counter,
-    // and the second target only grows something if you have another creature
-    // out, which these three cards do not guarantee. So that line comes off.
+    // What it does cost is one result, and only on five of the rows. Every source
+    // combo claims "Infinite +1/+1 counters on creatures you control", which is
+    // Archangel's wording — a counter on *each* creature, every iteration. Heroic
+    // Feast does not do that, so the line changes rather than survives.
     //
-    // Four rows get a weaker version of it back, off the outlet rather than off
-    // Heroic Feast. Carrion Feeder, Bartolome del Presidio, Bloodflow Connoisseur
-    // and Phantom Train each put a +1/+1 counter on *themselves* every time they
-    // eat something, so those four do accrue counters — on one creature, not on
-    // every creature you control. The other eleven claim nothing.
+    // Two life is two targets, not two counters on one creature: "choose up to
+    // that many target creatures you control. Put a +1/+1 counter on each of
+    // them." The targets have to be different objects, so one goes on the Finks
+    // to cancel persist and the second goes anywhere else. Which means the loop
+    // grows something for good whenever a second creature is on the battlefield —
+    // and for ten of these fifteen the outlet *is* a creature, so the three cards
+    // guarantee it between them. Those ten claim "Infinite +1/+1 counters on a
+    // creature": singular, because it is one creature rather than all of them.
+    //
+    // The five whose outlet is not a creature — Altar of Dementia, Ashnod's Altar,
+    // Blasting Station, Goblin Bombardment, Phyrexian Altar — leave the Finks as
+    // the only creature the three cards promise, so the second target has nothing
+    // to land on and those rows claim no counters at all.
+    //
+    // Phantom Train is counted among the ten on purpose: it is a Vehicle rather
+    // than a creature, but its own ability turns it into one for the turn as it
+    // eats, and it puts the counter on itself anyway.
     {
       cards: [
         'Kitchen Finks', 'Heroic Feast', 'Altar of Dementia',
@@ -449,6 +501,7 @@
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite Blood tokens',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -471,6 +524,7 @@
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite red mana',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -493,6 +547,7 @@
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite surveil',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -515,6 +570,7 @@
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite scry 1',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -537,6 +593,7 @@
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite scry 1',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     {
@@ -558,6 +615,7 @@
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite +1/+1 counters on a creature',
       ],
     },
     // The one row that is two swaps deep.
