@@ -86,7 +86,14 @@ function findBrowser() {
 // The fixture deck and dataset, shared with the Playwright suite in e2e/ — see
 // test/fixtures/dataset.js. Both harnesses drive the real pages against the same
 // made-up deck, so a case added for one is a case the other gets too.
-const { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished } = require('../test/fixtures/dataset.js');
+const { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished, stepsFiles } = require('../test/fixtures/dataset.js');
+
+// The steps tree, at the paths steps-source.js builds and in the shape
+// tools/fetch-combos.js writes. Served here so the disclosure on a combo row
+// draws real fetched text in this test rather than something the harness made
+// easier — and so a combo with no file still has to render the 404 as an answer.
+const STEPS_FILES = Object.fromEntries(Object.entries(stepsFiles())
+  .map(([at, body]) => [at, { type: 'application/json', body }]));
 
 // The page under test is loaded inside an iframe sized to each viewport.
 // Media queries evaluate against the iframe's own width, so the result no
@@ -1101,6 +1108,14 @@ function serve(dir, extra, onVerdict) {
       res.setHeader('Content-Type', extra[url].type);
       return res.end(extra[url].body);
     }
+    // The steps tree is answered from the fixture and from nowhere else. Left to
+    // fall through, a checkout that had once run tools/fetch-combos.js would serve
+    // its own `steps/` here and the test would quietly start depending on whatever
+    // Commander Spellbook published that morning.
+    if (url.startsWith('/steps/')) {
+      res.statusCode = 404;
+      return res.end('no steps for ' + url);
+    }
     const file = path.join(dir, url === '/' ? 'index.html' : url);
     try {
       res.setHeader('Content-Type', MIME[path.extname(file)] || 'text/plain');
@@ -1131,6 +1146,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     let deliver;
     const posted = new Promise((resolve) => { deliver = resolve; });
     const server = serve(ROOT, {
+      ...STEPS_FILES,
       '/combos.json': { type: 'application/json', body: JSON.stringify(fixture) },
       '/_page.html': { type: 'text/html', body: harness + REPORTER },
       // index.html as the deploy publishes it: every asset URL stamped. The

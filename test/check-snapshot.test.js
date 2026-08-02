@@ -220,3 +220,132 @@ test('the derived card ids are counted, so the table shrinking is noticed', () =
   next.combos.forEach((r, i) => { r.id = 'kept-' + i; });
   assert.match(fails(compare(next, previous)), /derived card ids fell 50/);
 });
+
+// ---- the steps tree --------------------------------------------------------
+//
+// The one published thing with no manifest: steps-source.js turns a combo id
+// straight into a URL and reads a 404 as "no steps recorded". That is what makes
+// the tree cheap, and it is also why nothing downstream can notice it being wrong
+// — a reader would press the button, be told there are none, and believe it. This
+// gate is the manifest, computed once a night instead of published.
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { checkSteps } = require('../tools/check-snapshot.js');
+const StepsSource = require('../steps-source.js');
+
+// A snapshot and a matching tree, built the way the nightly job builds them.
+function withSteps(ids, tweak) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-steps-'));
+  for (let i = 0; i < StepsSource.BUCKETS; i += 1) {
+    fs.mkdirSync(path.join(dir, i.toString(16).padStart(2, '0')), { recursive: true });
+  }
+  for (const id of ids) {
+    fs.writeFileSync(path.join(dir, StepsSource.pathFor(id).slice('steps/'.length)),
+      JSON.stringify({ id, description: 'Do the thing.' }));
+  }
+  const data = { combos: ids.map((id) => ({ id, c: [0], p: [0], i: '' })) };
+  if (tweak) tweak(dir, data);
+  return { dir, data };
+}
+
+const ID_SET = ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12', '13-14', '15-16', '17-18', '19-20'];
+const drop = (dir) => fs.rmSync(dir, { recursive: true, force: true });
+
+test('steps: a tree built from the same run passes and reports its coverage', () => {
+  const { dir, data } = withSteps(ID_SET);
+  const got = checkSteps(dir, data);
+  assert.deepStrictEqual(got.failures, []);
+  assert.match(got.lines[0], /steps files: 10 for 10 combos \(100\.0%/);
+  drop(dir);
+});
+
+// Combos with nothing recorded legitimately have no file, so partial coverage is
+// normal — right up until it is not.
+test('steps: some combos without files is fine, most of them is not', () => {
+  const { dir, data } = withSteps(ID_SET, (d, snapshot) => {
+    snapshot.combos.push({ id: '99-99', c: [0], p: [0], i: '' });
+  });
+  assert.deepStrictEqual(checkSteps(dir, data).failures, [], '10 of 11 is a normal day');
+  drop(dir);
+
+  const sparse = withSteps(['1-2'], (d, snapshot) => {
+    for (let i = 0; i < 20; i += 1) snapshot.combos.push({ id: 'x' + i, c: [0], p: [0], i: '' });
+  });
+  assert.match(checkSteps(sparse.dir, sparse.data).failures.join(' | '),
+    /only 4\.8% of combos have steps.*renamed `description`/);
+  drop(sparse.dir);
+});
+
+// The failure this is really for: Spellbook renames the field pick() reads, every
+// record comes back empty, no file is written, and nothing throws anywhere.
+test('steps: an empty tree is caught rather than read as "no combos have steps"', () => {
+  const { dir, data } = withSteps([], (d, snapshot) => {
+    snapshot.combos = ID_SET.map((id) => ({ id, c: [0], p: [0], i: '' }));
+  });
+  assert.match(checkSteps(dir, data).failures.join(' | '), /only 0\.0% of combos have steps/);
+  drop(dir);
+});
+
+test('steps: no tree at all is a refusal, not a pass', () => {
+  assert.match(checkSteps('/nonexistent/steps', { combos: [] }).failures.join(' | '),
+    /no steps tree at/);
+});
+
+// A file in the wrong bucket is a file no reader will ever look in. It is not
+// corrupt, it is not missing, and it is unreachable — which is why the check is
+// against pathFor() rather than against the file merely existing somewhere.
+test('steps: a file in a bucket the reader will not look in is caught', () => {
+  const { dir, data } = withSteps(ID_SET, (d) => {
+    const from = path.join(d, StepsSource.pathFor('1-2').slice('steps/'.length));
+    const wrong = StepsSource.bucketOf('1-2') === 0 ? '01' : '00';
+    fs.renameSync(from, path.join(d, wrong, '1-2.json'));
+  });
+  assert.match(checkSteps(dir, data).failures.join(' | '), /bucket no reader will look in/);
+  drop(dir);
+});
+
+test('steps: a truncated file is caught rather than published', () => {
+  const { dir, data } = withSteps(ID_SET, (d) => {
+    fs.writeFileSync(path.join(d, StepsSource.pathFor('1-2').slice('steps/'.length)), '{"id":"1-2","des');
+  });
+  assert.match(checkSteps(dir, data).failures.join(' | '), /could not be read as JSON/);
+  drop(dir);
+});
+
+// The reader refuses a record whose id disagrees with its URL, so this does not
+// show anyone the wrong combo — it shows them nothing, permanently and silently.
+test('steps: a record stamped with the wrong id is caught', () => {
+  const { dir, data } = withSteps(ID_SET, (d) => {
+    fs.writeFileSync(path.join(d, StepsSource.pathFor('1-2').slice('steps/'.length)),
+      JSON.stringify({ id: '3-4', description: 'Someone else\'s.' }));
+  });
+  assert.match(checkSteps(dir, data).failures.join(' | '), /id that is not their filename/);
+  drop(dir);
+});
+
+// Two published things from one run. A file for a combo today's snapshot does not
+// have means the tree was not rebuilt beside it, and that is the only way these
+// two can drift apart.
+test('steps: a file for a combo not in this snapshot means the two are out of step', () => {
+  const { dir, data } = withSteps(ID_SET, (d, snapshot) => {
+    snapshot.combos = snapshot.combos.filter((row) => row.id !== '19-20');
+  });
+  assert.match(checkSteps(dir, data).failures.join(' | '), /not in this snapshot: steps\/\w\w\/19-20\.json/);
+  drop(dir);
+});
+
+// Rows normally carry no id — theirs is rebuilt from the card-id table — so the
+// gate has to look for the same id the page will, or every file reads as an orphan.
+test('steps: ids are rebuilt the way the page rebuilds them', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-steps-'));
+  for (let i = 0; i < StepsSource.BUCKETS; i += 1) {
+    fs.mkdirSync(path.join(dir, i.toString(16).padStart(2, '0')), { recursive: true });
+  }
+  fs.writeFileSync(path.join(dir, StepsSource.pathFor('11-22').slice('steps/'.length)),
+    JSON.stringify({ id: '11-22', description: 'Do the thing.' }));
+  // No `id` on the row: 11 and 22 are the card ids, ascending, joined.
+  const data = { combos: [{ c: [0, 1], p: [0], i: '' }], cardIds: [22, 11] };
+  assert.deepStrictEqual(checkSteps(dir, data).failures, []);
+  drop(dir);
+});

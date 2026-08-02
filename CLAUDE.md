@@ -52,7 +52,8 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `search.js` | `ComboSearch` | download, Cache Storage, running a search |
 | `graph.js` | `ComboGraph` | the combo map's arithmetic — no DOM |
 | `theme.js` | `DeckTheme` | light/dark resolution, loaded from `<head>` |
-| `combo-steps.js` | `ComboSteps` | a combo's prerequisites and steps, fetched on demand |
+| `combo-steps.js` | `ComboSteps` | a combo's prerequisites and steps: `normalize()` for the page, `pick()` for the publisher |
+| `steps-source.js` | `StepsSource` | where a combo's steps live — the id → URL rule both ends share |
 | `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
 | `app.js` | — | the only file that touches the DOM of `index.html` |
 | `tiers-page.js` | — | the same for `tiers.html` |
@@ -60,6 +61,10 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 `search-worker.js` `importScripts` result-tiers → combos → unofficial → search,
 in that order (each reads the previous at load time). It does **not** load
 `parser.js` (the page parses before posting) or `graph.js` (drawn from the result).
+
+The nightly job publishes `steps/` beside `combos.json`: one small file per combo, in
+256 buckets, written by `tools/fetch-combos.js` in the same pass. Gitignored, like
+`combos.json`, and for the same reason.
 
 `templates.json` and `combos.json` are data: the first is generated and checked in,
 the second is built by CI and lives on the `data` branch. Never commit `combos.json`.
@@ -118,6 +123,17 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   drops a row's `id` only after rebuilding it and checking it matches; anything that
   does not rebuild keeps its literal id. Never make that path guess — a link that
   works and shows a different combo is invisible to every test we run.
+- **`raw.githubusercontent.com` gzips almost everything, which breaks byte ranges.**
+  They serve 24 of 25 probed extensions as `text/plain`, and Fastly compresses it — so
+  a browser `Range: bytes=1000-1099` gets bytes 1000-1099 *of the gzip stream*, and a
+  100 KB file reports a total size of 133. `Accept-Encoding` is a forbidden header, so
+  `fetch()` cannot opt out. Only `.zip` came back as `application/zip` with honest
+  ranges. Any design here that wants a slice of a file has to start from that.
+- **The steps tree has no manifest, on purpose — so CI computes one.** The id *is* the
+  URL and a 404 means "none recorded", which is what makes it cheap and also what makes
+  a wrong tree invisible: a reader is told there are no steps and believes it.
+  `tools/check-snapshot.js --steps` walks every file against `StepsSource.pathFor()` and
+  today's combo ids. Publishing the two out of step is the one way they can drift.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
 
 ## Conventions

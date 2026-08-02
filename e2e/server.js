@@ -18,7 +18,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { FIXTURE, asPublished } = require('../test/fixtures/dataset.js');
+const { FIXTURE, asPublished, stepsFiles } = require('../test/fixtures/dataset.js');
 
 const ROOT = path.join(__dirname, '..');
 const MIME = {
@@ -42,9 +42,26 @@ const DATASETS = {
   '/combos-tiers.json': asPublished(TIERS_FIXTURE),
 };
 
+// The steps tree the nightly job publishes beside combos.json, at the same paths.
+// Served from the fixture rather than from disk because `steps/` is a build
+// artifact and gitignored — and because a combo with no file has to answer 404,
+// which is how "no steps recorded" is published.
+const STEPS = stepsFiles();
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
+
+  if (pathname.startsWith('/steps/')) {
+    const body = STEPS[pathname];
+    if (!body) {
+      res.writeHead(404, { 'content-type': MIME['.txt'] }).end('no steps for ' + pathname);
+      return;
+    }
+    res.writeHead(200, { 'content-type': MIME['.json'], 'cache-control': 'no-store' });
+    res.end(body);
+    return;
+  }
 
   const dataset = DATASETS[pathname];
   if (dataset) {

@@ -138,7 +138,9 @@
   <script src="graph.js"></script>
   <!-- Page-only for the same reason, and for one more: the steps are fetched for
        a single combo when a reader asks for them, which cannot happen during a
-       search because nobody has asked yet. -->
+       search because nobody has asked yet. steps-source.js goes first — app.js
+       hands its reader to combo-steps.js, so both have to exist by then. -->
+  <script src="steps-source.js"></script>
   <script src="combo-steps.js"></script>
   <!-- The decisions app.js used to make while building DOM — what a sentence says,
        how a number is phrased — pulled out where `node --test` can reach them.

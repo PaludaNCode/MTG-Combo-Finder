@@ -16,10 +16,12 @@
 // stale citation would be the wrong end of the stick. This one checks whether
 // today's combos are worth publishing at all.
 //
-//   node tools/check-snapshot.js <new.json> [published.json]
+//   node tools/check-snapshot.js <new.json> [published.json] [--steps <dir>]
 //
 // With one argument it fetches the published copy from the data branch. With two it
 // compares two files, which is how it is tested and how it can be run by hand.
+// `--steps` additionally checks the tree of per-combo steps files published beside
+// it; see checkSteps() below for what that can catch that nothing else can.
 //
 // It is not a substitute for the fetcher's guards and does not replace them: those
 // catch a file that is wrong on its own terms, this catches a file that is only
@@ -27,10 +29,13 @@
 'use strict';
 
 const fs = require('node:fs');
+const path = require('node:path');
 // The same rebuild the page will run. Checking the published shape with a copy of
 // the logic would let the two drift, and this gate exists precisely for the day
 // the shape moves.
 const { rebuildId } = require('../combos.js');
+// And the same path the page will ask for. Same reasoning.
+const StepsSource = require('../steps-source.js');
 
 const PUBLISHED = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
 const USER_AGENT = 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder)';
@@ -124,6 +129,100 @@ function checkShape(data) {
   return problems;
 }
 
+// ---- the steps tree --------------------------------------------------------
+//
+// The steps have no index — steps-source.js turns a combo id straight into a URL,
+// and a 404 means "none recorded". That is what makes them cheap to publish and it
+// is also what makes them impossible to check by reading any one file: there is no
+// manifest to disagree with, so a tree that is wrong is a tree that is silently
+// missing answers. Nothing downstream would report it. A reader would press the
+// button, be told there are no steps, and believe it.
+//
+// So this is the manifest, computed rather than published, and checked once a night:
+//
+//   * coverage — how many combos got a file at all. Today it is 100%, because
+//     every combo Spellbook publishes has a description. A rename of that field
+//     would take it to zero without erroring anywhere.
+//   * every file readable, valid JSON, and stamped with an id.
+//   * every file at the path StepsSource.pathFor() would ask for. A file in the
+//     wrong bucket is a file no reader can ever reach.
+//   * no orphans — a file for a combo that is not in today's snapshot means the
+//     tree was not rebuilt from the same run, which is the one way these two
+//     published things can drift apart.
+//
+// Every file, not a sample: it is 50 MB of reads inside a job that just streamed
+// 512 MB, and a sample answers "probably", which is not what a publish gate is for.
+const MIN_STEPS_COVERAGE = 0.9;
+
+function checkSteps(dir, data, options) {
+  const opts = options || {};
+  const floor = typeof opts.minCoverage === 'number' ? opts.minCoverage : MIN_STEPS_COVERAGE;
+  const lines = [];
+  const failures = [];
+
+  if (!fs.existsSync(dir)) {
+    return { lines, failures: [`no steps tree at ${dir}`] };
+  }
+
+  // What the page will actually ask for: the id it holds after decode(), which is
+  // the row's own id or the one rebuilt from the card-id table.
+  const cardIds = Array.isArray(data.cardIds) ? data.cardIds : null;
+  const expected = new Set();
+  for (const row of data.combos || []) {
+    const id = (typeof row.id === 'string' && row.id)
+      || (cardIds && Array.isArray(row.c) ? rebuildId(row, cardIds) : null);
+    if (id) expected.add(id);
+  }
+
+  const bad = { unreadable: [], misplaced: [], mismatched: [], orphan: [] };
+  const note = (bucket, id) => { if (bucket.length < 5) bucket.push(id); };
+  let files = 0;
+  let bytes = 0;
+
+  for (const bucket of fs.readdirSync(dir).sort()) {
+    const bucketDir = path.join(dir, bucket);
+    if (!fs.statSync(bucketDir).isDirectory()) continue;
+    for (const name of fs.readdirSync(bucketDir)) {
+      files += 1;
+      const at = 'steps/' + bucket + '/' + name;
+      const id = name.replace(/\.json$/, '');
+      let record;
+      try {
+        const raw = fs.readFileSync(path.join(bucketDir, name), 'utf8');
+        bytes += Buffer.byteLength(raw);
+        record = JSON.parse(raw);
+      } catch (err) {
+        note(bad.unreadable, at);
+        continue;
+      }
+      if (StepsSource.pathFor(id) !== at) note(bad.misplaced, at);
+      // The reader refuses a record whose id disagrees with the URL, so this would
+      // not show a reader the wrong combo — it would show them nothing, for ever.
+      if (!record || String(record.id) !== id) note(bad.mismatched, at);
+      if (!expected.has(id)) note(bad.orphan, at);
+    }
+  }
+
+  const combos = (data.combos || []).length;
+  const coverage = combos ? files / combos : 0;
+  lines.push(`steps files: ${files.toLocaleString()} for ${combos.toLocaleString()} combos `
+    + `(${(coverage * 100).toFixed(1)}%, ${(bytes / 1024 / 1024).toFixed(2)} MB)`);
+
+  if (combos && coverage < floor) {
+    failures.push(`only ${(coverage * 100).toFixed(1)}% of combos have steps, under the `
+      + `${(floor * 100).toFixed(0)}% floor — check whether Spellbook renamed \`description\``);
+  }
+  const report = (list, what) => {
+    if (list.length) failures.push(`${list.length}+ steps file(s) ${what}: ${list.join(', ')}`);
+  };
+  report(bad.unreadable, 'could not be read as JSON');
+  report(bad.misplaced, 'are in a bucket no reader will look in');
+  report(bad.mismatched, 'carry an id that is not their filename');
+  report(bad.orphan, 'are for combos not in this snapshot');
+
+  return { lines, failures };
+}
+
 // next vs previous. Returns every line worth printing plus whether to stop, so the
 // caller does the reporting and this stays a pure function of two payloads.
 function compare(next, previous, options) {
@@ -171,9 +270,11 @@ async function fetchPublished(url) {
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
 async function main(argv) {
-  const [nextFile, previousFile] = argv;
-  if (!nextFile) {
-    console.error('usage: node tools/check-snapshot.js <new.json> [published.json]');
+  const stepsAt = argv.indexOf('--steps');
+  const stepsDir = stepsAt === -1 ? null : argv[stepsAt + 1];
+  const [nextFile, previousFile] = stepsAt === -1 ? argv : argv.slice(0, stepsAt).concat(argv.slice(stepsAt + 2));
+  if (!nextFile || (stepsAt !== -1 && !stepsDir)) {
+    console.error('usage: node tools/check-snapshot.js <new.json> [published.json] [--steps <dir>]');
     return 1;
   }
 
@@ -193,6 +294,14 @@ async function main(argv) {
   const { lines, failures } = compare(next, previous, {
     maxDrop: process.env.MAX_DROP ? Number(process.env.MAX_DROP) : undefined,
   });
+  // The steps tree is published from the same run and checked in the same gate:
+  // holding one back and letting the other through would put the two out of step,
+  // which is the state neither of them can detect on its own.
+  if (stepsDir) {
+    const steps = checkSteps(stepsDir, next);
+    lines.push(...steps.lines);
+    failures.push(...steps.failures);
+  }
   for (const line of lines) console.log(`  ${line}`);
 
   if (!failures.length) {
@@ -220,4 +329,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { compare, checkShape, COUNTS, MAX_DROP, main };
+module.exports = { compare, checkShape, checkSteps, COUNTS, MAX_DROP, MIN_STEPS_COVERAGE, main };

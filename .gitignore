@@ -20,6 +20,10 @@ build/
 # Combo database — built by tools/fetch-combos.js, published to the data branch
 combos.json
 
+# The steps tree, built by the same run and published beside it: 103,737 files
+# that are a build artifact exactly the way combos.json is.
+steps/
+
 # Playwright: fetched for the run, and its output is per-run
 test-results/
 playwright-report/
