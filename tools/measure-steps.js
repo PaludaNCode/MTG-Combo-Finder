@@ -60,9 +60,10 @@ const byHash = (id, buckets) => (
   crypto.createHash('sha1').update(String(id)).digest()[0]
   + crypto.createHash('sha1').update(String(id)).digest()[1] * 256
 ) % buckets;
-// The cheaper one: combo ids start with a card id, so their leading digits are
-// not uniform. Measured rather than assumed — an uneven split wastes the idea.
-const byPrefix = (id, buckets) => {
+// The cheap alternative: a plain string hash over the whole id, no crypto. The
+// question it answers is whether SHA-1 buys any evenness worth the cost — combo
+// ids are structured rather than random, so it is not obvious either way.
+const byStringHash = (id, buckets) => {
   let sum = 0;
   const s = String(id);
   for (let i = 0; i < s.length; i += 1) sum = (sum * 31 + s.charCodeAt(i)) >>> 0;
@@ -116,19 +117,25 @@ function sqliteReport(rows, dir) {
   }
 
   const dbPath = path.join(dir, 'steps.sqlite');
-  const sqlPath = path.join(dir, 'steps.sql');
   fs.rmSync(dbPath, { force: true });
 
-  // Written as a script rather than piped row by row: 100k inserts through the CLI
-  // one at a time is minutes, and this is measuring the file, not the import.
+  // Built as one script and handed to the CLI on stdin. It was written to a file
+  // first and read straight back, which is a race: createWriteStream had not
+  // flushed, and the run died on ENOENT after doing all the expensive work. There
+  // is no file now, so there is nothing to be too early for.
+  //
+  // One script rather than a row at a time: 100k round trips through the CLI is
+  // minutes, and this measures the file rather than the import.
   const esc = (s) => "'" + String(s).replace(/'/g, "''") + "'";
-  const out = fs.createWriteStream(sqlPath);
-  out.write('PRAGMA journal_mode=OFF;\nBEGIN;\nCREATE TABLE steps (id TEXT PRIMARY KEY, body TEXT);\n');
-  for (const row of rows) out.write(`INSERT INTO steps VALUES(${esc(row.id)},${esc(JSON.stringify(row.body))});\n`);
-  out.write('COMMIT;\nVACUUM;\n');
-  out.end();
+  const sql = ['PRAGMA journal_mode=OFF;', 'BEGIN;', 'CREATE TABLE steps (id TEXT PRIMARY KEY, body TEXT);'];
+  for (const row of rows) sql.push(`INSERT INTO steps VALUES(${esc(row.id)},${esc(JSON.stringify(row.body))});`);
+  sql.push('COMMIT;', 'VACUUM;');
 
-  execFileSync('sqlite3', [dbPath], { input: fs.readFileSync(sqlPath), stdio: ['pipe', 'ignore', 'ignore'] });
+  execFileSync('sqlite3', [dbPath], {
+    input: sql.join('\n'),
+    stdio: ['pipe', 'ignore', 'ignore'],
+    maxBuffer: 1024 * 1024 * 1024,
+  });
   const ask = (sql) => execFileSync('sqlite3', [dbPath, sql], { encoding: 'utf8' }).trim();
 
   const pageSize = Number(ask('PRAGMA page_size;'));
@@ -152,7 +159,6 @@ function sqliteReport(rows, dir) {
   const overflow = Math.max(0, Math.ceil((avgBody - pageSize) / pageSize));
   const trips = depth + 1 + overflow;
 
-  fs.rmSync(sqlPath, { force: true });
   return {
     version, size, pageSize, pageCount, fanout, depth, avgBody, overflow, trips,
     bytesPerLookup: trips * pageSize,
@@ -212,7 +218,7 @@ async function main(argv) {
   console.log('\n=== D/E. Sharding: how big a file a reader fetches ===');
   console.log('  buckets  strategy  files   median    max     spread   total gz');
   for (const buckets of [64, 128, 256, 512, 1024]) {
-    for (const [pick, label] of [[byHash, 'hash  '], [byPrefix, 'prefix']]) {
+    for (const [pick, label] of [[byHash, 'hash  '], [byStringHash, 'prefix']]) {
       const r = shardReport(rows, buckets, pick, label);
       console.log(`  ${String(buckets).padStart(7)}  ${label}  ${String(r.files).padStart(5)}`
         + `  ${kb(r.median).padStart(8)}  ${kb(r.max).padStart(8)}`
@@ -262,4 +268,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { stepsOf, shardReport, byHash, byPrefix, quantile };
+module.exports = { stepsOf, shardReport, byHash, byStringHash, quantile };
