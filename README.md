@@ -1685,10 +1685,13 @@ assertions ride along inside the layout runs, for the same reason:
   card the group shows — the recommended one included — with every term exact.
 - **"Combos this unlocks"** must run smallest-first. The fixture's most-played combo
   is deliberately also its largest, so sorting on popularity alone fails the run.
-- **The divider down a suggestion row** is walked piece by piece — the gutter's
-  border and the left border of every block beside it — and each has to be drawn, at
-  the same x, starting where the piece above ended. It is one line on screen and
-  three or four boxes in the CSS, none of which knows about the others. The same run
+- **The divider down a suggestion row** is walked piece by piece — the left border of
+  every block in the card's column — and each has to be drawn, at the same x, starting
+  where the piece above ended. The gutter is checked for the opposite: it must draw
+  nothing, since a border returning there would be a second line at the same x, which
+  is invisible on screen and puts the numbers back to sizing the card's column. It is
+  one line on screen and three or four boxes in the CSS, none of which knows about the
+  others. The same run
   holds the choice of card to the shape its column's width calls for, at both ends of
   the range: 233px of column on a phone, 454–1042px everywhere else.
 - **The combo map** is entirely geometry, and every way it can break is invisible:
@@ -2955,22 +2958,24 @@ claim can be checked — it is invisible in a screenshot of a single row. The co
 also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
 was a second, weaker copy of the same ordering.
 
-**Fixed in height too, and for the same reason.** The gutter shares its grid row with
-the card's name, links and pills, so that row is as tall as the taller of the two — and
-the gutter grows a line whenever a total is split into official and unofficial. Left to
-its content it pushed the disclosure below it down by 9px on exactly the rows that
-carried unofficial combos, and by 28px where the split wrapped, so "The combos it holds
-together" sat at a different height on every row and wandered down the panel according
-to which cards happened to have one. Reserving the split's line on all of them —
-`3.71rem`, which is measured, and the same at both gutter widths since the container
-query changes what the split says and not how tall it is — costs a row without a split
-9px and buys one offset for the whole panel.
+**And the gutter sizes nothing, which took a second attempt to get right.** It grows a
+line whenever a total is split into official and unofficial. While it shared a grid row
+with the card's name, links and pills, that row was as tall as the taller of the two, so
+a row with a split pushed everything below it down by 9px — 28px where the split wrapped
+— and a row without one did not. *The combos it holds together* therefore sat at a
+different height on every row and wandered down the panel according to which cards
+happened to carry unofficial combos. Measured in a browser rather than read off the CSS,
+because the fixture deck's card column is tall enough to hide it at desktop widths and
+it only shows on the phone run.
 
-The tempting fix is to let the gutter span the rows below it so it can never push
-anything down, and it breaks the line: the gutter's border *is* the divider's top
-segment, and it ends where the disclosure's begins only because the grid row sizes it.
-Spanning made the two overlap by 23px at every viewport. The layout test caught that,
-which is the case it was written for.
+The obvious fix is to let the gutter span the rows below it instead of sizing one, and
+on its own that breaks the line: the gutter's `border-right` *was* the divider's top
+segment, and it ended where the next block's border began only because the grid row
+sized it. Spanning made the two overlap by 23px at every viewport, which the layout test
+caught. The two constraints are the same constraint — a border sized by a grid row is a
+border that has to share one — so the fix is to stop the gutter drawing the line at all.
+`.row-main` carries the top segment now, the gutter spans, and the line is one rule
+applied to every block in the card's column instead of two rules that have to meet.
 
 **The divider runs the whole row, and everything below the numbers is on the card's
 side of it.** *Combos this unlocks* used to start under the gutter, level with a number
@@ -2981,14 +2986,14 @@ between the two columns is carried down past all of it — so everything to the 
 that line is one card's worth of reading, and every row in a panel has one shape
 whether it offers a choice of card or not.
 
-The line is a border on each of those blocks: the gutter's right one, stretched to the
-bottom of the card's column, and a left one on each block below, reaching back across
-the column gap with a negative margin to land on exactly the same pixel as the piece
-above it. The blocks' own spacing is padding rather than margin for the same reason — a
-margin would open a hole in the line at both ends of the block. That is a fact about
-three or four boxes agreeing and nothing in the CSS states it, so the layout test walks
-the pieces in order and reports the block that stepped sideways, lost its border, or
-left a gap. It earned that immediately: the gap is `.55rem` rather than `.7rem` below
+The line is a left border on each of those blocks — the card, the interchangeable cards
+where a row offers them, and the disclosure — each reaching back across the column gap
+with a negative margin to land on exactly the same pixel as the piece above it. Nothing
+in the gutter draws any of it. The blocks' own spacing is padding rather than margin for
+the same reason — a margin would open a hole in the line at both ends of the block. That
+is a fact about three or four boxes agreeing and nothing in the CSS states it, so the
+layout test walks the pieces in order and reports the block that stepped sideways, lost
+its border, or left a gap. It earned that immediately: the gap is `.55rem` rather than `.7rem` below
 480px, the disclosure was still reaching back `.7rem`, and the line was split by the
 .15rem of difference at phone width and nowhere else. The gap is one variable now,
 which is what makes the two impossible to override apart.
