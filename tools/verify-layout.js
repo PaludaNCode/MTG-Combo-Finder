@@ -1331,9 +1331,18 @@ function runOne(vp) {
         // Scope to the same combo card throughout: the pieces panel re-renders
         // these, so a document-wide query picks up other cards' unopened folds.
         const combo0 = doc.querySelector('.combo');
+        const results0 = combo0.querySelector('.results');
+        // The height the fold is buying, measured on the same element either side of the
+        // press. This is the whole point of folding grey, so it is worth a number rather
+        // than an assumption that hiding four chips must have saved something.
+        const foldedHeight = results0 ? Math.round(results0.getBoundingClientRect().height) : 0;
         const moreBtn = combo0.querySelector('.results .result.more');
         if (moreBtn) moreBtn.click();
         await new Promise((r) => setTimeout(r, 60));
+        const resultsHeight = {
+          folded: foldedHeight,
+          open: results0 ? Math.round(results0.getBoundingClientRect().height) : 0,
+        };
         const expandedChips = [...combo0.querySelectorAll('.results .result')].map((c) => ({
           text: c.textContent,
           win: c.classList.contains('tier-win'),
@@ -1424,7 +1433,7 @@ function runOne(vp) {
         };
 
         resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
-          { afterCollapse, expandedChips, afterAdd, storedDeck, afterClear }));
+          { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -2716,8 +2725,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (v.chips.length && v.chips[0].win !== true) problems.push('a game-winning result was not listed first');
     if (v.chips.some((c) => c.decisive && !c.title)) problems.push('a yellow result carries no explanation on hover');
     if (!v.chips.some((c) => c.more)) problems.push('the fixture no longer folds anything, so the fold is untested');
-    // Grey must be on screen without expanding: it is quieter, not hidden.
-    if (!v.chips.some((c) => c.grey)) problems.push('grey is not visible until the fold is opened');
+    // Grey folds, and this is where that is enforced rather than hoped for: it is the
+    // plumbing a loop runs on, the same handful of entries under combo after combo, and
+    // four of them on a phone row is most of its height. The assertion here used to be
+    // the opposite one — "grey is quieter, not hidden" — so it is worth being explicit
+    // that the reversal was measured rather than drifted into.
+    if (v.chips.some((c) => c.grey)) {
+      problems.push('a grey result is on screen before the fold is opened');
+    }
     const ex = v.expandedChips;
     if (ex.some((c) => c.more)) problems.push('the "+N more" fold did not open');
     if (!ex.some((c) => c.win)) problems.push('the green tier rendered nothing');
@@ -2729,6 +2744,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (colours.size < 3) problems.push(`only ${colours.size} distinct chip colours: ${[...colours].join(' / ')}`);
     // Eight results plus the "+N more" control.
     if (v.chips.length > 9) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
+    // What the fold is worth, in the only unit that matters here: the height it saves on
+    // the row. Printed rather than asserted against a number — the fixture is small, and a
+    // real deck's rows carry more grey than it does — but a fold that saves nothing is a
+    // control that costs a press for no reason, and that is worth failing.
+    if (v.resultsHeight && v.resultsHeight.folded >= v.resultsHeight.open) {
+      problems.push(`folding the results saved no height (${v.resultsHeight.folded}px folded, ${v.resultsHeight.open}px open)`);
+    }
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
     if (!v.afterCollapse.stored) problems.push('collapse state was not persisted');
@@ -2760,7 +2782,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       ? `top piece ${v.topPiece.card} ${v.topPiece.total} ${JSON.stringify(v.topPiece.pills)}`
       : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
-    const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
+    const chipNote = `${v.chips.length} folded (${v.resultsHeight.folded}px) / ${v.expandedChips.length} open (${v.resultsHeight.open}px), ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);

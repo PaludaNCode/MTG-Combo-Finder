@@ -106,8 +106,8 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   looking at, and how it got there. That matters more now a copy is kept between visits;
   see [Downloading the database once, not once a visit](#downloading-the-database-once-not-once-a-visit).
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
-  results sort first and are highlighted, duplicates collapse, and anything past
-  the fourth folds behind "+N more".
+  results sort first and are highlighted, duplicates collapse, and the grey
+  plumbing folds behind "+N more" — 53px a row on a phone.
 
 ### Cleaning up combo results
 
@@ -186,10 +186,30 @@ infinite lifegain loses to poison, a pile of Treasure is only mana.
 
 Grey is deliberately the four biggest outcomes in the database — ETB (66k
 combos), LTB (57k), death triggers (45k), sacrifice triggers (43k). They explain
-*how* a loop works, which is not the same as why you'd run it. Grey is shown, not
-hidden: up to eight results are listed before the rest fold behind "+N more", and
-`splitResults()` guarantees a tier that exists never disappears entirely into the
-fold.
+*how* a loop works, which is not the same as why you'd run it.
+
+**So grey folds.** Every grey result on a row goes behind "+N more" with the count on the
+control, and what is left is the louder tiers — up to the same eight, because nine decisive
+results are a wall of yellow whatever the tiers say.
+
+This reverses the rule that was here, and the reversal is worth recording rather than
+quietly restyling: `splitResults()` used to guarantee that a tier which exists never
+disappears entirely, on the grounds that grey is *quieter, not hidden*. The reasoning was
+sound; what changed it is the measurement. Those four biggest outcomes turn up together
+under combo after combo, so a row whose real payoff is one green chip was spending four
+lines on the plumbing — measured by `npm run verify` at **76px folded against 129px open**
+on a 390px phone, 53px a row, on rows a deck has eighty of. The fold is one press away and
+says how much it holds, so nothing is hidden in the sense that mattered.
+
+One case is exempt, and it is the one that would make the rule turn a row silent: a combo
+whose results are *all* grey. Folding those would leave a row saying nothing about what it
+does, so grey is only ever folded when something louder is on screen — with nothing louder,
+grey is what the combo does and it is shown. `test/match.test.js` pins that, and
+`npm run verify` fails if a grey chip is on screen before the fold is opened, which is the
+same assertion inverted: it used to fail if grey was *not*.
+
+The tiers page is deliberately untouched. It is the inventory of which result sits in which
+tier — the grey list is the page's subject, not noise on a row about something else.
 
 ### The combos you have: easiest first, named alphabetically
 
