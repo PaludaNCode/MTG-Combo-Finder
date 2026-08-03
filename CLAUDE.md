@@ -16,7 +16,7 @@ Combo data comes from a nightly snapshot of Commander Spellbook published to the
 ## Commands
 
 ```bash
-npm test                  # unit tests, node:test, zero deps (~370 tests, ~1s)
+npm test                  # unit tests, node:test, zero deps (564 tests, ~2s)
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change
@@ -61,6 +61,12 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
 | `app.js` | — | the only file that touches the DOM of `index.html` |
 | `tiers-page.js` | — | the same for `tiers.html` |
+| `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
+
+`research-log.js` is the one file that breaks the shape above: the browser never loads it,
+so it is a plain CommonJS module and is linted with the tools rather than with the shipped
+files. `test/lint-config.test.js` fails if a script matches no block, which is how that gets
+noticed.
 
 `search-worker.js` `importScripts` result-tiers → combos → unofficial → search,
 in that order (each reads the previous at load time). It does **not** load

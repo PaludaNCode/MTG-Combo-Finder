@@ -1614,6 +1614,12 @@ Static site, zero dependencies, no build step:
   declared once and worked out against live data. Hand-maintained data, no logic —
   the matching lives in `combos.js`. See
   [Unofficial combos](#unofficial-combos-the-pages-own-second-opinion).
+- `research-log.js` — which cards have been swept and what each pass found: the cards it
+  covered, how it generated candidates, how many it proposed, examined and kept, why each
+  rule-out was one, and the verbatim oracle text it read. Not page data — the browser never
+  loads it — so it is a plain CommonJS module rather than the dual-export shape everything
+  above uses. It is the answer to "has anybody checked this card?", which nothing could
+  answer before it existed.
 - `templates.json` — the generated card list behind every template slot ("a Persist
   Creature"), stored as `card -> template ids`. Checked in rather than resolved on
   every refresh; see [Template slots](#template-slots-a-persist-creature).
@@ -2606,6 +2612,29 @@ row whose cards no recorded pass covers fails the build, so the index cannot qui
 being one. The candidate count in this section is read out of it rather than added up by
 hand, which means a pass that gets logged moves the README and a pass that does not, cannot.
 
+**And a pass will not be accepted without the card text.** `research-log.js` carries a
+`read` field — the oracle text, verbatim, for every card a pass names — and
+`test/research-log.test.js` fails without it. That is not belt-and-braces. The rule
+existed as prose first, saying to work from card text rather than from a similarity
+score, and it was broken twice: once putting `{2}{B}{G}` and a `-X/-X` outlet on
+Chatterfang, who is `{2}{G}` with `+X/-X`; and once ruling out **all 37** Camellia
+candidates on "they answer *a nontoken creature died* with different tokens". Both
+cards trigger on *sacrificing a Food*, and Experimental Confectioner makes a **Rat**.
+The real difference is that Camellia batches where he counts, which rules out **2** of
+the 37 — so thirty-five were thrown away on a text nobody had opened.
+
+That is the failure worth engineering against here, because it is invisible: a wrong
+rule-out produces no row, no failing test and no complaint, only a card that quietly
+looks well covered. Nobody audits a zero.
+
+**Entries that predate the rule say `UNREAD` rather than inventing text**, and a ratchet
+caps how many: the number may go down and may never go up. Its history is in the test's
+own comment, because that is the honest record — **16 → 36 → 16**. It went *up* because
+the first count was wrong, not because anyone borrowed: it only covered cards listed in
+`cards`, so a pass could reason about a dozen *peers* and record none of them. Ashnod's
+Altar named twelve and had one. Correcting the undercount raised the number; fetching the
+texts one query at a time brought it back down.
+
 **Which makes this file a record of the cards somebody asked about, and nothing wider.**
 That is worth a number rather than an apology, so `tools/substitution-scope.js` points
 the same method at every card in the database instead of at one. At the strict bar —
@@ -2849,7 +2878,9 @@ node tools/combos-with.js "Heroic Feast" "Kitchen Finks"
 # by how many combos need it — which also checks the ids still line up.
 node tools/template-users.js ["Persist Creature"]
 
-# What does this card actually say? Straight from Scryfall.
+# What does this card actually say? Straight from Scryfall — when it can be
+# reached. A restrictive network refuses api.scryfall.com, and a web search is
+# the route that works from there; research-log.js needs the text either way.
 node tools/lookup-card.js "Camellia, the Seedmiser"
 
 # How much of the substitution space has nobody looked at? The method behind
