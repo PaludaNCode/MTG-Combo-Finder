@@ -37,6 +37,11 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
   count hides the difference entirely — see
   [What the count is made of](#what-the-count-is-made-of).
+- **Cards it did not recognise are named** — a section above the results, listing the
+  cards you pasted that this snapshot has no card by that name for. `1 Sol Rimg` is a
+  perfectly good card line, so it lands in the deck, matches nothing, and used to be
+  never mentioned again — see
+  [Telling the reader which cards were not recognised](#telling-the-reader-which-cards-were-not-recognised).
 - **Interchangeable cards are one decision, not many** — Spellbook stores one variant per
   concrete card list, so a combo its own site shows as *"Spike Feeder + 1 of 8 cards"*
   arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
@@ -2124,6 +2129,74 @@ The fetcher now drops `token` / `double_faced_token` / `emblem` / `art_series` /
 `vanguard` layouts, and `identityIndex()` additionally refuses to let a
 colourless entry displace a coloured one, so already-published data is repaired
 in the page without waiting for a refresh.
+
+### Telling the reader which cards were not recognised
+
+A misspelled card used to parse cleanly and then do nothing. `1 Sol Rimg` is a card
+line by every rule in `parser.js` — a quantity, a name, no set code — so it lands in
+the deck, is sent to the search, matches no combo, and is never mentioned again. The
+page reported *Searching combos for 100 cards…* and returned a smaller answer than the
+deck deserved, with nothing on screen saying why. An old or alternate spelling, a card
+printed since the snapshot, and a token line out of a deck export all failed the same
+silent way — the publisher drops `token` / `double_faced_token` / `emblem` /
+`art_series` / `vanguard` layouts, so `Treasure` on a line of its own is not a card as
+far as the data is concerned.
+
+This is the failure class this file already worries about in the other direction — *a
+wrong rule-out is invisible: it produces no row, no test failure and no complaint* —
+except here it happened in front of a reader, on their own deck, on every search.
+
+**The signal already existed and was thrown away.** `cardIdentity` is keyed by every
+card in Scryfall's oracle-cards bulk file, not only the 7,364 that appear in combos, and
+`deckIdentity()` already walked the deck against it and skipped what it could not find.
+`unrecognizedCards()` is that same walk keeping the misses. No new download, no new
+request, no second pass over the payload.
+
+**Three populations, and only one is worth a word.** In the map and in no combo is
+ordinary — most of any deck. In the map and in combos the deck cannot complete is what
+the suggestions panel is for. Not in the map at all is the one nobody can see.
+
+**It says so above the results, not in a disclosure.** The complaint being answered is
+that nothing on screen said why the answer was small, and a closed `<details>` is
+nothing on screen. It is also not `showDiagnostics()`' population: that lists lines the
+parser *dropped*, and an unrecognized card is one the parser accepted. So the names are
+written out, in the reader's own spelling — that is what they have to find in the box to
+fix — with one line saying every cause, because from here they cannot be told apart and
+only one of them is the reader's mistake.
+
+**The wording claims what is known and no more.** The data is a nightly snapshot of
+Scryfall by way of Spellbook, so the sentence is that *this snapshot* has no card by
+that name. "Sol Rimg is not a real card" would be wrong the day a set is released.
+
+**The constraint that decides the whole feature: a thin map must produce silence.** The
+test fixture's `cardIdentity` has 14 entries, so a naive version reports most of an
+85-card deck as unrecognized in `npm run verify` and `npm run test:ui`. That is not a
+fixture problem to paper over — the published payload has shipped `cardIdentity: {}`
+once already (see above), and *that* payload would report every card in the deck. The
+rule is the one `deckIdentity()` already uses: when the map cannot answer, say nothing.
+So an absent or empty map says nothing at all, and more than **half the deck** unknown
+says nothing either, on the grounds that the answer is then about the data rather than
+the deck.
+
+Half, and not something tighter, because the rule has to survive a small paste: a reader
+checking three cards with one typo is 33% unknown and deserves to be told. Nobody's real
+decklist is half misspelled, and a map thin enough to be broken misses almost
+everything — the fixtures sit at 83% and 100%, not at 55%.
+
+**Where the three pieces live**, which is the usual split here: `combos.js` identifies
+them and returns facts only — which names missed, how many were checked, how big the map
+was — beside the `identityIndex()`/`deckIdentity()` that own `nameKey()` and the dataset.
+`view-model.js` decides whether any of it is worth saying and how it is phrased, because
+a count and a pluralisation that could be confidently wrong is exactly what belongs where
+`node --test` can reach it — the thin-map rule is there too. `app.js` draws it and does
+nothing else with it.
+
+The layout test runs the tuning deck with `1 Sol Rimg` and `1 Treasure` appended, and
+asserts the section names both, claims two cards, says a token line lands here too, and
+sits **above** the first panel of results — measured, since a notice qualifying an answer
+it renders below is a notice nobody reads. Every other deck it runs is the other branch:
+nothing unrecognized, and no section at all. The thin-map and empty-map rules are pinned
+in `test/view-model.test.js` rather than left to the fixtures happening to be small.
 
 ### Testing the publisher against a fixture
 

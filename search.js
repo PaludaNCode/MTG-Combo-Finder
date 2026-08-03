@@ -275,6 +275,11 @@
         source: diagnostics.source || null,
       },
       identity: matched.identity,
+      // Which pasted cards the snapshot has never heard of. Worked out here for the
+      // same reason the bracket is: the identity map is part of the dataset and the
+      // dataset stays in the worker. Facts only — the page decides whether they are
+      // worth a sentence, since a thin map makes everything a miss.
+      unrecognized: DeckCombos.unrecognizedCards(data.cardIdentity, entries),
       // The Game Changer list lives in the dataset, and the dataset stays here —
       // so the bracket is worked out beside the match rather than in the page.
       // Deliberately `included` and not the unofficial rows: the bracket is a

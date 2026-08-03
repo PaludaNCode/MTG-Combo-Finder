@@ -46,6 +46,12 @@ const VIEWPORTS = [
   // app.js — searching in the window instead of beside it. Same output, or the
   // fallback is a branch nobody has ever run.
   { name: 'desktop (no worker)', width: 1440, height: 900, deck: 'marked', noWorker: true },
+  // The same deck with a misspelling and a token line in it. Both parse as card
+  // lines, reach the search and match nothing, so the page has to name them — and
+  // every other run above is the other branch of that rule, where nothing is
+  // unrecognized and nothing at all is said.
+  { name: 'misspelled card', width: 1440, height: 900, deck: 'misspelled' },
+  { name: 'misspelled card (phone)', width: 390, height: 844, deck: 'misspelled' },
   // Not a layout check: the share link's own round trip. Its encoding is ours,
   // so nothing about it can be taken on trust.
   { name: 'share link', width: 1440, height: 900, kind: 'share' },
@@ -355,6 +361,24 @@ function measure(win, doc) {
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
     comboIds: [...doc.querySelectorAll('#included .combo-link a')].map((a) => a.getAttribute('href')),
   };
+  // What the page said about cards it did not recognise. Read as what a reader sees
+  // — is the section there, what does it claim, and which names does it write out —
+  // plus where it sits, because a notice about the input that renders below the
+  // answer it is qualifying is a notice nobody reads.
+  const unknownCards = (() => {
+    const box = doc.querySelector('#unrecognized .unknown-cards');
+    const firstPanel = doc.querySelector('#results .panel');
+    return {
+      shown: !!box,
+      head: box ? (box.querySelector('.unknown-head') || {}).textContent || '' : '',
+      names: [...doc.querySelectorAll('#unrecognized .unknown-list .card-name')].map((e) => e.textContent),
+      why: box ? (box.querySelector('.unknown-why') || {}).textContent || '' : '',
+      // Above the first panel of results, measured rather than assumed from the
+      // markup order: a float or a grid could put it anywhere.
+      aboveResults: !!(box && firstPanel
+        && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
+    };
+  })();
   // A combo the deck cannot assemble for want of a template slot must not be on the
   // page at all. Combo 13 in the fixture is the case — every card it names is in the
   // deck and nothing fills its slot — and it used to have a panel of its own. Read
@@ -647,6 +671,7 @@ function measure(win, doc) {
     grouped,
     slots,
     stuckSlot,
+    unknownCards,
     comboCompare,
     order,
     leads,
@@ -1105,7 +1130,7 @@ function runOne(vp) {
           resultsHidden: doc.getElementById('results').hidden,
         };
 
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before,
+        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
           { afterCollapse, expandedChips, afterAdd, storedDeck, afterClear }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
@@ -1912,6 +1937,33 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // every slot on the page now is a slot the deck fills.
     if (v.stuckSlot.missingPills) problems.push(`${v.stuckSlot.missingPills} missing-slot pill(s) still rendered`);
 
+    // Cards the snapshot has never heard of. Keyed on the deck that was pasted and
+    // not on whether the section rendered, which would be circular: the decks with
+    // nothing wrong must produce no section at all, and the one with a misspelling
+    // must name it. The fixture's identity map is small, so this is also the check
+    // that the thin-map rule is not swallowing a real answer — 2 unknown of 10 is
+    // under the limit and has to speak.
+    const unknown = v.unknownCards;
+    if (v.deck === 'misspelled') {
+      if (!unknown.shown) {
+        problems.push('a deck with a misspelled card said nothing about it');
+      } else {
+        if (!unknown.names.includes('Sol Rimg')) {
+          problems.push(`the misspelled card was not named: ${JSON.stringify(unknown.names)}`);
+        }
+        if (!unknown.names.includes('Treasure')) {
+          problems.push(`the token line was not named: ${JSON.stringify(unknown.names)}`);
+        }
+        if (!/2 cards/.test(unknown.head)) problems.push(`the notice reads "${unknown.head}"`);
+        // The claim is about the snapshot, not about the card.
+        if (!/this snapshot/.test(unknown.head)) problems.push(`the notice overclaims: "${unknown.head}"`);
+        if (!/token/.test(unknown.why)) problems.push('the notice does not say a token line lands here too');
+        if (!unknown.aboveResults) problems.push('the unrecognized-cards notice is below the results it qualifies');
+      }
+    } else if (unknown.shown) {
+      problems.push(`a clean deck was told ${unknown.names.length} of its cards are unrecognized`);
+    }
+
     // Which daily snapshot is on screen, and whether the kept copy is being
     // used. Caching that silently stops working costs 2.9 MB a visit and looks
     // like nothing at all, so the source is asserted rather than trusted.
@@ -2262,6 +2314,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
       // Which branch the rows took, and the width that chose it: the pair is what
       // makes a changed threshold visible in the output rather than only in a failure.
+      const unknownNote = v.unknownCards.shown
+        ? `unrecognized [${v.unknownCards.names.join(', ')}]`
+        : 'every card recognized';
       const linked = v.numberColumns.filter((c) => c.rowLinks.length);
       const linkNote = `links ${linked.some((c) => c.rowLinks.every((r) => r.beside)) ? 'beside' : 'below'} the name `
         + `in ${linked.map((c) => c.column + 'px').join('/')} column(s)`;
@@ -2274,7 +2329,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${linkNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${linkNote}, ${unknownNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

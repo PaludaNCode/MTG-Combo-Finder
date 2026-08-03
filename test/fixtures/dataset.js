@@ -144,6 +144,15 @@ const DECKS = {
   // for that card is carried entirely by combos nobody published — the case the
   // page could not express at all until the second count existed.
   unofficialAlmost: ['1 Scurry Oak', '1 Necrosynthesis'].join('\n'),
+  // The tuning deck with a misspelling in it, and a token line of the kind deck
+  // sites export. Both parse as perfectly good card lines — quantity, name, no set
+  // code — so both reach the search and match nothing, which is exactly the failure
+  // the page has to say something about. Every other card here is in the fixture's
+  // `cardIdentity`, so the unknown fraction stays low enough for the page to speak;
+  // that is the point of the deck, and `marked` is the other branch of the same
+  // rule, where nothing is unknown and nothing is said.
+  misspelled: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
+    .concat(REST, ['1 Sol Rimg', '1 Treasure']).join('\n'),
 };
 
 // ---- the shape the deploy actually publishes --------------------------------

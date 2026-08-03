@@ -289,8 +289,68 @@
     return `Loaded ${parts.join(' + ')} from “${name}”.${tail}`;
   }
 
+  // ---- cards the snapshot has never heard of ---------------------------------
+
+  // How many names to write out before the list stops being readable. Twenty is
+  // already an unusual paste; past that the count is the information.
+  const UNKNOWN_NAMED = 20;
+
+  // Above this fraction of the deck, the answer is about the data and not about the
+  // deck. It is the guard the whole feature rests on, for the reason `deckIdentity()`
+  // already returns null rather than guessing: when the identity map cannot answer,
+  // say nothing.
+  //
+  // The case is not hypothetical in either direction. The test fixture's
+  // `cardIdentity` has 14 entries against decks of 85 and 103 cards, so the naive
+  // version reports 83% of the tuning deck as unrecognized in `npm run verify` and
+  // `npm run test:ui`. And the published payload has shipped `cardIdentity: {}` once
+  // already, which made colour filtering silently inert — that same payload would
+  // report *every card in the deck* as unknown.
+  //
+  // A half rather than something tighter, because the rule has to survive a small
+  // paste: a reader checking three cards with one typo is 33% unknown and deserves
+  // to be told. Nobody's real decklist is half misspelled, and a map thin enough to
+  // be broken misses almost everything — the fixtures are at 83% and 100%, not 55%.
+  const UNKNOWN_LIMIT = 0.5;
+
+  // What to say about the cards the snapshot did not recognise, or null for nothing
+  // at all — which is the answer whenever the data cannot support the claim.
+  //
+  // The wording is careful about what is actually known. The data is a nightly
+  // snapshot of Scryfall by way of Spellbook, so the honest sentence is that *this
+  // snapshot* has no card by that name, not that the card does not exist. A page
+  // that says "Sol Rimg is not a real card" is wrong the day a set is released.
+  function unrecognizedNote(found) {
+    const names = (found && found.names) || [];
+    const checked = Number(found && found.checked) || 0;
+    if (!names.length || !checked) return null;
+    // No map at all cannot distinguish an unknown card from an unknown database.
+    if (!Number(found.mapped)) return null;
+    if (names.length / checked > UNKNOWN_LIMIT) return null;
+
+    const shown = names.slice(0, UNKNOWN_NAMED);
+    const rest = names.length - shown.length;
+    const sentence = names.length === 1
+      ? 'One card in your list isn’t in this snapshot of the card list, so no combo was looked for it:'
+      : `${names.length} cards in your list aren’t in this snapshot of the card list, `
+        + 'so no combo was looked for them:';
+    return {
+      count: names.length,
+      names: shown,
+      more: rest > 0 ? rest : 0,
+      sentence,
+      // Every cause, because the reader cannot tell them apart from here and only
+      // one of them is their mistake.
+      why: 'Usually a misspelling. A card printed since the snapshot, an older or '
+        + 'alternate name, and a token line pasted out of a deck export all land here too.',
+    };
+  }
+
   const api = {
     pickedSentence,
+    unrecognizedNote,
+    UNKNOWN_NAMED,
+    UNKNOWN_LIMIT,
     sizePills,
     rowNumbers,
     bracketProse,

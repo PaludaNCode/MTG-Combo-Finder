@@ -244,6 +244,37 @@ button:disabled { opacity: .6; cursor: wait; }
 #status.error { color: var(--error); }
 
 /* ---- colour identity header ---- */
+/* ---- cards the snapshot did not recognise ----
+ *
+ * Above the results, in the accent's own family, because it is the page talking
+ * about the reader's input rather than a property of any combo — the same reason
+ * the unofficial half of a row's split takes the accent. Not --error: a token line
+ * in a deck export is not a failure, and colouring it like one would overstate a
+ * list that is usually one typo long.
+ *
+ * Colours are tokens, and nothing here leans on opacity to soften one: the text is
+ * --text on --panel and the footnote is --muted, both of which clear AA there.
+ * --faint is only safe on --bg. */
+.unknown-cards {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: .7rem .9rem;
+  margin: 0 0 1rem;
+}
+.unknown-head { margin: 0; font-size: .9rem; color: var(--text); }
+/* The names read as a list of things to go and fix, one per line: they are being
+   compared against a decklist in the box above, which is also one per line. */
+.unknown-list {
+  margin: .4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: .9rem;
+}
+.unknown-list .card-name { color: var(--text); font-weight: 600; }
+.unknown-more { margin: .3rem 0 0; font-size: .85rem; color: var(--muted); }
+.unknown-why { margin: .45rem 0 0; font-size: .82rem; color: var(--muted); }
+
 .identity-line {
   display: flex;
   align-items: center;

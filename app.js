@@ -76,6 +76,41 @@
   // — the reasoning, the Game Changers *with their links*, the combos behind the
   // floor, and the criteria nobody checked — rather than being a summary of it.
 
+  // Which of the pasted cards the snapshot has never heard of, written out.
+  //
+  // Above the results and not folded into the diagnostics disclosure, because the
+  // complaint this answers is that nothing on screen said why the answer came back
+  // smaller than the deck deserves — and a closed <details> is nothing on screen.
+  // It is not showDiagnostics()' population either: that lists lines the parser
+  // *dropped*, and an unrecognized card is one the parser accepted.
+  //
+  // Whether to say anything, and how it is worded, is DeckView.unrecognizedNote() —
+  // a count and a pluralisation that could be confidently wrong, plus the rule that
+  // a thin identity map must produce silence rather than a wall of names.
+  function renderUnrecognized(container, found) {
+    container.textContent = '';
+    const note = DeckView.unrecognizedNote(found);
+    if (!note) return;
+
+    const box = el('section', 'unknown-cards');
+    box.appendChild(el('p', 'unknown-head', note.sentence));
+
+    // The names themselves, as the reader typed them — the whole point of the
+    // section. Their own spelling, because that is what they have to find in the
+    // box to fix, and any "corrected" version would be a guess.
+    const list = el('ul', 'unknown-list');
+    note.names.forEach((name) => {
+      const li = el('li');
+      li.appendChild(el('span', 'card-name', name));
+      list.appendChild(li);
+    });
+    box.appendChild(list);
+    if (note.more) box.appendChild(el('p', 'unknown-more', `…and ${note.more} more.`));
+
+    box.appendChild(el('p', 'unknown-why', note.why));
+    container.appendChild(box);
+  }
+
   function renderBracket(container, bracket) {
     container.textContent = '';
     // No published list means the question cannot be asked at all. Half a bracket
@@ -170,6 +205,7 @@
   function renderResults(results, deckNames) {
     $('results').hidden = false;
 
+    renderUnrecognized($('unrecognized'), results.unrecognized);
     renderIdentity($('identity'), results.identity);
     renderBracket($('bracket'), results.bracket);
 

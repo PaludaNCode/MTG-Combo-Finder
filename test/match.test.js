@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { matchDeck, deckIdentity, withinIdentity, expand, deckNameSet, computeSuggestions } = require('../combos.js');
+const {
+  matchDeck, deckIdentity, withinIdentity, unrecognizedCards, expand, deckNameSet, computeSuggestions,
+} = require('../combos.js');
 
 // A miniature stand-in for the published combos.json.
 const DATASET = {
@@ -410,4 +412,53 @@ test('withinIdentity: a three-colour deck accepts any pair inside it', () => {
   for (const ci of ['R', 'U', 'BR', 'GU', 'WUBRG']) {
     assert.strictEqual(withinIdentity({ i: ci }, abzan), false, ci);
   }
+});
+
+// ---- the cards the identity map has never heard of --------------------------
+//
+// The same lookup deckIdentity() does, keeping the misses. `1 Sol Rimg` parses as a
+// card line by every rule in parser.js, so it reaches the search and matches nothing;
+// without this it is never mentioned again.
+
+const IDENTITIES = { 'Sol Ring': '', 'Swamp': 'B', 'Vindicate': 'BW' };
+const entries = (...names) => names.map((card) => ({ card }));
+
+test('unrecognizedCards: a name the map has never heard of is kept', () => {
+  const found = unrecognizedCards(IDENTITIES, entries('Sol Ring', 'Sol Rimg', 'Swamp'));
+  assert.deepStrictEqual(found.names, ['Sol Rimg']);
+  assert.equal(found.checked, 3);
+  assert.equal(found.mapped, 3, 'the size of the map, so the page can tell thin from broken');
+});
+
+test('unrecognizedCards: the spelling kept is the one that was typed', () => {
+  const found = unrecognizedCards(IDENTITIES, entries('SOL RIMG'));
+  assert.deepStrictEqual(found.names, ['SOL RIMG']);
+});
+
+// Case and the second face are not misses: the lookup is nameKey()'d, the same as
+// every other comparison here.
+test('unrecognizedCards: case and a split card are recognised', () => {
+  const found = unrecognizedCards({ 'Valki, God of Lies // Tibalt, Cosmic Impostor': 'BR' },
+    entries('valki, god of lies', 'VALKI, GOD OF LIES'));
+  assert.deepStrictEqual(found.names, []);
+  assert.equal(found.checked, 1, 'the same card twice is one card');
+});
+
+test('unrecognizedCards: the same unknown card twice is reported once', () => {
+  const found = unrecognizedCards(IDENTITIES, entries('Sol Rimg', 'Sol Rimg'));
+  assert.deepStrictEqual(found.names, ['Sol Rimg']);
+  assert.equal(found.checked, 1);
+});
+
+// No map is not "everything is unknown" — it is a question that cannot be answered.
+// The facts still say so honestly; DeckView is what turns `mapped: 0` into silence.
+test('unrecognizedCards: with no map at all, nothing has been checked against anything', () => {
+  const found = unrecognizedCards(null, entries('Sol Ring', 'Sol Rimg'));
+  assert.equal(found.mapped, 0);
+  assert.equal(found.names.length, 2);
+});
+
+test('unrecognizedCards: an empty deck reports nothing', () => {
+  assert.deepStrictEqual(unrecognizedCards(IDENTITIES, []).names, []);
+  assert.deepStrictEqual(unrecognizedCards(IDENTITIES, null).names, []);
 });

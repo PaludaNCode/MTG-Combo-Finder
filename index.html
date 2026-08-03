@@ -97,6 +97,11 @@
       <div id="diagnostics" hidden></div>
 
       <section id="results" hidden>
+        <!-- Cards in the pasted list that the snapshot has no card by that name for
+             — a misspelling, a token line, or a card newer than the data. First,
+             above the answer, because it says the answer is smaller than the deck
+             deserves. Absent entirely when there are none. -->
+        <div id="unrecognized"></div>
         <div id="identity"></div>
         <!-- Which Commander bracket the list is still eligible for. Two of the
              bracket criteria are readable off a decklist; the rest are judgement

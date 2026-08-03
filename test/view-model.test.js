@@ -367,3 +367,84 @@ test('fileRefusal: a file with no name is still a sentence', () => {
   const said = View.fileRefusal('empty', '', 1024 * 1024);
   assert.match(said, /^That file is empty/);
 });
+
+// ---- cards the snapshot has never heard of ---------------------------------
+//
+// The wording is a count and a pluralisation, and the decision to say anything at
+// all is a judgement about whether the data can support the claim. Both render
+// exactly as happily when wrong, which is why they are here and not in app.js.
+
+const found = (names, checked, mapped) => ({ names, checked, mapped: mapped === undefined ? 30000 : mapped });
+
+test('unrecognizedNote: a misspelled card is named', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg'], 100));
+  assert.match(note.sentence, /^One card in your list isn’t in this snapshot/);
+  assert.deepStrictEqual(note.names, ['Sol Rimg']);
+  assert.equal(note.count, 1);
+  assert.equal(note.more, 0);
+});
+
+test('unrecognizedNote: several are counted and pluralised', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg', 'Treasure', 'Lightning Bolt?'], 100));
+  assert.match(note.sentence, /^3 cards in your list aren’t/);
+  assert.equal(note.names.length, 3);
+});
+
+// A deck with nothing wrong says nothing at all — no empty box, no "0 unrecognized".
+test('unrecognizedNote: a clean deck says nothing', () => {
+  assert.equal(View.unrecognizedNote(found([], 100)), null);
+});
+
+test('unrecognizedNote: nothing to compare against says nothing', () => {
+  assert.equal(View.unrecognizedNote(found(['Sol Rimg'], 0)), null);
+  assert.equal(View.unrecognizedNote(null), null);
+  assert.equal(View.unrecognizedNote({}), null);
+});
+
+// The rule the whole feature rests on, pinned here rather than left to the fixtures
+// happening to be small. `cardIdentity: {}` has shipped once already — it made colour
+// filtering silently inert — and that payload reports every card in the deck as
+// unknown. So: an absent or empty map says nothing, whatever the deck.
+test('unrecognizedNote: an absent identity map says nothing', () => {
+  const everything = Array.from({ length: 100 }, (_, i) => 'Card ' + i);
+  assert.equal(View.unrecognizedNote(found(everything, 100, 0)), null);
+});
+
+// And a map too thin to answer, which is the test fixtures' own case: 14 entries
+// against a deck of 85. The answer there is about the data, not the deck.
+test('unrecognizedNote: a thin identity map says nothing', () => {
+  const most = Array.from({ length: 71 }, (_, i) => 'Card ' + i);
+  assert.equal(View.unrecognizedNote(found(most, 85, 14)), null);
+  // Exactly at the limit still speaks: half a deck is the line, and being at it is
+  // not being over it.
+  assert.ok(View.unrecognizedNote(found(most.slice(0, 42), 84)));
+  assert.equal(View.unrecognizedNote(found(most.slice(0, 43), 84)), null);
+});
+
+// A small paste is the case a fraction rule can get wrong: three cards with one
+// typo is 33% unknown and still worth saying.
+test('unrecognizedNote: one typo in a three-card paste still speaks', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg'], 3));
+  assert.ok(note);
+  assert.match(note.sentence, /^One card/);
+});
+
+test('unrecognizedNote: a wall of names is capped, and says how many are left', () => {
+  const many = Array.from({ length: 26 }, (_, i) => 'Card ' + i);
+  const note = View.unrecognizedNote(found(many, 200));
+  assert.equal(note.names.length, View.UNKNOWN_NAMED);
+  assert.equal(note.more, 26 - View.UNKNOWN_NAMED);
+  assert.match(note.sentence, /^26 cards/, 'the count is of all of them, not of the ones shown');
+});
+
+// The data is a nightly snapshot, so the honest claim is about the snapshot and not
+// about the card. "Sol Rimg is not a real card" is wrong the day a set is released.
+test('unrecognizedNote: the claim is about the snapshot, not about the card', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg'], 100));
+  assert.match(note.sentence, /this snapshot/);
+  assert.doesNotMatch(note.sentence, /does not exist|not a (real|valid) card/i);
+  // And it does not blame the reader: a token line and a card newer than the
+  // snapshot both land here too.
+  assert.match(note.why, /token/);
+  assert.match(note.why, /since the snapshot/);
+});

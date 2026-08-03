@@ -410,6 +410,38 @@
     return known ? colours : null;
   }
 
+  // The cards the identity map has never heard of — the same lookup deckIdentity()
+  // does, keeping the misses instead of skipping them.
+  //
+  // `cardIdentity` is keyed by every card in Scryfall's oracle-cards bulk file and
+  // not only the ones that appear in combos, so a name missing from it is a name
+  // Scryfall does not publish under that spelling: a typo, an old or alternate
+  // wording, a card printed after the snapshot, or a token line out of a deck site's
+  // export. `1 Sol Rimg` is a perfectly good card line by every rule in parser.js,
+  // so it reaches the search, matches nothing, and without this is never mentioned
+  // again.
+  //
+  // Facts only — how many were looked at, how big the map was, and which names
+  // missed. Whether any of that is worth saying to a reader is DeckView's decision,
+  // because a thin map makes *everything* a miss and a wall of names would be worse
+  // than silence. Deduplicated by comparison key: a card in the deck and in the
+  // command zone is one card, and one mention.
+  function unrecognizedCards(cardIdentity, deckEntries) {
+    const byKey = identityIndex(cardIdentity);
+    const names = [];
+    const seen = new Set();
+    let checked = 0;
+    for (const entry of deckEntries || []) {
+      const name = (entry && entry.card) || '';
+      const key = nameKey(name);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      checked += 1;
+      if (byKey[key] === undefined) names.push(name);
+    }
+    return { names, checked, mapped: Object.keys(byKey).length };
+  }
+
   function withinIdentity(combo, identity) {
     if (!identity) return true; // no colour data -> don't split by colour
     for (const c of String(combo.i || '')) {
@@ -1149,7 +1181,7 @@
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
     matchDeck, matchUnofficial, standInRows, identityString,
-    deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, comboCardIndex,
+    deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
