@@ -37,9 +37,6 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
   count hides the difference entirely — see
   [What the count is made of](#what-the-count-is-made-of).
-- **One slot away** — combos you hold every named card for and cannot assemble because
-  nothing in your deck fills their slot ("a Persist Creature"). Reported separately, never
-  counted among the combos you have — see [Template slots](#template-slots-a-persist-creature).
 - **Interchangeable cards are one decision, not many** — Spellbook stores one variant per
   concrete card list, so a combo its own site shows as *"Spike Feeder + 1 of 8 cards"*
   arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
@@ -465,8 +462,8 @@ action so it is a single press.
 **Both links sit above the result chips, not below them.** What a combo *needs* is read
 before what it *does* — the cards decide whether the row is worth reading at all, and a
 reader after the steps or the card images should not have to scroll past a wall of
-result chips to find the way out. All three row types do it in that order: an ordinary
-combo, a collapsed choice, and a *one slot away* row. The layout test compares the two
+result chips to find the way out. Both row types do it in that order: an ordinary
+combo and a collapsed choice. The layout test compares the two
 elements' document positions and fails if the links drop below the chips. Named cards only — a template slot has no card to open, and the row
 already names what fills it. A collapsed row's link covers its shared cards *plus* all
 the interchangeable ones, since that whole set is what the reader is choosing between.
@@ -594,8 +591,8 @@ Four rules, all of them about not overclaiming:
   suggest for "a Creature with Haste" — 612 cards fill it — so a template combo
   only counts once the deck already fills every slot it has. Templates with no
   query (29 of 178) can never be filled and are never counted, exactly as before.
-  What changed is that not counting a combo no longer means saying nothing about
-  it — see "One slot away" below.
+  A combo whose slot the deck cannot fill is not reported anywhere — see "The panel
+  that could not answer its own question" below.
 - **Every slot gets its own card.** A card cannot hold two slots, and a card the
   combo already names cannot also fill one. Assignment is a real matching
   (Kuhn's algorithm), not a greedy pass: taking the first candidate for each slot
@@ -610,41 +607,57 @@ Four rules, all of them about not overclaiming:
   and the data branch update independently, and a stale `combos.json` must never
   start claiming combos.
 
-### One slot away
+### The panel that could not answer its own question
 
-Not counting a combo is right. *Silence* about it was not: a deck holding Rings of
-Brighthearth and short only of a Persist Creature is one card from a combo, and the
-old behaviour was to drop the row and mention nothing. It's now its own section,
-below the combos the deck can actually assemble and never counted among them.
+There used to be a fifth panel here, **One slot away**: combos the deck held every named
+card for and could not assemble because nothing in it filled their slot. It is gone, and
+this section is the record of that rather than a description of it, because removing it
+reverses what this section used to argue.
 
-Four decisions, all narrowing:
+**What it was for.** Not counting these combos is right — the deck genuinely cannot do
+them. *Silence* about them looked wrong: "you hold Rings of Brighthearth and need any
+Persist Creature" is a real deckbuilding fact, and the original behaviour was to drop the
+row and mention nothing. So the panel narrowed hard — one gap and nothing else missing,
+inside the deck's colours, and only slots whose id the data could actually read — and then
+reported the slot, how many cards fill it, and six of them ranked by how many of your own
+stuck combos each would unstick.
 
-- **One gap, and nothing else missing.** Every card the combo names is in the deck and
-  exactly one slot is unfilled. Two unfilled slots is two cards away; a missing named card
-  *plus* a slot is likewise two, and the existing one-card-away suggestions already refuse
-  to cross that line.
-- **Inside the deck's colours.** A combo the deck could not legally run is not a decision
-  anyone has to make. (The off-colour tab exists for *suggestions*, where the card is the
-  subject; here the combo is.)
-- **A slot with no id says nothing.** `compact()` writes `null` for a requirement it could
-  not read, and data predating template resolution records only a slot count. Neither can
-  say what would fill it, so neither appears — the same rule as everywhere else here.
-- **It is not phrased as a recommendation.** There is no single card to recommend for a slot
-  394 cards fill. The row names the slot, counts the cards that fill it, says how many are
-  in your colours, and lists a few.
+**Why it went.** It is the one section that could not answer its own question. A slot 394
+cards fill has no card to recommend, so every row reduced to a slot name, a count and a
+handful of examples, and left the reader to do the rest. The four panels around it each
+end in something you can act on — a card to add, a card to cut, a combo to look for. This
+one ended in a research task.
 
-Which few is itself read off the data: candidates are **ranked by how many of your own stuck
-combos each one would complete**, then alphabetically. A card that unsticks three of them is
-a better thing to know about than a card that unsticks one, and that ordering needs nothing
-known about the card itself. Cards already in the deck are never offered, and off-colour
-cards are counted but not named.
+**What was given up, plainly.** The fact itself. A reader who wants it now has to ask from
+a terminal — `node tools/deck-gaps.js deck.txt` answers exactly this question and more
+besides — and that is a different audience from somebody pasting a decklist into a web
+page. This is the cost of the removal and it is not zero; it is accepted rather than
+worked around.
 
-**Making the slot nameable cost one field.** The published data carried names only for
-templates that resolved, so a combo blocked by *Haste Enabler* — one of the 29 with no
-Scryfall query — could only be described as needing "a card". `unresolvable` (43 short
-names, all told) is now published alongside, so the row reads "Needs Haste Enabler — no card
-list published for this slot yet". It cannot make a combo count, because matching only ever
-consults the card lists. `tools/try-deck.js` was already reading that field.
+**What did not go with it.** Template slots are untouched, and the distinction is the
+whole reason the removal is safe:
+
+- A combo whose slot the deck *does* fill still renders that slot in its own row in
+  "Combos in your deck", and still names the card credited with filling it.
+- A filled slot still **counts as a card** in the size breakdown: `Rings of Brighthearth
+  + a Persist Creature` is a two-card combo, and counting only the named cards would file
+  it as a one-card one.
+- `resolveSlots()`, `assignSlots()` and `templates.json` all stay exactly as they were.
+
+What went is the panel, the row shape it needed, and `slotCandidates()` — which existed
+only to feed it. `test/template-slots.test.js` is what is left of the tests: it holds the
+line that matters, which is that a combo the deck cannot assemble is never counted among
+the ones it can, plus the surviving half about filled slots. `npm run verify` now expects
+four panels, and asserts that the fixture's one-slot-short combo appears **nowhere** in
+the results rather than in a panel of its own — across every combo link on the page, since
+the way this could go wrong is it surfacing somewhere it would read as a combo the deck has.
+
+**One field outlived it.** `unresolvable` — names for the 29 templates with no Scryfall
+query — was published so a blocked row could read "Needs Haste Enabler" instead of "needs a
+card". It is still published and still merged into the template names, because it is what
+`tools/combos-with.js` and `tools/try-deck.js` read, and because a template with no card
+list must still be a slot the deck cannot fill rather than an unnamed one. The page just no
+longer has anywhere to print it.
 
 **Resolving against the Scryfall bulk file was considered and rejected.** We
 already download it for colour identity, so it looks free. It isn't: the bulk
@@ -1735,7 +1748,7 @@ Consequences worth knowing:
   not live. Which snapshot you have is printed at the bottom of the page.
 - Combos requiring a *template* ("a Persist Creature") are excluded from
   suggestions, since no single named card completes them — but not from results,
-  and no longer from the page: see "Template slots" and "One slot away" above.
+  where the deck fills the slot: see "Template slots" above.
 - Deck colour identity is the union of the colours of the cards pasted in. If
   none of them is recognised, colour filtering is switched off rather than
   guessed at.

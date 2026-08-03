@@ -1,7 +1,7 @@
-// The four panels that answer "what now": cards to add, the cards already carrying your
-// combos, combos one slot short of assembling, and the unofficial rows.
+// The three panels that answer "what now": cards to add, the cards already carrying your
+// combos, and the unofficial rows. (There were four; see below for the one that went.)
 //
-// All four are lists of rows built from render-rows.js, and the combos they cite are drawn
+// All three are lists of rows built from render-rows.js, and the combos they cite are drawn
 // by render-combos.js — so this file is mostly about grouping, ordering and what each
 // panel's heading claims, which is why so much of it reads as a call into view-model.js.
 (function (global) {
@@ -152,92 +152,16 @@
     return card;
   }
 
-  // How many cards that fill a slot to name before the number has to speak for
-  // itself. Six is enough to recognise what kind of card is wanted.
-  const CANDIDATES_SHOWN = 6;
-
-  // A combo you hold every named card for, and cannot assemble because nothing
-  // in the deck fills its slot. These used to be dropped in silence, which is
-  // the one thing they should not be: "you have Rings of Brighthearth and need
-  // any Persist Creature" is a deckbuilding decision, and an invisible one.
+  // There was a fourth row shape here, and a panel of them: a combo whose every
+  // named card the deck held, short only of a slot. It is gone, and the reasoning
+  // is in the README under "The panel that could not answer its own question" —
+  // a slot 394 cards fill has no card to recommend, so the row could only report
+  // the slot, a count and six examples and leave the reader to it.
   //
-  // It is deliberately not phrased as a suggestion. There is no single card to
-  // recommend for a slot 394 cards fill, so the row reports the slot, how many
-  // cards fill it, and a few of them — ranked by how many of *your* stuck combos
-  // each would complete, which is read off your own list.
-  function slotAwayCard(variant, candidates) {
-    const card = el('article', 'combo slot-away');
-
-    const header = el('h3');
-    RenderRows.comboCardNames(variant).forEach((name, i) => {
-      if (i > 0) header.appendChild(el('span', 'plus', ' + '));
-      header.appendChild(el('span', 'card-name', name));
-    });
-    (variant.fills || []).forEach((fill) => {
-      header.appendChild(el('span', 'plus', ' + '));
-      const slot = el('span', 'slot', fill.slot);
-      slot.title = 'A slot, not a specific card — filled here by ' + fill.card;
-      header.appendChild(slot);
-    });
-    (variant.gaps || []).forEach((gap) => {
-      header.appendChild(el('span', 'plus', ' + '));
-      header.appendChild(el('span', 'slot slot-missing', gap.slot));
-    });
-    card.appendChild(header);
-
-    (variant.gaps || []).forEach((gap) => {
-      const need = el('p', 'gap');
-      const found = candidates && candidates[String(gap.id)];
-      if (!found || !found.total) {
-        // Spellbook attaches no Scryfall query to 29 of its templates, so there
-        // is no card list to offer. Saying so beats implying the slot is narrow.
-        need.appendChild(el('span', 'gap-label', 'Needs ' + gap.slot + ' — '));
-        need.appendChild(document.createTextNode('no card list published for this slot yet.'));
-        card.appendChild(need);
-        return;
-      }
-      need.appendChild(el('span', 'gap-label', 'Needs ' + gap.slot + ' — '));
-      need.appendChild(document.createTextNode(
-        found.total + ' card' + (found.total === 1 ? '' : 's') + ' fill it'
-        + (found.inColour < found.total ? `, ${found.inColour} in your colours` : '') + '.'
-      ));
-      card.appendChild(need);
-
-      if (found.names.length) {
-        const list = el('p', 'candidates');
-        list.appendChild(el('span', 'gap-label', 'For example: '));
-        found.names.slice(0, CANDIDATES_SHOWN).forEach((name, i) => {
-          if (i > 0) list.appendChild(document.createTextNode(' · '));
-          list.appendChild(el('span', 'card-name', name));
-          list.appendChild(RenderRows.cardLinks(name));
-        });
-        card.appendChild(list);
-      }
-    });
-
-    // Same order again: the slot and its candidates, the way out, then the payoff.
-    if (variant.id) {
-      const p = el('p', 'combo-link');
-      p.appendChild(link(RenderRows.SPELLBOOK_COMBO_URL + encodeURIComponent(variant.id) + '/', 'View on Commander Spellbook →'));
-      card.appendChild(p);
-    }
-
-    card.appendChild(RenderRows.resultChips(variant));
-
-    return card;
-  }
-
-  function renderSlots(container, rows, candidates) {
-    if (!rows.length) {
-      container.textContent = '';
-      return;
-    }
-    const body = panel(container, 'slots', 'One slot away', rows.length);
-    body.appendChild(el('p', 'empty',
-      'Every card these combos name is already in your deck. What each one is short of is a slot — '
-      + 'a kind of card rather than a specific one — so there is no single card to recommend.'));
-    rows.forEach((row) => body.appendChild(slotAwayCard(row, candidates)));
-  }
+  // Template slots themselves are untouched: a combo the deck *can* assemble still
+  // names the slot it filled and which card of yours filled it, inside its own row
+  // in "Combos in your deck", and that slot still counts as a card in the size
+  // breakdown. See resolveSlots() in combos.js.
 
   // The second half of "Combos in your deck". Everything in the panel above comes
   // from Commander Spellbook and is shown on their authority; these are ours, found
@@ -357,7 +281,7 @@
   // A commander that *was* given still matters: it is part of the deck, so its
   // colours are in here along with everything else's.
 
-  const api = { suggestionCard, pieceCard, slotAwayCard, renderSlots, renderUnofficial, renderPieces, renderSuggestions };
+  const api = { suggestionCard, pieceCard, renderUnofficial, renderPieces, renderSuggestions };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

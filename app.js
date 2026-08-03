@@ -197,8 +197,6 @@
     // picture is never a search behind the list beside it.
     RenderMap.renderGraph($('graph'), included);
 
-    RenderSuggestions.renderSlots($('slots'), results.oneSlotAway || [], results.slotCandidates || {});
-
     // Both halves, because the question this panel asks — what does cutting this
     // card cost me — has the same answer whoever published the combo. The two
     // numbers stay apart on the row; see ourBadge().

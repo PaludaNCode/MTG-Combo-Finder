@@ -287,8 +287,6 @@
       // deck could not legally run lands behind the same tab either way.
       unofficialAlmost: nearly.filter(inColour).map(DeckCombos.expand),
       unofficialAlmostByAddingColors: nearly.filter((r) => !inColour(r)).map(DeckCombos.expand),
-      oneSlotAway: matched.oneSlotAway.map(DeckCombos.expand),
-      slotCandidates: matched.slotCandidates,
       almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
       almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
     };

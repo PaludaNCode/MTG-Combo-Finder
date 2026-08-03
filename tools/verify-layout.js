@@ -355,8 +355,21 @@ function measure(win, doc) {
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
     comboIds: [...doc.querySelectorAll('#included .combo-link a')].map((a) => a.getAttribute('href')),
   };
-  // The combos held up by a slot the deck cannot fill: reported, apart from the
-  // ones it can assemble, and never counted among them.
+  // A combo the deck cannot assemble for want of a template slot must not be on the
+  // page at all. Combo 13 in the fixture is the case — every card it names is in the
+  // deck and nothing fills its slot — and it used to have a panel of its own. Read
+  // across every combo link in the results, not just the ones in a single panel,
+  // because the way this could go wrong now is it turning up somewhere else.
+  const stuckSlot = (() => {
+    const links = [...doc.querySelectorAll('#results .combo-link a')].map((a) => a.getAttribute('href') || '');
+    return {
+      links: links.length,
+      // A substring and not a regex: this block is inside a template literal, where
+      // a lone \\/ collapses to / and turns the pattern into a line comment.
+      anywhere: links.some((href) => href.indexOf('/13/') !== -1),
+      missingPills: doc.querySelectorAll('#results .slot-missing').length,
+    };
+  })();
   // "Combos in your deck" leads with the easiest: 2-card rows, then 3, then 4.
   // Card names inside a row are alphabetical, so two rows can be compared.
   // Scoped to the row's own heading: a collapsed row keeps every version inside a
@@ -369,13 +382,6 @@ function measure(win, doc) {
     const choices = head.querySelector(':scope > .either') ? 1 : 0; // "any of N" stands in for one card
     return { names, size: names.length + slots + choices, label: names.join(' + ') };
   });
-  const stuck = {
-    rows: doc.querySelectorAll('#slots .combo').length,
-    missing: [...doc.querySelectorAll('#slots .slot-missing')].map((e) => e.textContent),
-    needs: [...doc.querySelectorAll('#slots .gap')].map((e) => e.textContent),
-    candidates: [...doc.querySelectorAll('#slots .candidates .card-name')].map((e) => e.textContent),
-    comboIds: [...doc.querySelectorAll('#slots .combo-link a')].map((a) => a.getAttribute('href')),
-  };
   // Combos listed *under* a card have to start with that card. Read from the
   // closed <details> — the rows are in the DOM whether or not it is open.
   const nested = (scope, cardSelector) => [...doc.querySelectorAll(scope)].slice(0, 3).map((row) => {
@@ -640,8 +646,8 @@ function measure(win, doc) {
     header,
     grouped,
     slots,
+    stuckSlot,
     comboCompare,
-    stuck,
     order,
     leads,
     bracket,
@@ -840,7 +846,6 @@ async function runStamped(vp) {
         via: age ? age.dataset.via : null,
         noWorker: !!vp.noWorker,
         panels: doc.querySelectorAll('.panel').length,
-        stuckRows: doc.querySelectorAll('#slots .combo').length,
         // Read after the search, so the two scripts app.js injects are in the DOM by
         // now and their URLs are part of what gets checked for the stamp.
         scripts: [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')),
@@ -1360,7 +1365,6 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         }
       }
       if (s.panels < 4) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
-      if (s.stuckRows < 2) wrong.push(`the one-slot-away rows did not render from a stamped page`);
       if (wrong.length) {
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
@@ -1569,12 +1573,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    // Combos in your deck, how they connect, one slot away, cards carrying them,
-    // suggested additions. The bracket check is not among them — it stopped being
-    // a panel and became a line beside the colour identity, which the next check
-    // is what keeps true.
-    if (v.panels.length !== 5) problems.push(`expected 5 panels, got ${v.panels.length}`);
+    // Combos in your deck, how they connect, cards carrying them, suggested
+    // additions. Four, not five: "One slot away" was removed. The bracket check is
+    // not among them either — it stopped being a panel and became a line beside the
+    // colour identity, which the next check is what keeps true.
+    if (v.panels.length !== 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
     if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
+    if (v.panels.some((p) => /slot away/i.test(p.title))) problems.push('the one-slot-away panel is back');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/^\d+$/.test(v.topPiece.total)) {
@@ -1892,22 +1897,20 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (s.comboIds.some((href) => /\/12\//.test(href))) problems.push('a combo whose template nothing fills was listed as complete');
     if (!s.comboIds.some((href) => /\/11\//.test(href))) problems.push('the combo whose template the deck fills went missing');
 
-    // A combo the deck holds every named card for and cannot assemble is worth
-    // saying out loud, in its own section, naming the slot and what fills it.
-    // Dropping these in silence was the old behaviour.
-    const stuck = v.stuck;
-    if (stuck.rows < 2) problems.push(`expected 2 one-slot-away rows, got ${stuck.rows}`);
-    if (!stuck.comboIds.some((href) => /\/13\//.test(href))) problems.push('the combo one slot away was not reported');
-    if (s.comboIds.some((href) => /\/13\//.test(href))) problems.push('a combo one slot away was listed among the combos in the deck');
-    if (!stuck.missing.some((t) => /Persist Creature/.test(t))) problems.push(`the missing slot reads "${stuck.missing[0]}"`);
-    if (!stuck.needs.some((t) => /2 cards fill it, 1 in your colours/.test(t))) {
-      problems.push(`no row counted the cards that fill its slot: ${JSON.stringify(stuck.needs)}`);
+    // Combo 13 in the fixture is one slot short: the deck holds the card it names
+    // and nothing fills its Persist Creature slot. It used to have a panel of its
+    // own; now it must appear nowhere on the page at all. Asserted across every
+    // combo link in the results rather than only inside "Combos in your deck",
+    // because the failure the removal could introduce is it surfacing somewhere
+    // else — a suggestion, a piece row's disclosure — where it would read as a
+    // combo the deck has.
+    if (v.stuckSlot.anywhere) {
+      problems.push('a combo the deck cannot assemble for want of a slot is on the page');
     }
-    if (!stuck.candidates.includes('Bloom Tender')) problems.push('the cards that fill the slot were not named');
-    if (stuck.candidates.includes('Murderous Redcap')) problems.push('an off-colour card was offered for a slot');
-    // Haste Enabler has no Scryfall query, so it can be named and never filled.
-    if (!stuck.needs.some((t) => /Haste Enabler/.test(t))) problems.push('a slot with no card list was not named');
-    if (!stuck.needs.some((t) => /no card list published/.test(t))) problems.push('a slot with no card list did not say so');
+    if (!v.stuckSlot.links) problems.push('no combo links found at all, so that check proves nothing');
+    // And no dashed missing-slot pill survives anywhere, which is the other half:
+    // every slot on the page now is a slot the deck fills.
+    if (v.stuckSlot.missingPills) problems.push(`${v.stuckSlot.missingPills} missing-slot pill(s) still rendered`);
 
     // Which daily snapshot is on screen, and whether the kept copy is being
     // used. Caching that silently stops working costs 2.9 MB a visit and looks
@@ -2254,7 +2257,6 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
         : '';
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
-      const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
@@ -2272,7 +2274,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${linkNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${linkNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

@@ -528,73 +528,6 @@
     return slots.fills;
   }
 
-  // ---- the cards that would fill a slot you are short of ---------------------
-  //
-  // A slot has no single card to suggest — 394 cards are a "Noncreature Artifact
-  // with MV<=1" — so this does not pretend to make a recommendation. It reports
-  // how many cards fill the slot, and names a few, ranked by how many of *your*
-  // blocked combos each one would complete. That ranking is read off your own
-  // list rather than from anything about the card.
-
-  // key -> the spelling Scryfall uses, front face only. The published template
-  // lists are keyed by comparison key, so without this a candidate could only be
-  // shown lowercased.
-  function spellingIndex(cardIdentity) {
-    const byKey = Object.create(null);
-    for (const name of Object.keys(cardIdentity || {})) {
-      const key = nameKey(name);
-      if (byKey[key]) continue;
-      byKey[key] = name.split('//')[0].trim();
-    }
-    return byKey;
-  }
-
-  // rows: the one-slot-away combos, each carrying its `gaps`.
-  // Returns { [templateId]: { total, inColour, names } } — `total` counts every
-  // card Spellbook's query matched, `names` only the ones your deck could play.
-  function slotCandidates(dataset, rows, deckNames, identity, limit) {
-    const wanted = new Map(); // template id (as string) -> combos waiting on it
-    for (const row of rows || []) {
-      for (const gap of (row && row.gaps) || []) {
-        if (gap.id === null || gap.id === undefined) continue;
-        const id = String(gap.id);
-        wanted.set(id, (wanted.get(id) || 0) + 1);
-      }
-    }
-    const out = Object.create(null);
-    if (!wanted.size) return out;
-
-    const lookup = (dataset && dataset.templateCards) || {};
-    const identities = identityIndex(dataset && dataset.cardIdentity);
-    const spelling = spellingIndex(dataset && dataset.cardIdentity);
-    for (const id of wanted.keys()) out[id] = { total: 0, inColour: 0, names: [] };
-
-    const scored = new Map(); // template id -> [{ name, score }]
-    for (const key of Object.keys(lookup)) {
-      const ids = (lookup[key] || []).map(String).filter((id) => wanted.has(id));
-      if (!ids.length) continue;
-      for (const id of ids) out[id].total += 1;
-      // A card you already play is not an addition, and a card outside your
-      // colours is noise — the same line the suggestion tabs draw.
-      if (deckNames && deckNames.has(key)) continue;
-      if (!withinIdentity({ i: identities[key] }, identity)) continue;
-      // How many of the combos you are short on this one card would complete.
-      const score = ids.reduce((sum, id) => sum + wanted.get(id), 0);
-      for (const id of ids) {
-        out[id].inColour += 1;
-        if (!scored.has(id)) scored.set(id, []);
-        scored.get(id).push({ name: spelling[key] || key, score });
-      }
-    }
-
-    const cap = limit || 6;
-    for (const [id, cards] of scored) {
-      cards.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
-      out[id].names = cards.slice(0, cap).map((c) => c.name);
-    }
-    return out;
-  }
-
   // Splits the dataset against a deck the same way find-my-combos does:
   // complete combos, those one card short, and those one card short but
   // outside the deck's colours.
@@ -613,7 +546,6 @@
     const included = [];
     const almost = [];
     const almostByAddingColors = [];
-    const oneSlotAway = [];
 
     for (const combo of combos) {
       const cards = combo.c || [];
@@ -633,21 +565,11 @@
       const slots = combo.t ? resolveSlots(combo, byTemplate, templateNames) : { fills: [], gaps: [] };
       if (!slots) continue;
 
-      if (slots.gaps.length) {
-        // Not claimable — but silence is the wrong answer. A deck holding every
-        // card a combo names and short of one slot is one card from the combo,
-        // and that card is a real deckbuilding decision. Reported apart from the
-        // combos the deck can actually assemble, and never counted among them.
-        //
-        // Only one gap, only when nothing else is missing, and only inside the
-        // deck's colours: two gaps is two cards away, and a slot whose id the
-        // data could not record has nothing to say about what would fill it.
-        if (missing === 0 && slots.gaps.length === 1 && slots.gaps[0].id !== null
-          && withinIdentity(combo, identity)) {
-          oneSlotAway.push(Object.assign({}, combo, { fills: slots.fills, gaps: slots.gaps }));
-        }
-        continue;
-      }
+      // A gap is a slot nothing in the deck fills, so the combo is not claimable
+      // and drops out here. It used to be kept when it was the *only* thing
+      // missing, and reported in a panel of its own; that panel is gone — see the
+      // README's "The panel that could not answer its own question".
+      if (slots.gaps.length) continue;
 
       const row = slots.fills.length ? Object.assign({}, combo, { fills: slots.fills }) : combo;
 
@@ -665,12 +587,9 @@
     included.sort(bySizeThenPopularity);
     almost.sort(byPopularity);
     almostByAddingColors.sort(byPopularity);
-    oneSlotAway.sort(byPopularity);
     return {
       identity,
       included,
-      oneSlotAway,
-      slotCandidates: slotCandidates(dataset, oneSlotAway, deckNames, identity),
       almostIncluded: almost,
       almostIncludedByAddingColors: almostByAddingColors,
     };
@@ -1233,7 +1152,7 @@
     deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
     groupSuggestions, groupVariants, variantSignature,
-    deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
+    deckTemplateIndex, fillTemplates, resolveSlots,
     comboSize, sizeBreakdown, bracketCheck,
     decode, rebuildId,
   };

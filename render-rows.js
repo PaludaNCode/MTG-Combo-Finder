@@ -2,9 +2,9 @@
 // links, the + Add to deck button, the size breakdown, the two-number split line.
 //
 // This file is the answer to the question that made splitting app.js's rendering awkward:
-// a combo row, a suggestion row, a piece row and a one-slot-away row are four different
-// things built from the same handful of pieces. Without somewhere shared to put them, the
-// two renderers below would each have needed half of them, or a copy.
+// a combo row, a suggestion row and a piece row are three different things built from the
+// same handful of pieces. Without somewhere shared to put them, the two renderers below
+// would each have needed half of them, or a copy.
 //
 // It is not page-dom.js, and the line between them is worth keeping: that file is markup
 // plumbing with no opinions, and resultChips() sorts by tier and folds past the fourth,

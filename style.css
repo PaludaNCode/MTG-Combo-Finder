@@ -819,20 +819,9 @@ button:disabled { opacity: .6; cursor: wait; }
 .fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }
 .fills .card-name { color: var(--text); font-weight: 600; }
 
-/* The slot a combo is short of. Dashed, because unlike the slots above it is
-   not filled — the row is a gap, not a find. */
-.slot-missing {
-  box-shadow: none;
-  border: 1px dashed var(--accent);
-  color: var(--accent);
-  font-style: italic;
-}
-.slot-away { border-left: 2px solid var(--line-strong); }
-.gap { margin: .2rem 0 .1rem; font-size: .85rem; color: var(--muted); }
-.gap-label { color: var(--text); font-weight: 600; }
-.candidates { margin: .1rem 0 .35rem; font-size: .85rem; color: var(--muted); }
-.candidates .card-name { color: var(--text); }
-.candidates .card-links { margin-left: .3rem; }
+/* There was a dashed variant of the pill above for a slot a combo was *short* of,
+   plus the rules for the rows that showed them. They went with the "One slot away"
+   panel: every slot on the page now is a slot the deck fills. */
 
 /* The alternatives under a suggestion. Same job, same combos — worth listing,
    not worth shouting. */
