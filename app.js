@@ -1613,7 +1613,60 @@
     });
   }
 
+  // What the in-page fallback needs and the page does not otherwise have, in load
+  // order — search.js reads UnofficialCombos at load time, so unofficial.js goes first.
+  //
+  // **Two files, not four, and the difference is worth writing down** because the
+  // review that proposed this said four. `result-tiers.js` and `combos.js` cannot leave
+  // index.html: app.js uses `DeckCombos` throughout the rendering, graph.js and
+  // view-model.js read it too, and combos.js reads the tier inventory at load. Only
+  // `unofficial.js` and `search.js` are touched by nothing on the page except
+  // inPageSearch() below — which is now the only thing that loads them.
+  //
+  // That is still 34.5 KB gzipped of a 143 KB shell, and unofficial.js is the largest
+  // single script the page had. It saves no bytes: the worker fetches the same URLs and
+  // the HTTP cache serves one download. What it saves is building the 235-row table on
+  // the main thread, ahead of first paint, for a path that almost never runs — and it
+  // stops that cost growing every time somebody adds a row.
+  //
+  // Stamped from ASSET_VERSION exactly as the worker's own URL is. That makes three
+  // hops the deploy's rewrite cannot reach — these two, the worker's URL, and the
+  // worker's own importScripts — and an unstamped one is invisible: it resolves
+  // perfectly well and serves whatever the CDN last cached. The stamped/no-worker
+  // viewport in tools/verify-layout.js is what proves these carry it, and it had to be
+  // added for this change: `desktop (no worker)` runs unstamped and
+  // `desktop (asset-stamped)` asserts the search went through the *worker*, so nothing
+  // covered the stamped page path until now.
+  const FALLBACK_SCRIPTS = ['unofficial.js', 'search.js'];
+  let fallbackReady = null;
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = src;
+      el.addEventListener('load', () => resolve());
+      el.addEventListener('error', () => reject(new Error('could not load ' + src)));
+      document.head.appendChild(el);
+    });
+  }
+
+  // Loaded once per page, however many searches fall back. Chained rather than fired
+  // in parallel with `async = false`: the ordering guarantee for injected scripts is
+  // real but easy to lose to a later refactor, and there is nothing to gain here —
+  // this path is already the slow one by definition.
+  function loadFallback() {
+    if (typeof ComboSearch !== 'undefined') return Promise.resolve();
+    if (!fallbackReady) {
+      fallbackReady = FALLBACK_SCRIPTS.reduce(
+        (chain, src) => chain.then(() => loadScript(src + ASSET_VERSION)),
+        Promise.resolve(),
+      );
+    }
+    return fallbackReady;
+  }
+
   async function inPageSearch(entries) {
+    await loadFallback();
     try {
       const out = await ComboSearch.run(new URL(DATA_URL, location.href).href, entries);
       lastDiagnostics = out.diagnostics;

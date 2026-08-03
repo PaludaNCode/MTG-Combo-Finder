@@ -138,9 +138,13 @@
   <!-- The tier inventory has to be in place before combos.js reads it. -->
   <script src="result-tiers.js"></script>
   <script src="combos.js"></script>
-  <!-- The combos we believe in that Spellbook has not published. Before search.js,
-       which reads it at load time the same way it reads combos.js. -->
-  <script src="unofficial.js"></script>
+  <!-- unofficial.js and search.js are deliberately absent, and app.js injects them if
+       it ever needs them. Both are used only by the in-page fallback — the search
+       itself runs in search-worker.js, which imports them there — so loading them
+       here built the unofficial rows table on the main thread, before first paint, on
+       every visit, to serve a path that runs only for a browser with no Worker.
+       See FALLBACK_SCRIPTS in app.js. combos.js and result-tiers.js above cannot go
+       the same way: the rendering uses DeckCombos throughout. -->
   <!-- Page-only, so the worker below does not import it: the map is drawn from
        what the search hands back, not worked out during one. -->
   <script src="graph.js"></script>
@@ -154,11 +158,9 @@
        how a number is phrased — pulled out where `node --test` can reach them.
        Page-only and dependency-free; it just has to be here before app.js. -->
   <script src="view-model.js"></script>
-  <!-- The searching itself happens in search-worker.js, which imports parser.js,
-       result-tiers.js, combos.js and unofficial.js plus search.js. This copy is
-       the fallback for a browser with no Worker — see runSearch() in app.js. -->
-
-  <script src="search.js"></script>
+  <!-- The searching itself happens in search-worker.js, which imports result-tiers.js,
+       combos.js and unofficial.js plus search.js. The fallback for a browser with no
+       Worker loads the last two on demand — see runSearch() in app.js. -->
   <script src="app.js"></script>
 </body>
 </html>

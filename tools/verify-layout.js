@@ -56,6 +56,20 @@ const VIEWPORTS = [
   // production looks fine while running half-stale JS. Hence asserting that the
   // search still went through the *worker* on a stamped page.
   { name: 'desktop (asset-stamped)', width: 1440, height: 900, deck: 'marked', kind: 'stamped' },
+  // And the same page with no Worker, which is the combination nothing covered until
+  // unofficial.js and search.js left index.html. Those two are now injected by app.js,
+  // making a third hop the deploy's rewrite cannot reach — and an unstamped one is
+  // invisible in production, since it resolves fine and serves whatever the CDN
+  // cached. That is how unofficial.js, graph.js and theme.js each shipped stale. The
+  // sandbox 404s unstamped .js, so this run fails rather than a reader's.
+  {
+    name: 'desktop (asset-stamped, no worker)',
+    width: 1440,
+    height: 900,
+    deck: 'marked',
+    kind: 'stamped',
+    noWorker: true,
+  },
   // Also not a layout check: the theme control overriding the system, remembering
   // the answer, and carrying it to the second page.
   { name: 'theme toggle', width: 1440, height: 900, kind: 'theme' },
@@ -721,6 +735,12 @@ async function runStamped(vp) {
   try {
     const { win, doc } = await load('/stamped/index.html', vp.width);
     win.localStorage.clear();
+    // The combination nothing covered until unofficial.js and search.js stopped being
+    // in the HTML. The no-worker viewport proves the fallback runs; this proves the
+    // scripts it injects carry the stamp — and the sandbox 404s any .js that does not,
+    // so an unstamped injection fails here rather than silently serving a CDN copy in
+    // production. app.js reads Worker lazily, so removing it after load is enough.
+    if (vp.noWorker) delete win.Worker;
     doc.getElementById('decklist').value = DECKS[vp.deck];
     doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
     await settled(doc, '.combo');
@@ -731,8 +751,11 @@ async function runStamped(vp) {
       requested: vp.width,
       stamped: {
         via: age ? age.dataset.via : null,
+        noWorker: !!vp.noWorker,
         panels: doc.querySelectorAll('.panel').length,
         stuckRows: doc.querySelectorAll('#slots .combo').length,
+        // Read after the search, so the two scripts app.js injects are in the DOM by
+        // now and their URLs are part of what gets checked for the stamp.
         scripts: [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')),
       },
     };
@@ -1206,14 +1229,25 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!s.scripts.every((src) => src.includes(STAMP))) {
         wrong.push(`an unstamped script survived: ${s.scripts.filter((x) => !x.includes(STAMP)).join(', ')}`);
       }
-      if (s.via !== 'worker') {
-        wrong.push(`the search ran in the ${s.via} — a stamped worker or one of its imports did not load`);
+      const expectVia = s.noWorker ? 'page' : 'worker';
+      if (s.via !== expectVia) {
+        wrong.push(s.noWorker
+          ? `the search ran in the ${s.via}, expected the page — Worker was removed`
+          : `the search ran in the ${s.via} — a stamped worker or one of its imports did not load`);
       }
-      // The stamp has to travel two hops that no sed can reach: app.js building
-      // the worker's URL, and the worker building its importScripts URLs. The
-      // sandbox already fails the run if either is dropped — this only says
-      // which one, since "the search ran in the page" is a symptom, not a cause.
-      for (const file of ['search-worker.js', 'result-tiers.js', 'combos.js', 'unofficial.js', 'search.js']) {
+      // The stamp has to travel three hops that no sed can reach: app.js building the
+      // worker's URL, the worker building its importScripts URLs, and app.js injecting
+      // unofficial.js and search.js when there is no worker at all. The sandbox already
+      // fails the run if any is dropped — this only says which, since "the search ran
+      // in the page" is a symptom, not a cause.
+      //
+      // Which files to expect depends on which path ran: with no worker, search-worker.js
+      // is never requested and the two lazy scripts are, injected by app.js. With a
+      // worker they all arrive, because the worker imports them.
+      const expectStamped = s.noWorker
+        ? ['unofficial.js', 'search.js']
+        : ['search-worker.js', 'result-tiers.js', 'combos.js', 'unofficial.js', 'search.js'];
+      for (const file of expectStamped) {
         if (!REQUESTS.some((u) => u === `/stamped/${file}${STAMP}`)) {
           wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
         }
@@ -1224,7 +1258,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
-        console.log(`ok   ${v.name} — ${s.scripts.length} stamped scripts, searched in the worker, ${s.panels} panels`);
+        // Reads `via` rather than asserting it in prose. The line said "searched in the
+        // worker" unconditionally, which on the no-worker run reported the opposite of
+        // what happened next to a tick.
+        console.log(`ok   ${v.name} — ${s.scripts.length} stamped scripts, searched in the ${s.via}, ${s.panels} panels`);
       }
       continue;
     }
