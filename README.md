@@ -2331,9 +2331,11 @@ failed on 3 Aug 2026: an agent sandbox with an egress proxy allowlisting
 `raw.githubusercontent.com` got `CONNECT tunnel failed, response 403` for
 `api.scryfall.com`, `scryfall.com`, `data.scryfall.io`, `commanderspellbook.com`,
 `api.magicthegathering.io`, `mtgjson.com` and `gatherer.wizards.com` alike.
-`tools/lookup-card.js` printed *"Scryfall returned HTTP 403 — check the spelling"*,
-which is the wrong diagnosis given honestly — the tool cannot tell a blocked host
-from a misspelling, and says the likelier thing.
+`tools/lookup-card.js` printed *"Scryfall returned HTTP 403 — check the spelling"*
+and stopped, which is a diagnosis it had no way to make: a blocked host and a
+misspelling are identical from inside the tool, and it named the likelier one as
+though it knew. **It now asks Scryfall first and Forge second**, and only says
+"check the spelling" when Scryfall was reachable enough to say the name is unknown.
 
 **[Forge](https://github.com/Card-Forge/forge) publishes its card scripts as plain
 files in a GitHub repository, so they arrive over the one host that was reachable.**
@@ -2370,12 +2372,41 @@ second request is part of the rule and not an optimisation.
 
 Two things this is not. It is **not a replacement for Scryfall**: there are no
 colour identities, no legalities and no printings here, and `tools/lookup-card.js`
-still asks Scryfall first because Scryfall is the better answer when it is
-available. And it is **not the same authority** — Forge's `Oracle:` line is
-maintained by that project rather than by Wizards, so it is a second opinion, not
-the gospel. Where a reading actually turned on the wording, both Forge and
+asks Scryfall first because Scryfall is the better answer when it is available. And
+it is **not the same authority** — Forge's `Oracle:` line is maintained by that
+project rather than by Wizards, so it is a second opinion, not the gospel. Where a
+reading actually turned on the wording, both Forge and
 [XMage](https://github.com/magefree/mage) were read and agreed; that is how the
-Peregrin Took and Academy Manufactor texts above were settled.
+Peregrin Took and Academy Manufactor texts above were settled. XMage files a card at
+`Mage.Sets/src/mage/cards/<letter>/<PascalCaseName>.java`, punctuation gone.
+
+So **every card Forge answers is printed under a banner saying so**, rather than the
+distinction living in a header nobody scrolls back to:
+
+> **From Forge's card script, not Scryfall.** Scryfall could not be reached (HTTP 403), which says nothing about the name.
+>
+> Oracle text only — no colour identity, no legality, no printings. Forge maintains
+> this wording rather than Wizards, so cross-check anything a reading turns on.
+
+That matters because this tool's output gets pasted into `unofficial.js` rows, which
+exist to cite their evidence. *Which source said this* has to survive the journey.
+
+**Four outcomes, and one of them was the bug.** `verdict()` decides which — a
+function of the two answers rather than branches buried in the printing, because
+both ways of getting it wrong are invisible to the reader: Forge's wording passed
+off as Scryfall's, and a refused network reported as a typo.
+
+| Scryfall | Forge | what it says |
+|---|---|---|
+| answered | not asked | the card, no banner — the ordinary case |
+| blocked | has it | the card, banner, and the blame on the network |
+| 404 | has it | the card, banner, and *Scryfall wants a different spelling of this name* |
+| blocked | no | both failed, and the network is the likely reason for both |
+| 404 | no | **the only case that says "check the spelling"** |
+
+`test/lookup-card.test.js` pins all five, and pins the slug rule case by case — a
+slug that reaches nothing is indistinguishable from a card Forge does not have, so
+without those the fallback could rot into uselessness in silence.
 
 ### One card, 1,889 combos: why this one is a rule and not rows
 
