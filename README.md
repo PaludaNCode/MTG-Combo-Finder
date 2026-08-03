@@ -828,8 +828,8 @@ reader would have seen. Both ends import the same module, as the publisher and t
 import the same `pathFor()`.
 
 **What is still rough.** Nothing measures what a real fetch costs on a phone — the same
-gap that makes the data-side work in `IMPROVEMENTS.md` hard to rank, and the numbers in
-the table above are bytes and round trips rather than milliseconds on a train. And
+gap that made the data-side work hard to rank until the footer line closed it, and the
+numbers in the table above are bytes and round trips rather than milliseconds on a train. And
 `combo-steps.js` is page-only, like `graph.js`: the worker does not import it, because
 nobody has asked for steps at the moment a search runs.
 
@@ -1944,9 +1944,9 @@ without a second mechanism. Nothing is sent anywhere: this is a static page with
 analytics, and the measurement is for whoever is looking at the screen.
 
 **This is what the data-side decisions were missing**, and it settled them the day it
-shipped. `IMPROVEMENTS.md` argued for sharding the payload and for keeping a decoded
-copy in IndexedDB, both substantial work justified entirely by numbers nobody had
-collected. The first reading off a real phone, cold:
+shipped. The review this project ran in August 2026 argued for sharding the payload and for
+keeping a decoded copy in IndexedDB, both substantial work justified entirely by numbers
+nobody had collected. The first reading off a real phone, cold:
 
 ```
 ready in 1.6s (download 1.5s · parse 61ms · match 64ms)
@@ -3359,10 +3359,20 @@ Spellbook's templates still carry Scryfall queries. They run together from the
 Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk-based,
 short-lived branches.
 
-**Outstanding work lives in GitHub issues.** `IMPROVEMENTS.md` below is the record of a
-review whose items are all settled — it says what was measured and what each decision
-traded away, which is worth keeping, but it is history rather than a queue. Anything still
-to do is an issue, so it can be closed by the PR that finishes it.
+**Outstanding work lives in GitHub issues, and nowhere else.** There is no backlog file in
+this repository, and there deliberately is not one any more: two of them existed — a review
+of 2 Aug 2026 and a second of 3 Aug 2026 — and both were deleted on 3 Aug 2026 once their
+technical items had shipped. What each decision measured and traded away is worth keeping,
+and it is kept: in the README section that owns the thing that shipped, which is the
+document somebody reads. What was not worth keeping was two files that *read* as queues
+while the real queue was the issue list, both restating counts that files already hold.
+
+The two items still open when they went became issues
+([#118](https://github.com/PaludaNCode/MTG-Combo-Finder/issues/118), a service worker for
+the shell, and [#119](https://github.com/PaludaNCode/MTG-Combo-Finder/issues/119),
+legality beside the bracket). The remaining feature sketches went with the files, on
+purpose: an idea worth doing is worth an issue, and an idea nobody will file is one nobody
+was going to build.
 
 An issue here **points at the live answer rather than restating it**: the count of unread
 card texts belongs in `research-log.js`, where a test caps it, not in an issue body that
