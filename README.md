@@ -32,6 +32,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   floor, never a verdict; hover, focus or tap the pips for the reasoning, the Game
   Changers behind it and the criteria it did not check — see
   [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
+- **Whether the list is *allowed*** — beside the bracket: cards outside the commander's
+  colour identity, and cards banned in Commander. Two lines, because they are two
+  different accusations, and nothing at all when there is neither — see
+  [Whether the list is allowed](#whether-the-list-is-allowed-is-a-different-question-from-how-strong-it-is).
 - **What each recommendation's count is made of** — `Thassa's Oracle +3` reads
   *1 × 2-card · 1 × 3-card · 1 × 4-card*, on the card's own line, smallest first. A
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
@@ -1299,6 +1303,61 @@ already knows: green tier, by the same written-down inventory the result chips u
 Basalt Monolith + Rings of Brighthearth loops all day and wins nothing, so it is
 not one. A filled template slot counts as one of the two cards — something has to
 occupy it, and your deck is what does.
+
+### Whether the list is allowed is a different question from how strong it is
+
+The bracket says what power level a list sits at and never says whether the list is
+*legal*. Two neighbouring questions come nearly free from machinery that was already
+here, and they are answered on a line under the bracket:
+
+- **Cards outside the commander's colour identity.** No new data at all: `cardIdentity`
+  covers every card in Scryfall's oracle-cards file rather than only the ones that
+  appear in combos.
+- **Cards banned in Commander.** New data, but the same shape as the Game Changers and
+  read in the same pass over the same bulk file — `legalities.commander === 'banned'` —
+  so the page stays on one request.
+
+**Only `banned`, and not `not_legal`.** That value covers every card that has simply
+never been in the format: Alchemy rebalances, un-cards, most of Arena. Reporting those
+as illegal would flag a lot of paper decks that are fine.
+
+**The identity is the commander's, not the deck's**, and that is the whole point of the
+rule. Colours elsewhere on this page are read off the cards — see "Colours come from
+the cards" — and reading them off the cards *here* would make every list legal by
+construction, since the union of a deck's colours always contains the deck's colours.
+So the claim needs a commander, and there is no claim without one.
+
+**Two accusations, kept apart.** A card in the wrong colours is a decklist mistake the
+reader fixes by cutting a card; a banned card is the format saying no. Two lines, and
+only the ban takes `--error` — colouring both the same would overstate the first. But
+**one card only ever collects one accusation**: a banned card in the wrong colours is on
+both lists, since the ban list is not filtered by colour, and naming it twice reads as
+two problems where there is one card to cut. The ban wins, because the colours stop
+mattering the moment the card goes.
+
+**Silence is not a clean bill of health, so silence is what a legal deck gets.** No line,
+no green tick, no "0 problems" — the same discipline the bracket panel keeps. Two of the
+format's rules are readable off a card list and the footnote says so; a tick would be
+read as covering singleton, deck size and everything else nobody checked. What *was* not
+checked rides along with a finding rather than standing on its own: a reader looking at
+one banned card should know the colour half went unanswered, but a panel that appears on
+a legal deck to list what it skipped is an empty panel with a caveat in it.
+
+**The thin-map rule is the same one, shared rather than copied.** Off-identity is
+computed only over cards the map knows, so it cannot invent a card — but it can be wrong
+about all of them at once, which is exactly what a commander whose own identity came back
+empty looks like, and the published data has zeroed real cards' identities once already.
+So the same guard applies as for
+[unrecognized cards](#telling-the-reader-which-cards-were-not-recognised): more than half
+the deck reading as off-identity is a claim about the data, and the colour half goes
+quiet. `tooMuchOfTheDeck()` in `view-model.js` is that rule, in one place, used by both.
+
+The publisher gates the new list the way it gates the others: `check-snapshot.js` compares
+the count against the last snapshot, and the fetcher says so in the log when the list comes
+back short — a ban list that came back empty is a `legalities` shape change, not a format
+that banned nothing, and the page would go quiet rather than wrong. The layout test runs a
+deck that is illegal two ways at once and a second with no commander named, and every other
+deck it runs is the silent branch.
 
 ### The Game Changer list is read, not kept
 

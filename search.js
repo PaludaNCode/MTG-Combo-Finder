@@ -286,6 +286,11 @@
       // claim about what a deck is allowed to be, and it should rest on what
       // Spellbook has published rather than on a swap we worked out ourselves.
       bracket: DeckCombos.bracketCheck(data, deckNames, included),
+      // The neighbouring question the bracket never answers: is the list *allowed*.
+      // Beside the bracket for the same reason it is worked out here — the ban list
+      // and the identity map are both part of the dataset, and the dataset stays in
+      // the worker. Facts only; the page decides what is worth saying.
+      legality: DeckCombos.legalityCheck(data, entries),
       included,
       unofficial: unofficial.map(DeckCombos.expand),
       // Split on colour the same way the published near-misses are, so a card the

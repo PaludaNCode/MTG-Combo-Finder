@@ -202,12 +202,61 @@
     });
   }
 
+  // Whether the list is allowed, beside the bracket that says how strong it is.
+  //
+  // Two lines and not one, because an off-identity card and a banned card are
+  // different accusations: the first is a decklist mistake the reader can fix by
+  // cutting a card, the second is the format saying no. Only the ban gets --error;
+  // a card in the wrong colours is wrong, not alarming.
+  //
+  // Nothing at all when there is nothing to report — no empty line, no green tick.
+  // The claim this can support is two rules read off a card list, which is what the
+  // footnote says, and a tick would be read as covering everything else.
+  function renderLegality(container, legality) {
+    container.textContent = '';
+    const prose = DeckView.legalityProse(legality);
+    if (!prose) return;
+
+    const box = el('section', 'legality');
+
+    // Named, and named first: the reader needs the card, not the count.
+    const listLine = (cls, label, sentence, items) => {
+      const line = el('p', 'legality-line ' + cls);
+      line.appendChild(el('span', 'legality-label', label));
+      line.appendChild(el('span', 'legality-claim', sentence));
+      const names = el('span', 'legality-cards');
+      items.forEach((item, i) => {
+        if (i > 0) names.appendChild(document.createTextNode(' · '));
+        names.appendChild(el('span', 'card-name', item.card || item));
+        // The colours the card carries that the commander does not — the reason it
+        // is on this line, so it does not have to be looked up to be believed.
+        if (item.colours) names.appendChild(el('span', 'legality-colours', ' ' + item.colours));
+        names.appendChild(RenderRows.cardLinks(item.card || item));
+      });
+      line.appendChild(names);
+      box.appendChild(line);
+    };
+
+    if (prose.banned.length) {
+      listLine('is-banned', 'Banned', prose.bannedSentence, prose.banned.map((card) => ({ card })));
+    }
+    if (prose.offIdentity.length) {
+      listLine('is-off-identity', 'Colours', prose.identitySentence, prose.offIdentity);
+    }
+
+    // What went unanswered, with the finding rather than in place of it.
+    prose.unchecked.forEach((said) => box.appendChild(el('p', 'legality-note', said)));
+    box.appendChild(el('p', 'legality-note', prose.note));
+    container.appendChild(box);
+  }
+
   function renderResults(results, deckNames) {
     $('results').hidden = false;
 
     renderUnrecognized($('unrecognized'), results.unrecognized);
     renderIdentity($('identity'), results.identity);
     renderBracket($('bracket'), results.bracket);
+    renderLegality($('legality'), results.legality);
 
     const included = results.included;
     // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
@@ -533,7 +582,12 @@
       ? `Searching combos for ${main.length + commanders.length} cards…`
       : 'Downloading the combo database (once per visit)…');
     $('find-combos').disabled = true;
-    const allEntries = commanders.concat(main);
+    // Marked, so the search can tell which cards are in the command zone. It is one
+    // list from here on — every consumer but the legality check treats a commander as
+    // an ordinary card, which it is — and the flag is what lets that check read the
+    // colour identity off the commanders rather than off the deck. Reading it off the
+    // deck would make every list legal by construction.
+    const allEntries = commanders.map((e) => Object.assign({}, e, { commander: true })).concat(main);
     lastSent = {
       sent: { main: main.length, commanders: commanders.length },
       firstCards: allEntries.slice(0, 5).map((c) => `${c.quantity} ${c.card}`),

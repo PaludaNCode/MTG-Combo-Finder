@@ -81,6 +81,19 @@ test('the notice about unrecognized cards is clean', async ({ page }) => {
   await expectClean(page);
 });
 
+// The legality line, which is the one place --error is used on a claim rather than
+// on an error report — a banned card is the format refusing the deck. Contrast on
+// that pairing is checked here, and so is the off-colour line beside it, which is
+// deliberately *not* --error and so a different colour on the same background.
+test('the legality line is clean', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.locator('#decklist').fill(DECKS.illegal);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+  await expect(page.locator('#legality .is-banned')).toBeVisible();
+  await expect(page.locator('#legality .is-off-identity')).toBeVisible();
+  await expectClean(page);
+});
+
 // The three controls that build DOM when pressed, so their opened state is
 // checked rather than assumed: the bracket explanation, a steps disclosure, and
 // the map's own filter.

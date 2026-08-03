@@ -55,6 +55,10 @@ const COUNTS = [
   { key: 'combos', of: (d) => (Array.isArray(d.combos) ? d.combos.length : 0), what: 'combos' },
   { key: 'cardIdentity', of: (d) => Object.keys(d.cardIdentity || {}).length, what: 'card identities' },
   { key: 'gameChangers', of: (d) => (d.gameChangers || []).length, what: 'Game Changers' },
+  // The Commander ban list. Going missing does not break a combo, it stops the page
+  // saying whether the deck is legal — and a page that has stopped making that claim
+  // looks exactly like a deck with nothing banned in it.
+  { key: 'banned', of: (d) => (d.banned || []).length, what: 'banned cards' },
   { key: 'templateCards', of: (d) => Object.keys(d.templateCards || {}).length, what: 'template cards' },
   // The string tables. A table shrinking without the combo count shrinking means
   // rows are pointing somewhere new, which is a shape change wearing a normal

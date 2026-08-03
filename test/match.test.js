@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const {
-  matchDeck, deckIdentity, withinIdentity, unrecognizedCards, expand, deckNameSet, computeSuggestions,
+  matchDeck, deckIdentity, withinIdentity, unrecognizedCards, legalityCheck, expand, deckNameSet,
+  computeSuggestions,
 } = require('../combos.js');
 
 // A miniature stand-in for the published combos.json.
@@ -461,4 +462,100 @@ test('unrecognizedCards: with no map at all, nothing has been checked against an
 test('unrecognizedCards: an empty deck reports nothing', () => {
   assert.deepStrictEqual(unrecognizedCards(IDENTITIES, []).names, []);
   assert.deepStrictEqual(unrecognizedCards(IDENTITIES, null).names, []);
+});
+
+// ---- whether the decklist is allowed ---------------------------------------
+//
+// Two questions the bracket never asks: is a card outside the commander's colour
+// identity, and is a card banned. Facts only here — the wording and the decision to
+// say anything at all are DeckView.legalityProse()'s, and tested there.
+
+const LEGAL_DATA = {
+  cardIdentity: {
+    'Kinnan, Bonder Prodigy': 'GU', 'Basalt Monolith': '', 'Palinchron': 'U',
+    'Heliod, Sun-Crowned': 'W', 'Murderous Redcap': 'BR', 'Island': 'U',
+  },
+  banned: ['Murderous Redcap'],
+};
+const deck = (commanders, main) => commanders.map((card) => ({ card, commander: true }))
+  .concat(main.map((card) => ({ card })));
+
+test('legalityCheck: a card outside the commander identity is named, with its colours', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Kinnan, Bonder Prodigy'], ['Palinchron', 'Heliod, Sun-Crowned']));
+  assert.deepStrictEqual(found.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: 'W' }]);
+  assert.deepStrictEqual(found.allowed, ['G', 'U']);
+  assert.equal(found.canCheckIdentity, true);
+});
+
+test('legalityCheck: colourless and in-identity cards are not accused', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Kinnan, Bonder Prodigy'], ['Basalt Monolith', 'Island']));
+  assert.deepStrictEqual(found.offIdentity, []);
+});
+
+// The identity is the commander's, not the deck's. Reading it off every card would
+// make every list legal by construction — the union of the deck's colours always
+// contains the deck's colours.
+test('legalityCheck: the identity is the commander’s and not the deck’s', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Kinnan, Bonder Prodigy'], ['Heliod, Sun-Crowned']));
+  assert.equal(found.offIdentity.length, 1, 'Heliod does not license his own colour');
+});
+
+test('legalityCheck: no commander means the identity question is not answered', () => {
+  const found = legalityCheck(LEGAL_DATA, deck([], ['Palinchron', 'Heliod, Sun-Crowned']));
+  assert.equal(found.canCheckIdentity, false);
+  assert.deepStrictEqual(found.offIdentity, [], 'and nothing is accused on the strength of it');
+});
+
+// A commander the map cannot look up has no identity, and every coloured card in the
+// deck would read as illegal against an empty one.
+test('legalityCheck: a commander the map does not know answers nothing', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Sol Rimg'], ['Heliod, Sun-Crowned']));
+  assert.equal(found.canCheckIdentity, false);
+  assert.deepStrictEqual(found.offIdentity, []);
+});
+
+// Two commanders, and the identity is the union: a partner pair legally plays both.
+test('legalityCheck: partners license the union of their colours', () => {
+  const found = legalityCheck(LEGAL_DATA,
+    deck(['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'], ['Palinchron', 'Murderous Redcap']));
+  assert.deepStrictEqual(found.allowed, ['G', 'U', 'W']);
+  assert.deepStrictEqual(found.offIdentity, [{ card: 'Murderous Redcap', colours: 'BR' }]);
+});
+
+// A card the map has never heard of is an unknown name, not an illegal card — that is
+// the unrecognized-cards notice's business, and one typo must not collect two
+// accusations.
+test('legalityCheck: an unknown card is not accused of being off-identity', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Kinnan, Bonder Prodigy'], ['Sol Rimg']));
+  assert.deepStrictEqual(found.offIdentity, []);
+  assert.equal(found.checked, 0, 'and it does not count as checked either');
+});
+
+test('legalityCheck: a banned card is named', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Kinnan, Bonder Prodigy'], ['Murderous Redcap']));
+  assert.deepStrictEqual(found.banned, ['Murderous Redcap']);
+  assert.equal(found.hasBanList, true);
+});
+
+// A commander can be the banned card, which is why the ban check reads the whole
+// list and not just the main deck.
+test('legalityCheck: a banned commander counts too', () => {
+  const found = legalityCheck(LEGAL_DATA, deck(['Murderous Redcap'], ['Island']));
+  assert.deepStrictEqual(found.banned, ['Murderous Redcap']);
+});
+
+// No published list means "cannot say", the same rule bracketCheck() uses for the
+// Game Changers — not "nothing is banned".
+test('legalityCheck: no ban list says so rather than declaring the deck clean', () => {
+  const found = legalityCheck({ cardIdentity: LEGAL_DATA.cardIdentity }, deck(['Kinnan, Bonder Prodigy'], ['Murderous Redcap']));
+  assert.equal(found.hasBanList, false);
+  assert.deepStrictEqual(found.banned, []);
+});
+
+test('legalityCheck: no identity map answers neither question', () => {
+  const found = legalityCheck({}, deck(['Kinnan, Bonder Prodigy'], ['Heliod, Sun-Crowned']));
+  assert.equal(found.mapped, 0);
+  assert.equal(found.canCheckIdentity, false);
+  assert.deepStrictEqual(found.offIdentity, []);
+  assert.equal(found.hasBanList, false);
 });

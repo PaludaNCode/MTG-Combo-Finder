@@ -244,6 +244,50 @@ button:disabled { opacity: .6; cursor: wait; }
 #status.error { color: var(--error); }
 
 /* ---- colour identity header ---- */
+/* ---- whether the list is allowed ----
+ *
+ * Under the bracket line and in the same idiom: a label in small caps, then the
+ * claim. Two lines because there are two accusations, and only the ban list gets
+ * --error — a card in the wrong colours is a decklist mistake, not the format
+ * refusing the deck, and colouring both the same would overstate the first.
+ *
+ * --error on --panel is the pairing .diag summary already uses; the footnote is
+ * --muted for the same reason the map legend's is, since --faint only clears AA
+ * on --bg. */
+.legality {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  margin: -.5rem 0 1rem;
+}
+.legality-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .3rem .5rem;
+  margin: .2rem 0;
+  font-size: .9rem;
+}
+.legality-label {
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.is-banned .legality-label,
+.is-banned .legality-claim { color: var(--error); }
+.legality-claim { color: var(--text); }
+.legality-cards .card-name { color: var(--text); font-weight: 600; }
+/* The links sit against the name without this — "Murderous RedcapEDHREC" — because
+   the flex gap above is between the line's parts and not inside this span. */
+.legality-cards .card-links { margin-left: .35rem; font-size: .85em; }
+/* The colours the card carries and the commander does not, so the claim can be
+   checked without opening the card. */
+.legality-colours { color: var(--muted); font-size: .85em; }
+.legality-note { margin: .35rem 0 0; font-size: .8rem; color: var(--muted); }
+
 /* ---- cards the snapshot did not recognise ----
  *
  * Above the results, in the accent's own family, because it is the page talking

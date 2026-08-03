@@ -52,6 +52,24 @@ const VIEWPORTS = [
   // unrecognized and nothing at all is said.
   { name: 'misspelled card', width: 1440, height: 900, deck: 'misspelled' },
   { name: 'misspelled card (phone)', width: 390, height: 844, deck: 'misspelled' },
+  // The same deck made illegal two ways at once — a card outside the commander's
+  // colour identity and a card on the fixture's ban list — because the two findings
+  // have to be drawn together to be checked apart. Every other deck here is the
+  // silent branch: nothing to report, and no line at all.
+  { name: 'illegal deck', width: 1440, height: 900, deck: 'illegal', kind: 'legality' },
+  // And on a phone, where the two lines wrap: a claim, a card name and two links per
+  // line is the widest thing in that box, and it has to stay inside the column.
+  { name: 'illegal deck (phone)', width: 390, height: 844, deck: 'illegal', kind: 'legality' },
+  // And with no commander named, which is the half the check cannot answer: a
+  // Commander deck's identity is its commander's, and there is none to read. The ban
+  // still stands, and the line has to say why the other half went unanswered.
+  {
+    name: 'illegal deck (no commander)',
+    width: 1440,
+    height: 900,
+    deck: 'illegalNoCommander',
+    kind: 'legality',
+  },
   // Not a layout check: the share link's own round trip. Its encoding is ours,
   // so nothing about it can be taken on trust.
   { name: 'share link', width: 1440, height: 900, kind: 'share' },
@@ -379,6 +397,39 @@ function measure(win, doc) {
         && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
     };
   })();
+  // What the page said about legality. Two lines, or none — and read as a reader sees
+  // it: which claim, which cards, and what it admitted to not checking.
+  const legality = (() => {
+    const box = doc.querySelector('#legality .legality');
+    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
+      .map((e) => e.textContent);
+    return {
+      shown: !!box,
+      banned: cardsIn('#legality .is-banned'),
+      bannedClaim: (doc.querySelector('#legality .is-banned .legality-claim') || {}).textContent || '',
+      offIdentity: cardsIn('#legality .is-off-identity'),
+      colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
+        .map((e) => e.textContent.trim()),
+      identityClaim: (doc.querySelector('#legality .is-off-identity .legality-claim') || {}).textContent || '',
+      notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
+      // Beside the bracket, which means under it and above the combos.
+      belowBracket: (() => {
+        const bracket = doc.querySelector('#bracket .bracket-line');
+        const firstPanel = doc.querySelector('#results .panel');
+        if (!box || !bracket || !firstPanel) return null;
+        return box.getBoundingClientRect().top >= bracket.getBoundingClientRect().top
+          && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top;
+      })(),
+      // The ban is the format refusing the deck and takes --error; a card in the
+      // wrong colours does not, or the two accusations read as one.
+      bannedColour: doc.querySelector('#legality .is-banned .legality-claim')
+        ? win.getComputedStyle(doc.querySelector('#legality .is-banned .legality-claim')).color
+        : null,
+      identityColour: doc.querySelector('#legality .is-off-identity .legality-claim')
+        ? win.getComputedStyle(doc.querySelector('#legality .is-off-identity .legality-claim')).color
+        : null,
+    };
+  })();
   // A combo the deck cannot assemble for want of a template slot must not be on the
   // page at all. Combo 13 in the fixture is the case — every card it names is in the
   // deck and nothing fills its slot — and it used to have a panel of its own. Read
@@ -672,6 +723,7 @@ function measure(win, doc) {
     slots,
     stuckSlot,
     unknownCards,
+    legality,
     comboCompare,
     order,
     leads,
@@ -881,6 +933,59 @@ async function runStamped(vp) {
   }
 }
 
+// Whether the list is allowed, which needs a deck that is not: the tuning deck is
+// legal, and making it illegal would mean changing its colours, its combos and its
+// ordering — all of which the run above asserts. So this is its own run, like the
+// unofficial panel's, with only the legality line in scope.
+async function runLegality(vp) {
+  try {
+    const { win, doc } = await load('/index.html', vp.width);
+    win.localStorage.clear();
+    doc.getElementById('commanders').value = '';
+    doc.getElementById('decklist').value = DECKS[vp.deck];
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await settled(doc, '.combo');
+
+    const box = doc.querySelector('#legality .legality');
+    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
+      .map((e) => e.textContent);
+    const claim = (sel) => (doc.querySelector(sel + ' .legality-claim') || {}).textContent || '';
+    const bracket = doc.querySelector('#bracket .bracket-line');
+    const firstPanel = doc.querySelector('#results .panel');
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      deck: vp.deck,
+      legality: {
+        shown: !!box,
+        banned: cardsIn('#legality .is-banned'),
+        bannedClaim: claim('#legality .is-banned'),
+        offIdentity: cardsIn('#legality .is-off-identity'),
+        colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
+          .map((e) => e.textContent.trim()),
+        identityClaim: claim('#legality .is-off-identity'),
+        notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
+        // Beside the bracket: under that line, above the first panel of results.
+        besideBracket: !!(box && bracket && firstPanel
+          && box.getBoundingClientRect().top >= bracket.getBoundingClientRect().top
+          && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
+        // Two accusations, so two colours. The ban is the format refusing the deck
+        // and takes --error; a card in the wrong colours does not.
+        bannedColour: doc.querySelector('#legality .is-banned .legality-claim')
+          ? win.getComputedStyle(doc.querySelector('#legality .is-banned .legality-claim')).color
+          : null,
+        identityColour: doc.querySelector('#legality .is-off-identity .legality-claim')
+          ? win.getComputedStyle(doc.querySelector('#legality .is-off-identity .legality-claim')).color
+          : null,
+        overflow: doc.documentElement.scrollWidth > vp.width,
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
 // The unofficial panel, against the real unofficial.js rather than a fixture — the
 // data is small enough to ship and its rows are the thing being checked. The
 // fixture dataset does not need to know about any of it: an unofficial row matches
@@ -1014,6 +1119,7 @@ function runOne(vp) {
   if (vp.kind === 'share') return runShare(vp);
   if (vp.kind === 'stamped') return runStamped(vp);
   if (vp.kind === 'unofficial') return runUnofficial(vp);
+  if (vp.kind === 'legality') return runLegality(vp);
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:' + vp.height + 'px';
@@ -1506,6 +1612,70 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       continue;
     }
 
+    // Whether the list is allowed. Its own run, because a legal deck says nothing at
+    // all and the tuning deck is legal — see runLegality() for why this is not just
+    // another viewport over the same deck.
+    if (v.deck === 'illegal' || v.deck === 'illegalNoCommander') {
+      const legal = v.legality;
+      const wrong = [];
+      if (!legal.shown) {
+        wrong.push('an illegal deck said nothing about it');
+      } else {
+        if (!legal.banned.includes('Murderous Redcap')) {
+          wrong.push(`the banned card was not named: ${JSON.stringify(legal.banned)}`);
+        }
+        if (!/banned in Commander/.test(legal.bannedClaim)) {
+          wrong.push(`the ban does not say what it is: "${legal.bannedClaim}"`);
+        }
+        if (!legal.besideBracket) wrong.push('the legality line is not beside the bracket');
+        if (legal.overflow) wrong.push('the legality line overflows horizontally');
+        // It never claims more than the two rules that are readable off a card list.
+        if (!legal.notes.some((t) => /Singleton, deck size/.test(t))) {
+          wrong.push('the legality line does not say what it left unchecked');
+        }
+        if (v.deck === 'illegal') {
+          // A commander was named, so both halves are answerable. Heliod is {W}
+          // against a {U}{G} commander.
+          if (!legal.offIdentity.includes('Heliod, Sun-Crowned')) {
+            wrong.push(`the off-identity card was not named: ${JSON.stringify(legal.offIdentity)}`);
+          }
+          if (!legal.colours.includes('{W}')) {
+            wrong.push(`the offending colour was not shown: ${JSON.stringify(legal.colours)}`);
+          }
+          if (!/\{U\}\{G\}/.test(legal.identityClaim)) {
+            wrong.push(`the commander's identity is not in the claim: "${legal.identityClaim}"`);
+          }
+          // Murderous Redcap is banned *and* off-identity. One card, one accusation,
+          // and the graver one: two lines about the same card read as two problems.
+          if (legal.offIdentity.includes('Murderous Redcap')) {
+            wrong.push('a banned card is accused on the colour line as well');
+          }
+          // Two accusations, two colours, or which one is a ban is unreadable.
+          if (legal.bannedColour === legal.identityColour) {
+            wrong.push(`both lines are ${legal.bannedColour}`);
+          }
+        } else {
+          // No commander named, so the colour half cannot be answered — and must not
+          // fall back on the deck's own colours, which would make every list legal.
+          if (legal.offIdentity.length) {
+            wrong.push(`a deck with no commander was told ${legal.offIdentity.length} card(s) are off-identity`);
+          }
+          if (!legal.notes.some((t) => /No commander was named/.test(t))) {
+            wrong.push(`nothing said why colours went unchecked: ${JSON.stringify(legal.notes)}`);
+          }
+        }
+      }
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — banned ${JSON.stringify(legal.banned)}, `
+          + `off-colour ${JSON.stringify(legal.offIdentity)}${legal.colours.length ? ' ' + legal.colours.join('') : ''}, `
+          + `${legal.notes.length} caveat(s)`);
+      }
+      continue;
+    }
+
     // The share-link run measures a round trip rather than a layout, so it is
     // judged on its own terms.
     if (v.theme) {
@@ -1964,6 +2134,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       problems.push(`a clean deck was told ${unknown.names.length} of its cards are unrecognized`);
     }
 
+    // A deck with nothing wrong is told nothing. The two illegal decks have their own
+    // run below, because the full battery here is about the tuning deck: adding an
+    // off-colour card to it changes its colour identity, its combo list and its
+    // ordering, and every one of those has an assertion of its own.
+    if (v.legality.shown) {
+      problems.push('a legal deck was given a legality line saying '
+        + `${JSON.stringify(v.legality.banned)} / ${JSON.stringify(v.legality.offIdentity)}`);
+    }
+
     // Which daily snapshot is on screen, and whether the kept copy is being
     // used. Caching that silently stops working costs 2.9 MB a visit and looks
     // like nothing at all, so the source is asserted rather than trusted.
@@ -2314,6 +2493,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
       // Which branch the rows took, and the width that chose it: the pair is what
       // makes a changed threshold visible in the output rather than only in a failure.
+      const legalNote = v.legality.shown
+        ? `illegal [banned ${JSON.stringify(v.legality.banned)}, off-colour ${JSON.stringify(v.legality.offIdentity)}]`
+        : 'nothing illegal';
       const unknownNote = v.unknownCards.shown
         ? `unrecognized [${v.unknownCards.names.join(', ')}]`
         : 'every card recognized';
@@ -2329,7 +2511,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${linkNote}, ${unknownNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${linkNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

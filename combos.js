@@ -1080,6 +1080,95 @@
     return { gameChangers, twoCardWins, floor };
   }
 
+  // ---- whether the decklist is allowed ---------------------------------------
+  //
+  // The bracket says what power level a list sits at and never says whether it is
+  // *legal*. Two neighbouring questions, answered from data that is already here:
+  //
+  //   - cards outside the commander's colour identity, which is a decklist mistake
+  //   - cards banned in Commander, which is a format rule
+  //
+  // Kept apart all the way through, because they are different accusations and a
+  // panel that ran them together would be alarming where it should be useful.
+  //
+  // Facts only, like everything else this file returns: which cards, and what could
+  // not be checked. Whether any of it is worth saying, and how, is DeckView's — see
+  // legalityProse() there, and the thin-map rule it shares with unrecognizedNote().
+  //
+  // deckEntries carries `commander: true` on the cards the parser found in the
+  // command zone, from either the marker or the commander box. The identity claim
+  // rests on those and not on the deck's own colours: a Commander deck's identity is
+  // its commanders', which is the whole point of the rule — reading it off every card
+  // would make every deck legal by construction.
+  function legalityCheck(dataset, deckEntries) {
+    const cardIdentity = (dataset && dataset.cardIdentity) || null;
+    const byKey = identityIndex(cardIdentity);
+    const mapped = Object.keys(byKey).length;
+    const entries = (deckEntries || []).filter((e) => e && e.card);
+    const commanders = entries.filter((e) => e.commander);
+
+    // The commanders' own identity, as a set of colours. Read through the same
+    // index every other colour question here uses.
+    const allowed = new Set();
+    let commandersKnown = 0;
+    for (const entry of commanders) {
+      const identity = byKey[nameKey(entry.card)];
+      if (identity === undefined) continue;
+      commandersKnown += 1;
+      for (const c of String(identity)) if (c !== 'C') allowed.add(c);
+    }
+
+    // Off-identity is only answerable when a commander was named *and* the map knows
+    // it. A commander it cannot look up would produce an empty identity, against
+    // which every coloured card in the deck reads as illegal.
+    const canCheckIdentity = commanders.length > 0 && commandersKnown === commanders.length;
+    const offIdentity = [];
+    let checked = 0;
+    if (canCheckIdentity) {
+      const seen = new Set();
+      for (const entry of entries) {
+        if (entry.commander) continue;
+        const key = nameKey(entry.card);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        const identity = byKey[key];
+        // A card the map has never heard of is #116's business, not this one: it is
+        // an unknown name rather than an illegal card, and saying both about the same
+        // card twice would be two accusations for one typo.
+        if (identity === undefined) continue;
+        checked += 1;
+        const outside = [...String(identity)].filter((c) => c !== 'C' && !allowed.has(c));
+        if (outside.length) offIdentity.push({ card: entry.card, colours: outside.join('') });
+      }
+    }
+
+    // The ban list is its own published field, and a missing one means "cannot say"
+    // rather than "nothing is banned" — the same rule bracketCheck() uses for the
+    // Game Changers, and for the same reason.
+    const published = (dataset && dataset.banned) || null;
+    const hasBanList = Array.isArray(published) && published.length > 0;
+    const deckKeys = new Set(entries.map((e) => nameKey(e.card)));
+    const banned = hasBanList
+      ? published
+        .filter((name) => deckKeys.has(nameKey(name)))
+        .map((name) => name.split('//')[0].trim())
+        .sort((a, b) => a.localeCompare(b))
+      : [];
+
+    return {
+      offIdentity,
+      banned,
+      // What the answer rests on, so the page can say what it did not check rather
+      // than implying it passed.
+      commanders: commanders.map((e) => e.card),
+      allowed: [...allowed].sort(),
+      canCheckIdentity,
+      hasBanList,
+      checked,
+      mapped,
+    };
+  }
+
   // The order a combo's cards are named in on screen.
   //
   // Alphabetical is the base. Spellbook lists them in the order the combo was
@@ -1185,7 +1274,7 @@
     splitResults,
     groupSuggestions, groupVariants, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
-    comboSize, sizeBreakdown, bracketCheck,
+    comboSize, sizeBreakdown, bracketCheck, legalityCheck,
     decode, rebuildId,
   };
 

@@ -138,5 +138,6 @@
     "Fixture Only Beta": "R"
   },
 
-  "gameChangers": ["Rings of Brighthearth", "Basalt Monolith"]
+  "gameChangers": ["Rings of Brighthearth", "Basalt Monolith"],
+  "banned": ["Scurry Oak"]
 }
