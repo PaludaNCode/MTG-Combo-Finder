@@ -34,6 +34,19 @@
     return a;
   }
 
+  // The page's one line of chrome. It lives here rather than in app.js because both the
+  // wiring there and the deck I/O split out of it write to the same element, and passing
+  // a message-setter through two modules to reach one <p> is more structure than the job
+  // needs. It is specific to index.html, which is the only page that loads this file.
+  //
+  // The local is `node`, not `el`: it used to shadow the helper above, which was harmless
+  // and read like a bug every time.
+  function setStatus(msg, isError) {
+    const node = $('status');
+    node.textContent = msg || '';
+    node.classList.toggle('error', Boolean(isError));
+  }
+
   // Remember which sections the reader closed, so a new search doesn't reopen
   // everything they just tidied away.
   const COLLAPSE_KEY = 'mtg-combo-finder.collapsed';
@@ -94,7 +107,7 @@
     return body;
   }
 
-  const api = { $, el, link, panel, readCollapsed, writeCollapsed, COLLAPSE_KEY };
+  const api = { $, el, link, panel, setStatus, readCollapsed, writeCollapsed, COLLAPSE_KEY };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

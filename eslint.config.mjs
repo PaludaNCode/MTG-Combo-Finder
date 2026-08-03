@@ -85,6 +85,7 @@ const PAGE = {
   // renderer wanted; RenderMap is the map's drawing half, beside graph.js's arithmetic.
   PageDom: 'readonly',
   RenderMap: 'readonly',
+  DeckIO: 'readonly',
 };
 
 const NODE = {
@@ -145,7 +146,7 @@ export default [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
       'combo-steps.js', 'steps-source.js', 'view-model.js',
-      'page-dom.js', 'render-map.js',
+      'page-dom.js', 'render-map.js', 'deck-io.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

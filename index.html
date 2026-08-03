@@ -154,6 +154,9 @@
   <!-- The map's drawing half, split out of app.js. graph.js above is its DOM-free
        counterpart and has to be in place first. -->
   <script src="render-map.js"></script>
+  <!-- Keeping the decklist, sharing it as a link, reading it out of a dropped file.
+       Renders nothing; needs page-dom.js above and parser.js/view-model.js. -->
+  <script src="deck-io.js"></script>
   <!-- Page-only for the same reason, and for one more: the steps are fetched for
        a single combo when a reader asks for them, which cannot happen during a
        search because nobody has asked yet. steps-source.js goes first — app.js
