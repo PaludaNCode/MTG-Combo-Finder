@@ -288,13 +288,21 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   local work, `npm run verify` and `npm run test:ui` all serve this page unstamped.
   `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
   so the test and the deploy cannot disagree — they did, for a while.
-- **The line down a suggestion row is not one element.** It is the gutter's
-  `border-right` plus a `border-left` on every block beside it, each reaching back over
-  the column gap with a negative margin to meet the piece above. So the gap is a
-  variable (`--col-gap`) rather than a number, spacing inside those blocks is padding
-  and never margin, and a new block in the card's column has to carry its own piece or
-  the line stops at it. `npm run verify` walks the pieces and names the one that broke
-  it. The same rule decides two shapes for the interchangeable cards, keyed on the
+- **The line down a suggestion row is not one element.** It is a `border-left` on every
+  block in the card's column — `.row-main`, `.alternatives`, the disclosure — each
+  reaching back over the column gap with a negative margin to meet the piece above. So
+  the gap is a variable (`--col-gap`) rather than a number, spacing inside those blocks
+  is padding and never margin, and a new block in that column has to carry its own piece
+  or the line stops at it. `npm run verify` walks the pieces and names the one that
+  broke it.
+  **The gutter draws none of it, and that is load-bearing rather than incidental.** It
+  used to own the top segment, which forced it to share a grid row with `.row-main` and
+  be sized by it — so a row whose total splits into official and unofficial, which makes
+  the gutter one line taller, pushed everything below it down by 9px (28px where the
+  split wrapped) while rows without a split did not, and the disclosure sat at a
+  different height on every row. The gutter spans the rows now instead of sizing one.
+  `verify` fails if a `border-right` reappears on it: a second line at the same x is
+  invisible on screen and undoes the whole thing. The same rule decides two shapes for the interchangeable cards, keyed on the
   card's column rather than the viewport — the README's *Where the second number goes*
   has the measurements.
 - **Colour is a token, and `opacity` is not a way to make one quieter.** Opacity is

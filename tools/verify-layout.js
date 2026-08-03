@@ -286,42 +286,40 @@ function measure(win, doc) {
     }),
   }));
   // Where the row's divider runs, and where the blocks beside it start. The line is
-  // drawn in pieces — the gutter's right border, and a left border on every block in
-  // the card's column, each reaching back across the column gap to meet the one
-  // above — so "one line down the row" is a fact about three or four boxes agreeing
-  // and nothing in the CSS says it. Changing the column gap, dropping the stretch
-  // off .row-numbers, putting a block back in column 1, or giving one a margin where
-  // it should have padding each breaks it, and each leaves a page that renders
-  // perfectly. A row offering interchangeable cards is the case that carries three
-  // pieces, which is why it is measured as a list rather than as a pair.
+  // drawn in pieces — a left border on every block in the card's column, each
+  // reaching back across the column gap to meet the one above — so "one line down
+  // the row" is a fact about three or four boxes agreeing and nothing in the CSS
+  // says it. Changing the column gap, dropping the stretch, putting a block back in
+  // column 1, adding a block to the column without giving it a piece, or giving one
+  // a margin where it should have padding each breaks it, and each leaves a page
+  // that renders perfectly. A row offering interchangeable cards is the case that
+  // carries three pieces, which is why it is measured as a list rather than a pair.
+  //
+  // The gutter is measured for the opposite reason: it must draw NOTHING. It used to
+  // own the top segment, which is what forced it to share a grid row with .row-main
+  // and made the disclosure sit at a different height on every row that carried a
+  // split. It spans the rows now, and a border-right returning here would be a
+  // second line at the same x — invisible on screen, and the whole design undone.
   const dividers = [...doc.querySelectorAll('.tab-pane:not([hidden]) .combo.suggestion, #pieces .combo.suggestion')].map((row) => {
     const num = row.querySelector(':scope > .row-numbers');
     const main = row.querySelector(':scope > .row-main');
     const det = row.querySelector(':scope > details');
     const sum = det && det.querySelector(':scope > summary');
     if (!num || !main || !det || !sum) return null;
-    const numBox = num.getBoundingClientRect();
-    // Each piece's own border, read as the x it is drawn at — the inner edge of the
-    // gutter's right border and the outer edge of a block's left one, which are the
-    // same pixel when they are one line. Comparing the boxes instead reports a 1px
-    // difference that is only the border's own thickness.
-    const numLine = parseFloat(win.getComputedStyle(num).borderRightWidth) || 0;
     return {
       name: (row.querySelector('h3 > .card-name') || {}).textContent || '',
+      // Must be 0. See above — the gutter draws no part of the line any more.
+      gutterWidth: parseFloat(win.getComputedStyle(num).borderRightWidth) || 0,
+      // Every block in the card's column, in the order they are drawn: the card
+      // itself, the interchangeable cards where there are any, then the disclosure.
       // Rounded: a sub-pixel difference is not a broken line. A piece that has lost
       // its border reports the box edge instead, so it stops agreeing with the rest
       // — which is the answer wanted, since part of a divider is not one.
-      gutterLine: Math.round(numBox.right - numLine),
-      // Where the gutter's piece ends. The next block has to start there, which is
-      // what the stretch on .row-numbers is for.
-      gutterEnd: Math.round(numBox.bottom),
-      gutterWidth: numLine,
-      // Every block in the card's column, in the order they are drawn: the
-      // interchangeable cards where there are any, then the disclosure.
-      blocks: [...row.querySelectorAll(':scope > .alternatives, :scope > details')].map((b) => {
+      blocks: [...row.querySelectorAll(':scope > .row-main, :scope > .alternatives, :scope > details')].map((b) => {
         const box = b.getBoundingClientRect();
         return {
-          what: b.classList.contains('alternatives') ? 'the choice of card' : 'the disclosure',
+          what: b.classList.contains('row-main') ? 'the card'
+            : b.classList.contains('alternatives') ? 'the choice of card' : 'the disclosure',
           line: Math.round(box.left),
           width: parseFloat(win.getComputedStyle(b).borderLeftWidth) || 0,
           top: Math.round(box.top),
@@ -331,8 +329,17 @@ function measure(win, doc) {
       // The disclosure reads from the card's column, level with the name and the
       // sizes above it — not from under the gutter, where it read as a third thing
       // the row was about rather than the list behind the number.
+      //
+      // Both are content edges, not box edges: every block in this column now
+      // reaches back over the column gap to draw the divider, so their boxes all
+      // start a gap to the LEFT of the column and comparing those would compare two
+      // numbers that agree no matter where the text went.
       summaryLeft: Math.round(sum.getBoundingClientRect().left),
-      mainLeft: Math.round(main.getBoundingClientRect().left),
+      // The border counts: getBoundingClientRect() is the border box, and this
+      // column's blocks all carry a 1px left border that the padding sits inside.
+      mainLeft: Math.round(main.getBoundingClientRect().left
+        + (parseFloat(win.getComputedStyle(main).borderLeftWidth) || 0)
+        + (parseFloat(win.getComputedStyle(main).paddingLeft) || 0)),
     };
   }).filter(Boolean);
   const grouped = {
@@ -2029,17 +2036,23 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         if (d.summaryLeft !== d.mainLeft) {
           problems.push(`"${d.name}"'s disclosure starts at ${d.summaryLeft}px, its name at ${d.mainLeft}px — not in the card's column`);
         }
-        if (!d.gutterWidth) problems.push(`"${d.name}"'s gutter draws no divider`);
-        if (!d.blocks.length) problems.push(`"${d.name}" has nothing below its numbers, so the divider ends at them`);
+        // The gutter draws none of it. A border here is the old design creeping
+        // back, and it would cost the alignment the span buys without looking wrong.
+        if (d.gutterWidth) {
+          problems.push(`"${d.name}"'s gutter draws a divider of its own, so the numbers are sizing the card's column again`);
+        }
+        if (d.blocks.length < 2) problems.push(`"${d.name}" has nothing below its name, so the divider ends there`);
         // Each piece picks up where the one above left off, and all of them are drawn
         // at the same x. Walked in order, so the report names the block that broke it.
-        let end = d.gutterEnd;
+        // The first block sets the x rather than the gutter: it is the top of the line.
+        const line = d.blocks.length ? d.blocks[0].line : 0;
+        let end = null;
         for (const b of d.blocks) {
           if (!b.width) problems.push(`"${d.name}" draws no divider beside ${b.what}`);
-          if (b.line !== d.gutterLine) {
-            problems.push(`"${d.name}"'s divider steps sideways at ${b.what}: ${d.gutterLine}px then ${b.line}px`);
+          if (b.line !== line) {
+            problems.push(`"${d.name}"'s divider steps sideways at ${b.what}: ${line}px then ${b.line}px`);
           }
-          if (b.top !== end) {
+          if (end !== null && b.top !== end) {
             problems.push(`"${d.name}"'s divider breaks above ${b.what}: the piece before it ends at ${end}px and it starts at ${b.top}px`);
           }
           end = b.bottom;
@@ -2644,7 +2657,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         ? `, choice in ${v.grouped.column}px: pill ${v.grouped.altLabel.pillBeside ? 'beside' : 'below'} the label, `
           + `${v.grouped.altRows[0] && v.grouped.altRows[0].sameLine ? 'one line' : 'two lines'} per card`
         : '';
-      const dividerNote = `divider at ${v.dividers[0].gutterLine}px, ${v.dividers[0].blocks.length + 1} pieces,`
+      const dividerNote = `divider at ${v.dividers[0].blocks[0].line}px, ${v.dividers[0].blocks.length} pieces,`
         + ` blocks from ${v.dividers[0].summaryLeft}px${shape}`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
