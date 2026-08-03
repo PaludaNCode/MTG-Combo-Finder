@@ -35,6 +35,29 @@ const DEFAULT_DECK = path.join(__dirname, '..', 'test', 'fixtures', 'chatterfang
 
 const say = (line = '') => console.log(line);
 
+// The rows, ranked, each carrying whether a pass has swept it — and the two counts the
+// summary line reports, worked out here rather than off whatever the table ends up
+// printing.
+//
+// That distinction is the whole reason this is a function. The counts used to be taken
+// from the already-filtered list, so `--unswept` reported "0 of those have been swept"
+// every time: true of the rows that survived the filter, and false of the deck it claims
+// to describe. On the Chatterfang fixture it said 0 of 33 where research-log.js has 27 of
+// 60 — a sentence that reads as "nobody has looked at this deck" on a deck half swept.
+//
+// Exported for the test, because a count that can be confidently wrong is a decision and
+// the CLI printing it is not somewhere `node --test` can reach.
+function sweepStatus(cards, swept) {
+  const rows = (cards || [])
+    .map((s) => ({ ...s, swept: Boolean(swept && swept.has(DeckCombos.nameKey(s.name))) }))
+    .sort((a, b) => b.combos - a.combos || b.played - a.played);
+  return {
+    rows,
+    swept: rows.filter((r) => r.swept).length,
+    unswept: rows.filter((r) => !r.swept).length,
+  };
+}
+
 async function load(local) {
   if (local) return DeckCombos.decode(JSON.parse(fs.readFileSync(local, 'utf8')));
   const res = await fetch(COMBOS_URL, { headers: { Accept: 'application/json', 'User-Agent': UA } });
@@ -69,18 +92,22 @@ async function main() {
     }
   }
 
-  const swept = sweptCards();
-  const rows = [...stats.values()]
-    .map((s) => ({ ...s, swept: swept.has(DeckCombos.nameKey(s.name)) }))
-    .filter((s) => (unsweptOnly ? !s.swept : true))
-    .sort((a, b) => b.combos - a.combos || b.played - a.played);
+  const status = sweepStatus([...stats.values()], sweptCards());
+  // Filtered only for the table. The counts above it are the deck's, not the filter's —
+  // see sweepStatus().
+  const rows = unsweptOnly ? status.rows.filter((r) => !r.swept) : status.rows;
 
   say(`# The cards carrying ${path.basename(deckFile)}`);
   say();
   say(`${deck.size} cards in the deck, ${stats.size} of them named in at least one of `
     + `${(data.combos || []).length.toLocaleString()} published combos.`);
-  say(`${rows.filter((r) => r.swept).length} of those have been swept; `
-    + `${rows.filter((r) => !r.swept).length} have not.`);
+  say(`${status.swept} of those have been swept; ${status.unswept} have not.`);
+  // Said out loud rather than left to be inferred from a shorter table: the reader asked
+  // for the queue, and a table that quietly holds back 27 rows reads as the whole answer.
+  if (unsweptOnly && status.swept) {
+    say(`The ${status.swept} already swept ${status.swept === 1 ? 'is' : 'are'} not in the `
+      + 'table below — drop `--unswept` to see them.');
+  }
   say();
   say('| combos | played | swept | card |');
   say('|---:|---:|:---:|---|');
@@ -106,7 +133,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err && err.message ? err.message : err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err && err.message ? err.message : err);
+    process.exit(1);
+  });
+}
+
+module.exports = { sweepStatus };

@@ -42,6 +42,28 @@ const resultNames = (variant) => (variant.produces || [])
   .map((p) => (p.feature && p.feature.name) || p.name)
   .filter(Boolean);
 
+// The lines the parser dropped, as a reader can act on them: the reason it dropped each
+// one, then the line. `skipped` holds { line, reason } objects, and this used to print
+// them straight into a template literal — so the whole report was ten lines of
+// "! [object Object]", which says a line was skipped and nothing about which or why. On
+// the standing Chatterfang fixture that was 29 sideboard lines rendered as noise.
+//
+// Worded the way app.js:showDiagnostics() words the same list, since a reader comparing
+// the tool against the page should not have to translate between them. Truncation is
+// stated rather than silent, for the same reason.
+function skippedLines(skipped, limit) {
+  const rows = (skipped || []).filter(Boolean);
+  const shown = rows.slice(0, limit);
+  const lines = shown.map((s) => (s && s.reason)
+    ? `  ! [${s.reason}] ${s.line}`
+    // A plain string is not the shape parseDecklist() produces, but a caller passing one
+    // should get the line rather than "[object Object]" all over again.
+    : `  ! ${typeof s === 'string' ? s : JSON.stringify(s)}`);
+  const rest = rows.length - shown.length;
+  if (rest > 0) lines.push(`  …and ${rest} more.`);
+  return lines;
+}
+
 function tierCounts(variants) {
   const counts = { win: 0, decisive: 0, other: 0 };
   for (const v of variants) {
@@ -66,7 +88,7 @@ async function main() {
     + (typedCommanders.length ? `, ${typedCommanders.length} marked as commander` : ''));
   if (parsed.skipped && parsed.skipped.length) {
     say();
-    for (const line of parsed.skipped.slice(0, 10)) say(`  ! ${line}`);
+    for (const line of skippedLines(parsed.skipped, 10)) say(line);
   }
   say();
 
@@ -201,4 +223,8 @@ async function main() {
   if (summary) fs.appendFileSync(summary, out.join('\n') + '\n');
 }
 
-main().catch((err) => { console.error('Deck check failed:', err.message); process.exit(1); });
+if (require.main === module) {
+  main().catch((err) => { console.error('Deck check failed:', err.message); process.exit(1); });
+}
+
+module.exports = { skippedLines };
