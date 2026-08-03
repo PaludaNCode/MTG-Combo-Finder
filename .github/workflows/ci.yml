@@ -6,6 +6,19 @@ on:
   pull_request:
   # So a run can be re-triggered by hand when GitHub misses a pull_request event.
   workflow_dispatch:
+    inputs:
+      # The upload step at the bottom of this job sits behind `if: failure()`, so a
+      # green run never reaches it and a bump to that action is proved only by the
+      # next run that goes red — which is the worst moment to discover the report no
+      # longer uploads, because it is the moment somebody needs to read it.
+      #
+      # This makes it provable on demand instead of retroactively. Default off: a
+      # normal push or pull request still only uploads on failure, and this adds a
+      # way to check rather than a new behaviour.
+      prove_upload:
+        description: 'Upload the Playwright report even if everything passed (proves the upload step still works)'
+        type: boolean
+        default: false
 
 jobs:
   checks:
@@ -84,11 +97,23 @@ jobs:
       # v3 → v4; this step uploads once, from a job that has already failed. v7 adds
       # an `archive` input, which nothing here passes.
       #
-      # Still the least verified line in this file: `if: failure()` means a green
-      # run never reaches it, so a bump here is proved by the first run that goes
-      # red — the worst moment to find out the report no longer uploads.
+      # It used to be the least verified line in this file, for a reason worth keeping
+      # written down: `if: failure()` means a green run never reaches it, so a bump
+      # here was proved by the first run that went red — the worst moment to find out
+      # the report no longer uploads, since it is the moment somebody needs it.
+      #
+      # `prove_upload` is the way to ask on purpose. Run this workflow by hand with it
+      # ticked and the step runs on a green build, which is the only way to see the
+      # upload work without breaking something first. The condition keeps `failure()`
+      # first so the ordinary path is unchanged and obvious.
+      #
+      # No `always()` wrapper, deliberately: an `if` that already names a status check
+      # function does not get the implicit `success()` gate, so `failure() ||` is
+      # enough and `always() &&` would only be noise that reads as necessary. On a
+      # pull_request or push there is no `inputs` context, which evaluates falsey —
+      # so the ordinary path really is unchanged.
       - name: Keep the report from a failing run
-        if: failure()
+        if: ${{ failure() || inputs.prove_upload }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report

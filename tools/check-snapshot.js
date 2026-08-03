@@ -30,6 +30,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const zlib = require('node:zlib');
 // The same rebuild the page will run. Checking the published shape with a copy of
 // the logic would let the two drift, and this gate exists precisely for the day
 // the shape moves.
@@ -269,6 +270,41 @@ async function fetchPublished(url) {
 
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
+// What a reader actually waits for. Interning the payload and dropping the derivable
+// combo id took it from 2.73 MB to 1.28 MB on the wire, and the download is still 94%
+// of a cold search on a phone — so it is the number this project has spent the most
+// effort on, and until now nothing defended it. The gate checked counts and row shapes;
+// one new field in Spellbook's export, kept by a future compact(), would put the whole
+// saving back with every check green and the only symptom on somebody's phone.
+//
+// Gzipped, because that is what crosses the wire — `raw.githubusercontent.com`
+// compresses this. Not the same bytes Fastly will produce, which is exactly why this is
+// a ceiling with room in it rather than today's figure pinned: a compressed length
+// depends on the encoder, so an equality here would be a gate that fails on a Node
+// upgrade rather than on anything anybody did.
+//
+// 1.6 MB against a live payload of ~1.28 MB. Set like the coverage floors — a little
+// clear of current, to notice a shape change rather than to bicker over kilobytes.
+const WIRE_CEILING_BYTES = 1_600_000;
+
+function checkWireSize(file, ceiling = WIRE_CEILING_BYTES) {
+  const wire = zlib.gzipSync(fs.readFileSync(file), { level: 9 }).length;
+  const mb = (wire / 1024 / 1024).toFixed(2);
+  const lines = [`${mb} MB gzipped on the wire (ceiling ${(ceiling / 1024 / 1024).toFixed(2)} MB)`];
+  if (wire <= ceiling) return { lines, failures: [], wire };
+  return {
+    lines,
+    wire,
+    // Named as a shape change rather than as "too big", because that is what it almost
+    // certainly is. The two things worth doing are both deliberate acts: find the field
+    // that came back, or raise the ceiling on purpose and say why in the commit.
+    failures: [`the payload is ${mb} MB gzipped, past the ${(ceiling / 1024 / 1024).toFixed(2)} MB `
+      + 'ceiling. That is usually a field creeping back into compact() rather than real '
+      + 'growth — check what the export gained. If the growth is real, raise '
+      + 'WIRE_CEILING_BYTES deliberately.'],
+  };
+}
+
 async function main(argv) {
   const stepsAt = argv.indexOf('--steps');
   const stepsDir = stepsAt === -1 ? null : argv[stepsAt + 1];
@@ -279,6 +315,11 @@ async function main(argv) {
   }
 
   const next = read(nextFile);
+  // Ahead of everything else, because it is the one check here that needs no yesterday
+  // to compare against — a ceiling is a ceiling — and so it is also the only one that
+  // still means something on the path below where the published copy cannot be read.
+  const size = checkWireSize(nextFile);
+
   let previous;
   try {
     previous = previousFile ? read(previousFile) : await fetchPublished(PUBLISHED);
@@ -287,7 +328,14 @@ async function main(argv) {
     // bad. Say so loudly and let the publish through: this gate exists to catch a
     // bad snapshot, not to make the refresh depend on a second network call.
     console.log(`Could not compare against the published snapshot (${err.message}).`);
-    console.log('Publishing anyway — this check is a comparison, not a requirement.');
+    for (const line of size.lines) console.log(`  ${line}`);
+    if (size.failures.length) {
+      for (const failure of size.failures) console.log(`  REFUSING: ${failure}`);
+      if (process.env.ALLOW_SHRINK !== 'true') return 1;
+      console.log('\nALLOW_SHRINK is set — publishing anyway.');
+      return 0;
+    }
+    console.log('Publishing anyway — the comparison is not a requirement.');
     return 0;
   }
 
@@ -302,6 +350,8 @@ async function main(argv) {
     lines.push(...steps.lines);
     failures.push(...steps.failures);
   }
+  lines.push(...size.lines);
+  failures.push(...size.failures);
   for (const line of lines) console.log(`  ${line}`);
 
   if (!failures.length) {
@@ -329,4 +379,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { compare, checkShape, checkSteps, COUNTS, MAX_DROP, MIN_STEPS_COVERAGE, main };
+module.exports = {
+  compare, checkShape, checkSteps, COUNTS, MAX_DROP, MIN_STEPS_COVERAGE, main,
+  checkWireSize, WIRE_CEILING_BYTES,
+};
