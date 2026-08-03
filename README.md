@@ -3123,9 +3123,24 @@ them up; one number and no split hid half the answer.
 time. A badge that follows the name lands wherever the name ends, so eighty totals
 sat at eighty different offsets and there was nothing to read down — `Scurry Oak` put
 its badge at 40% of the width and `Warren Soultrader` at 75%. The gutter is one fixed
-4.2rem, so every total in a panel shares both edges; the layout test measures the
+3.8rem, so every total in a panel shares both edges; the layout test measures the
 distinct right edges per panel and fails on more than one, which is the only way that
-claim can be checked — it is invisible in a screenshot of a single row. The column
+claim can be checked — it is invisible in a screenshot of a single row.
+
+It was 4.2rem, and the width is now checked rather than remembered. What the gutter has to
+hold is the worst real split — a card unlocking 1,889 combos of ours and none of
+Spellbook's, so `0+1889` — and `npm run verify` builds that case rather than hoping the
+fixture contains it: **51px** of content, against 50px for the word COMBOS beneath it. With
+.45rem of clearance that is 59px, which 3.8rem holds with 2px spare, and the divider moved
+from 99px to 93px — 6px of a 334px phone column given back to the card names. 6px is all
+there is: shrinking COMBOS was tried first and bought nothing, since 46px of label still
+sits under 51px of split, and the split cannot wrap instead because `0+1889` has no space
+in it to break at. The test fails if either stops fitting.
+
+That measurement also caught the change breaking itself: an editing slip closed the
+gutter's comment early, which left prose as CSS, dropped the whole `.combo.suggestion`
+rule, and put the divider at 23px instead of 93px. Nothing lints CSS here — `npm run
+verify` is what noticed. The column
 also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
 was a second, weaker copy of the same ordering.
 

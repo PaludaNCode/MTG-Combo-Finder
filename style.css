@@ -587,12 +587,29 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* ---- a suggestion or a piece: numbers in a gutter, the card beside them ----
  *
- * Two columns at every width, phone and desktop alike. The gutter is a fixed
- * 4.2rem so that every total in a panel shares both its edges — a column whose
- * width follows its content is not a column, and the whole point of this shape is
- * that a ranked list can be read down its numbers. 4.2rem is measured, not
- * chosen: it is what the widest real case needs, which is a card unlocking 1,889
- * combos of ours and none of Spellbook's, so the gutter has to hold "0+1889".
+ * Two columns at every width, phone and desktop alike. The gutter is a fixed width so
+ * that every total in a panel shares both its edges — a column whose width follows its
+ * content is not a column, and the whole point of this shape is that a ranked list can be
+ * read down its numbers.
+ *
+ * 3.8rem is measured, and it replaces a 4.2rem that was measured the same way and left
+ * more room than the measurement asked for. The widest thing the gutter must hold is the
+ * worst real split — a card unlocking 1,889 combos of ours and none of Spellbook's, so
+ * "0+1889" — and `npm run verify` now builds that case and prints what it needs against
+ * what the column gives: **51px** of content, against 50px for the word COMBOS beneath it.
+ * With .45rem of clearance that is 59px, so 3.8rem (61px rendered) holds it with 2px spare,
+ * and the divider moves from 99px to 93px measured — 6px of a 334px phone column handed
+ * back to the card names. 6px is what there is: the split is the floor, and going further
+ * means changing what the gutter holds rather than how much room it is given.
+ *
+ * Two things it is worth having measured rather than assumed. The number really is the
+ * floor, not the label: shrinking COMBOS was tried first and bought nothing, because 46px
+ * of label still sits under 51px of split. And the split cannot be allowed to wrap instead
+ * — "0+1889" has no space in it to break at, so `white-space: normal` would overflow the
+ * column rather than use a second line.
+ *
+ * The layout test fails if the widest thing in the gutter, or that built worst case, stops
+ * fitting — so the next total that grows is caught by a test rather than by a screenshot.
  *
  * What used to be here was a brass badge after the card name. It landed wherever
  * the name ended, so eighty totals sat at eighty offsets. */
@@ -602,7 +619,7 @@ button:disabled { opacity: .6; cursor: wait; }
      disagree — they were, below 480px, and the line was split down the row. */
   --col-gap: .7rem;
   display: grid;
-  grid-template-columns: 4.2rem minmax(0, 1fr);
+  grid-template-columns: 3.8rem minmax(0, 1fr);
   column-gap: var(--col-gap);
   align-items: start;
   /* 2px tighter than the .combo default. These two panels are read as ranked
@@ -683,7 +700,7 @@ button:disabled { opacity: .6; cursor: wait; }
   align-items: flex-end;
   /* Clearance from the line, which is now drawn on the far side of the column gap
      by .row-main rather than on this element. */
-  padding-right: .55rem;
+  padding-right: .45rem;
 }
 .row-total {
   color: var(--accent);
@@ -1773,7 +1790,7 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   .why { margin-left: 0; }
   ul.why { padding-left: .9rem; }
   /* The gutter keeps its width here — it is what the numbers line up in, and the
-     4.2rem was measured at this end of the range in the first place. What gives
+     3.8rem was measured at this end of the range in the first place. What gives
      way is the gap between it and the card. Set through the variable, not
      column-gap: the disclosure reaches back across this gap to pick the divider up,
      so overriding one and not the other split the line by exactly the .15rem of

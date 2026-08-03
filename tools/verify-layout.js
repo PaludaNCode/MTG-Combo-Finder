@@ -558,6 +558,59 @@ function measure(win, doc) {
     };
   })();
 
+  // What the gutter actually needs, so its width is a measurement rather than a memory.
+  // Every rendered thing in it, widest first — and then the worst real case built on
+  // purpose, because the fixture need not contain it: a card holding up 1,889 combos of
+  // ours and none of Spellbook's, which is the row the 4.2rem was set for.
+  const gutterNeeds = (() => {
+    const parts = [...doc.querySelectorAll('.row-numbers > *')]
+      .filter((e) => e.getBoundingClientRect().width > 0);
+    let widest = 0;
+    let what = '';
+    for (const part of parts) {
+      const w = Math.ceil(part.getBoundingClientRect().width);
+      if (w > widest) {
+        widest = w;
+        what = part.className.split(' ')[0] + ' "' + part.textContent.trim().slice(0, 14) + '"';
+      }
+    }
+    // Built rather than cloned from a rendered row: this deck has no unofficial combos, so
+    // it draws no split at all, and a clone of nothing measures 0px and reports as "fits".
+    // The shape mirrors numberGutter() in render-rows.js — if that changes, this measures
+    // the wrong thing, which is why the note prints the number instead of only asserting it.
+    const host = doc.querySelector('.row-numbers');
+    let worst = 0;
+    if (host) {
+      const span = (cls, text) => {
+        const e = doc.createElement('span');
+        if (cls) e.className = cls;
+        if (text) e.appendChild(doc.createTextNode(text));
+        return e;
+      };
+      const half = (cls, count, word) => {
+        const e = span(cls, count);
+        e.appendChild(span('word', ' ' + word));
+        return e;
+      };
+      const probe = span('row-split');
+      probe.appendChild(half('official', '0', 'official'));
+      probe.appendChild(span('sign', '+'));
+      probe.appendChild(span('dot', ' · '));
+      probe.appendChild(half('ours', '1889', 'unofficial'));
+      host.appendChild(probe);
+      worst = Math.ceil(probe.getBoundingClientRect().width);
+      probe.remove();
+    }
+    const cs = host ? win.getComputedStyle(host) : null;
+    return {
+      widest,
+      what,
+      worst,
+      pad: cs ? Math.ceil(parseFloat(cs.paddingRight)) : 0,
+      column: host ? Math.round(host.getBoundingClientRect().width) : 0,
+    };
+  })();
+
   const slots = {
     labels: [...doc.querySelectorAll('#included .slot')].map((e) => e.textContent),
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
@@ -909,6 +962,7 @@ function measure(win, doc) {
     unknownCards,
     legality,
     comboCompare,
+    gutterNeeds,
     headingShape,
     linkLine,
     order,
@@ -2255,6 +2309,23 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const mute = g.altRows.filter((r) => !r.titled);
     if (mute.length) problems.push(`${mute.length} clipped name(s) carry no title, e.g. ${mute[0].name}`);
 
+    // The gutter's width is a measurement, so this is where it stays one: the widest thing
+    // actually in it, and the worst case the page will ever have to draw, both against the
+    // column they have to fit in. A gutter that has quietly stopped fitting shows up as a
+    // wrapped label or a number over the divider, which is exactly the class of thing a
+    // screenshot catches and nothing else does.
+    const gut = v.gutterNeeds;
+    if (!gut || !gut.column) {
+      problems.push('no gutter to measure');
+    } else {
+      if (gut.widest + gut.pad > gut.column) {
+        problems.push(`the gutter holds ${gut.widest}px + ${gut.pad}px of clearance in ${gut.column}px (${gut.what})`);
+      }
+      if (gut.worst && gut.worst + gut.pad > gut.column) {
+        problems.push(`a 0+1889 row needs ${gut.worst}px + ${gut.pad}px in a ${gut.column}px gutter`);
+      }
+    }
+
     // ---- one card per line, and no dot separating things that are not side by side ----
     //
     // Both are geometry, and both are invisible to textContent: a heading whose cards
@@ -2790,6 +2861,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       // The shape the headings took and the two numbers that chose it, so a changed
       // threshold is visible in a passing run rather than only in a failure.
+      const gutterNote = v.gutterNeeds
+        ? `gutter ${v.gutterNeeds.column}px holds ${v.gutterNeeds.widest}px (${v.gutterNeeds.what})`
+          + `, worst case 0+1889 is ${v.gutterNeeds.worst}px, pad ${v.gutterNeeds.pad}px`
+        : 'no gutter measured';
       const cardsNote = v.headingShape && v.headingShape.rows
         ? `headings ${v.headingShape.sharing ? 'inline' : 'one card per line'} in `
           + `${v.headingShape.column}px (needs ${v.headingShape.wants}px inline), `
@@ -2832,7 +2907,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 
