@@ -250,6 +250,16 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   DOM-free modules. If getting it wrong would produce a page that looks right and
   says something false — a count, a pluralisation, a bracket's reasoning — it is a
   decision, and it belongs in `view-model.js`, where `node --test` can reach it.
+- **The same applies to what a tool says about itself, and nothing was watching that
+  either.** `deck-cards.js --unswept` took its summary from the already-filtered rows, so
+  it reported "0 of those have been swept" every run — true of what survived the filter,
+  false of the deck, and *0 of 33* where the log had **27 of 60**. `try-deck.js` printed
+  ten lines of `! [object Object]` because `skipped` holds objects. Neither failed
+  anything: a tool's output is read once by a person who believes it, and these feed the
+  queue that decides which card gets swept next. Counted before you filter, and the
+  decision goes in an exported function — `sweepStatus()`, `skippedLines()`, both pinned
+  by `test/deck-tools.test.js`. A tool that only runs against the live 28 MB snapshot has
+  no other way to be checked.
 - **`verify-layout.js`'s `HARNESS` is a template literal, so a regex in it loses its
   backslashes.** `/\d+ combos/` becomes `/d+ combos/` before the browser ever sees it,
   and an assertion that matches nothing passes — the exact failure `check:readme` exists

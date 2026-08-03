@@ -221,3 +221,91 @@ test('comboPieces: a 2x2 of interchangeable groups sorts into two adjacent pairs
   assert.ok(pair('3', '6'), `the Scurry Oak pair is split: ${ids.join(', ')}`);
   assert.ok(pair('2', '5'), `the Kitchen Finks pair is split: ${ids.join(', ')}`);
 });
+
+// ---- rows move, cards do not -------------------------------------------------
+//
+// The row order is a choice about which rows to read first; the card order inside a row is
+// a separate choice, made by orderComboNames(). Sorting must never reach into the second
+// one, and "must never" is worth a test rather than an argument: the comparator reads the
+// drawn name, and reading it is one keystroke from rewriting it.
+
+const { interchangeableIn, orderComboNames, variantCardNames } = require('../combos.js');
+
+const drawnBy = (list, lead) => {
+  const trails = interchangeableIn(list);
+  return list.map((v) => [v.id, orderComboNames(variantCardNames(v), {
+    lead, trail: trails.get(v),
+  }).join(' + ')]);
+};
+
+test('comboPieces: sorting the rows leaves every row\'s cards exactly as they were', () => {
+  const lead = 'Carrion Feeder';
+  const rows = [
+    variant('1', lead, 'Kitchen Finks', 'Archangel of Thune'),
+    variant('2', lead, 'Cauldron Familiar', 'Samwise Gamgee'),
+    variant('3', lead, 'Kitchen Finks', 'Heliod, Sun-Crowned'),
+    variant('4', lead, 'Herd Baloth', 'Necrosynthesis'),
+    variant('5', lead, 'Kitchen Finks', 'Heroic Feast'),
+    variant('6', lead, 'Herd Baloth', 'Sadistic Glee'),
+  ];
+  const before = drawnBy(rows, lead).sort();
+  const after = drawnBy(
+    comboPieces(rows, []).find((p) => p.card === lead).combos, lead
+  ).sort();
+  assert.deepStrictEqual(after, before, 'a row was redrawn, not just moved');
+});
+
+// The same invariant from the other side: the answer cannot depend on the order the rows
+// arrived in, or "we only moved rows" would be true of one input and false of another.
+test('comboPieces: the cards a row draws do not depend on the order the rows arrived in', () => {
+  const lead = 'Carrion Feeder';
+  const rows = [
+    variant('1', lead, 'Herd Baloth', 'Necrosynthesis'),
+    variant('2', lead, 'Scurry Oak', 'Necrosynthesis'),
+    variant('3', lead, 'Herd Baloth', 'Sadistic Glee'),
+    variant('4', lead, 'Scurry Oak', 'Sadistic Glee'),
+  ];
+  const one = drawnBy(comboPieces(rows, []).find((p) => p.card === lead).combos, lead).sort();
+  const other = drawnBy(
+    comboPieces(rows.slice().reverse(), []).find((p) => p.card === lead).combos, lead
+  ).sort();
+  assert.deepStrictEqual(other, one);
+});
+
+// ---- which rows come first ---------------------------------------------------
+
+// Alphabetical alone opens a list on whichever block starts with an A — Carrion Feeder's
+// real list opened on a Cauldron Familiar row that is the only one of its kind, above
+// three Kitchen Finks rows that are one decision between three cards. The blocks come
+// first now, biggest down to smallest, and the rows that stand alone follow.
+test('comboPieces: the biggest block of versions leads, then smaller ones, then singles', () => {
+  const lead = 'Carrion Feeder';
+  const rows = [
+    // One row of its own that sorts alphabetically above everything else.
+    variant('single', lead, 'Cauldron Familiar', 'Samwise Gamgee'),
+    // A block of two.
+    variant('two-a', lead, 'Herd Baloth', 'Necrosynthesis'),
+    variant('two-b', lead, 'Herd Baloth', 'Sadistic Glee'),
+    // A block of three.
+    variant('three-a', lead, 'Kitchen Finks', 'Archangel of Thune'),
+    variant('three-b', lead, 'Kitchen Finks', 'Heliod, Sun-Crowned'),
+    variant('three-c', lead, 'Kitchen Finks', 'Heroic Feast'),
+  ];
+  const ids = comboPieces(rows, []).find((p) => p.card === lead).combos.map((v) => v.id);
+  assert.deepStrictEqual(ids,
+    ['three-a', 'three-b', 'three-c', 'two-a', 'two-b', 'single']);
+});
+
+// Combo size still outranks the block size, and nothing is lost to it: a family's rows all
+// hold the same number of cards, since they share every card but one.
+test('comboPieces: a small combo still leads a bigger block of bigger combos', () => {
+  const lead = 'Carrion Feeder';
+  const rows = [
+    variant('big-a', lead, 'Kitchen Finks', 'Archangel of Thune', 'Sol Ring'),
+    variant('big-b', lead, 'Kitchen Finks', 'Heliod, Sun-Crowned', 'Sol Ring'),
+    variant('big-c', lead, 'Kitchen Finks', 'Heroic Feast', 'Sol Ring'),
+    variant('small', lead, 'Pitiless Plunderer'),
+  ];
+  const ids = comboPieces(rows, []).find((p) => p.card === lead).combos.map((v) => v.id);
+  assert.strictEqual(ids[0], 'small', `a 2-card combo must lead: ${ids.join(', ')}`);
+});
