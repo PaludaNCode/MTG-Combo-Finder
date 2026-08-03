@@ -397,7 +397,7 @@ test('identityString: colourless is C, and the order is WUBRG', () => {
 // every daily refresh. What *is* checkable here is that the checker works: that
 // a broken citation is caught rather than that today's data happens to be fine.
 
-const { check, checkStandIns, checkCardIds, cardIndex } = require('../tools/verify-unofficial.js');
+const { check, checkStandIns, checkCardIds, cardIndex, parseArgs } = require('../tools/verify-unofficial.js');
 
 const PUBLISHED = {
   combos: [
@@ -667,4 +667,33 @@ test('rules: the stand-in turning up in published combos is reported', () => {
 
 test('rules: no data and no rules are not an error', () => {
   assert.deepStrictEqual(checkStandIns(null, null), { problems: [], summaries: [] });
+});
+
+// ---- --graduated, the half of the report nobody was reading ------------------
+//
+// A broken citation fails the nightly job and is impossible to miss. A row
+// Spellbook has *since published* exits 0 and prints into the step summary of a job
+// that passed, which is the same as not reporting it — so the list is also written
+// as JSON and update-data.yml turns it into a standing issue. The flag has to work
+// whichever side of the snapshot path it lands on, because a workflow that has to
+// remember the order will get it wrong once and write the report over combos.json.
+test('args: the snapshot alone', () => {
+  assert.deepStrictEqual(parseArgs(['combos.json']),
+    { snapshot: 'combos.json', graduatedOut: null });
+});
+
+test('args: --graduated on either side of the snapshot', () => {
+  assert.deepStrictEqual(parseArgs(['combos.json', '--graduated', 'out.json']),
+    { snapshot: 'combos.json', graduatedOut: 'out.json' });
+  assert.deepStrictEqual(parseArgs(['--graduated', 'out.json', 'combos.json']),
+    { snapshot: 'combos.json', graduatedOut: 'out.json' });
+});
+
+test('args: --graduated without a snapshot still fetches the live data', () => {
+  assert.deepStrictEqual(parseArgs(['--graduated', 'out.json']),
+    { snapshot: undefined, graduatedOut: 'out.json' });
+});
+
+test('args: nothing at all', () => {
+  assert.deepStrictEqual(parseArgs([]), { snapshot: undefined, graduatedOut: null });
 });

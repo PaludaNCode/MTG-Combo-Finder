@@ -2641,6 +2641,19 @@ card set already appears there. Showing both copies would be the same combo list
 twice, one of them ours and stale — so the entry moves up a panel with nobody editing
 the file.
 
+**And somebody is told, which is the part that used to be missing.** The page dropping
+a row silently is right for the reader and wrong for the file: the row stays in
+`unofficial.js` forever, carrying a claim that is no longer ours to make. The nightly
+data job runs `tools/verify-unofficial.js` against the snapshot it just published, and
+two things can come back. A **broken citation** — an id that has stopped resolving, or
+one that now names a different combo — fails the job, because a row whose evidence
+points at nothing is the one failure this panel cannot survive. A **graduation** is not
+a failure and used to be reported into the step summary of a job that passed, which is
+the same as not reporting it. It now opens a standing issue listing the rows that can
+come out, updated every night and closed by the job itself once the list empties. That
+is the whole maintenance loop: rows arrive by hand, and leave because a machine noticed
+they had stopped being needed.
+
 ### The audit, and what it ruled out
 
 44 candidates, from pairs of cards that Spellbook itself treats as interchangeable

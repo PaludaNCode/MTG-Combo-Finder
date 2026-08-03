@@ -25,8 +25,16 @@
 //
 // Run against the live data, which is why this is a tool and not a unit test:
 //
-//   node tools/verify-unofficial.js               # fetches the published data
-//   node tools/verify-unofficial.js combos.json   # or reads a local copy
+//   node tools/verify-unofficial.js                      # fetches the published data
+//   node tools/verify-unofficial.js combos.json          # or reads a local copy
+//   node tools/verify-unofficial.js --graduated out.json # …and list the graduates as JSON
+//
+// `--graduated` exists because the graduation report is the half nobody reads. A
+// broken citation fails this run and is loud; a row Spellbook has since published
+// exits 0 and prints into the step summary of a nightly cron job that passed, which
+// is the same as not reporting it. The file's whole promise is that these rows
+// graduate rather than accumulate, and a graduate nobody removes is the promise
+// quietly not being kept. The JSON is what update-data.yml turns into an issue.
 'use strict';
 
 const fs = require('node:fs');
@@ -214,8 +222,25 @@ async function load(path) {
   return { data: decode(raw), cards };
 }
 
+// Argument order is not meaningful — `--graduated <path>` may sit before or after
+// the snapshot — because a workflow that has to remember which comes first is a
+// workflow that will get it wrong once and write the report to a file named
+// "combos.json".
+function parseArgs(argv) {
+  const at = argv.indexOf('--graduated');
+  // `at === -1` is the case to be careful with: `at + 1` is then 0, and a filter
+  // written as `i !== at + 1` would drop argv[0] — silently turning
+  // `verify-unofficial.js combos.json` into a run against the network. Guarding on
+  // the flag being present is the whole fix.
+  const has = at !== -1;
+  const graduatedOut = has ? argv[at + 1] : null;
+  const rest = argv.filter((a, i) => !a.startsWith('--') && !(has && (i === at || i === at + 1)));
+  return { snapshot: rest[0], graduatedOut };
+}
+
 async function main() {
-  const { data, cards } = await load(process.argv[2]);
+  const { snapshot, graduatedOut } = parseArgs(process.argv.slice(2));
+  const { data, cards } = await load(snapshot);
   const { problems, graduated, counted } = check(data, COMBOS);
   const rules = checkStandIns(data, STAND_INS);
   problems.push(...checkCardIds(cards, COMBOS, STAND_INS, PASSES));
@@ -249,6 +274,17 @@ async function main() {
 
   problems.push(...rules.problems);
 
+  // Written before the broken-evidence early return below, so a run that also has a
+  // broken citation still reports its graduates. The two are unrelated failures and
+  // holding one back over the other would lose a night of it.
+  if (graduatedOut) {
+    fs.writeFileSync(graduatedOut, JSON.stringify({
+      snapshot: data.updatedAt || null,
+      checked: COMBOS.length,
+      graduated,
+    }, null, 1));
+  }
+
   if (graduated.length) {
     say('## Graduated — Spellbook now publishes these');
     say();
@@ -272,7 +308,7 @@ async function main() {
     + 'card swapped in still answers to the id recorded beside it.');
 }
 
-module.exports = { check, checkStandIns, checkCardIds, cardIndex };
+module.exports = { check, checkStandIns, checkCardIds, cardIndex, parseArgs };
 
 // Only when run, so requiring it for the tests does not go to the network.
 if (require.main === module) {

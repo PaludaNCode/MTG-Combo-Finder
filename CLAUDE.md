@@ -22,6 +22,8 @@ npm run lint              # ESLint, fetched for the run — no lint dependency i
 npm run verify            # layout smoke test — REQUIRED after any UI change
 npm run test:ui           # Playwright browser tests + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
+                          # --graduated out.json also lists the rows Spellbook now
+                          # publishes, which is what the nightly job turns into an issue
 npm run check:readme      # the README's countable numbers still match the files
 
 node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,737 files
@@ -237,6 +239,13 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **The unofficial panel is never counted as published data.** Its rows stay out of
   the combo count and the bracket check, and every row has to name the published
   combo it came from. `test/unofficial.test.js` enforces that shape.
+- **Rows leave the file because the nightly job noticed, not because somebody
+  remembered.** `update-data.yml` verifies every citation against the snapshot it just
+  published: a broken one fails the job, and a row Spellbook has *since published*
+  goes into a standing issue that the job rewrites nightly and closes itself once the
+  list empties. Adding a row is a decision; removing one should not have to be. Don't
+  hand-edit that issue's body — it is regenerated, and `npm run verify:unofficial` is
+  the live answer.
 - **Row and result counts in the README are real measurements.** If you add rows to
   `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too —
   `npm run check:readme` says which, and CI runs it. It also fails if a sentence it
