@@ -249,6 +249,13 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   list empties. Adding a row is a decision; removing one should not have to be. Don't
   hand-edit that issue's body — it is regenerated, and `npm run verify:unofficial` is
   the live answer.
+- **`unofficial.js` is the biggest script the page loads, and it only grows.** Rows go
+  in by hand and leave only by graduation, so watch the gzipped size rather than the row
+  count: `gzip -9 -c unofficial.js | wc -c`. The threshold is written down —
+  **at 50 KB gzipped `COMBOS` moves to the `data` branch as JSON** — along with what
+  that costs, which is mostly the exact-row assertion in `test/unofficial.test.js`. See
+  the README's *What the file costs, and the size at which it stops being source*. Do
+  not move it early and do not let it drift past without noticing.
 - **Row and result counts in the README are real measurements.** If you add rows to
   `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too —
   `npm run check:readme` says which, and CI runs it. It also fails if a sentence it

@@ -697,3 +697,37 @@ test('args: --graduated without a snapshot still fetches the live data', () => {
 test('args: nothing at all', () => {
   assert.deepStrictEqual(parseArgs([]), { snapshot: undefined, graduatedOut: null });
 });
+
+// ---- what the file costs the page --------------------------------------------
+//
+// `unofficial.js` is the largest single script the page loads and it only grows:
+// rows go in by hand, and the only thing that ever takes one out is Spellbook
+// publishing it. So the README writes down the size at which it stops being source
+// and becomes data on the `data` branch, along with what that costs — and this is
+// the mechanism, because a threshold nobody measures is the "please remember" note
+// this repository has already replaced twice.
+//
+// Gzipped, not raw: the reader waits for the wire size, and GitHub Pages compresses.
+// Ceiling rather than a pinned size, and that distinction is what makes this safe to
+// run in CI: a compressed length depends on the zlib build, so asserting today's exact
+// figure would be a check that can go red on a Node upgrade rather than on anything
+// anybody did. A ceiling with room to spare cannot — the same reason the coverage
+// numbers are floors set a point under, rather than equalities.
+//
+// Crossing it is not a bug and this test failing is not a defect. It is the moment
+// the decision in the README comes due, and the failure message says so.
+const zlib = require('node:zlib');
+
+const MOVE_TO_DATA_BRANCH_AT = 50 * 1024;
+
+test('unofficial.js is still small enough to ship as source', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'unofficial.js'));
+  const wire = zlib.gzipSync(source, { level: 9 }).length;
+  assert.ok(
+    wire < MOVE_TO_DATA_BRANCH_AT,
+    `unofficial.js is ${wire} bytes gzipped, at or past the ${MOVE_TO_DATA_BRANCH_AT}-byte `
+    + 'threshold. Nothing is broken — this is the decision in the README\'s "What the file '
+    + 'costs, and the size at which it stops being source" coming due. Move COMBOS to the '
+    + 'data branch as JSON, or move the threshold on purpose and say why.',
+  );
+});

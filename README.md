@@ -2654,6 +2654,47 @@ come out, updated every night and closed by the job itself once the list empties
 is the whole maintenance loop: rows arrive by hand, and leave because a machine noticed
 they had stopped being needed.
 
+### What the file costs, and the size at which it stops being source
+
+`unofficial.js` is the largest single script the page loads, and almost all of it is
+data: the rows, plus one rule. Graduation is the only thing that ever takes a row out,
+and research passes put them in faster than Spellbook publishes them, so the trend is up.
+
+No figure for today's size is written here on purpose. It would be stale within a
+research pass, and pinning a compressed size in CI is a check that can fail on a zlib
+version rather than on anything anybody did — the mistake the test count in CLAUDE.md
+made in the cheap direction and this would make in the expensive one.
+`gzip -9 -c unofficial.js | wc -c` is the live answer.
+
+It stays in the repository, and this section is not a plan to move it. Rows being
+versioned alongside the matching logic they depend on is worth real weight:
+`npm run verify:unofficial` is a test somebody runs before merging rather than a gate
+that fires after publishing, and `test/unofficial.test.js` pins the *exact* rows the
+standing deck unlocks — a check that cannot exist if the rows arrive over the network.
+
+What is worth fixing in advance is the number at which that trade flips, because it is a
+much worse decision to make while looking at a slow page.
+
+**At 50 KB gzipped, `COMBOS` moves to the `data` branch as JSON**, fetched by the worker
+and nothing else. The mechanics are already paid for: `connect-src` names that host,
+Cache Storage is already how the combo database gets there, and the nightly job already
+writes two artefacts beside each other. Roughly double today's rows, so this is not
+close — which is exactly why the number belongs here now rather than in the commit that
+has to act on it.
+
+**And what it would cost, in the same breath**, because a threshold with only the
+benefit written down is a decision nobody can argue with later:
+
+- rows stop being versioned with the code, so a row and the matching logic it needs can
+  ship apart — the failure being a row that matches nothing, silently;
+- `verify:unofficial` becomes a publish-time gate, which changes *when* a broken
+  citation is found from "before merge" to "after somebody is already reading it";
+- the exact-row assertion in `test/unofficial.test.js` needs somewhere to live that is
+  still a unit test, and that is the part with no obvious answer.
+
+The last one is the real cost. The first two are inconveniences; that one deletes a
+check which has already caught a row matching on something too loose.
+
 ### The audit, and what it ruled out
 
 44 candidates, from pairs of cards that Spellbook itself treats as interchangeable
