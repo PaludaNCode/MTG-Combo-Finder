@@ -59,8 +59,13 @@ jobs:
       # The diff is the deliverable, so it goes in the summary too. A card's oracle text
       # arriving as something a person reads is the entire argument for keeping this file
       # in the repository rather than on the data branch.
+      #
+      # --intent-to-add first, because `git diff` ignores untracked files completely and
+      # the first run of this workflow is the one where the file is new. Without it this
+      # printed an empty diff for the run that had everything to show.
       - name: Show what changed
         run: |
+          git add --intent-to-add card-text.json
           {
             echo ''
             echo '## The diff'
@@ -73,7 +78,13 @@ jobs:
       - name: Commit the result
         run: |
           set -euo pipefail
-          if git diff --quiet -- card-text.json; then
+          # `git status --porcelain`, not `git diff`. This is the line that made the first
+          # real run of this workflow report success having done nothing: `git diff` does
+          # not see untracked files at all, card-text.json is new on the first run, so git
+          # said "no changes" for the one run that had five cards to commit and the job
+          # went green. `status --porcelain` sees new and modified alike, which is the
+          # question actually being asked.
+          if [ -z "$(git status --porcelain -- card-text.json)" ]; then
             echo 'Nothing changed — every card asked for was already cached with the same text.' \
               >> "$GITHUB_STEP_SUMMARY"
             exit 0
