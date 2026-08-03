@@ -3274,13 +3274,14 @@ where only one of them is checked.
 
 1. Branch off `main`: `feat/<thing>` or `fix/<thing>`
 2. Push, open a PR — CI runs (`checks` job: JS syntax check + lint + unit tests with
-   coverage floors + layout smoke test + the Playwright browser tests, which install
-   Chromium and are the longest step)
+   coverage floors + the README's countable numbers + layout smoke test + the Playwright
+   browser tests, which install Chromium and are the longest step)
 3. Merge when green. "Allow auto-merge" is enabled on the repo, so the usual move is
    to hit **Enable auto-merge** on the PR right after opening it — it then lands on
    its own the moment CI passes. Merging to `main` **is** the release: the deploy
-   workflow fires on push to `main` and publishes to GitHub Pages (once Pages is
-   available — see Deploying below).
+   workflow fires on push to `main` and publishes to GitHub Pages. The branch is deleted
+   on merge — that is a repository setting, not something to remember, and it is why a
+   merged branch is simply gone rather than waiting to be tidied up.
 
 **`main` is protected**, by a branch ruleset: a pull request is required, the `checks` job
 has to be green before it can merge, and force-pushes and deletion are blocked. So the flow
@@ -3315,8 +3316,15 @@ literally.
 ## Deploying
 
 `.github/workflows/deploy.yml` publishes the repo root to GitHub Pages on every push
-to `main`. Note: GitHub Pages on a **private** repo requires a paid GitHub plan —
-either make the repo public or run the page locally until then.
+to `main`, and does: the repository is public, Pages is enabled and built from the
+workflow rather than from a branch, and every merge produces a `github-pages`
+deployment. The live answer is the Actions tab, or the deployments list —
+`gh api repos/PaludaNCode/MTG-Combo-Finder/deployments?environment=github-pages`.
+
+This used to carry a caveat that Pages on a **private** repo needs a paid plan, so make
+the repo public or run the page locally until then. Both halves of that are settled and
+the note is gone; it is recorded here only because a reader who remembers it should know
+it was resolved rather than dropped.
 
 **Asset URLs are stamped with the commit SHA, and nothing is listed by name.**
 Pages' CDN caches by full URL and a deploy purges nothing, so an unversioned URL can
