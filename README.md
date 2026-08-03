@@ -2955,6 +2955,23 @@ claim can be checked — it is invisible in a screenshot of a single row. The co
 also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
 was a second, weaker copy of the same ordering.
 
+**Fixed in height too, and for the same reason.** The gutter shares its grid row with
+the card's name, links and pills, so that row is as tall as the taller of the two — and
+the gutter grows a line whenever a total is split into official and unofficial. Left to
+its content it pushed the disclosure below it down by 9px on exactly the rows that
+carried unofficial combos, and by 28px where the split wrapped, so "The combos it holds
+together" sat at a different height on every row and wandered down the panel according
+to which cards happened to have one. Reserving the split's line on all of them —
+`3.71rem`, which is measured, and the same at both gutter widths since the container
+query changes what the split says and not how tall it is — costs a row without a split
+9px and buys one offset for the whole panel.
+
+The tempting fix is to let the gutter span the rows below it so it can never push
+anything down, and it breaks the line: the gutter's border *is* the divider's top
+segment, and it ends where the disclosure's begins only because the grid row sizes it.
+Spanning made the two overlap by 23px at every viewport. The layout test caught that,
+which is the case it was written for.
+
 **The divider runs the whole row, and everything below the numbers is on the card's
 side of it.** *Combos this unlocks* used to start under the gutter, level with a number
 it is the expansion of, which made it read as a third thing the row was about rather

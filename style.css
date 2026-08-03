@@ -567,6 +567,32 @@ button:disabled { opacity: .6; cursor: wait; }
 .combo.suggestion > details { padding-top: 1px; }
 
 .row-numbers {
+  /* A fixed height, for the same reason the column has a fixed width: a gutter
+   * whose size follows its content is not a column.
+   *
+   * The height is what makes the disclosure below line up. The gutter shares grid
+   * row 1 with .row-main, so row 1 is as tall as the taller of the two — and the
+   * gutter grows a line whenever a total is split into official and unofficial.
+   * Left to its content, a row with a split made row 1 9px taller than the card's
+   * name, links and sizes needed, and every one of those 9px was a hole above "The
+   * combos it holds together"; a split wrapped onto two lines opened 28px. Rows
+   * without a split had no hole at all, so the disclosure wandered down the panel
+   * according to which rows happened to carry unofficial combos.
+   *
+   * Reserving the split's line on every row is what squares that with the divider.
+   * The alternative — letting the gutter span all three rows so it can never push
+   * anything down — breaks the line: the gutter's border-right IS the divider's
+   * top segment, and it only ends where the disclosure's border-left begins
+   * because grid row 1 sizes it. Spanning made it overlap that junction by 23px at
+   * every viewport, which is what tools/verify-layout.js failed on.
+   *
+   * 3.71rem is measured, not chosen: 59.3px is the tallest the gutter's content
+   * gets in a normal row — total (1.5rem at line-height 1.05), label, and split —
+   * at both gutter widths, since the container query changes what the split says
+   * and not how tall it is. A four-digit half on both sides still wraps to two
+   * lines and still makes its own row taller; that case is rare enough to be worth
+   * a taller row rather than 19px on all eighty. */
+  min-height: 3.71rem;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
