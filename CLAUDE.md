@@ -37,7 +37,10 @@ node tools/fetch-combos.js out.json --fixture test/fixtures/export.json
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
-node tools/lookup-card.js "Card name"          # oracle text: Scryfall, else Forge
+node tools/lookup-card.js "Card name"          # oracle text: cache, else Scryfall, else Forge
+node tools/cache-card-text.js "Card name"      # fetch it from Scryfall into card-text.json.
+                          # Needs a runner — see the "Cache card text" workflow. Never
+                          # hand-edit that file; the point is that it is not recollection.
 node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
 node tools/deck-gaps.js [deck.txt]             # which gaps THIS deck exposes
@@ -110,15 +113,29 @@ in that order (each reads the previous at load time). It does **not** load
 > That is deliberate: an instruction was already here saying to work from card text, and
 > it was not enough.
 >
-> **Getting the text in this sandbox:** `tools/lookup-card.js` works again. Scryfall is
-> still refused by the network policy — `api.scryfall.com` 403s at CONNECT, and so does
-> WebFetch — so the tool asks Scryfall first and falls back to Forge's card scripts on
-> `raw.githubusercontent.com`, which the policy does allow. Everything it answers from
-> Forge is banner-marked as Forge's wording. **Cross-check anything the reasoning turns
-> on against XMage**, whose implementation is on the same host. WebSearch and a card the
-> user pastes are both still fine. Published Spellbook steps (`steps/` on the data
-> branch) are good corroboration for what a loop *does*, but they are not oracle text and
-> do not satisfy this rule.
+> **Getting the text in this sandbox:** `tools/lookup-card.js` asks three sources in
+> order, and the first is the one to reach for.
+>
+> 1. **`card-text.json`, the committed cache.** Scryfall's own wording, fetched on a
+>    runner by the *Cache card text* workflow and committed. No request, so it works here,
+>    and no banner, because it *is* Scryfall. Every entry carries the date it was read and
+>    the tool prints how old that makes it. **If the cards you need are not in it, run that
+>    workflow first** — it takes a semicolon-separated list, commits to your branch, and
+>    turns the expensive half of a research pass into a diff somebody reads once.
+> 2. **Scryfall live**, which is refused by the network policy here — `api.scryfall.com`
+>    403s at CONNECT, and so does WebFetch — but works on a runner.
+> 3. **Forge's card scripts** on `raw.githubusercontent.com`, which the policy does allow.
+>    Everything it answers is banner-marked as Forge's wording. **Cross-check anything the
+>    reasoning turns on against XMage**, whose implementation is on the same host.
+>
+> WebSearch and a card the user pastes are both still fine. Published Spellbook steps
+> (`steps/` on the data branch) are good corroboration for what a loop *does*, but they are
+> not oracle text and do not satisfy this rule.
+>
+> **Never hand-write an entry into `card-text.json`.** It exists so that a reading is
+> Scryfall's word rather than somebody's recollection; a typed entry makes it a source of
+> exactly the unverified text the rule above was written to stop, and one that now looks
+> authoritative. Only the workflow writes that file.
 
 `research-log.js` is the index of what has been swept. **Before starting a deep dive,
 read it; after finishing one, add to it.** A pass that is not in it did not happen as

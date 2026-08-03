@@ -1,0 +1,87 @@
+name: Cache card text
+
+# Fetch oracle text from Scryfall and commit it, so the sandbox this repository is usually
+# edited from gets Scryfall's wording instead of Forge's.
+#
+# Why this is a workflow and not something you run locally: every Scryfall host is refused
+# at CONNECT from that sandbox — api.scryfall.com 403s, and so does WebFetch — which is
+# the whole reason tools/lookup-card.js has a Forge fallback and why anything Forge
+# answers is banner-marked as Forge's wording rather than Wizards'. A runner has no such
+# restriction, so this is where reading a card actually happens.
+#
+# What it buys: research-log.js will not accept a pass without verbatim oracle text for
+# every card in it, and that rule is right — it exists because two cards were reasoned
+# about from memory and one of those readings survived review. The constraint on the
+# research queue was never finding candidates, it was that reading each one is expensive.
+# This makes it cheap, and permanently: a card read once is a card read.
+#
+# Manual, like every other workflow here that asks a third party a question. Nothing
+# nightly should depend on Scryfall's uptime to learn that a card still says what it said.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cards:
+        # Semicolons, not commas: "Camellia, the Seedmiser" is one card.
+        description: 'Card names, separated by a semicolon'
+        required: true
+        default: 'Bartolomé del Presidio; Woe Strider; Bloodflow Connoisseur'
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Never onto main: this repo's rule is branch -> PR -> checks -> merge, and a
+      # workflow with a write token is not an excuse to skip it. Same guard as
+      # resolve-templates.yml, for the same reason.
+      - name: Refuse to run against the default branch
+        if: github.ref_name == github.event.repository.default_branch
+        run: |
+          echo "Run this from a branch; it commits card-text.json and main is protected." >&2
+          exit 1
+
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Fetch the card text
+        env:
+          CARDS: ${{ inputs.cards }}
+        run: |
+          set -o pipefail
+          node tools/cache-card-text.js | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The diff is the deliverable, so it goes in the summary too. A card's oracle text
+      # arriving as something a person reads is the entire argument for keeping this file
+      # in the repository rather than on the data branch.
+      - name: Show what changed
+        run: |
+          {
+            echo ''
+            echo '## The diff'
+            echo ''
+            echo '```diff'
+            git --no-pager diff --stat -- card-text.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the result
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- card-text.json; then
+            echo 'Nothing changed — every card asked for was already cached with the same text.' \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add card-text.json
+          git commit -m "Cache oracle text for: ${CARDS}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+        env:
+          CARDS: ${{ inputs.cards }}

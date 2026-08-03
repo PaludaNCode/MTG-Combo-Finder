@@ -2408,6 +2408,56 @@ misspelling are identical from inside the tool, and it named the likelier one as
 though it knew. **It now asks Scryfall first and Forge second**, and only says
 "check the spelling" when Scryfall was reachable enough to say the name is unknown.
 
+#### And now a third source, ahead of both: a cache a runner filled
+
+Falling back to Forge works, and it costs something every time. Forge's wording is not
+Wizards', so anything a reading turns on has to be cross-checked against XMage by hand —
+which means the *rule* that made this project trustworthy (`research-log.js` refuses a pass
+without verbatim oracle text) is also what makes each pass expensive. And the queue is not
+small: `tools/substitution-scope.js` finds thousands of implied-but-unpublished combos, most
+of whose cards no recorded pass has read.
+
+A runner can reach Scryfall perfectly well. So the *Cache card text* workflow reads cards
+there and commits them to `card-text.json`, and `tools/lookup-card.js` asks that first. A
+cache hit needs no request — so it works in the sandbox — and carries no banner, because it
+is not a second opinion: a runner read Scryfall and wrote down what it said.
+
+**The ordering is the whole design.** If a live fetch outranked the cache, every pass run
+from the sandbox would fall through to Forge exactly as before, and the cache would be dead
+weight that looked like it was working. `test/lookup-card.test.js` pins it.
+
+**Normalised, not raw, and that is what makes it committable.** A Scryfall card object is
+3–5 KB of prices, images, printings and rulings; what the tool prints is about 300 bytes of
+it. Storing the raw object would make the queue's worth of cards a multi-megabyte blob
+nobody reviews — and "a card's oracle text arrives as a diff somebody reads" is the entire
+argument for keeping this in the repository rather than on the `data` branch. So only the
+printed fields are kept, the file is written sorted so an added card is a one-entry diff,
+and a shape change means re-fetching rather than migrating.
+
+**Every entry carries the day it was read, and the tool says how old that makes it.** Not a
+timestamp — a day, because a full ISO time would make every re-fetch a diff even when the
+text is identical, burying the one line that did change. Oracle text is errata'd rarely,
+which is exactly what makes a silently stale copy dangerous: it is a *wrong reading somebody
+trusts*, the most expensive mistake available here and the only one that produces no
+complaint. Past a year the note says so and names the workflow; it still shows the text,
+because a year-old reading is right for all but a handful of cards and withholding it would
+send somebody to Forge's wording instead, which is strictly worse. An entry with no date
+reads as *unknown*, never as fresh.
+
+**Nothing hand-writes into that file.** It exists so a reading is Scryfall's word rather
+than somebody's recollection; a typed entry would make it a source of exactly the
+unverified text the rule was written to stop, and one that now looks authoritative. Only
+the workflow writes it — which is also why this repository ships without one, rather than
+with a seeded example nobody could vouch for.
+
+**What it does not do yet**, stated because the obvious next step looks free and is not:
+it takes card names, not the work queue. Feeding it the top N unswept cards directly needs
+`tools/substitution-scope.js` to become a module first — it has no exports at all today and
+computes its ranking inside `main()` on the way to printing a table, and scraping a tool's
+own markdown output is the coupling this repository avoids everywhere else. So for now: run
+the scope tool, read its bottom table, paste the names in. Two steps, the same shape as
+`peek-variant.yml` being read and written down by a person.
+
 **[Forge](https://github.com/Card-Forge/forge) publishes its card scripts as plain
 files in a GitHub repository, so they arrive over the one host that was reachable.**
 Each carries an `Oracle:` line, which is the card text verbatim:

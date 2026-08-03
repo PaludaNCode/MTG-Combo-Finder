@@ -58,6 +58,8 @@
 'use strict';
 
 const UA = 'MTG-Combo-Finder/1.0 (+https://github.com/PaludaNCode/MTG-Combo-Finder; card text lookup)';
+const CardText = require('./card-text.js');
+
 const NAMED = 'https://api.scryfall.com/cards/named?exact=';
 const FORGE = 'https://raw.githubusercontent.com/Card-Forge/forge/master/forge-gui/res/cardsfolder/';
 
@@ -168,7 +170,13 @@ async function fromScryfall(name) {
 // must never read as Scryfall's word, and a name that failed because the network
 // was refused must never be reported as a misspelling. Both of those are wrong in
 // the direction a reader cannot detect.
-function verdict(scry, faceList) {
+function verdict(scry, faceList, cached) {
+  // The cache first, and it outranks a live fetch rather than backing it up. What is in
+  // it *is* Scryfall's wording — a runner read it and committed it — so asking again buys
+  // a fresher date and nothing else, at the cost of a request that this sandbox cannot
+  // make anyway. The age is printed instead, which is the honest version of the same
+  // information.
+  if (cached) return { source: 'cache', age: CardText.ageNote(cached.fetched) };
   if (scry.card) return { source: 'scryfall' };
   if (faceList) {
     return {
@@ -221,14 +229,47 @@ function sayForge(faceList, why) {
   }
 }
 
-async function lookup(name) {
+// A cached entry, printed the way a live one is. It came from Scryfall, so it gets
+// Scryfall's fields and no banner — the only difference is a line saying when it was read.
+// Deliberately not shaped like forgeBanner(): a warning that appears on every card is a
+// warning nobody reads, and this one is only ever a prompt to re-fetch.
+function sayCached(entry, age) {
+  say(`### ${entry.name}`);
+  say();
+  if (age) say(`_${age}_`);
+  if (age) say();
+  say(`- mana cost: \`${entry.mana || '—'}\``);
+  say(`- colour identity: \`${entry.identity || 'colourless'}\``);
+  say(`- commander legal: ${entry.commanderLegal ? 'yes' : 'no'}`);
+  say();
+  for (const face of entry.faces || []) {
+    say(`**${face.types || '(no type line)'}**`);
+    say();
+    say('```');
+    say(face.oracle || '(no rules text)');
+    say('```');
+    if (face.pt) say(`_${face.pt}_`);
+    if (face.loyalty) say(`_loyalty ${face.loyalty}_`);
+    say();
+  }
+}
+
+async function lookup(name, cache) {
+  const cached = cache ? CardText.lookup(cache, name) : null;
+  // No request at all when the cache has it. That is the point of the cache: a research
+  // pass reading forty cards makes no network calls, and works in a sandbox where every
+  // Scryfall host is refused at CONNECT.
+  if (cached) {
+    sayCached(cached, CardText.ageNote(cached.fetched));
+    return;
+  }
   const scry = await fromScryfall(name);
   // Forge is asked whenever Scryfall did not hand back a card. When Scryfall is
   // blocked that is the whole point; when it 404s it is still worth asking, because
   // a card Forge has under this name and Scryfall does not is a spelling this tool
   // can then show you rather than leave you to find.
   const faceList = scry.card ? null : await fromForge(name).catch(() => null);
-  const answer = verdict(scry, faceList);
+  const answer = verdict(scry, faceList, null);
 
   if (answer.source === 'forge') return sayForge(faceList, answer.why);
   if (answer.source === 'none') {
@@ -265,18 +306,28 @@ async function main() {
     process.exit(2);
   }
 
+  // Read once, not per card. Also worth reporting: "the cache answered" and "the cache is
+  // empty" look identical from the output of a single lookup, and the difference is whether
+  // the workflow has ever been run.
+  const cache = CardText.read();
+
   say('# Card text');
+  say();
+  if (cache.count) say(`_${cache.count} card(s) in \`card-text.json\`; anything in there is answered without a request._`);
+  else say('_No `card-text.json` yet — run the "Cache card text" workflow to fill it. Falling back to Scryfall, then Forge._');
   say();
   for (const name of names) {
     try {
-      await lookup(name);
+      await lookup(name, cache);
     } catch (err) {
       say(`### ${name}`);
       say(`Lookup failed: ${err.message}`);
       say();
     }
-    // Scryfall asks for 50-100ms between requests; this is well inside that.
-    await wait(200);
+    // Scryfall asks for 50-100ms between requests; this is well inside that. Skipped
+    // entirely when the cache answered, because there was no request to be polite about —
+    // which is what makes a forty-card pass instant rather than eight seconds.
+    if (!CardText.lookup(cache, name)) await wait(200);
   }
 
   const summary = process.env.GITHUB_STEP_SUMMARY;
