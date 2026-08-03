@@ -450,12 +450,19 @@ Two details worth keeping:
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
-- **Each option is one grid row, not a wrapping line.** *name · links · + Add*, where
-  the name column is the only one that gives: `minmax(0, 1fr)` plus an ellipsis. As a
-  wrapping flex row, a long name pushed its **+ Add** onto a second line — measured on
-  a phone, *The Destined White Mage* put its button 113px left of the row above it —
-  so some rows were one line, some were two, and no two buttons shared an edge. The
-  layout test measures the buttons' right edges and fails if they differ.
+- **Each option is a grid, never a wrapping line.** *name · links · + Add* on one row
+  where the column has room for it, and *name* above *links · + Add* where it does not
+  — a grid area either way, with the name column the only one that gives:
+  `minmax(0, 1fr)` plus an ellipsis. As a wrapping flex row, a long name pushed its
+  **+ Add** onto a second line — measured on a phone, *The Destined White Mage* put its
+  button 113px left of the row above it — so some rows were one line, some were two,
+  and no two buttons shared an edge. The difference between that and the two shapes
+  here is that the *width* decides, not the name: every option in a list changes
+  together, and the button is in the last column of both shapes, so the buttons share
+  an edge at every width. The layout test measures those edges and fails if they
+  differ. Which shape a column should be in, and why the threshold is where it is, is
+  in [Where the second number goes](#where-the-second-number-goes-and-why-it-is-a-second-number)
+  — it is the same measurement that decides where the *Compare* pill sits.
 - **The name is clipped, not shortened.** The full text stays in the DOM, so a screen
   reader reads it, find-in-page finds it, and copying the row copies all of it; only
   the drawing stops early, with `title` putting it back within reach of a pointer.
@@ -492,15 +499,22 @@ elements' document positions and fails if the links drop below the chips. Named 
 already names what fills it. A collapsed row's link covers its shared cards *plus* all
 the interchangeable ones, since that whole set is what the reader is choosing between.
 
-**The label and that link share one row, and the wording is cut to fit it.** On a
-phone the label's box is 298px and the link takes 108 of them, which leaves about
-180px for words. *"or any one of these 15 instead — same combos:"* needed two rows and
-pushed the link onto a line of its own, so it reads **"or these 15, same combos:"** —
-and *"or this one, same combos:"* when there is a single alternative, since *"or these
-1"* is not English. The link dropped *on Scryfall* for the same 70px; its `title` and
-accessible name still say where it goes. The layout test measures the label's line
-count and fails at two, and both halves of that budget are pinned: putting either the
-old wording or *on Scryfall* back fails the run.
+**The wording is cut to fit the column, and the link shares its row wherever that
+fits.** The label's own sentence is 163px and the link 108px. *"or any one of these 15
+instead — same combos:"* needed two rows on a phone all by itself, so it reads **"or
+these 15, same combos:"** — and *"or this one, same combos:"* when there is a single
+alternative, since *"or these 1"* is not English. The link dropped *on Scryfall* for
+70px of the same budget; its `title` and accessible name still say where it goes.
+
+What the layout test measures is the **sentence**, over its own text node rather than
+the label's box — because the box holds the link too, so a label reported as one line
+can still be *"or these 2, same / combo:"* with the link beside it. That is not a
+hypothetical: it is what happened when this block moved into the card's column, where
+233px is not enough for both. The sentence has to be one line at every width, which
+pins both halves of the budget — putting the old wording or *on Scryfall* back fails
+the run — and where the link sits is the column's decision, asserted against the
+column's own width in
+[Where the second number goes](#where-the-second-number-goes-and-why-it-is-a-second-number).
 
 - **The query is exact.** `DeckCombos.scryfallSetQuery()` builds
   `!"Blood Artist" or !"Zulaport Cutthroat" or …`. Without the `!`, Scryfall reads
@@ -1671,6 +1685,12 @@ assertions ride along inside the layout runs, for the same reason:
   card the group shows — the recommended one included — with every term exact.
 - **"Combos this unlocks"** must run smallest-first. The fixture's most-played combo
   is deliberately also its largest, so sorting on popularity alone fails the run.
+- **The divider down a suggestion row** is walked piece by piece — the gutter's
+  border and the left border of every block beside it — and each has to be drawn, at
+  the same x, starting where the piece above ended. It is one line on screen and
+  three or four boxes in the CSS, none of which knows about the others. The same run
+  holds the choice of card to the shape its column's width calls for, at both ends of
+  the range: 233px of column on a phone, 454–1042px everywhere else.
 - **The combo map** is entirely geometry, and every way it can break is invisible:
   a graph with every node at one point, or with nodes placed outside the box it is
   drawn in, is valid SVG and an empty panel to look at. So the run reads the real
@@ -2916,6 +2936,8 @@ COMBOS  │ EDHREC · Scryfall
   +8    │ Kitchen Finks                 ← as a suggestion: what it would add
 COMBOS  │ EDHREC · Scryfall · + Add to deck
   3+5   │ 1 × 2-card   7 × 3-card
+        │ ▾ Combos this unlocks         ← the fold is the card's, not the row's
+        │     Kitchen Finks + Sadistic Glee + Scurry Oak
 ```
 
 The gutter carries the **total** because these are ranked columns and the question
@@ -2932,6 +2954,45 @@ distinct right edges per panel and fails on more than one, which is the only way
 claim can be checked — it is invisible in a screenshot of a single row. The column
 also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
 was a second, weaker copy of the same ordering.
+
+**The divider runs the whole row, and everything below the numbers is on the card's
+side of it.** *Combos this unlocks* used to start under the gutter, level with a number
+it is the expansion of, which made it read as a third thing the row was about rather
+than the list behind the total. It starts where the name, the links and the size pills
+start now, and so do the interchangeable cards where a row offers them, and the line
+between the two columns is carried down past all of it — so everything to the right of
+that line is one card's worth of reading, and every row in a panel has one shape
+whether it offers a choice of card or not.
+
+The line is a border on each of those blocks: the gutter's right one, stretched to the
+bottom of the card's column, and a left one on each block below, reaching back across
+the column gap with a negative margin to land on exactly the same pixel as the piece
+above it. The blocks' own spacing is padding rather than margin for the same reason — a
+margin would open a hole in the line at both ends of the block. That is a fact about
+three or four boxes agreeing and nothing in the CSS states it, so the layout test walks
+the pieces in order and reports the block that stepped sideways, lost its border, or
+left a gap. It earned that immediately: the gap is `.55rem` rather than `.7rem` below
+480px, the disclosure was still reaching back `.7rem`, and the line was split by the
+.15rem of difference at phone width and nowhere else. The gap is one variable now,
+which is what makes the two impossible to override apart.
+
+**The card's column is narrower than the row, and the choice of card had to be measured
+against it rather than assumed into it.** At 390px that column is 233px of the panel's
+334px. `or these 2, same combo:` is 163px and its *Compare all 3* pill 108px, so on one
+line the pill broke the **sentence** — `or these 2, same / combo:` — and a card name
+beside its two links and its *+ Add*, which take 190px between them whatever is left,
+was down to 43px: every alternative drawn as an unreadable stub. So below 420px of
+column the pill takes its own line and each entry takes two, name above actions; above
+it, both are back on one line. One container query decides both, because one width
+decides both.
+
+Neither shape is a wrapping row, which is the failure this replaced long ago and must
+not come back: *every* entry changes shape at the threshold, not the ones whose names
+happen to be long, and the *+ Add* stays in the last grid column either way — so all
+of them share a right edge at every width, which the layout test asserts along with
+which shape the column's width should have produced. The narrow shape trades a line of
+height per alternative for names that say which card they are; the assertion that no
+name is clipped once it has the column to itself is what holds that trade honest.
 
 The width is measured rather than chosen. Four-digit totals are real — Hammerhead
 again — so the gutter has to hold `0+1889`, and at 3.4rem that clipped. Widening it

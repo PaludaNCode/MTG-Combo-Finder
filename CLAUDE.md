@@ -288,6 +288,15 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   local work, `npm run verify` and `npm run test:ui` all serve this page unstamped.
   `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
   so the test and the deploy cannot disagree — they did, for a while.
+- **The line down a suggestion row is not one element.** It is the gutter's
+  `border-right` plus a `border-left` on every block beside it, each reaching back over
+  the column gap with a negative margin to meet the piece above. So the gap is a
+  variable (`--col-gap`) rather than a number, spacing inside those blocks is padding
+  and never margin, and a new block in the card's column has to carry its own piece or
+  the line stops at it. `npm run verify` walks the pieces and names the one that broke
+  it. The same rule decides two shapes for the interchangeable cards, keyed on the
+  card's column rather than the viewport — the README's *Where the second number goes*
+  has the measurements.
 - **Colour is a token, and `opacity` is not a way to make one quieter.** Opacity is
   applied after the colour is chosen, so it spends a contrast budget already
   allocated, invisibly — four rules did exactly that and three were a couple of
