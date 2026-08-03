@@ -1,0 +1,76 @@
+{
+ "generated": "2026-08-03",
+ "count": 5,
+ "cards": {
+  "Bartolomé del Presidio": {
+   "fetched": "2026-08-03",
+   "name": "Bartolomé del Presidio",
+   "mana": "{W}{B}",
+   "identity": "BW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Vampire Knight",
+     "oracle": "Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio.",
+     "pt": "2/1"
+    }
+   ]
+  },
+  "Bloodflow Connoisseur": {
+   "fetched": "2026-08-03",
+   "name": "Bloodflow Connoisseur",
+   "mana": "{2}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Vampire",
+     "oracle": "Sacrifice a creature: Put a +1/+1 counter on this creature.",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Samut, Tyrant Smasher": {
+   "fetched": "2026-08-03",
+   "name": "Samut, Tyrant Smasher",
+   "mana": "{2}{R/G}{R/G}",
+   "identity": "GR",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Planeswalker — Samut",
+     "oracle": "Creatures you control have haste.\n−1: Target creature gets +2/+1 and gains haste until end of turn. Scry 1.",
+     "loyalty": "5"
+    }
+   ]
+  },
+  "Smellerbee, Rebel Fighter": {
+   "fetched": "2026-08-03",
+   "name": "Smellerbee, Rebel Fighter",
+   "mana": "{3}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Rebel Ally",
+     "oracle": "First strike\nOther creatures you control have haste.\nWhenever Smellerbee attacks, you may discard your hand. If you do, draw cards equal to the number of attacking creatures.",
+     "pt": "3/3"
+    }
+   ]
+  },
+  "Yahenni, Undying Partisan": {
+   "fetched": "2026-08-03",
+   "name": "Yahenni, Undying Partisan",
+   "mana": "{2}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Aetherborn Vampire",
+     "oracle": "Haste\nWhenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni.\nSacrifice another creature: Yahenni gains indestructible until end of turn.",
+     "pt": "2/2"
+    }
+   ]
+  }
+ }
+}
