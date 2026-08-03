@@ -508,9 +508,49 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .row-split .official { color: var(--muted); }
 .row-split .ours { color: var(--accent); }
+/* Both readings are in the markup and this shows the compact one. See the
+   container query below for the other, and render-rows.js for why both exist. */
+.row-split .word,
+.row-split .dot { display: none; }
 /* A sign is not a numeral. At the digits' size "+24" alone needed 63px of a 54px
    column, which is what pushed the long rows out of it. */
 .sign { color: var(--muted); font-size: .62em; padding: 0 .05em; }
+
+/* ---- the same row where it has room to spell the split out ----
+ *
+ * Keyed on the width of the row's own column, not the viewport, because the two
+ * do not track each other here: the results column is 704px wide at a 768px
+ * viewport and 442px at 900px, where the two-column shell starts and hands 370px
+ * of the window to the decklist. A `min-width: 900px` media query would therefore
+ * spell the words out in the *narrower* of those two and not the wider one. The
+ * row's column is the thing that decides, so the row's column is what is asked.
+ *
+ * 560px is measured: at 566px of column — a 1024px window — a 12rem gutter still
+ * leaves the card name 331px, which is more than the 248px it gets on a phone, so
+ * nothing is worse off than the layout this replaces. Below that the gutter would
+ * be taking a third of the row to say in words what "17+7" says in five
+ * characters.
+ *
+ * 12rem is measured too: "0 official · 1889 unofficial" is 177px, and Hammerhead
+ * makes that a real row rather than a hypothetical one. `white-space: normal`
+ * here is the safety valve — a row with a four-digit half on *both* sides would
+ * wrap to two lines instead of running out of its column and over the card name. */
+#pieces .panel-body,
+#suggestions .panel-body { container: rows / inline-size; }
+
+@container rows (min-width: 560px) {
+  .combo.suggestion { grid-template-columns: 12rem minmax(0, 1fr); }
+  .row-split {
+    white-space: normal;
+    text-align: right;
+  }
+  .row-split .word,
+  .row-split .dot { display: inline; }
+  /* The + was standing in for the word "and". With the words back, it would be
+     "17 official + 7 unofficial", which reads as arithmetic on two labelled
+     quantities. The dot is the separator the split line used before this. */
+  .row-split > .sign { display: none; }
+}
 
 /* One thing per line down the card's column: the name, then everywhere you can
    go with it, then what its combos cost to assemble. */
