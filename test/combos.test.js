@@ -203,3 +203,21 @@ test('comboPieces: size still leads, whatever the names do', () => {
   const ids = comboPieces(published, []).find((p) => p.card === 'Carrion Feeder').combos.map((v) => v.id);
   assert.deepStrictEqual(ids, ['2', '1']);
 });
+
+// The list-order half of the same case: once the axis is settled, the four rows of a 2×2
+// sort into two adjacent pairs rather than into two blocks with other rows between them.
+test('comboPieces: a 2x2 of interchangeable groups sorts into two adjacent pairs', () => {
+  const published = [
+    variant('1', 'Carrion Feeder', 'Herd Baloth', 'Necrosynthesis'),
+    variant('2', 'Carrion Feeder', 'Kitchen Finks', 'Archangel of Thune'),
+    variant('3', 'Carrion Feeder', 'Scurry Oak', 'Necrosynthesis'),
+    variant('4', 'Carrion Feeder', 'Herd Baloth', 'Sadistic Glee'),
+    variant('5', 'Carrion Feeder', 'Kitchen Finks', 'Heliod, Sun-Crowned'),
+    variant('6', 'Carrion Feeder', 'Scurry Oak', 'Sadistic Glee'),
+  ];
+  const ids = comboPieces(published, []).find((p) => p.card === 'Carrion Feeder').combos.map((v) => v.id);
+  const pair = (a, b) => Math.abs(ids.indexOf(a) - ids.indexOf(b)) === 1;
+  assert.ok(pair('1', '4'), `the Herd Baloth pair is split: ${ids.join(', ')}`);
+  assert.ok(pair('3', '6'), `the Scurry Oak pair is split: ${ids.join(', ')}`);
+  assert.ok(pair('2', '5'), `the Kitchen Finks pair is split: ${ids.join(', ')}`);
+});

@@ -211,3 +211,54 @@ test('interchangeableIn: a lead-first list still sends the card that changes las
     assert.ok(line.includes(' + Warren Soultrader + '), `"${line}" moved the shared card`);
   });
 });
+
+// A row can sit in two families at once — "the lead + one of these + one of those" —
+// and Carrion Feeder's real list holds a 2×2 of them: {Herd Baloth, Scurry Oak} against
+// {Necrosynthesis, Sadistic Glee}. Every one of the four rows can be read as either
+// dimension varying, so something has to pick an axis for the block. Choosing per row
+// let two of the four pick the other one: the Scurry Oak rows sent Scurry Oak last while
+// the Herd Baloth rows sent it middle, and the block came apart. A family claims the rows
+// it orders, so the axis is settled once and all four rows agree on it.
+test('interchangeableIn: a row in two families is ordered on one axis, and the block agrees', () => {
+  const lead = 'Carrion Feeder';
+  const grid = [
+    variant('1', [lead, 'Herd Baloth', 'Necrosynthesis'], ['Infinite tokens']),
+    variant('2', [lead, 'Herd Baloth', 'Sadistic Glee'], ['Infinite tokens']),
+    variant('3', [lead, 'Scurry Oak', 'Necrosynthesis'], ['Infinite tokens']),
+    variant('4', [lead, 'Scurry Oak', 'Sadistic Glee'], ['Infinite tokens']),
+  ];
+  const trails = interchangeableIn(grid);
+  const drawn = grid.map((v) => orderComboNames(
+    v.uses.map((u) => u.card.name), { lead, trail: trails.get(v) }
+  ));
+
+  // Every row leads with the card the list is under, names its axis card second, and
+  // ends on the card that changes along that axis.
+  for (const row of drawn) {
+    assert.strictEqual(row[0], lead);
+    assert.ok(['Herd Baloth', 'Scurry Oak'].includes(row[1]),
+      `"${row.join(' + ')}" put the changing card in the middle`);
+    assert.ok(['Necrosynthesis', 'Sadistic Glee'].includes(row[2]),
+      `"${row.join(' + ')}" did not end on the card that changes`);
+  }
+  // And the axis is the same one for the whole block, rather than each pair choosing.
+  assert.deepStrictEqual(drawn.map((r) => r[1]).sort(),
+    ['Herd Baloth', 'Herd Baloth', 'Scurry Oak', 'Scurry Oak']);
+});
+
+// The other half of claiming: a family left holding one unclaimed row is not a family.
+// Ordering that row against siblings drawn elsewhere would send a card last with nothing
+// beside it to compare against, which is noise dressed as a rule.
+test('interchangeableIn: a family down to one unclaimed row does not order it', () => {
+  const rows = [
+    // A family of three on [A], which claims all three...
+    variant('1', ['A', 'x'], ['Infinite mill']),
+    variant('2', ['A', 'y'], ['Infinite mill']),
+    variant('3', ['A', 'z'], ['Infinite mill']),
+    // ...leaving this one crossing it on [x] with only itself unclaimed.
+    variant('4', ['B', 'x'], ['Infinite mill']),
+  ];
+  const trails = interchangeableIn(rows);
+  assert.ok(trails.get(rows[0]), 'the family of three still orders its rows');
+  assert.strictEqual(trails.get(rows[3]), undefined, 'a lone leftover row is left alphabetical');
+});

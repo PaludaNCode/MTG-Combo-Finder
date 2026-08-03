@@ -396,24 +396,39 @@
       });
     });
 
-    // Biggest family first, so a row that differs from one neighbour by card X and
-    // from another by card Y takes the version that lines it up with more rows. Ties
-    // break on the key, so the answer never depends on iteration order. Unlike
-    // grouping, a row is not consumed by the family that claims it: nothing here is
-    // merged, so the only question is which set of siblings it is ordered against.
+    // Biggest family first, and a family **claims** the rows it orders, so each row is
+    // ordered against one set of siblings and every member of that set agrees which card
+    // is the one that changes. Ties break on the key, so the answer never depends on
+    // iteration order.
+    //
+    // Claiming is the part that matters, and the case that needs it is a row sitting in
+    // two families at once — "the lead + one of these + one of those". Carrion Feeder's
+    // list holds a 2×2 of them: {Herd Baloth, Scurry Oak} against {Necrosynthesis,
+    // Sadistic Glee}, four rows, each of which could be read as either dimension varying.
+    // Choosing per row without claiming let two of the four pick the *other* axis — the
+    // Scurry Oak rows sent Scurry Oak last while the Herd Baloth rows sent it middle — so
+    // the block came apart into two rows here and two rows four places down.
+    //
+    // Claiming picks one axis for the whole block: the first family takes its rows, and
+    // the families that cross it are then left with one unclaimed row each, which is not
+    // a family any more and is skipped. The rows that remain are claimed by the next
+    // family along the same axis, so all four read "lead + shared + the one that changes"
+    // and sort into one block of two pairs.
     const trails = new Map();
-    const claimed = new Map();
+    const taken = new Set();
     const order = [...buckets.entries()].sort(
       (a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1)
     );
     for (const [, members] of order) {
-      // One row is not a family: there is nothing it differs from, so nothing to send
-      // last, and the row stays alphabetical.
-      if (members.length < 2) continue;
-      const choices = members.map((m) => m.name);
-      for (const m of members) {
-        if ((claimed.get(m.index) || 0) >= members.length) continue;
-        claimed.set(m.index, members.length);
+      const free = members.filter((m) => !taken.has(m.index));
+      // One row is not a family: there is nothing left beside it to line up against, so
+      // it stays alphabetical rather than trailing a card against rows drawn elsewhere.
+      if (free.length < 2) continue;
+      // The cards that vary among the rows this family will actually show together —
+      // not among the members it lost, whose card is being sent last somewhere else.
+      const choices = free.map((m) => m.name);
+      for (const m of free) {
+        taken.add(m.index);
         trails.set(list[m.index], choices);
       }
     }

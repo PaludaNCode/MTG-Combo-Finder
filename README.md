@@ -249,6 +249,17 @@ lead-first and then alphabetical, and the card that changed landed mid-line on e
 place each time. That is the one place a reader compares rows most closely, and it was the
 one place the rule was off.
 
+**A row can sit in two families at once** — *the lead + one of these + one of those* — and
+then something has to pick which axis the block is read along. Carrion Feeder's list holds
+a 2×2 of them: `{Herd Baloth, Scurry Oak}` against `{Necrosynthesis, Sadistic Glee}`, four
+rows, each of which can be read as either dimension varying. Choosing per row let two of
+the four pick the other axis — the Scurry Oak rows sent Scurry Oak *last* while the Herd
+Baloth rows sent it *middle* — so the block came apart into two rows in one place and two
+rows four positions down. A family therefore **claims** the rows it orders, biggest first:
+the families crossing it are left holding one unclaimed row each, which is no longer a
+family and is skipped, and the rest are claimed along the same axis. All four rows then
+read *lead + shared + the one that changes* and sort into one block of two pairs.
+
 Which rows count as a family, for ordering, is decided **from the cards alone** —
 deliberately unlike [collapsing](#collapsing-interchangeable-cards), which also requires
 the same results and must: merging two combos that do different things would say one
