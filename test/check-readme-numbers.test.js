@@ -66,6 +66,64 @@ test('a number spelled as a word is checked too', () => {
   assert.match(check('and the one rule applies', [Object.assign({}, spelled, { is: 2 })])[0], /says one/);
 });
 
+// ---- a number restated inside its own sentence -------------------------------
+//
+// The hole this closes: an anchor checks the instance it matched and nothing else,
+// and this README's normal style is to give a figure in bold and then refer back to
+// it. `main` once carried "**264 candidates have been read** … and which 183 is no
+// longer a matter of reading the prose above" — the sentence disagreeing with itself
+// by 81 — and the checker passed, correctly by its own rules, because the second
+// number is not inside the anchor.
+
+test('a number restated in the same sentence is checked too', () => {
+  const problems = check('All 63 widgets are here, and which 62 is not in doubt.', [claim()]);
+  assert.strictEqual(problems.length, 1);
+  assert.match(problems[0], /restates it as "which 62"/);
+  assert.match(problems[0], /widgets\.js has 63/);
+});
+
+test('a restatement that agrees is not a problem', () => {
+  assert.deepStrictEqual(
+    check('All 63 widgets are here, and which 63 is not in doubt.', [claim()]),
+    []
+  );
+});
+
+// The whole reason the scan is grammatical rather than positional. A sentence is
+// free to carry other numbers — 137 verified against 25 derived, or a table row with
+// a before and an after column — and flagging those would make the check unusable.
+test('an unrelated number in the same sentence is left alone', () => {
+  assert.deepStrictEqual(
+    check('All 63 widgets are here, 40 of them blue and 23 of them red.', [claim()]),
+    []
+  );
+  assert.deepStrictEqual(
+    check('| Widgets | 148 | All 63 widgets | 12 |', [claim()]),
+    []
+  );
+});
+
+// The README wraps mid-sentence, so a single newline cannot end a sentence — the
+// drift that shipped sat on the line after its anchor. A blank line does end one.
+test('a restatement across a wrapped line is still the same sentence', () => {
+  const wrapped = 'All 63 widgets are here, and\nwhich 62 is not in doubt.';
+  assert.match(check(wrapped, [claim()])[0], /restates it as "which 62"/);
+});
+
+test('a number in the next paragraph is not a restatement', () => {
+  assert.deepStrictEqual(
+    check('All 63 widgets are here.\n\nAnd which 62 is a separate matter.', [claim()]),
+    []
+  );
+});
+
+// A claim written as a word has no digits to restate, and running the scan on it
+// would compare "the one rule" against every "all 3" in the paragraph.
+test('a spelled-out claim is not scanned for restatements', () => {
+  const spelled = claim({ what: 'rules', is: 1, find: /the (one) rule/g, spelled: { one: 1 } });
+  assert.deepStrictEqual(check('the one rule, and all 7 of those cases', [spelled]), []);
+});
+
 test('several broken claims are all reported, not just the first', () => {
   const problems = check('All 1 widgets. All 2 gadgets.', [
     claim(),

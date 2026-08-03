@@ -500,6 +500,10 @@ test('a real deck: the unofficial rows it unlocks are exactly these', () => {
     'Animation Module + Phyrexian Altar + Heroic Feast + Lunarch Veteran // Luminous Phantom',
     'Basking Broodscale + Archangel of Thune + Aunt May',
     'Basking Broodscale + Archangel of Thune + Elas il-Kor, Sadistic Pilgrim',
+    // The one row the Broodscale sweep added that this deck can cast. The other 37
+    // want cards it does not hold — which is the expected shape: the sweep looked
+    // across the whole database, not across this deck.
+    "Basking Broodscale + Ghave, Guru of Spores + Ashnod's Altar",
     'Basking Broodscale + Heliod, Sun-Crowned + Aunt May',
     'Basking Broodscale + Heliod, Sun-Crowned + Elas il-Kor, Sadistic Pilgrim',
     'Basking Broodscale + Heliod, Sun-Crowned + Lunarch Veteran // Luminous Phantom',

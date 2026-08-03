@@ -32,6 +32,7 @@
 const fs = require('node:fs');
 const { COMBOS, STAND_INS } = require('../unofficial.js');
 const { nameKey, decode } = require('../combos.js');
+const { PASSES } = require('../research-log.js');
 
 const COMBOS_URL = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
 
@@ -140,7 +141,13 @@ function checkStandIns(data, rules) {
 //                    makes it — being in no combo at all is the entire reason he
 //                    needs a stand-in rule — and the day it stops being true is the
 //                    day the rule can go.
-function checkCardIds(cards, rows, rules) {
+//
+// research-log.js records the same thing for every card a pass swept, and for the
+// same reason, so it is checked here too — nothing else could. Seven of its ids were
+// wrong when this was first pointed at them: Camellia's 3868 was Prosperous
+// Partnership, Cauldron Familiar's 1475 was One with the Kami. Nothing had noticed,
+// because an id in the log is never dereferenced by anything that runs.
+function checkCardIds(cards, rows, rules, passes) {
   if (!cards) return [];
   const problems = [];
   const look = (where, name, id) => {
@@ -170,6 +177,11 @@ function checkCardIds(cards, rows, rules) {
   for (const rule of rules || []) {
     look(`stand-in ${rule.card}`, rule.card, rule.cardId);
     for (const src of (rule.for || [])) look(`stand-in ${rule.card}`, src.card, src.cardId);
+  }
+  for (const pass of passes || []) {
+    (pass.cards || []).forEach((name, i) => {
+      look(`research log "${pass.subject}"`, name, (pass.cardIds || [])[i]);
+    });
   }
   return problems;
 }
@@ -206,7 +218,7 @@ async function main() {
   const { data, cards } = await load(process.argv[2]);
   const { problems, graduated, counted } = check(data, COMBOS);
   const rules = checkStandIns(data, STAND_INS);
-  problems.push(...checkCardIds(cards, COMBOS, STAND_INS));
+  problems.push(...checkCardIds(cards, COMBOS, STAND_INS, PASSES));
 
   say('# Unofficial rows against the published data');
   say();

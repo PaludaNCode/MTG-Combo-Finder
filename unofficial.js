@@ -3459,6 +3459,1756 @@
         'Infinitely large creature until end of turn',
       ],
     },
+
+    // ---- Basking Broodscale, the 38 that survived reading -----------------------
+    //
+    // The Broodscale sweep had been sitting at kept: 0 with a note admitting the
+    // number was provisional — 148 candidates proposed, 12 read, 136 nobody had
+    // opened. Reading the other 136 killed 108 of them on five facts and left these
+    // 38, so the zero was not a well-covered card. It was an unfinished pass.
+    //
+    // Broodscale, Scurry Oak and Herd Baloth share a sentence — "whenever one or more
+    // +1/+1 counters are put on this creature, you may create a token" — and differ in
+    // what the token *is*. Everything below is a loop that never asks. The five facts
+    // that killed the other 108 are all the opposite case, and they are in
+    // research-log.js with their counts:
+    //
+    //   the Spawn is 0/1 where the Squirrel is 1/1   38  power, and "a 1/1 creature"
+    //   Scurry Oak has evolve and Broodscale has not 38  the counter's only source
+    //   Treebeard targets a Halfling or Treefolk     27  Broodscale is an Eldrazi Lizard
+    //   the loop reads a GREEN creature entering      3  the Spawn is colourless
+    //   Ravenous Baloth sacrifices a BEAST            2  the Spawn is an Eldrazi Spawn
+    //
+    // Two more are held back rather than written, and the reason is worth keeping: the
+    // Arbaaz Mir pair. Spellbook's own step list has a token triggering him, and both
+    // Forge and XMage give him "another NONTOKEN historic permanent". The swap is
+    // sound either way — Broodscale and Scurry Oak both make tokens, so whatever is
+    // true of the published version is true of ours — but a row asserting a loop that
+    // cannot be traced is not a row this file writes.
+    //
+    // ---- The counter is moved by hand, and any creature will do ----------------
+    {
+      cards: ['Basking Broodscale', 'Ghave, Guru of Spores', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2034-4186-5189',
+        cards: ['Ghave, Guru of Spores', 'Scurry Oak', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Ghave spends {1} and a creature '
+        + 'to put the counter on, and {1} and a counter to make the creature — so the loop only '
+        + 'asks the engine for a body, and takes it back the same turn. The Eldrazi Spawn is a '
+        + 'body, and it also taps itself for {C}, which the Squirrel does not: Ashnod’s Altar has '
+        + 'less to do here than in the published version.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- A Food is made alongside the token, and the Food is the mana ----------
+    {
+      cards: ['Basking Broodscale', 'Greta, Sweettooth Scourge', 'Night of the Sweets\' Revenge', 'Peregrin Took'],
+      confidence: 'verified',
+      from: {
+        id: '4186-4321-6451-6934',
+        cards: ['Greta, Sweettooth Scourge', 'Night of the Sweets\' Revenge', 'Peregrin Took', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Peregrin Took adds a Food to '
+        + 'whatever token the engine creates, Night of the Sweets’ Revenge taps that Food for '
+        + '{G}, and Greta sacrifices the same tapped Food to put the next counter on. Nothing in '
+        + 'the cycle reads the engine’s own token at all — it only has to be a token, so that '
+        + 'Took’s replacement effect sees it.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Greta, Sweettooth Scourge', 'Jaheira, Friend of the Forest', 'Peregrin Took'],
+      confidence: 'verified',
+      from: {
+        id: '1563-4186-4321-6934',
+        cards: ['Greta, Sweettooth Scourge', 'Jaheira, Friend of the Forest', 'Peregrin Took', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same cycle with Jaheira '
+        + 'supplying the {G} instead: she gives every token “{T}: Add {G}”, and the Food Peregrin '
+        + 'Took adds is a token and an artifact, so it taps the turn it arrives. Greta then eats '
+        + 'it. Again the engine’s own token is never read.',
+      produces: [
+        'Infinite ETB',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+
+    // ---- Scry is the trigger, and a scry does not care what entered ------------
+    {
+      cards: ['Basking Broodscale', 'Arwen Undómiel', 'Season of Growth'],
+      confidence: 'verified',
+      from: {
+        id: '1920-2359-3197',
+        cards: ['Arwen Undómiel', 'Season of Growth', 'Herd Baloth'],
+      },
+      swap: { out: 'Herd Baloth', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Season of Growth scries on *a '
+        + 'creature* entering with no colour or type clause, and Arwen turns each scry into a '
+        + 'counter on target creature. Broodscale is a legal target and the Spawn is a creature, '
+        + 'which is the whole of what this loop asks.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Elrond, Master of Healing', 'Season of Growth'],
+      confidence: 'verified',
+      from: {
+        id: '2359-3197-4167',
+        cards: ['Elrond, Master of Healing', 'Season of Growth', 'Herd Baloth'],
+      },
+      swap: { out: 'Herd Baloth', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same loop with Elrond '
+        + 'reading the scry: one card looked at makes X = 1, so one target creature gets the '
+        + 'counter. Broodscale is that target.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Arwen Undómiel', 'Viscera Seer'],
+      confidence: 'verified',
+      from: {
+        id: '1920-2292-4186',
+        cards: ['Arwen Undómiel', 'Scurry Oak', 'Viscera Seer'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Viscera Seer scries by eating '
+        + 'the token, Arwen turns the scry into the next counter. The outlet is free and takes '
+        + 'any creature, and the Spawn is one.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Arwen Undómiel', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-1920-4186',
+        cards: ['Arwen Undómiel', 'Scurry Oak', 'Woe Strider'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Woe Strider, '
+        + 'whose “sacrifice another creature” takes the token the engine just made. Free, '
+        + 'repeatable, and indifferent to what it eats.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+
+    // ---- Proliferate, which reads a counter already there and nothing else -----
+    {
+      cards: ['Basking Broodscale', 'Xavier Sal, Infested Captain', 'Thornbite Staff'],
+      confidence: 'verified',
+      from: {
+        id: '2178-3143-4186',
+        cards: ['Xavier Sal, Infested Captain', 'Scurry Oak', 'Thornbite Staff'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Xavier Sal eats the token to '
+        + 'proliferate, Thornbite Staff untaps him on the death. Proliferate adds a counter to '
+        + 'anything that already has one, so the engine only has to be holding a +1/+1 counter — '
+        + 'and Broodscale’s own adapt puts the first one on.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite copies of creature tokens you control',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite proliferate',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Tainted Observer', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2034-3517-4186',
+        cards: ['Tainted Observer', 'Ashnod\'s Altar', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Tainted Observer proliferates '
+        + 'when *another creature you control enters*, for {2}. The Spawn is another creature '
+        + 'entering, and it sacrifices itself for {C} on top of the {C}{C} Ashnod’s Altar pays — '
+        + 'this loop is cheaper for Broodscale than for the Oak.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite proliferate',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Tainted Observer', 'Mana Echoes'],
+      confidence: 'verified',
+      from: {
+        id: '2440-3517-4186',
+        cards: ['Tainted Observer', 'Mana Echoes', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Mana Echoes pays for the '
+        + 'proliferate, counting creatures that share a type with the one entering. Every Eldrazi '
+        + 'Spawn shares Eldrazi with Broodscale and with every Spawn before it, so the count '
+        + 'climbs exactly as the Squirrels’ does.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite proliferate',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Plaguemaw Beast', 'Intruder Alarm'],
+      confidence: 'verified',
+      from: {
+        id: '1636-3654-4186',
+        cards: ['Plaguemaw Beast', 'Intruder Alarm', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Plaguemaw Beast taps and eats '
+        + 'the token to proliferate; Intruder Alarm untaps him when the next token enters. Both '
+        + 'halves read “a creature”, with no clause the Spawn fails.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite proliferate',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Plaguemaw Beast', 'Thornbite Staff'],
+      confidence: 'verified',
+      from: {
+        id: '2178-3654-4186',
+        cards: ['Plaguemaw Beast', 'Thornbite Staff', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same, untapped by Thornbite '
+        + 'Staff off the death rather than by Intruder Alarm off the entry.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite proliferate',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Roalesk, Apex Hybrid', 'Blade of Shared Souls', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2034-3008-3048-4186',
+        cards: ['Roalesk, Apex Hybrid', 'Blade of Shared Souls', 'Scurry Oak', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Blade of Shared Souls makes a '
+        + 'creature a copy of Roalesk, the legend rule kills it, and its death proliferates twice '
+        + '— two counter events, two tokens. Proliferate is indifferent to what the engine makes; '
+        + 'Ashnod’s Altar pays the equip out of it.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite proliferate',
+        'Infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- The token entering is a life gained, and the life is the counter ------
+    {
+      cards: ['Basking Broodscale', 'Light of Promise', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'verified',
+      from: {
+        id: '338-1939-4186',
+        cards: ['Light of Promise', 'Lunarch Veteran // Luminous Phantom', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Lunarch Veteran gains a life on '
+        + '*another creature you control* entering, and Light of Promise turns life gained into '
+        + 'counters on the creature it enchants. Enchant Broodscale and the Spawn closes it — '
+        + 'neither card reads a colour, a type or a power.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Lunarch Veteran // Luminous Phantom', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '1939-4017-4186',
+        cards: ['Lunarch Veteran // Luminous Phantom', 'Sunbond', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Sunbond is Light of Promise '
+        + 'with a different name and the same sentence, so the loop is the same one.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Daxos, Blessed by the Sun', 'Spider-Man, Peter Parker'],
+      confidence: 'verified',
+      from: {
+        id: '671-4186-6824',
+        cards: ['Daxos, Blessed by the Sun', 'Scurry Oak', 'Spider-Man, Peter Parker'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Daxos gains a life on another '
+        + 'creature entering *or dying*, and Spider-Man turns life gained into a counter on '
+        + 'target creature. Broodscale is the target; the Spawn is the creature. Nothing here '
+        + 'reads what kind.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Valentin, Dean of the Vein // Lisette, Dean of the Root', 'Spike Feeder', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2290-3097-3197',
+        cards: ['Valentin, Dean of the Vein // Lisette, Dean of the Root', 'Spike Feeder', 'Herd Baloth', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Herd Baloth', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Spike Feeder trades a counter '
+        + 'for 2 life, Lisette pays {1} to turn any life gained into a counter on *each* creature '
+        + 'you control — Broodscale among them — and Ashnod’s Altar makes the {1} out of the '
+        + 'token. “Each creature you control” is as type-blind as a clause gets.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Valentin, Dean of the Vein // Lisette, Dean of the Root', 'Spike Feeder', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2290-3097-4050-4186',
+        cards: ['Valentin, Dean of the Vein // Lisette, Dean of the Root', 'Spike Feeder', 'Scurry Oak', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same loop paid for by '
+        + 'Phyrexian Altar instead. Its one mana of any colour is more than the {1} Lisette asks '
+        + 'for, so the colourless restriction that kills so many Ashnod’s Altar swaps does not '
+        + 'arise.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+
+    // ---- Peregrin Took’s Food is an artifact, and an artifact entering is the life ----
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Heliod, Sun-Crowned', 'Teething Wurmlet'],
+      confidence: 'verified',
+      from: {
+        id: '1274-2685-4186-4321',
+        cards: ['Peregrin Took', 'Heliod, Sun-Crowned', 'Teething Wurmlet', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Peregrin Took adds a Food to '
+        + 'the token creation, Teething Wurmlet gains a life on the artifact entering, Heliod '
+        + 'turns that into a counter on target creature. The engine’s own token is never read — '
+        + 'only the Food is — so the Spawn does the Squirrel’s job.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Leonin Elder', 'Heliod, Sun-Crowned'],
+      confidence: 'verified',
+      from: {
+        id: '475-1274-4186-4321',
+        cards: ['Peregrin Took', 'Leonin Elder', 'Heliod, Sun-Crowned', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same cycle with Leonin '
+        + 'Elder gaining the life off the Food.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Cleric Class', 'Leonin Elder'],
+      confidence: 'verified',
+      from: {
+        id: '104-475-4186-4321',
+        cards: ['Peregrin Took', 'Cleric Class', 'Leonin Elder', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same, with Cleric Class at '
+        + 'level 2 turning the life into the counter instead of Heliod. It reads “target creature '
+        + 'you control”, which Broodscale is.',
+      produces: [
+        'Infinite card draw',
+        'Infinite creature tokens',
+        'Infinite draw triggers',
+        'Infinite ETB',
+        'Infinite Food tokens',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Archangel of Thune', 'Teething Wurmlet'],
+      confidence: 'verified',
+      from: {
+        id: '2685-2919-4186-4321',
+        cards: ['Peregrin Took', 'Archangel of Thune', 'Teething Wurmlet', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Archangel of Thune in the '
+        + 'counter slot: it puts one on *each* creature you control, so the engine gets one '
+        + 'whatever else is on the board.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Archangel of Thune', 'Leonin Elder'],
+      confidence: 'verified',
+      from: {
+        id: '475-2919-4186-4321',
+        cards: ['Peregrin Took', 'Archangel of Thune', 'Leonin Elder', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same pair with Leonin Elder '
+        + 'gaining the life.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Pactdoll Terror', 'Heliod, Sun-Crowned'],
+      confidence: 'verified',
+      from: {
+        id: '1274-4186-4321-6830',
+        cards: ['Peregrin Took', 'Pactdoll Terror', 'Heliod, Sun-Crowned', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Pactdoll Terror gains the life '
+        + 'on “this creature or another artifact you control” entering — the Food again — and '
+        + 'Heliod pays it back as a counter.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite lifeloss',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Peregrin Took', 'Archangel of Thune', 'Pactdoll Terror'],
+      confidence: 'verified',
+      from: {
+        id: '2919-4186-4321-6830',
+        cards: ['Peregrin Took', 'Archangel of Thune', 'Pactdoll Terror', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Archangel of '
+        + 'Thune reading the life.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Infinite Food tokens',
+        'Infinite lifeloss',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+
+    // ---- Biotransference makes the token itself the artifact -------------------
+    {
+      cards: ['Basking Broodscale', 'Archangel of Thune', 'Biotransference', 'Teething Wurmlet'],
+      confidence: 'verified',
+      from: {
+        id: '549-2685-2919-4186',
+        cards: ['Archangel of Thune', 'Biotransference', 'Teething Wurmlet', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Biotransference makes every '
+        + 'creature you control an artifact, so the token the engine creates is an artifact '
+        + 'entering and Teething Wurmlet gains the life directly — no Food needed. Archangel of '
+        + 'Thune returns the counter to each creature, Broodscale included. The clause is '
+        + '“creatures you control”, so the Spawn is covered as the Squirrel is.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Archangel of Thune', 'Pactdoll Terror', 'Biotransference'],
+      confidence: 'verified',
+      from: {
+        id: '549-2919-4186-6830',
+        cards: ['Archangel of Thune', 'Pactdoll Terror', 'Biotransference', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Pactdoll Terror '
+        + 'reading the artifact entering.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Archangel of Thune', 'Leonin Elder', 'Biotransference'],
+      confidence: 'verified',
+      from: {
+        id: '475-549-2919-4186',
+        cards: ['Archangel of Thune', 'Leonin Elder', 'Biotransference', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Leonin Elder '
+        + 'reading it.',
+      produces: [
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+
+    // ---- A card drawn is the counter -------------------------------------------
+    {
+      cards: ['Basking Broodscale', 'Wizard Class', 'Kindred Discovery'],
+      confidence: 'verified',
+      from: {
+        id: '1017-4052-4186',
+        cards: ['Wizard Class', 'Kindred Discovery', 'Scurry Oak'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Kindred Discovery names a '
+        + 'creature type as it enters and draws on one of that type entering; Wizard Class at '
+        + 'level 3 turns each draw into a counter on target creature. Name Eldrazi rather than '
+        + 'Squirrel and the loop is unchanged — the type is chosen, not fixed, which is why this '
+        + 'swap costs nothing.',
+      produces: [
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature',
+        'Near-infinite creature tokens',
+        'Near-infinite ETB',
+      ],
+    },
+
+    // ---- Constellation: with Enchanted Evening every token is an enchantment ----
+    {
+      cards: ['Basking Broodscale', 'Calix, Guided by Fate', 'Enchanted Evening'],
+      confidence: 'verified',
+      from: {
+        id: '860-1462-4186',
+        cards: ['Calix, Guided by Fate', 'Scurry Oak', 'Enchanted Evening'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Enchanted Evening makes all '
+        + 'permanents enchantments, so the token the engine creates is an enchantment entering '
+        + 'and Calix’s constellation puts the next counter on target creature. Neither card reads '
+        + 'what the token otherwise is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite creature tokens',
+        'Infinite ETB',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Calix, Guided by Fate', 'Rancor', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '860-3018-4050-4186',
+        cards: ['Calix, Guided by Fate', 'Scurry Oak', 'Rancor', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Rancor is the recurring '
+        + 'enchantment instead: enchant the token, sacrifice it to Phyrexian Altar for the mana, '
+        + 'Rancor returns to hand off the battlefield, recast it for the constellation trigger. '
+        + 'Rancor enchants any creature and the Altar eats any creature.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Eutropia the Twice-Favored', 'Enchanted Evening'],
+      confidence: 'verified',
+      from: {
+        id: '1462-1523-4186',
+        cards: ['Eutropia the Twice-Favored', 'Scurry Oak', 'Enchanted Evening'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Eutropia’s constellation in '
+        + 'Calix’s place, reading the same Enchanted Evening.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite creature tokens',
+        'Infinite ETB',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Eutropia the Twice-Favored', 'Rancor', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1523-3018-4050-4186',
+        cards: ['Eutropia the Twice-Favored', 'Scurry Oak', 'Rancor', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. And the Rancor version of the '
+        + 'same.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+
+    // ---- Steel Overseer counts artifact creatures, and the engine can be made one ----
+    {
+      cards: ['Basking Broodscale', 'Intruder Alarm', 'Steel Overseer', 'Liquimetal Coating'],
+      confidence: 'verified',
+      from: {
+        id: '662-1102-1636-4186',
+        cards: ['Scurry Oak', 'Intruder Alarm', 'Steel Overseer', 'Liquimetal Coating'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. Steel Overseer taps to put a '
+        + 'counter on each artifact creature; Liquimetal Coating makes the engine an artifact for '
+        + 'the turn; Intruder Alarm untaps the Overseer every time a token enters. Broodscale is '
+        + 'as valid a Liquimetal target as the Oak — the Coating reads “target permanent”.',
+      produces: [
+        'Infinite +1/+1 counters on certain creatures',
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Intruder Alarm', 'Steel Overseer', 'Liquimetal Torque'],
+      confidence: 'verified',
+      from: {
+        id: '486-1102-1636-4186',
+        cards: ['Scurry Oak', 'Intruder Alarm', 'Steel Overseer', 'Liquimetal Torque'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Liquimetal Torque '
+        + 'supplying the artifact-making.',
+      produces: [
+        'Infinite +1/+1 counters on certain creatures',
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Intruder Alarm', 'Steel Overseer', 'Mycosynth Lattice'],
+      confidence: 'verified',
+      from: {
+        id: '1102-1636-3263-4186',
+        cards: ['Scurry Oak', 'Intruder Alarm', 'Steel Overseer', 'Mycosynth Lattice'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Mycosynth '
+        + 'Lattice, which makes everything an artifact permanently.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Intruder Alarm', 'Steel Overseer', 'Biotransference'],
+      confidence: 'verified',
+      from: {
+        id: '549-1102-1636-4186',
+        cards: ['Scurry Oak', 'Intruder Alarm', 'Steel Overseer', 'Biotransference'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. The same with Biotransference, '
+        + 'which does it for creatures you control.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: ['Basking Broodscale', 'Intruder Alarm', 'Steel Overseer', 'Encroaching Mycosynth'],
+      confidence: 'verified',
+      from: {
+        id: '1102-1379-1636-4186',
+        cards: ['Scurry Oak', 'Intruder Alarm', 'Steel Overseer', 'Encroaching Mycosynth'],
+      },
+      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
+      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
+        + 'create a token”, and both fire once per counter event. And with Encroaching Mycosynth.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+
+    // ---- Camellia, the 35 the pass found and never wrote down -------------------
+    //
+    // The Camellia entry in research-log.js is the file's cautionary tale twice over.
+    // Its first version ruled out all 37 candidates on a card text nobody had opened;
+    // read properly, the difference is batching — she reads "whenever you sacrifice
+    // ONE OR MORE Foods" and triggers once per sacrifice event, where Experimental
+    // Confectioner reads "whenever you sacrifice A Food" and triggers per Food — and
+    // only 2 of the 37 die to it. Then the 35 survivors sat in a note saying they
+    // survived, with kept: 0 beside them, because nobody wrote the rows. These are
+    // the rows.
+    //
+    // **Not a STAND_INS rule, and the two rule-outs are the proof.** A stand-in rule
+    // is a claim about a card — "this one stands in for that one, wherever the data
+    // uses it" — expanded unconditionally against every combo. Camellia does not
+    // stand in for Experimental Confectioner unconditionally: Peregrin Took spends
+    // three Foods a cycle and Savvy Hunter two, and one Squirrel does not sustain
+    // either. A rule would generate exactly those two rows and be wrong about both.
+    // The swap holds per shape, not per card, so it is written per shape.
+    //
+    // ---- One shape, 34 rows: Ygra, Ninja Pizza and a haste enabler ------
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Concordant Crossroads'],
+      confidence: 'verified',
+      from: {
+        id: '1322-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Concordant Crossroads'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Concordant '
+        + 'Crossroads is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Tyvar, Jubilant Brawler'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4927-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Tyvar, Jubilant Brawler'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Tyvar, '
+        + 'Jubilant Brawler is the haste, which the granted ability needs because it taps; it '
+        + 'reads nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Thousand-Year Elixir'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5295-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Thousand-Year Elixir'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Thousand-Year '
+        + 'Elixir is the haste, which the granted ability needs because it taps; it reads nothing '
+        + 'about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Shang-Chi, Master of Kung Fu'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-7313-7730',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Shang-Chi, Master of Kung Fu'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Shang-Chi, '
+        + 'Master of Kung Fu is the haste, which the granted ability needs because it taps; it '
+        + 'reads nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Akroma\'s Memorial'],
+      confidence: 'verified',
+      from: {
+        id: '2590-3499-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Akroma\'s Memorial'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Akroma\'s '
+        + 'Memorial is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Mass Hysteria'],
+      confidence: 'verified',
+      from: {
+        id: '1849-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Mass Hysteria'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Mass Hysteria '
+        + 'is the haste, which the granted ability needs because it taps; it reads nothing about '
+        + 'what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Urabrask the Hidden'],
+      confidence: 'verified',
+      from: {
+        id: '647-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Urabrask the Hidden'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Urabrask the '
+        + 'Hidden is the haste, which the granted ability needs because it taps; it reads nothing '
+        + 'about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Rising of the Day'],
+      confidence: 'verified',
+      from: {
+        id: '1879-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Rising of the Day'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Rising of the '
+        + 'Day is the haste, which the granted ability needs because it taps; it reads nothing '
+        + 'about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Lavaleaper'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-7175-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Lavaleaper'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Lavaleaper is '
+        + 'the haste, which the granted ability needs because it taps; it reads nothing about '
+        + 'what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Dynaheir, Invoker Adept'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4785-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Dynaheir, Invoker Adept'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Dynaheir, '
+        + 'Invoker Adept is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Fires of Yavimaya'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5223-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Fires of Yavimaya'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Fires of '
+        + 'Yavimaya is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Samut, Voice of Dissent'],
+      confidence: 'verified',
+      from: {
+        id: '1753-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Samut, Voice of Dissent'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Samut, Voice '
+        + 'of Dissent is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Roar of Resistance'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4478-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Roar of Resistance'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Roar of '
+        + 'Resistance is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Anger'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4068-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Anger'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Anger is the '
+        + 'haste, which the granted ability needs because it taps; it reads nothing about what '
+        + 'the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Garna, the Bloodflame'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4359-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Garna, the Bloodflame'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Garna, the '
+        + 'Bloodflame is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Dragonlord Kolaghan'],
+      confidence: 'verified',
+      from: {
+        id: '1251-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Dragonlord Kolaghan'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Dragonlord '
+        + 'Kolaghan is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Maelstrom Wanderer'],
+      confidence: 'verified',
+      from: {
+        id: '955-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Maelstrom Wanderer'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Maelstrom '
+        + 'Wanderer is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Purphoros, Bronze-Blooded'],
+      confidence: 'verified',
+      from: {
+        id: '2590-3480-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Purphoros, Bronze-Blooded'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Purphoros, '
+        + 'Bronze-Blooded is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Cyclops of Eternal Fury'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4460-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Cyclops of Eternal Fury'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Cyclops of '
+        + 'Eternal Fury is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Tannuk, Steadfast Second'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-6791-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Tannuk, Steadfast Second'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Tannuk, '
+        + 'Steadfast Second is the haste, which the granted ability needs because it taps; it '
+        + 'reads nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Gimli\'s Reckless Might'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-7296-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Gimli\'s Reckless Might'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Gimli\'s '
+        + 'Reckless Might is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Tuktuk Rubblefort'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4885-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Tuktuk Rubblefort'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Tuktuk '
+        + 'Rubblefort is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Kratos, God of War'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-6968-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Kratos, God of War'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Kratos, God '
+        + 'of War is the haste, which the granted ability needs because it taps; it reads nothing '
+        + 'about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Hammer of Purphoros'],
+      confidence: 'verified',
+      from: {
+        id: '1115-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Hammer of Purphoros'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Hammer of '
+        + 'Purphoros is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Temur Ascendancy'],
+      confidence: 'verified',
+      from: {
+        id: '2079-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Temur Ascendancy'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Temur '
+        + 'Ascendancy is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Samut, Tyrant Smasher'],
+      confidence: 'verified',
+      from: {
+        id: '206-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Samut, Tyrant Smasher'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Samut, Tyrant '
+        + 'Smasher is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Nahiri\'s Resolve'],
+      confidence: 'verified',
+      from: {
+        id: '2590-4742-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Nahiri\'s Resolve'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Nahiri\'s '
+        + 'Resolve is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Fervor'],
+      confidence: 'verified',
+      from: {
+        id: '969-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Fervor'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Fervor is the '
+        + 'haste, which the granted ability needs because it taps; it reads nothing about what '
+        + 'the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Barbarian Class'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-7297-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Barbarian Class'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Barbarian '
+        + 'Class is the haste, which the granted ability needs because it taps; it reads nothing '
+        + 'about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Phabine, Boss\'s Confidant'],
+      confidence: 'verified',
+      from: {
+        id: '1169-2590-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Phabine, Boss\'s Confidant'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Phabine, '
+        + 'Boss\'s Confidant is the haste, which the granted ability needs because it taps; it '
+        + 'reads nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Yarus, Roar of the Old Gods'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5434-5776-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Yarus, Roar of the Old Gods'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Yarus, Roar '
+        + 'of the Old Gods is the haste, which the granted ability needs because it taps; it '
+        + 'reads nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Smellerbee, Rebel Fighter'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-7060-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Smellerbee, Rebel Fighter'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Smellerbee, '
+        + 'Rebel Fighter is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'The Fire Crystal'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-6633-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'The Fire Crystal'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. The Fire '
+        + 'Crystal is the haste, which the granted ability needs because it taps; it reads '
+        + 'nothing about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Ninja Pizza', 'Frostcliff Siege'],
+      confidence: 'verified',
+      from: {
+        id: '2590-5776-6965-7313',
+        cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Ninja Pizza', 'Frostcliff Siege'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. This loop spends exactly one Food a cycle: Ygra makes every other '
+        + 'creature a Food, Ninja Pizza gives Foods “{T}, Sacrifice this artifact: Add one mana '
+        + 'of any color”, and the token that comes back is the next Food to eat. One Food, one '
+        + 'trigger, one creature back — so the Squirrel does the Rat’s job exactly. Frostcliff '
+        + 'Siege is the haste, which the granted ability needs because it taps; it reads nothing '
+        + 'about what the token is.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- The other shape the same pass found ----------------------------------
+    {
+      cards: ['Sam, Loyal Attendant', 'Warren Soultrader', 'Academy Manufactor', 'Camellia, the Seedmiser'],
+      confidence: 'verified',
+      from: {
+        id: '342-2590-4231-5670',
+        cards: ['Sam, Loyal Attendant', 'Warren Soultrader', 'Academy Manufactor', 'Experimental Confectioner'],
+      },
+      swap: { out: 'Experimental Confectioner', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Camellia reads “whenever you sacrifice ONE OR MORE Foods” — one trigger per sacrifice '
+        + 'event — where Experimental Confectioner reads “whenever you sacrifice A Food” and '
+        + 'triggers per Food. Warren Soultrader eats a creature for a Treasure, Academy '
+        + 'Manufactor makes that a Clue, a Food and a Treasure, the Treasure pays the {1} the '
+        + 'Food costs with Sam, Loyal Attendant’s discount on it — and exactly ONE Food is '
+        + 'sacrificed a cycle. One trigger, one creature back, which is the creature Soultrader '
+        + 'eats next. The published step list spends the same single Food.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite Clue tokens',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

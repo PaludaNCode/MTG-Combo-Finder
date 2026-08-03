@@ -169,12 +169,19 @@ different from the second: `deck-cards.js` chooses *subjects* from a deck and th
 each across the whole database, where `deck-gaps.js` bounds the candidate shapes too, so
 every hit is a combo the deck could cast tonight.
 
-**It re-proposes what has already been ruled out.** The first sweep threw out
-`Scurry Oak + Sadistic Glee` — the Squirrel cannot sacrifice itself where Broodscale's
-Spawn can — and `deck-gaps.js` offers it again, because that decision is a sentence in
-`research-log.js` and not a card set. Read the log first. Wiring them together means
-giving every rule-out a machine-readable set of cards, which is a change to the log's
-shape nobody has made.
+**It used to re-propose what had already been ruled out**, and no longer does for the
+decisions somebody wrote down as cards. A rule-out in `research-log.js` may carry `sets`
+— the exact card combinations that reason killed — and `deck-gaps.js` drops them, then
+prints what it dropped and why. `Scurry Oak + Sadistic Glee` was the case that named the
+problem: the Squirrel cannot sacrifice itself where Broodscale's Spawn can, the first
+sweep threw it out, and the tool offered it again every run.
+
+**`sets` is a subset of its reason, always.** Most rule-outs are categorical — "the loop
+needs a *token* out of the sacrifice" — and cover shapes nobody enumerated, so they have
+no card set to record. `ruledOutSets()` answers *has this been ruled out?* with **yes** or
+**nothing recorded**, and never with *no*. A surviving candidate means nothing has been
+recorded about it in a form a tool can read; it does not mean nobody has decided. Still
+read the log.
 
 ### The two fixture decks
 

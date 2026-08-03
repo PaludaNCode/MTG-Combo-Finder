@@ -22,13 +22,18 @@
 // Every hit still has to be read against the cards before it becomes a row. This
 // proposes; research-log.js records what reading it decided.
 //
-// **It will re-propose things already ruled out, and cannot help it.** The first
-// sweep threw out "Scurry Oak + Sadistic Glee" as a pair because the Squirrel has no
-// sacrifice ability where Basking Broodscale's Eldrazi Spawn does — and this offers
-// it again, because that decision lives in research-log.js as a sentence and not as
-// a card set. Read the log before the list. Teaching the two to talk would mean
-// giving every rule-out a machine-readable set of cards, which is a real change to
-// the log's shape and has not been made.
+// Card sets a pass has already thrown out are dropped, from `sets` on the rule-outs
+// in research-log.js — the two files used to have no way to talk, so this re-offered
+// "Scurry Oak + Sadistic Glee" every run, a pair the first sweep killed because the
+// Squirrel has no sacrifice ability where Basking Broodscale's Eldrazi Spawn does.
+//
+// **That index is partial, and what survives it has not been cleared.** Most
+// rule-outs in the log are categorical — "the loop needs a *token* out of the
+// sacrifice" — and cover shapes nobody enumerated, so they have no card set to
+// record. A dropped row means somebody decided; a row that is still here means
+// nothing at all. The drops are printed rather than silently removed, for the same
+// reason: a filter that quietly shrinks a list is indistinguishable from a shorter
+// list. Read the log before the table either way.
 'use strict';
 
 const fs = require('node:fs');
@@ -36,6 +41,7 @@ const path = require('node:path');
 const DeckParser = require('../parser.js');
 const DeckCombos = require('../combos.js');
 const { COMBOS } = require('../unofficial.js');
+const { ruledOutSets } = require('../research-log.js');
 
 const COMBOS_URL = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
 const UA = 'MTG-Combo-Finder (github.com/PaludaNCode/MTG-Combo-Finder; deck-scoped gaps)';
@@ -57,10 +63,24 @@ async function load(local) {
 const shapeKey = (combo, without) => combo.c.filter((n) => n !== without).sort().join('|')
   + (combo.t && combo.t.length ? '|t' + combo.t.slice().sort().join(',') : '');
 
-function findGaps(data, deck, minJaccard) {
+// The rule-outs a pass wrote down as cards rather than as a sentence, keyed the way
+// every other card set here is. Injectable so a test can drive the filter without
+// depending on which decisions the live log happens to hold today.
+function ruledOutIndex(entries) {
+  const out = new Map();
+  for (const entry of entries || []) out.set(keyOf(entry.cards), entry);
+  return out;
+}
+
+// Returns { gaps, ruledOut } rather than the bare list it used to: what the filter
+// removed is part of the answer, not a side effect. A candidate list that silently
+// got shorter is a candidate list nobody can audit.
+function findGaps(data, deck, minJaccard, ruledOut) {
   const combos = data.combos || [];
   const published = new Set(combos.map((c) => keyOf(c.c)));
   const written = new Set(COMBOS.map((r) => keyOf(r.cards)));
+  const settled = ruledOutIndex(ruledOut === undefined ? ruledOutSets() : ruledOut);
+  const dropped = [];
 
   // Only cards the deck actually holds can be subjects, and only they can fill a shape.
   const inDeck = (name) => deck.has(DeckCombos.nameKey(name));
@@ -114,7 +134,18 @@ function findGaps(data, deck, minJaccard) {
     const k = keyOf([...row.rest, row.subject]);
     if (!best.has(k)) best.set(k, row);
   }
-  return [...best.values()].sort((a, b) => b.pop - a.pop);
+  // Deduplicated first, so a set already thrown out is reported once rather than
+  // once per peer that proposed it.
+  const gaps = [];
+  for (const row of best.values()) {
+    const settledAs = settled.get(keyOf([...row.rest, row.subject]));
+    if (settledAs) dropped.push(Object.assign({}, row, { settledAs }));
+    else gaps.push(row);
+  }
+  return {
+    gaps: gaps.sort((a, b) => b.pop - a.pop),
+    ruledOut: dropped.sort((a, b) => b.pop - a.pop),
+  };
 }
 
 async function main() {
@@ -127,7 +158,7 @@ async function main() {
   const data = await load(files[1]);
   const parsed = DeckParser.parseDecklist(fs.readFileSync(deckFile, 'utf8'));
   const deck = DeckCombos.deckNameSet((parsed.commanders || []).concat(parsed.main || []));
-  const gaps = findGaps(data, deck, minJaccard);
+  const { gaps, ruledOut: settled } = findGaps(data, deck, minJaccard);
 
   say(`# Gaps ${path.basename(deckFile)} exposes`);
   say();
@@ -148,6 +179,26 @@ async function main() {
   say();
   say(`**${gaps.length} candidate(s). None of them is a row yet** — each still has to be read `
     + 'against the cards, and research-log.js is where that reading gets recorded.');
+
+  // Said out loud, always. A filter nobody can see is a filter nobody can check,
+  // and the point of the index is that a settled decision stops costing a reading.
+  say();
+  if (!settled.length) {
+    say('No candidate matched a rule-out recorded as cards in `research-log.js`. That is not '
+      + 'the same as none of them having been ruled out — most rule-outs there are '
+      + 'categorical and have no card set to match against.');
+    return;
+  }
+  say(`**${settled.length} more were proposed and dropped**, each matching a rule-out that `
+    + 'names its exact cards in `research-log.js`:');
+  say();
+  for (const row of settled) {
+    say(`- ${[row.subject, ...row.rest].join(' + ')} — ruled out by *${row.settledAs.subject}*: `
+      + row.settledAs.reason);
+  }
+  say();
+  say('That index is partial by construction, so the table above is "not settled in a form a '
+    + 'tool can read", not "still open". Read the log.');
 }
 
 if (require.main === module) {
@@ -157,4 +208,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { findGaps, shapeKey };
+module.exports = { findGaps, shapeKey, ruledOutIndex };
