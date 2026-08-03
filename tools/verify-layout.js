@@ -236,6 +236,51 @@ function measure(win, doc) {
         + (head.querySelector(':scope > .either') ? 1 : 0);
     }),
   }));
+  // Where the row's divider runs, and where the disclosure under it starts. The
+  // line is drawn in two pieces — the gutter's right border and the disclosure's
+  // left one, which reaches back across the column gap to meet it — so "one line
+  // down the row" is a fact about two boxes agreeing, and nothing in the CSS says
+  // it. Changing the column gap, dropping the stretch off .row-numbers, or putting
+  // the disclosure back in column 1 each breaks it, and each leaves a page that
+  // renders perfectly.
+  const dividers = [...doc.querySelectorAll('.tab-pane:not([hidden]) .combo.suggestion, #pieces .combo.suggestion')].map((row) => {
+    const num = row.querySelector(':scope > .row-numbers');
+    const main = row.querySelector(':scope > .row-main');
+    const det = row.querySelector(':scope > details');
+    const sum = det && det.querySelector(':scope > summary');
+    if (!num || !main || !det || !sum) return null;
+    const numBox = num.getBoundingClientRect();
+    const detBox = det.getBoundingClientRect();
+    // Each half's own border, read as the x it is drawn at — the inner edge of the
+    // gutter's right border and the outer edge of the disclosure's left one, which
+    // are the same pixel when the two are one line. Comparing the boxes instead
+    // reports a 1px difference that is only the border's own thickness.
+    const numLine = parseFloat(win.getComputedStyle(num).borderRightWidth) || 0;
+    const detLine = parseFloat(win.getComputedStyle(det).borderLeftWidth) || 0;
+    return {
+      name: (row.querySelector('h3 > .card-name') || {}).textContent || '',
+      // Rounded: a sub-pixel difference is not a broken line. A half that has lost
+      // its border reports the box edge instead, so the two stop agreeing — which
+      // is the answer wanted, since half a divider is not one.
+      gutterLine: Math.round(numBox.right - numLine),
+      detLine: Math.round(detBox.left),
+      widths: [numLine, detLine],
+      // The two ends of it. Equal means the pieces meet; the gutter has to stretch
+      // to the bottom of the card's column for that to be true.
+      gutterEnd: Math.round(numBox.bottom),
+      detStart: Math.round(detBox.top),
+      // The summary reads from the card's column, level with the name and the
+      // sizes above it — not from under the gutter, where it read as a third
+      // thing the row was about rather than the list behind the number.
+      summaryLeft: Math.round(sum.getBoundingClientRect().left),
+      mainLeft: Math.round(main.getBoundingClientRect().left),
+      // A row offering interchangeable cards is the one place the line is broken:
+      // that block keeps the full width, because its label and Compare pill need
+      // two rows in the card's column at 390px. Reported so the exception is
+      // measured rather than assumed.
+      hasAlternatives: Boolean(row.querySelector(':scope > .alternatives')),
+    };
+  }).filter(Boolean);
   const grouped = {
     // A combo row offering a choice of part, and a suggestion offering a choice
     // of card. Both exist in the fixture, so both must render.
@@ -623,6 +668,7 @@ function measure(win, doc) {
     dataAge,
     numberColumns,
     sizes,
+    dividers,
     included,
     map,
     width: win.innerWidth,
@@ -1690,6 +1736,28 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       }
     }
 
+    // One divider down the row, and the disclosure on the card's side of it.
+    if (!v.dividers.length) {
+      problems.push('no suggestion or piece row rendered, so the row divider is untested');
+    } else {
+      for (const d of v.dividers) {
+        if (d.summaryLeft !== d.mainLeft) {
+          problems.push(`"${d.name}"'s disclosure starts at ${d.summaryLeft}px, its name at ${d.mainLeft}px — not in the card's column`);
+        }
+        if (d.detLine !== d.gutterLine) {
+          problems.push(`"${d.name}"'s divider is two lines, at ${d.gutterLine}px and ${d.detLine}px`);
+        }
+        if (d.widths.some((w) => !w)) {
+          problems.push(`"${d.name}"'s divider is drawn by only one of its two halves [${d.widths.join(', ')}]`);
+        }
+        // Where a row shows interchangeable cards, that block takes the full width
+        // and the line stops for it — see the divider measurement above.
+        if (!d.hasAlternatives && d.detStart !== d.gutterEnd) {
+          problems.push(`"${d.name}"'s divider breaks: the gutter's half ends at ${d.gutterEnd}px and the disclosure's starts at ${d.detStart}px`);
+        }
+      }
+    }
+
     if (v.tabs.length !== 2) {
       problems.push(`expected 2 suggestion tabs, got ${v.tabs.length}`);
     } else {
@@ -2209,6 +2277,11 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
+      // The x the row's divider is drawn at, and where the disclosure beside it
+      // starts. One number for the line because the two halves agree, which is the
+      // thing being asserted.
+      const dividerNote = `divider at ${v.dividers[0].gutterLine}px with the disclosure from ${v.dividers[0].summaryLeft}px`
+        + ` (${v.dividers.filter((d) => d.hasAlternatives).length} broken by a choice of card)`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
@@ -2218,7 +2291,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${dividerNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

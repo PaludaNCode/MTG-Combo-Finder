@@ -451,16 +451,38 @@ button:disabled { opacity: .6; cursor: wait; }
  * What used to be here was a brass badge after the card name. It landed wherever
  * the name ended, so eighty totals sat at eighty offsets. */
 .combo.suggestion {
+  /* Named because the disclosure below reaches back across it to pick the divider
+     up where the gutter leaves off, so the two cannot be allowed to disagree. */
+  --col-gap: .7rem;
   display: grid;
   grid-template-columns: 4.2rem minmax(0, 1fr);
-  column-gap: .7rem;
+  column-gap: var(--col-gap);
   align-items: start;
 }
-/* The alternatives and the "Combos this unlocks" disclosure are sub-blocks of the
-   row rather than part of the name column, so they take the full width. The
-   alt-label's one-line fit is measured against that width. */
-.combo.suggestion > .alternatives,
-.combo.suggestion > details { grid-column: 1 / -1; }
+/* "Combos this unlocks" is the list behind the number, so it belongs to the card:
+ * it starts where the name, the links and the sizes start, and the divider runs
+ * down its left edge to say so. Under the gutter — where it used to be — it read as
+ * a third thing the row was about, level with a number it is the expansion of.
+ *
+ * The line is the gutter's border continued, not a second one: the negative margin
+ * puts this box's left edge on the gutter's right edge, 1px included, and the
+ * padding hands the content back to where the column starts. The two segments abut
+ * because there is no row gap, so what is drawn is one line down the whole row —
+ * which is also what makes `align-self: stretch` on .row-numbers load-bearing
+ * below: without it the gutter's half stops at the bottom of the numbers, two
+ * lines short of where this one begins.
+ *
+ * The alternatives stay full-width: at 390px this column is 222px, and the
+ * "or these 2, same combo:" label and its Compare pill need two rows in that —
+ * measured, and the layout test fails on it. So a row offering a choice of card
+ * breaks the line for that block, which is the one place it is not continuous. */
+.combo.suggestion > .alternatives { grid-column: 1 / -1; }
+.combo.suggestion > details {
+  grid-column: 2;
+  margin-left: calc(-1 * var(--col-gap) - 1px);
+  padding-left: var(--col-gap);
+  border-left: 1px solid var(--line);
+}
 
 .row-numbers {
   display: flex;
@@ -468,6 +490,11 @@ button:disabled { opacity: .6; cursor: wait; }
   align-items: flex-end;
   padding-right: .55rem;
   border-right: 1px solid var(--line);
+  /* Down to the bottom of the card's column, not the bottom of the numbers: this
+     is the top half of the row's divider and the disclosure's border-left is the
+     rest of it. `align-items: start` above keeps the numerals themselves at the
+     top, which is what this has to stretch without changing. */
+  align-self: stretch;
 }
 .row-total {
   color: var(--accent);
@@ -1424,8 +1451,11 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   ul.why { padding-left: .9rem; }
   /* The gutter keeps its width here — it is what the numbers line up in, and the
      4.2rem was measured at this end of the range in the first place. What gives
-     way is the gap between it and the card. */
-  .combo.suggestion { column-gap: .55rem; }
+     way is the gap between it and the card. Set through the variable, not
+     column-gap: the disclosure reaches back across this gap to pick the divider up,
+     so overriding one and not the other split the line by exactly the .15rem of
+     difference. The layout run found that, and now guards it. */
+  .combo.suggestion { --col-gap: .55rem; }
   h1 { font-size: 1.45rem; }
   #find-combos { padding: .8rem; } /* easier to hit with a thumb */
 }
