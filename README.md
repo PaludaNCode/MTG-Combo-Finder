@@ -2300,7 +2300,9 @@ identity for him is there, so the page knows the card — and he is named by
 
 **So the only way in is to read the card**, which is what `tools/lookup-card.js`
 and the *Look up card text* workflow are for — Scryfall answers, Actions has the
-network, and the text lands in the run summary. Hammerhead says:
+network, and the text lands in the run summary. (When it does *not* answer, there
+is a second source; see [Reading a card when Scryfall is
+unreachable](#reading-a-card-when-scryfall-is-unreachable).) Hammerhead says:
 
 > Sacrifice another creature or artifact: Put a +1/+1 counter on Hammerhead.
 
@@ -2321,6 +2323,59 @@ naming Bartolomé and none naming Hammerhead.
 The colour is the part that earns its keep. Hammerhead is mono-black where
 Bartolomé is white-black, so every one of those lines is an Orzhov combo that a
 Golgari deck can actually run, and had no way of being told about.
+
+### Reading a card when Scryfall is unreachable
+
+"Read the card" assumes a network that will serve you the card, and that assumption
+failed on 3 Aug 2026: an agent sandbox with an egress proxy allowlisting
+`raw.githubusercontent.com` got `CONNECT tunnel failed, response 403` for
+`api.scryfall.com`, `scryfall.com`, `data.scryfall.io`, `commanderspellbook.com`,
+`api.magicthegathering.io`, `mtgjson.com` and `gatherer.wizards.com` alike.
+`tools/lookup-card.js` printed *"Scryfall returned HTTP 403 — check the spelling"*,
+which is the wrong diagnosis given honestly — the tool cannot tell a blocked host
+from a misspelling, and says the likelier thing.
+
+**[Forge](https://github.com/Card-Forge/forge) publishes its card scripts as plain
+files in a GitHub repository, so they arrive over the one host that was reachable.**
+Each carries an `Oracle:` line, which is the card text verbatim:
+
+```bash
+curl -s https://raw.githubusercontent.com/Card-Forge/forge/master/forge-gui/res/cardsfolder/a/academy_manufactor.txt
+```
+```
+Name:Academy Manufactor
+ManaCost:3
+Types:Artifact Creature Assembly-Worker
+PT:1/3
+R:Event$ CreateToken | … | ValidToken$ Clue,Food,Treasure | …
+Oracle:If you would create a Clue, Food, or Treasure token, instead create one of each.
+```
+
+The path is `cardsfolder/<first letter of the slug>/<slug>.txt`, and the slug rule
+was derived by probing rather than guessed, because a documented URL rule that is
+wrong is worse than none. Four parts, each one a card the obvious rule got wrong:
+
+| | |
+|---|---|
+| **strip accents, then lowercase** | `Éomer, Marshal of Rohan` → `eomer_marshal_of_rohan` |
+| **apostrophes vanish; every other non-alphanumeric run becomes one `_`** | `Ashnod's Altar` → `ashnods_altar`, and `M.O.D.O.K.` → `m_o_d_o_k` — the dots are separators, not nothing |
+| **split and double-faced cards join *both* faces** | `Birgi, God of Storytelling // Harnfel, Horn of Bounty` → `birgi_god_of_storytelling_harnfel_horn_of_bounty`. Taking the front face alone 404s |
+| **recent sets live in `cardsfolder/upcoming/`, not the letter directory** | so a miss is two requests, not one, before it is a miss |
+
+Probed against **454 card names** drawn from the published combo data — 400 spread
+evenly across all 7,364 distinct names, plus 54 chosen for apostrophes, commas,
+accents, hyphens, digits, dots and `//` — the rule resolves **454 of 454**. Nine of
+the 54 were only in `upcoming/`, all of them from recent sets, which is why that
+second request is part of the rule and not an optimisation.
+
+Two things this is not. It is **not a replacement for Scryfall**: there are no
+colour identities, no legalities and no printings here, and `tools/lookup-card.js`
+still asks Scryfall first because Scryfall is the better answer when it is
+available. And it is **not the same authority** — Forge's `Oracle:` line is
+maintained by that project rather than by Wizards, so it is a second opinion, not
+the gospel. Where a reading actually turned on the wording, both Forge and
+[XMage](https://github.com/magefree/mage) were read and agreed; that is how the
+Peregrin Took and Academy Manufactor texts above were settled.
 
 ### One card, 1,889 combos: why this one is a rule and not rows
 

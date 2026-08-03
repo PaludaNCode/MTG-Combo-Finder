@@ -12,6 +12,37 @@
 // need no code change. Names there are separated by a semicolon or a newline,
 // never a comma: half of Magic's legendary creatures have a comma in the name,
 // and "Camellia, the Seedmiser" split into two cards neither of which exists.
+//
+// ---- when Scryfall is not reachable -----------------------------------------
+//
+// "a runner with open network" is an assumption, and it fails: an agent sandbox
+// behind an egress proxy that allowlists raw.githubusercontent.com answers every
+// Scryfall host with a 403 at CONNECT, and so do mtgjson, gatherer and the
+// Spellbook API. This tool then prints "HTTP 403 — check the spelling", which is
+// the wrong diagnosis honestly given — a blocked host and a typo look identical
+// from here, and a typo is the likelier one.
+//
+// The way out is that Forge ships its card scripts as plain files in a GitHub
+// repo, so they come over the host that *is* allowed. Each has an `Oracle:` line
+// carrying the card text verbatim:
+//
+//   https://raw.githubusercontent.com/Card-Forge/forge/master/forge-gui/res/
+//     cardsfolder/<first letter of slug>/<slug>.txt
+//
+// The slug rule was probed, not guessed — 454 of 454 names out of the published
+// combo data resolve, and each clause below is a name the obvious rule got wrong:
+//
+//   strip accents, then lowercase          Éomer, … -> eomer_…
+//   apostrophes vanish, every other run    Ashnod's Altar -> ashnods_altar
+//     of non-alphanumerics becomes one _   M.O.D.O.K.     -> m_o_d_o_k
+//   split cards join BOTH faces            Birgi … // Harnfel … ->
+//                                            birgi_…_harnfel_…  (front alone 404s)
+//   recent sets sit in cardsfolder/upcoming/ rather than the letter directory
+//
+// It is a second opinion rather than a replacement: no colour identity, no
+// legalities, no printings, and the text is maintained by Forge rather than by
+// Wizards. Scryfall stays the first ask. The README section "Reading a card when
+// Scryfall is unreachable" has the probe numbers and the XMage cross-check.
 'use strict';
 
 const UA = 'MTG-Combo-Finder/1.0 (+https://github.com/PaludaNCode/MTG-Combo-Finder; card text lookup)';

@@ -28,7 +28,7 @@ node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
-node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
+node tools/lookup-card.js "Card name"          # oracle text, from Scryfall (see below if it 403s)
 node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
@@ -195,6 +195,20 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   100 KB file reports a total size of 133. `Accept-Encoding` is a forbidden header, so
   `fetch()` cannot opt out. Only `.zip` came back as `application/zip` with honest
   ranges. Any design here that wants a slice of a file has to start from that.
+- **`tools/lookup-card.js` saying "HTTP 403 — check the spelling" may mean the sandbox,
+  not the spelling.** An agent sandbox whose proxy allowlists `raw.githubusercontent.com`
+  403s every Scryfall host at CONNECT, and mtgjson, gatherer and the Spellbook API with
+  them; the tool cannot tell that from a typo. Card text is still reachable, because
+  Forge ships its card scripts as files in a GitHub repo and each has an `Oracle:` line:
+  `…/Card-Forge/forge/master/forge-gui/res/cardsfolder/<first letter>/<slug>.txt`.
+  The slug: strip accents, lowercase, drop apostrophes, every other run of
+  non-alphanumerics becomes one `_` (so `M.O.D.O.K.` → `m_o_d_o_k`), split cards join
+  **both** faces, and recent sets live in `cardsfolder/upcoming/` instead of the letter
+  directory. Probed at 454 of 454 names from the combo data. It is a second opinion, not
+  Scryfall — no colour identity, no legalities — so cross-check anything a reading turns
+  on against XMage, whose path is the same idea in PascalCase with the punctuation gone:
+  `…/magefree/mage/master/Mage.Sets/src/mage/cards/b/BartolomeDelPresidio.java`.
+  The README's *Reading a card when Scryfall is unreachable* has the probe.
 - **The steps tree has no manifest, on purpose — so CI computes one.** The id *is* the
   URL and a 404 means "none recorded", which is what makes it cheap and also what makes
   a wrong tree invisible: a reader is told there are no steps and believes it.
