@@ -1,6 +1,6 @@
 {
  "generated": "2026-08-03",
- "count": 174,
+ "count": 177,
  "cards": {
   "Abby, Merciless Soldier": {
    "fetched": "2026-08-03",
@@ -163,6 +163,20 @@
     }
    ]
   },
+  "Bartolomé del Presidio": {
+   "fetched": "2026-08-03",
+   "name": "Bartolomé del Presidio",
+   "mana": "{W}{B}",
+   "identity": "BW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Vampire Knight",
+     "oracle": "Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio.",
+     "pt": "2/1"
+    }
+   ]
+  },
   "Basking Broodscale": {
    "fetched": "2026-08-03",
    "name": "Basking Broodscale",
@@ -219,6 +233,20 @@
      "types": "Creature — Vampire",
      "oracle": "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.",
      "pt": "0/1"
+    }
+   ]
+  },
+  "Bloodflow Connoisseur": {
+   "fetched": "2026-08-03",
+   "name": "Bloodflow Connoisseur",
+   "mana": "{2}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Vampire",
+     "oracle": "Sacrifice a creature: Put a +1/+1 counter on this creature.",
+     "pt": "1/1"
     }
    ]
   },
@@ -2355,6 +2383,20 @@
      "types": "Legendary Creature — Wraith Noble",
      "oracle": "Flying\nWhenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you this turn. The Ring tempts you.\nDiscard a card: Witch-king of Angmar gains indestructible until end of turn. Tap it.",
      "pt": "5/3"
+    }
+   ]
+  },
+  "Yahenni, Undying Partisan": {
+   "fetched": "2026-08-03",
+   "name": "Yahenni, Undying Partisan",
+   "mana": "{2}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Aetherborn Vampire",
+     "oracle": "Haste\nWhenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni.\nSacrifice another creature: Yahenni gains indestructible until end of turn.",
+     "pt": "2/2"
     }
    ]
   },
