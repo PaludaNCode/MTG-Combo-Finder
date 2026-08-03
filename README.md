@@ -3282,12 +3282,35 @@ where only one of them is checked.
    workflow fires on push to `main` and publishes to GitHub Pages (once Pages is
    available — see Deploying below).
 
-`main` should be protected: PRs need the `checks` job green before merge; force-pushes
-and deletion blocked. **Not enabled yet** — flip it on under
-Settings → Branches → Add branch ruleset (require status checks: `checks`) when ready;
-until then the flow above is convention. Auto-merge only waits for whatever the ruleset
-requires, so it pulls its full weight once `checks` is a required status check. Repo
-admins can push directly in a pinch (escape hatch — prefer PRs).
+**`main` is protected**, by a branch ruleset: a pull request is required, the `checks` job
+has to be green before it can merge, and force-pushes and deletion are blocked. So the flow
+above is enforced rather than conventional, and auto-merge pulls its full weight — it waits
+for whatever the ruleset requires. Repo admins bypass it and can push directly in a pinch
+(escape hatch — prefer PRs). Settings → Rules → Rulesets is the live answer; this paragraph
+is only a description of it.
+
+Two rules are deliberately **not** part of it, and both look like oversights:
+
+- **Require linear history.** `main` is merged with merge commits, and that rule forbids
+  exactly those — turning it on quietly makes the repository squash-only. That is a
+  decision about history, not about protection.
+- **Required approvals above zero.** GitHub will not let you approve your own pull
+  request, so on a single-maintainer repository any number above zero makes every PR
+  unmergeable. `checks` is the gate.
+
+The `data` branch is not covered, and if it ever is, **it must not block force-pushes**:
+`update-data.yml` force-pushes an orphan commit there every night, so a ruleset catching
+that branch — including one that catches it by glob — breaks the job that publishes the
+combo database.
+
+**Secret scanning and push protection are on** (Settings → Advanced Security, which is the
+live answer). Push protection is the half that earns its keep: it refuses a push carrying
+something that looks like a credential, rather than telling you afterwards, and afterwards
+is too late — a secret pushed to a public repository is a secret to rotate, not to remove.
+Nothing here needs a credential today; the one place a real one is handled is
+`update-data.yml` interpolating `secrets.GITHUB_TOKEN` into a push URL, which is exactly
+the shape of thing that gets copied into a second workflow with the token written out
+literally.
 
 ## Deploying
 

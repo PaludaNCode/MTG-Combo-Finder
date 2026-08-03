@@ -360,6 +360,16 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - Trunk-based: short-lived `feat/…` / `fix/…` branches off `main`, PR, auto-merge
   when green. Merging to `main` *is* the release. **Short-lived is the load-bearing
   word** — see below for what a branch that outlives a day costs.
+- **A ruleset enforces that, so a direct push to `main` is refused** — PR required,
+  `checks` green, no force-push, no deletion. Nothing to work around: branch and open a
+  PR. Two rules are left off on purpose, and both read as oversights: *require linear
+  history* would forbid the merge commits `main` already uses, and any required-approval
+  count above zero makes every PR unmergeable on a solo repository. If a ruleset is ever
+  added for `data`, it must not block force-pushes — `update-data.yml` force-pushes that
+  branch nightly.
+- **Push protection is on**, so a push carrying anything that looks like a credential is
+  rejected outright rather than reported later. If a push fails on a file you were only
+  quoting a token *shape* into — a fixture, a comment, a test — that is what happened.
 - **Outstanding work is a GitHub issue.** `IMPROVEMENTS.md` is the record of a review
   whose items are all settled — history, not a queue. Anything still to do goes in an
   issue so it can be closed, assigned and linked from the PR that finishes it.
