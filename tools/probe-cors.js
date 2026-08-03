@@ -4,8 +4,8 @@
 // Why this is a tool and not a guess: the whole reason Moxfield is not supported
 // is that somebody assumed it would work, and it does not — their API needs a
 // User-Agent a page cannot set, sits behind Cloudflare, and sends no CORS headers.
-// Every other deck site is the same question and the same trap, so F4's own note
-// in IMPROVEMENTS.md says each one needs its CORS behaviour verified first.
+// Every other deck site is the same question and the same trap, so each one needs
+// its CORS behaviour verified before an adapter is written for it, not after.
 //
 // It cannot be verified from a laptop behind a proxy that blocks these hosts, and
 // it must not be verified with a plain curl either: curl does not enforce CORS, so
