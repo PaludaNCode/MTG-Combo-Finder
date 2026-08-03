@@ -2795,9 +2795,18 @@ much worse decision to make while looking at a slow page.
 **At 50 KB gzipped, `COMBOS` moves to the `data` branch as JSON**, fetched by the worker
 and nothing else. The mechanics are already paid for: `connect-src` names that host,
 Cache Storage is already how the combo database gets there, and the nightly job already
-writes two artefacts beside each other. Roughly double today's rows, so this is not
-close — which is exactly why the number belongs here now rather than in the commit that
-has to act on it.
+writes two artefacts beside each other. The number belongs here rather than in the commit
+that has to act on it, which is the whole point of fixing it in advance.
+
+**It used to say "roughly double today's rows, so this is not close", and that stopped
+being true in a single pass.** The four-card sweep that added Bogwater Lumaret, Ghave,
+Elas il-Kor and Insidious Roots put on 156 rows at once and spent most of the remaining
+headroom; the threshold went from comfortably far to the same order of magnitude as the
+file. No replacement figure is written here, for the reason given above — `gzip -9 -c
+unofficial.js | wc -c` is the live answer and this paragraph would only rot again. What
+is worth recording is the shape of the risk: a single research pass can move this by half
+the remaining budget, so "not close" is not a state this file stays in, and the next pass
+of that size should settle the move before it starts rather than after.
 
 **And what it would cost, in the same breath**, because a threshold with only the
 benefit written down is a decision nobody can argue with later:
