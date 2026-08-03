@@ -1412,7 +1412,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 162 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 235 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -2618,7 +2618,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 162 hand-written rows cite a published combo. 137 of them and the one stand-in rule
+All 235 hand-written rows cite a published combo. 210 of them and the one stand-in rule
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -2640,6 +2640,19 @@ official list on its own authority. `matchUnofficial()` therefore drops any row 
 card set already appears there. Showing both copies would be the same combo listed
 twice, one of them ours and stale — so the entry moves up a panel with nobody editing
 the file.
+
+**And somebody is told, which is the part that used to be missing.** The page dropping
+a row silently is right for the reader and wrong for the file: the row stays in
+`unofficial.js` forever, carrying a claim that is no longer ours to make. The nightly
+data job runs `tools/verify-unofficial.js` against the snapshot it just published, and
+two things can come back. A **broken citation** — an id that has stopped resolving, or
+one that now names a different combo — fails the job, because a row whose evidence
+points at nothing is the one failure this panel cannot survive. A **graduation** is not
+a failure and used to be reported into the step summary of a job that passed, which is
+the same as not reporting it. It now opens a standing issue listing the rows that can
+come out, updated every night and closed by the job itself once the list empties. That
+is the whole maintenance loop: rows arrive by hand, and leave because a machine noticed
+they had stopped being needed.
 
 ### The audit, and what it ruled out
 
@@ -2713,13 +2726,21 @@ That is the failure worth engineering against here, because it is invisible: a w
 rule-out produces no row, no failing test and no complaint, only a card that quietly
 looks well covered. Nobody audits a zero.
 
-**Entries that predate the rule say `UNREAD` rather than inventing text**, and a ratchet
-caps how many: the number may go down and may never go up. Its history is in the test's
-own comment, because that is the honest record — **16 → 36 → 16**. It went *up* because
+**Entries that predate the rule said `UNREAD` rather than inventing text**, under a
+ratchet that could only fall — and it reached **zero**, so the allowance is gone and an
+`UNREAD` marker anywhere in the log now simply fails. The history is in the test's own
+comment because that is the honest record: **16 → 36 → 16 → 0**. It went *up* because
 the first count was wrong, not because anyone borrowed: it only covered cards listed in
 `cards`, so a pass could reason about a dozen *peers* and record none of them. Ashnod's
 Altar named twelve and had one. Correcting the undercount raised the number; fetching the
-texts one query at a time brought it back down.
+texts one query at a time brought it to nothing.
+
+Clearing the last of them was not bookkeeping. Reading Scrap Trawler closed the one
+rule-out holding the Ashnod's Altar zero open; reading Trudge Garden found a rule-out
+describing a card that does not exist — the pass had it wanting mana *out of the
+sacrifice*, and it has no sacrifice clause at all, only "whenever you **gain life**, you
+may **pay {2}**". The count survived because the requirement is real. The sentence did
+not.
 
 **Which makes this file a record of the cards somebody asked about, and nothing wider.**
 That is worth a number rather than an apology, so `tools/substitution-scope.js` points
@@ -2728,21 +2749,54 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **338 candidates have been
-read, out of thousands proposed** — and which 338 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **474 candidates have been
+read, out of thousands proposed** — and which 474 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards
 proposing the most that no recorded pass has swept, which is the only form of "how much
 is left" anybody can act on.
 
-**A pass that finds nothing is still a pass**, and three of the eight recorded found
+**A rule-out can also be written as cards, and then a tool can act on it.** `tools/deck-gaps.js`
+re-proposed `Scurry Oak + Sadistic Glee` on every run — a pair the first sweep threw out,
+because the Squirrel cannot sacrifice itself where Basking Broodscale's Eldrazi Spawn can
+— since that decision existed only as a sentence. A rule-out may now carry `sets`, the
+exact combinations it killed, and the tool drops them and prints what it dropped.
+**It is a subset of its reason, always.** Most rule-outs here are categorical — "the loop
+needs a *token* out of the sacrifice" — and cover shapes nobody enumerated, so they have
+no card set to record; the first sweep's counted four and names the two it wrote down,
+because inventing the others would be the same failure as inventing a count. So the index
+answers *has this been ruled out?* with **yes** or **nothing recorded**, and never with
+*no*. A candidate that survives it has not been cleared by anybody.
+
+**A pass that finds nothing is still a pass**, and two of the twelve recorded found
 exactly that. Ashnod's Altar is the largest card in the standing deck by combo count —
 6,063 — and kept none of its 3,316 candidates: its top scored peers are four different
 kinds of card, and only the free sacrifice outlets are substitutable at all. Cauldron
 Familiar, Samwise Gamgee and Academy Manufactor produced **no candidates at any
 threshold**, which is the method being silent rather than the cards being covered. Those
 entries are the ones that stop the next person spending the same afternoon.
+
+**But a zero has to be earned, and two of them were not.** Both said so in their own
+notes — *provisional*, the candidates filtered but not read — and a provisional zero is
+the most dangerous entry the log can hold, because "found nothing" reads as diligence and
+nobody audits it. Basking Broodscale had read **12 of 148**, and reading the other 136
+turned kept: 0 into **38 rows**. Camellia had read all 37 and found **35 survivors**, then
+recorded kept: 0 beside a note saying they survived, because nobody wrote the rows down;
+that is the same failure with the arithmetic the other way round. Ashnod's Altar was the
+one that held up: all twelve of its rule-out cards are now read end to end, and its zero
+is a well-covered card rather than an unfinished pass.
+
+From the outside those two look identical to Chatterfang below, and only `examined` tells
+them apart — which is the argument for the field existing. What settled Broodscale was
+reading the *engines* rather than the candidates: 108 of the 136 died to five facts about
+what the token is. The Eldrazi Spawn is 0/1 where the Squirrel is 1/1, which is 38 of them
+(Railway Brawler scales by power, Sword of the Meek returns only for "a 1/1 creature",
+Altar of Dementia mills by power); Scurry Oak has **evolve** and Broodscale does not,
+which is another 38 — Yawgmoth only ever puts on *-1/-1* counters, so the published steps
+say the +1/+1 comes from evolve and nothing else; Treebeard targets "a Halfling or
+Treefolk" and Broodscale is an Eldrazi Lizard, which is 27; three read a *green* creature
+entering; and two want a **Beast** to sacrifice.
 
 Chatterfang is what a *well-covered* card looks like under the same method, and worth
 recording as the counterweight to Rosie: the sweep proposed **1,202** candidates for him
@@ -3025,7 +3079,8 @@ node tools/deck-cards.js [deck.txt] [--unswept] [--top N]
 
 # Which gaps does THIS deck expose? Same method, with the candidate shapes bounded
 # to cards the deck already holds, so every hit is a combo it could cast tonight.
-# It re-proposes what has been ruled out — read research-log.js first.
+# Card sets a pass ruled out are dropped and listed; the rest is unrecorded, not
+# cleared — read research-log.js first.
 node tools/deck-gaps.js [deck.txt] [--jaccard N]
 ```
 

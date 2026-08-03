@@ -41,6 +41,26 @@ test('research log: every rule-out gives a reason, and a count only if it has on
         pass.subject + ': a rule-out with no reason worth reading');
       assert.ok(!('count' in out) || Number.isInteger(out.count),
         pass.subject + ': a rule-out count that is not a number');
+      // `sets` is the machine-readable half — the specific card combinations the
+      // reason killed, so tools/deck-gaps.js can stop re-proposing them. Optional,
+      // and always a subset of what its reason covers; what is not optional is that
+      // it holds card sets rather than something a consumer has to guess at.
+      if (!('sets' in out)) return;
+      assert.ok(Array.isArray(out.sets) && out.sets.length,
+        pass.subject + ': a rule-out with an empty `sets` — leave it off instead');
+      out.sets.forEach((cards) => {
+        assert.ok(Array.isArray(cards) && cards.length >= 2,
+          pass.subject + ': a rule-out set that is not a set of at least two cards');
+        cards.forEach((card) => assert.ok(typeof card === 'string' && card.trim().length > 2,
+          pass.subject + ': a rule-out set naming something that is not a card'));
+      });
+      // A `sets` longer than the count it sits under would mean the pass ruled out
+      // more combinations than it says it ruled out, which is one of them invented.
+      if (Number.isInteger(out.count)) {
+        assert.ok(out.sets.length <= out.count,
+          pass.subject + ': `sets` names ' + out.sets.length + ' combinations under a '
+          + 'rule-out that counted ' + out.count);
+      }
     });
   });
 });
@@ -69,38 +89,31 @@ test('research log: no pass reasons about a card whose text it did not record', 
   });
 });
 
-// A ratchet, not a gate. Entries written before the rule existed never had their
-// text fetched; pretending otherwise would mean inventing oracle text, which is the
-// one thing worse than admitting the gap. So they carry an explicit UNREAD marker
-// and this caps the number.
+// This used to be a ratchet with an allowance. Entries written before the
+// read-the-card rule existed had never had their text fetched, and pretending
+// otherwise would have meant inventing oracle text — the one thing worse than
+// admitting the gap — so they carried an explicit UNREAD marker under a cap that
+// could only fall. It went 16 -> 36 as a correction (the first count only looked at
+// cards listed in `cards`, so a pass could reason about a dozen *peers* and record
+// none of them — Ashnod's Altar named twelve and had one text), then 36 -> 30 -> 16
+// as they were read, and reached 0 on 2026-08-03.
 //
-// **The number may go down. It may never go up.** A new pass that cannot be
-// bothered to read its cards fails here, and an old entry gets fixed by fetching
-// the text and deleting a marker. Anyone tempted to raise the cap should read the
-// Camellia entry first — that is what an unread card costs.
-//
-// It went up once, 16 -> 36, as a correction rather than borrowing, then down to 30
-// when Broodscale, Scurry Oak and Herd Baloth were finally read. The
-// first count only covered cards listed in `cards`, so a pass could reason about a
-// dozen *peers* and record none of them — Ashnod's Altar named twelve and had one
-// text. Those twenty were always unread; the number was wrong, not the debt. If it
-// ever rises again, that is the same bug or a new excuse, and neither is allowed.
-const UNREAD_DEBT = 16;
-
-test('research log: the unread backlog only ever shrinks', () => {
+// **The allowance is not coming back.** It is now a flat prohibition: an UNREAD
+// marker anywhere in the log fails, whatever its excuse and whatever its number.
+// Reintroducing a cap would mean re-opening the debt this test spent four passes
+// closing, and anyone tempted should read the Camellia entry first — 35 candidates
+// discarded on a text nobody had opened is what one unread card costs.
+test('research log: nothing in the log is marked UNREAD', () => {
   const unread = [];
   PASSES.forEach((pass) => {
     Object.entries(pass.read || {}).forEach(([card, text]) => {
       if (String(text).startsWith('UNREAD')) unread.push(pass.subject + ' / ' + card);
     });
   });
-  assert.ok(unread.length <= UNREAD_DEBT,
-    'the unread backlog grew to ' + unread.length + ' (cap ' + UNREAD_DEBT + '). '
-    + 'A new pass must record real oracle text:\n  ' + unread.join('\n  '));
-  if (unread.length < UNREAD_DEBT) {
-    assert.fail('the backlog is down to ' + unread.length + ' — lower UNREAD_DEBT to '
-      + unread.length + ' so it cannot drift back up');
-  }
+  assert.deepStrictEqual(unread, [],
+    'the unread backlog is closed and stays closed. Fetch the text — node '
+    + 'tools/lookup-card.js "<card>", which falls back to Forge when Scryfall is '
+    + 'blocked — and paste it in:\n  ' + unread.join('\n  '));
 });
 
 // Peers are where the reasoning actually happens: the subject is compared *against*

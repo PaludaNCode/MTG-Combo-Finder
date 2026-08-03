@@ -22,6 +22,8 @@ npm run lint              # ESLint, fetched for the run — no lint dependency i
 npm run verify            # layout smoke test — REQUIRED after any UI change
 npm run test:ui           # Playwright browser tests + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
+                          # --graduated out.json also lists the rows Spellbook now
+                          # publishes, which is what the nightly job turns into an issue
 npm run check:readme      # the README's countable numbers still match the files
 
 node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,737 files
@@ -169,12 +171,19 @@ different from the second: `deck-cards.js` chooses *subjects* from a deck and th
 each across the whole database, where `deck-gaps.js` bounds the candidate shapes too, so
 every hit is a combo the deck could cast tonight.
 
-**It re-proposes what has already been ruled out.** The first sweep threw out
-`Scurry Oak + Sadistic Glee` — the Squirrel cannot sacrifice itself where Broodscale's
-Spawn can — and `deck-gaps.js` offers it again, because that decision is a sentence in
-`research-log.js` and not a card set. Read the log first. Wiring them together means
-giving every rule-out a machine-readable set of cards, which is a change to the log's
-shape nobody has made.
+**It used to re-propose what had already been ruled out**, and no longer does for the
+decisions somebody wrote down as cards. A rule-out in `research-log.js` may carry `sets`
+— the exact card combinations that reason killed — and `deck-gaps.js` drops them, then
+prints what it dropped and why. `Scurry Oak + Sadistic Glee` was the case that named the
+problem: the Squirrel cannot sacrifice itself where Broodscale's Spawn can, the first
+sweep threw it out, and the tool offered it again every run.
+
+**`sets` is a subset of its reason, always.** Most rule-outs are categorical — "the loop
+needs a *token* out of the sacrifice" — and cover shapes nobody enumerated, so they have
+no card set to record. `ruledOutSets()` answers *has this been ruled out?* with **yes** or
+**nothing recorded**, and never with *no*. A surviving candidate means nothing has been
+recorded about it in a form a tool can read; it does not mean nobody has decided. Still
+read the log.
 
 ### The two fixture decks
 
@@ -230,6 +239,13 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **The unofficial panel is never counted as published data.** Its rows stay out of
   the combo count and the bracket check, and every row has to name the published
   combo it came from. `test/unofficial.test.js` enforces that shape.
+- **Rows leave the file because the nightly job noticed, not because somebody
+  remembered.** `update-data.yml` verifies every citation against the snapshot it just
+  published: a broken one fails the job, and a row Spellbook has *since published*
+  goes into a standing issue that the job rewrites nightly and closes itself once the
+  list empties. Adding a row is a decision; removing one should not have to be. Don't
+  hand-edit that issue's body — it is regenerated, and `npm run verify:unofficial` is
+  the live answer.
 - **Row and result counts in the README are real measurements.** If you add rows to
   `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too —
   `npm run check:readme` says which, and CI runs it. It also fails if a sentence it
