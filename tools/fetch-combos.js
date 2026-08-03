@@ -349,6 +349,7 @@ function readFixture(file) {
       // Sorted the same way the live path sorts, so a fixture cannot accidentally
       // assert an order the real thing does not produce.
       gameChangers: (doc.gameChangers || []).slice().sort((a, b) => a.localeCompare(b)),
+      banned: (doc.banned || []).slice().sort((a, b) => a.localeCompare(b)),
     },
   };
 }
@@ -367,6 +368,11 @@ async function fetchCardIdentities() {
   // revised with each bracket update, and a copy here would go stale silently —
   // the exact failure mode templates.json has to work to avoid.
   const gameChangers = [];
+  // The Commander ban list, off the same card object and in the same pass. Read
+  // rather than kept here for the same reason the Game Changers are: Wizards revise
+  // it, and a copy in this repository would go stale in silence — the page would go
+  // on calling a banned deck legal, which is worse than saying nothing.
+  const banned = [];
   let cards = 0;
   const collect = (card) => {
     cards += 1;
@@ -376,6 +382,12 @@ async function fetchCardIdentities() {
       identities[card.name] = card.color_identity.join('');
     }
     if (pick(card, 'game_changer', 'gameChanger') === true) gameChangers.push(card.name);
+    // `legalities.commander` is one of legal / not_legal / restricted / banned. Only
+    // `banned` is a claim worth making: `not_legal` covers every card that has simply
+    // never been in the format — Alchemy rebalances, un-cards, most of Arena — and
+    // reporting those as illegal would flag a lot of paper decks that are fine.
+    const legalities = card.legalities || {};
+    if (legalities.commander === 'banned') banned.push(card.name);
   };
 
   if (meta.jsonl_download_uri) {
@@ -389,7 +401,11 @@ async function fetchCardIdentities() {
   }
 
   console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity`);
-  return { identities, gameChangers: gameChangers.sort((a, b) => a.localeCompare(b)) };
+  return {
+    identities,
+    gameChangers: gameChangers.sort((a, b) => a.localeCompare(b)),
+    banned: banned.sort((a, b) => a.localeCompare(b)),
+  };
 }
 
 // Nought Game Changers is not a short list: it means Scryfall's flag has moved, and
@@ -416,6 +432,33 @@ async function fetchCardIdentities() {
 // and they are all still correct without it. But it must be impossible to miss in
 // the log, which is what this is for.
 const GAME_CHANGERS_EXPECTED = 30;
+
+// The Commander ban list is about 50 cards and moves once or twice a year. Same
+// reasoning as the Game Changers above and the same failure: a list that came back
+// empty is a `legalities` shape change, not a format that banned nothing, and the
+// consequence is a page that stops making the claim — which looks exactly like a
+// deck with no banned cards in it. Not fatal, for the same reason: the combos are
+// still right without it.
+//
+// 30 rather than 50, on the same principle as GAME_CHANGERS_EXPECTED: a number under
+// whatever the data currently manages, there to catch something breaking rather than
+// to bicker over a card. Scryfall is unreachable from the sandbox this was written
+// in, so the true figure could not be read; the ban list has been in the fifties for
+// years, and 30 still catches a field that had half stopped working.
+const BANNED_EXPECTED = 30;
+
+function reportBanned(names) {
+  if (names.length >= BANNED_EXPECTED) {
+    console.log(`Read ${names.length} Commander-banned cards from Scryfall's legalities.`);
+    return;
+  }
+  console.log(`\nOnly ${names.length} card(s) came back banned in Commander, expected at `
+    + `least ${BANNED_EXPECTED}.`);
+  console.log('Scryfall publishes this as `legalities.commander === "banned"` on the card');
+  console.log('object. If that has moved, the deck page stops saying whether a deck is legal,');
+  console.log('which is indistinguishable from a deck with nothing banned in it.');
+  console.log('Check the card object: https://scryfall.com/docs/api/cards\n');
+}
 
 function reportGameChangers(names) {
   if (names.length >= GAME_CHANGERS_EXPECTED) {
@@ -755,7 +798,7 @@ async function main() {
   if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
   if (STEPS_DIR) steps.report(combos.length);
 
-  const { identities: cardIdentity, gameChangers } = fixture
+  const { identities: cardIdentity, gameChangers, banned } = fixture
     ? fixture.cardData
     : await fetchCardIdentities();
   // An empty map silently disables colour filtering in the page, which is how
@@ -776,6 +819,7 @@ async function main() {
 
   reportUnclassified(combos);
   reportGameChangers(gameChangers);
+  reportBanned(banned);
 
   const templateData = readTemplates();
   const templates = templateData.templates;
@@ -804,6 +848,11 @@ async function main() {
     // missing list as "cannot say" and shows nothing, which is the right answer
     // either way.
     gameChangers,
+    // The cards banned in Commander, for the legality line beside the bracket.
+    // Empty is published as empty for the same reason the list above is: the page
+    // treats a missing list as "cannot say" and shows nothing, and a page that
+    // cannot say so is better than one that quietly calls a banned deck legal.
+    banned,
     templates,
     // The 29 templates Spellbook gives no Scryfall query for, by name only.
     // There is no card list to match against and there never will be, so these
@@ -828,7 +877,7 @@ async function main() {
   const mb = (fs.statSync(OUT).size / 1024 / 1024).toFixed(2);
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, `
     + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, `
-    + `${gameChangers.length} Game Changers, ${mb} MB`);
+    + `${gameChangers.length} Game Changers, ${banned.length} banned, ${mb} MB`);
   console.log(`  interned ${names.length} card names and ${results.length} results`);
   const unsolved = cardIds.filter((id) => id === null).length;
   console.log(`  derived ${names.length - unsolved} card ids; ${keptIds} combo(s) kept a literal id`

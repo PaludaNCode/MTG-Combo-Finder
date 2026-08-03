@@ -244,6 +244,81 @@ button:disabled { opacity: .6; cursor: wait; }
 #status.error { color: var(--error); }
 
 /* ---- colour identity header ---- */
+/* ---- whether the list is allowed ----
+ *
+ * Under the bracket line and in the same idiom: a label in small caps, then the
+ * claim. Two lines because there are two accusations, and only the ban list gets
+ * --error — a card in the wrong colours is a decklist mistake, not the format
+ * refusing the deck, and colouring both the same would overstate the first.
+ *
+ * --error on --panel is the pairing .diag summary already uses; the footnote is
+ * --muted for the same reason the map legend's is, since --faint only clears AA
+ * on --bg. */
+.legality {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  margin: -.5rem 0 1rem;
+}
+.legality-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .3rem .5rem;
+  margin: .2rem 0;
+  font-size: .9rem;
+}
+.legality-label {
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.is-banned .legality-label,
+.is-banned .legality-claim { color: var(--error); }
+.legality-claim { color: var(--text); }
+.legality-cards .card-name { color: var(--text); font-weight: 600; }
+/* The links sit against the name without this — "Murderous RedcapEDHREC" — because
+   the flex gap above is between the line's parts and not inside this span. */
+.legality-cards .card-links { margin-left: .35rem; font-size: .85em; }
+/* The colours the card carries and the commander does not, so the claim can be
+   checked without opening the card. */
+.legality-colours { color: var(--muted); font-size: .85em; }
+.legality-note { margin: .35rem 0 0; font-size: .8rem; color: var(--muted); }
+
+/* ---- cards the snapshot did not recognise ----
+ *
+ * Above the results, in the accent's own family, because it is the page talking
+ * about the reader's input rather than a property of any combo — the same reason
+ * the unofficial half of a row's split takes the accent. Not --error: a token line
+ * in a deck export is not a failure, and colouring it like one would overstate a
+ * list that is usually one typo long.
+ *
+ * Colours are tokens, and nothing here leans on opacity to soften one: the text is
+ * --text on --panel and the footnote is --muted, both of which clear AA there.
+ * --faint is only safe on --bg. */
+.unknown-cards {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: .7rem .9rem;
+  margin: 0 0 1rem;
+}
+.unknown-head { margin: 0; font-size: .9rem; color: var(--text); }
+/* The names read as a list of things to go and fix, one per line: they are being
+   compared against a decklist in the box above, which is also one per line. */
+.unknown-list {
+  margin: .4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: .9rem;
+}
+.unknown-list .card-name { color: var(--text); font-weight: 600; }
+.unknown-more { margin: .3rem 0 0; font-size: .85rem; color: var(--muted); }
+.unknown-why { margin: .45rem 0 0; font-size: .82rem; color: var(--muted); }
+
 .identity-line {
   display: flex;
   align-items: center;
@@ -549,9 +624,12 @@ button:disabled { opacity: .6; cursor: wait; }
  * spell the words out in the *narrower* of those two and not the wider one. The
  * row's column is the thing that decides, so the row's column is what is asked.
  *
- * 560px is measured: at 566px of column — a 1024px window — a 12rem gutter still
- * leaves the card name 331px, which is more than the 248px it gets on a phone, so
- * nothing is worse off than the layout this replaces. Below that the gutter would
+ * 560px is measured: at that column width a 12rem gutter still leaves the card name
+ * 325px, which is more than the 248px it gets on a phone, so nothing is worse off
+ * than the layout this replaces. (Not "a 1024px window", as this said before it was
+ * checked against the tool: that window is 551px of column and stays compact. The
+ * widths `npm run verify` prints are the ones the query is answered against.)
+ * Below that the gutter would
  * be taking a third of the row to say in words what "17+7" says in five
  * characters.
  *
@@ -574,6 +652,51 @@ button:disabled { opacity: .6; cursor: wait; }
      "17 official + 7 unofficial", which reads as arithmetic on two labelled
      quantities. The dot is the separator the split line used before this. */
   .row-split > .sign { display: none; }
+}
+
+/* ---- and where it has room to put the links beside the name ----
+ *
+ * A second threshold rather than the split's, and much wider than the 560px it
+ * looked like it wanted, because the line being moved is not just the two links.
+ * It is the links *and* `+ Add to deck`, and measured on this stylesheet that line
+ * is 245px, not the ~108px the links alone take. At 560px of column the row-main
+ * is 325px, which leaves the name 80px: the links held their place on 2 of 198 real
+ * card names. That is the ragged list the phone layout exists to avoid, arrived at
+ * from the other direction.
+ *
+ * 750px is where it holds — measured over the 198 names in card-text.json, which
+ * run to 55 characters and have a median of 17, at the column widths `npm run verify`
+ * reports rather than at round numbers:
+ *
+ *   column   row-main   names whose links stay on the name's line
+ *    560px     325px      2 / 198   (where the split's threshold is)
+ *    689px     454px    137 / 198   (a 768px window)
+ *    750px     515px    191 / 198   ← and no name wraps at all
+ *    967px     732px    197 / 198   (a 1440px window)
+ *   1042px     807px    198 / 198   (a 1920px window)
+ *
+ * So a 768px window keeps the stacked reading and a desktop does not. The seven
+ * names that still overflow at 750px are not a break: flex-wrap drops their links
+ * to the line below, which is exactly the layout they had before. Nothing is
+ * clipped and nothing overflows the column at any width.
+ *
+ * Two thresholds and not one because they are answering different questions — the
+ * gutter needs room for two words, this needs room for a card name beside 245px of
+ * controls — and collapsing them to a single number would mean picking whichever
+ * question is louder and being wrong about the other. */
+@container rows (min-width: 750px) {
+  .combo.suggestion > .row-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: .6rem;
+  }
+  /* The margins that separated three stacked lines; on one line the gap places them. */
+  .combo.suggestion > .row-main > .card-links { margin: 0; }
+  /* The breakdown still closes the row on a line of its own. It is what the count is
+     made of, not another thing you can do with the card, and beside the links it
+     would read as one run of pills and controls. */
+  .combo.suggestion > .row-main > .sizes { flex-basis: 100%; }
 }
 
 /* One thing per line down the card's column: the name, then everywhere you can
@@ -795,20 +918,9 @@ button:disabled { opacity: .6; cursor: wait; }
 .fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }
 .fills .card-name { color: var(--text); font-weight: 600; }
 
-/* The slot a combo is short of. Dashed, because unlike the slots above it is
-   not filled — the row is a gap, not a find. */
-.slot-missing {
-  box-shadow: none;
-  border: 1px dashed var(--accent);
-  color: var(--accent);
-  font-style: italic;
-}
-.slot-away { border-left: 2px solid var(--line-strong); }
-.gap { margin: .2rem 0 .1rem; font-size: .85rem; color: var(--muted); }
-.gap-label { color: var(--text); font-weight: 600; }
-.candidates { margin: .1rem 0 .35rem; font-size: .85rem; color: var(--muted); }
-.candidates .card-name { color: var(--text); }
-.candidates .card-links { margin-left: .3rem; }
+/* There was a dashed variant of the pill above for a slot a combo was *short* of,
+   plus the rules for the rows that showed them. They went with the "One slot away"
+   panel: every slot on the page now is a slot the deck fills. */
 
 /* The alternatives under a suggestion. Same job, same combos — worth listing,
    not worth shouting.

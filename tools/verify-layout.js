@@ -46,6 +46,30 @@ const VIEWPORTS = [
   // app.js — searching in the window instead of beside it. Same output, or the
   // fallback is a branch nobody has ever run.
   { name: 'desktop (no worker)', width: 1440, height: 900, deck: 'marked', noWorker: true },
+  // The same deck with a misspelling and a token line in it. Both parse as card
+  // lines, reach the search and match nothing, so the page has to name them — and
+  // every other run above is the other branch of that rule, where nothing is
+  // unrecognized and nothing at all is said.
+  { name: 'misspelled card', width: 1440, height: 900, deck: 'misspelled' },
+  { name: 'misspelled card (phone)', width: 390, height: 844, deck: 'misspelled' },
+  // The same deck made illegal two ways at once — a card outside the commander's
+  // colour identity and a card on the fixture's ban list — because the two findings
+  // have to be drawn together to be checked apart. Every other deck here is the
+  // silent branch: nothing to report, and no line at all.
+  { name: 'illegal deck', width: 1440, height: 900, deck: 'illegal', kind: 'legality' },
+  // And on a phone, where the two lines wrap: a claim, a card name and two links per
+  // line is the widest thing in that box, and it has to stay inside the column.
+  { name: 'illegal deck (phone)', width: 390, height: 844, deck: 'illegal', kind: 'legality' },
+  // And with no commander named, which is the half the check cannot answer: a
+  // Commander deck's identity is its commander's, and there is none to read. The ban
+  // still stands, and the line has to say why the other half went unanswered.
+  {
+    name: 'illegal deck (no commander)',
+    width: 1440,
+    height: 900,
+    deck: 'illegalNoCommander',
+    kind: 'legality',
+  },
   // Not a layout check: the share link's own round trip. Its encoding is ours,
   // so nothing about it can be taken on trust.
   { name: 'share link', width: 1440, height: 900, kind: 'share' },
@@ -190,6 +214,31 @@ function measure(win, doc) {
           const cs = win.getComputedStyle(body);
           return Math.round(body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
         })(),
+        // Where the card's links sit relative to its name. Beside it where the row's
+        // column has room for both, on a line of their own below where it has not —
+        // and this is the only check that can tell those apart, because both are the
+        // same three children in the same order and only the geometry differs.
+        // Rendered rows only, for the same reason the totals are filtered above.
+        rowLinks: [...p.querySelectorAll('.combo.suggestion')].map((row) => {
+          const main = row.querySelector(':scope > .row-main');
+          const name = main && main.querySelector(':scope > .row-name');
+          const links = main && main.querySelector(':scope > .card-links');
+          if (!name || !links) return null;
+          const nb = name.getBoundingClientRect();
+          const lb = links.getBoundingClientRect();
+          if (!nb.width || !lb.width) return null;
+          return {
+            name: name.textContent,
+            // Sharing the name's line: starting after the name ends, and starting
+            // before the name's own box does.
+            beside: lb.left >= nb.right - 1 && lb.top < nb.bottom,
+            below: lb.top >= nb.bottom - 1,
+            // Whichever branch is taken, the line has to stay inside the column.
+            // A links line running past the row's own right edge is the failure
+            // mode this rule can produce and a screenshot of a short name hides.
+            overflows: Math.round(lb.right) > Math.round(main.getBoundingClientRect().right) + 1,
+          };
+        }).filter(Boolean),
         splits: [...p.querySelectorAll('.row-split')].map((s) => ({
           // What a reader actually sees. Both readings of the split are in the
           // markup and CSS shows one, so textContent would report the words even
@@ -409,8 +458,72 @@ function measure(win, doc) {
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
     comboIds: [...doc.querySelectorAll('#included .combo-link a')].map((a) => a.getAttribute('href')),
   };
-  // The combos held up by a slot the deck cannot fill: reported, apart from the
-  // ones it can assemble, and never counted among them.
+  // What the page said about cards it did not recognise. Read as what a reader sees
+  // — is the section there, what does it claim, and which names does it write out —
+  // plus where it sits, because a notice about the input that renders below the
+  // answer it is qualifying is a notice nobody reads.
+  const unknownCards = (() => {
+    const box = doc.querySelector('#unrecognized .unknown-cards');
+    const firstPanel = doc.querySelector('#results .panel');
+    return {
+      shown: !!box,
+      head: box ? (box.querySelector('.unknown-head') || {}).textContent || '' : '',
+      names: [...doc.querySelectorAll('#unrecognized .unknown-list .card-name')].map((e) => e.textContent),
+      why: box ? (box.querySelector('.unknown-why') || {}).textContent || '' : '',
+      // Above the first panel of results, measured rather than assumed from the
+      // markup order: a float or a grid could put it anywhere.
+      aboveResults: !!(box && firstPanel
+        && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
+    };
+  })();
+  // What the page said about legality. Two lines, or none — and read as a reader sees
+  // it: which claim, which cards, and what it admitted to not checking.
+  const legality = (() => {
+    const box = doc.querySelector('#legality .legality');
+    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
+      .map((e) => e.textContent);
+    return {
+      shown: !!box,
+      banned: cardsIn('#legality .is-banned'),
+      bannedClaim: (doc.querySelector('#legality .is-banned .legality-claim') || {}).textContent || '',
+      offIdentity: cardsIn('#legality .is-off-identity'),
+      colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
+        .map((e) => e.textContent.trim()),
+      identityClaim: (doc.querySelector('#legality .is-off-identity .legality-claim') || {}).textContent || '',
+      notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
+      // Beside the bracket, which means under it and above the combos.
+      belowBracket: (() => {
+        const bracket = doc.querySelector('#bracket .bracket-line');
+        const firstPanel = doc.querySelector('#results .panel');
+        if (!box || !bracket || !firstPanel) return null;
+        return box.getBoundingClientRect().top >= bracket.getBoundingClientRect().top
+          && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top;
+      })(),
+      // The ban is the format refusing the deck and takes --error; a card in the
+      // wrong colours does not, or the two accusations read as one.
+      bannedColour: doc.querySelector('#legality .is-banned .legality-claim')
+        ? win.getComputedStyle(doc.querySelector('#legality .is-banned .legality-claim')).color
+        : null,
+      identityColour: doc.querySelector('#legality .is-off-identity .legality-claim')
+        ? win.getComputedStyle(doc.querySelector('#legality .is-off-identity .legality-claim')).color
+        : null,
+    };
+  })();
+  // A combo the deck cannot assemble for want of a template slot must not be on the
+  // page at all. Combo 13 in the fixture is the case — every card it names is in the
+  // deck and nothing fills its slot — and it used to have a panel of its own. Read
+  // across every combo link in the results, not just the ones in a single panel,
+  // because the way this could go wrong now is it turning up somewhere else.
+  const stuckSlot = (() => {
+    const links = [...doc.querySelectorAll('#results .combo-link a')].map((a) => a.getAttribute('href') || '');
+    return {
+      links: links.length,
+      // A substring and not a regex: this block is inside a template literal, where
+      // a lone \\/ collapses to / and turns the pattern into a line comment.
+      anywhere: links.some((href) => href.indexOf('/13/') !== -1),
+      missingPills: doc.querySelectorAll('#results .slot-missing').length,
+    };
+  })();
   // "Combos in your deck" leads with the easiest: 2-card rows, then 3, then 4.
   // Card names inside a row are alphabetical, so two rows can be compared.
   // Scoped to the row's own heading: a collapsed row keeps every version inside a
@@ -423,13 +536,6 @@ function measure(win, doc) {
     const choices = head.querySelector(':scope > .either') ? 1 : 0; // "any of N" stands in for one card
     return { names, size: names.length + slots + choices, label: names.join(' + ') };
   });
-  const stuck = {
-    rows: doc.querySelectorAll('#slots .combo').length,
-    missing: [...doc.querySelectorAll('#slots .slot-missing')].map((e) => e.textContent),
-    needs: [...doc.querySelectorAll('#slots .gap')].map((e) => e.textContent),
-    candidates: [...doc.querySelectorAll('#slots .candidates .card-name')].map((e) => e.textContent),
-    comboIds: [...doc.querySelectorAll('#slots .combo-link a')].map((a) => a.getAttribute('href')),
-  };
   // Combos listed *under* a card have to start with that card. Read from the
   // closed <details> — the rows are in the DOM whether or not it is open.
   const nested = (scope, cardSelector) => [...doc.querySelectorAll(scope)].slice(0, 3).map((row) => {
@@ -694,8 +800,10 @@ function measure(win, doc) {
     header,
     grouped,
     slots,
+    stuckSlot,
+    unknownCards,
+    legality,
     comboCompare,
-    stuck,
     order,
     leads,
     bracket,
@@ -895,10 +1003,62 @@ async function runStamped(vp) {
         via: age ? age.dataset.via : null,
         noWorker: !!vp.noWorker,
         panels: doc.querySelectorAll('.panel').length,
-        stuckRows: doc.querySelectorAll('#slots .combo').length,
         // Read after the search, so the two scripts app.js injects are in the DOM by
         // now and their URLs are part of what gets checked for the stamp.
         scripts: [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')),
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
+// Whether the list is allowed, which needs a deck that is not: the tuning deck is
+// legal, and making it illegal would mean changing its colours, its combos and its
+// ordering — all of which the run above asserts. So this is its own run, like the
+// unofficial panel's, with only the legality line in scope.
+async function runLegality(vp) {
+  try {
+    const { win, doc } = await load('/index.html', vp.width);
+    win.localStorage.clear();
+    doc.getElementById('commanders').value = '';
+    doc.getElementById('decklist').value = DECKS[vp.deck];
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await settled(doc, '.combo');
+
+    const box = doc.querySelector('#legality .legality');
+    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
+      .map((e) => e.textContent);
+    const claim = (sel) => (doc.querySelector(sel + ' .legality-claim') || {}).textContent || '';
+    const bracket = doc.querySelector('#bracket .bracket-line');
+    const firstPanel = doc.querySelector('#results .panel');
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      deck: vp.deck,
+      legality: {
+        shown: !!box,
+        banned: cardsIn('#legality .is-banned'),
+        bannedClaim: claim('#legality .is-banned'),
+        offIdentity: cardsIn('#legality .is-off-identity'),
+        colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
+          .map((e) => e.textContent.trim()),
+        identityClaim: claim('#legality .is-off-identity'),
+        notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
+        // Beside the bracket: under that line, above the first panel of results.
+        besideBracket: !!(box && bracket && firstPanel
+          && box.getBoundingClientRect().top >= bracket.getBoundingClientRect().top
+          && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
+        // Two accusations, so two colours. The ban is the format refusing the deck
+        // and takes --error; a card in the wrong colours does not.
+        bannedColour: doc.querySelector('#legality .is-banned .legality-claim')
+          ? win.getComputedStyle(doc.querySelector('#legality .is-banned .legality-claim')).color
+          : null,
+        identityColour: doc.querySelector('#legality .is-off-identity .legality-claim')
+          ? win.getComputedStyle(doc.querySelector('#legality .is-off-identity .legality-claim')).color
+          : null,
+        overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
   } catch (err) {
@@ -1039,6 +1199,7 @@ function runOne(vp) {
   if (vp.kind === 'share') return runShare(vp);
   if (vp.kind === 'stamped') return runStamped(vp);
   if (vp.kind === 'unofficial') return runUnofficial(vp);
+  if (vp.kind === 'legality') return runLegality(vp);
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:' + vp.height + 'px';
@@ -1155,7 +1316,7 @@ function runOne(vp) {
           resultsHidden: doc.getElementById('results').hidden,
         };
 
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width }, before,
+        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
           { afterCollapse, expandedChips, afterAdd, storedDeck, afterClear }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
@@ -1415,7 +1576,6 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         }
       }
       if (s.panels < 4) wrong.push(`only ${s.panels} panels rendered from a stamped page`);
-      if (s.stuckRows < 2) wrong.push(`the one-slot-away rows did not render from a stamped page`);
       if (wrong.length) {
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
@@ -1532,6 +1692,70 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       continue;
     }
 
+    // Whether the list is allowed. Its own run, because a legal deck says nothing at
+    // all and the tuning deck is legal — see runLegality() for why this is not just
+    // another viewport over the same deck.
+    if (v.deck === 'illegal' || v.deck === 'illegalNoCommander') {
+      const legal = v.legality;
+      const wrong = [];
+      if (!legal.shown) {
+        wrong.push('an illegal deck said nothing about it');
+      } else {
+        if (!legal.banned.includes('Murderous Redcap')) {
+          wrong.push(`the banned card was not named: ${JSON.stringify(legal.banned)}`);
+        }
+        if (!/banned in Commander/.test(legal.bannedClaim)) {
+          wrong.push(`the ban does not say what it is: "${legal.bannedClaim}"`);
+        }
+        if (!legal.besideBracket) wrong.push('the legality line is not beside the bracket');
+        if (legal.overflow) wrong.push('the legality line overflows horizontally');
+        // It never claims more than the two rules that are readable off a card list.
+        if (!legal.notes.some((t) => /Singleton, deck size/.test(t))) {
+          wrong.push('the legality line does not say what it left unchecked');
+        }
+        if (v.deck === 'illegal') {
+          // A commander was named, so both halves are answerable. Heliod is {W}
+          // against a {U}{G} commander.
+          if (!legal.offIdentity.includes('Heliod, Sun-Crowned')) {
+            wrong.push(`the off-identity card was not named: ${JSON.stringify(legal.offIdentity)}`);
+          }
+          if (!legal.colours.includes('{W}')) {
+            wrong.push(`the offending colour was not shown: ${JSON.stringify(legal.colours)}`);
+          }
+          if (!/\{U\}\{G\}/.test(legal.identityClaim)) {
+            wrong.push(`the commander's identity is not in the claim: "${legal.identityClaim}"`);
+          }
+          // Murderous Redcap is banned *and* off-identity. One card, one accusation,
+          // and the graver one: two lines about the same card read as two problems.
+          if (legal.offIdentity.includes('Murderous Redcap')) {
+            wrong.push('a banned card is accused on the colour line as well');
+          }
+          // Two accusations, two colours, or which one is a ban is unreadable.
+          if (legal.bannedColour === legal.identityColour) {
+            wrong.push(`both lines are ${legal.bannedColour}`);
+          }
+        } else {
+          // No commander named, so the colour half cannot be answered — and must not
+          // fall back on the deck's own colours, which would make every list legal.
+          if (legal.offIdentity.length) {
+            wrong.push(`a deck with no commander was told ${legal.offIdentity.length} card(s) are off-identity`);
+          }
+          if (!legal.notes.some((t) => /No commander was named/.test(t))) {
+            wrong.push(`nothing said why colours went unchecked: ${JSON.stringify(legal.notes)}`);
+          }
+        }
+      }
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} — banned ${JSON.stringify(legal.banned)}, `
+          + `off-colour ${JSON.stringify(legal.offIdentity)}${legal.colours.length ? ' ' + legal.colours.join('') : ''}, `
+          + `${legal.notes.length} caveat(s)`);
+      }
+      continue;
+    }
+
     // The share-link run measures a round trip rather than a layout, so it is
     // judged on its own terms.
     if (v.theme) {
@@ -1624,12 +1848,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
-    // Combos in your deck, how they connect, one slot away, cards carrying them,
-    // suggested additions. The bracket check is not among them — it stopped being
-    // a panel and became a line beside the colour identity, which the next check
-    // is what keeps true.
-    if (v.panels.length !== 5) problems.push(`expected 5 panels, got ${v.panels.length}`);
+    // Combos in your deck, how they connect, cards carrying them, suggested
+    // additions. Four, not five: "One slot away" was removed. The bracket check is
+    // not among them either — it stopped being a panel and became a line beside the
+    // colour identity, which the next check is what keeps true.
+    if (v.panels.length !== 4) problems.push(`expected 4 panels, got ${v.panels.length}`);
     if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
+    if (v.panels.some((p) => /slot away/i.test(p.title))) problems.push('the one-slot-away panel is back');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
     } else if (!/^\d+$/.test(v.topPiece.total)) {
@@ -1665,6 +1890,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // gutter has started sizing itself to its content again.
     if (!v.numberColumns.length) {
       problems.push('no row totals rendered at all, so the number column is untested');
+    } else if (!v.numberColumns.some((c) => c.rowLinks.length)) {
+      problems.push('no card links measured on any row, so which line they sit on is untested');
     } else {
       for (const col of v.numberColumns) {
         if (col.edges.length !== 1) {
@@ -1682,6 +1909,28 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         // restated: if the container declaration were dropped the words would never
         // appear, and if the query were dropped they would appear on a phone. Both
         // fail here. The breakpoint is in style.css and nowhere else.
+        // The card's links share its name's line where the row's column has room for
+        // both, and take a line of their own where it has not. Checked as the rule and
+        // not as a restated breakpoint, the same way the split above is: a run whose
+        // column is over the threshold must show one branch and a run under it the
+        // other, so dropping either declaration fails here rather than in front of a
+        // reader. Both branches are covered by the viewports this tool already runs —
+        // a 1440px window puts the column at 982px and a phone at 349px.
+        //
+        // 750px and not the split's 560px because the line carries `+ Add to deck`
+        // as well as the two links; the measurement is in style.css beside the rule.
+        const roomForLinks = col.column >= 750;
+        for (const row of col.rowLinks) {
+          if (row.overflows) {
+            problems.push(`the links on "${row.name}" run past the row's column in "${col.panel}"`);
+          }
+          if (roomForLinks && !row.beside) {
+            problems.push(`the links on "${row.name}" are not beside the name in a ${col.column}px column`);
+          }
+          if (!roomForLinks && !row.below) {
+            problems.push(`the links on "${row.name}" share the name's line in a ${col.column}px column`);
+          }
+        }
         const roomForWords = col.column >= 560;
         for (const split of col.splits) {
           // "17+7" is numerals and two colours. Neither is available to a screen
@@ -1977,22 +2226,56 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (s.comboIds.some((href) => /\/12\//.test(href))) problems.push('a combo whose template nothing fills was listed as complete');
     if (!s.comboIds.some((href) => /\/11\//.test(href))) problems.push('the combo whose template the deck fills went missing');
 
-    // A combo the deck holds every named card for and cannot assemble is worth
-    // saying out loud, in its own section, naming the slot and what fills it.
-    // Dropping these in silence was the old behaviour.
-    const stuck = v.stuck;
-    if (stuck.rows < 2) problems.push(`expected 2 one-slot-away rows, got ${stuck.rows}`);
-    if (!stuck.comboIds.some((href) => /\/13\//.test(href))) problems.push('the combo one slot away was not reported');
-    if (s.comboIds.some((href) => /\/13\//.test(href))) problems.push('a combo one slot away was listed among the combos in the deck');
-    if (!stuck.missing.some((t) => /Persist Creature/.test(t))) problems.push(`the missing slot reads "${stuck.missing[0]}"`);
-    if (!stuck.needs.some((t) => /2 cards fill it, 1 in your colours/.test(t))) {
-      problems.push(`no row counted the cards that fill its slot: ${JSON.stringify(stuck.needs)}`);
+    // Combo 13 in the fixture is one slot short: the deck holds the card it names
+    // and nothing fills its Persist Creature slot. It used to have a panel of its
+    // own; now it must appear nowhere on the page at all. Asserted across every
+    // combo link in the results rather than only inside "Combos in your deck",
+    // because the failure the removal could introduce is it surfacing somewhere
+    // else — a suggestion, a piece row's disclosure — where it would read as a
+    // combo the deck has.
+    if (v.stuckSlot.anywhere) {
+      problems.push('a combo the deck cannot assemble for want of a slot is on the page');
     }
-    if (!stuck.candidates.includes('Bloom Tender')) problems.push('the cards that fill the slot were not named');
-    if (stuck.candidates.includes('Murderous Redcap')) problems.push('an off-colour card was offered for a slot');
-    // Haste Enabler has no Scryfall query, so it can be named and never filled.
-    if (!stuck.needs.some((t) => /Haste Enabler/.test(t))) problems.push('a slot with no card list was not named');
-    if (!stuck.needs.some((t) => /no card list published/.test(t))) problems.push('a slot with no card list did not say so');
+    if (!v.stuckSlot.links) problems.push('no combo links found at all, so that check proves nothing');
+    // And no dashed missing-slot pill survives anywhere, which is the other half:
+    // every slot on the page now is a slot the deck fills.
+    if (v.stuckSlot.missingPills) problems.push(`${v.stuckSlot.missingPills} missing-slot pill(s) still rendered`);
+
+    // Cards the snapshot has never heard of. Keyed on the deck that was pasted and
+    // not on whether the section rendered, which would be circular: the decks with
+    // nothing wrong must produce no section at all, and the one with a misspelling
+    // must name it. The fixture's identity map is small, so this is also the check
+    // that the thin-map rule is not swallowing a real answer — 2 unknown of 10 is
+    // under the limit and has to speak.
+    const unknown = v.unknownCards;
+    if (v.deck === 'misspelled') {
+      if (!unknown.shown) {
+        problems.push('a deck with a misspelled card said nothing about it');
+      } else {
+        if (!unknown.names.includes('Sol Rimg')) {
+          problems.push(`the misspelled card was not named: ${JSON.stringify(unknown.names)}`);
+        }
+        if (!unknown.names.includes('Treasure')) {
+          problems.push(`the token line was not named: ${JSON.stringify(unknown.names)}`);
+        }
+        if (!/2 cards/.test(unknown.head)) problems.push(`the notice reads "${unknown.head}"`);
+        // The claim is about the snapshot, not about the card.
+        if (!/this snapshot/.test(unknown.head)) problems.push(`the notice overclaims: "${unknown.head}"`);
+        if (!/token/.test(unknown.why)) problems.push('the notice does not say a token line lands here too');
+        if (!unknown.aboveResults) problems.push('the unrecognized-cards notice is below the results it qualifies');
+      }
+    } else if (unknown.shown) {
+      problems.push(`a clean deck was told ${unknown.names.length} of its cards are unrecognized`);
+    }
+
+    // A deck with nothing wrong is told nothing. The two illegal decks have their own
+    // run below, because the full battery here is about the tuning deck: adding an
+    // off-colour card to it changes its colour identity, its combo list and its
+    // ordering, and every one of those has an assertion of its own.
+    if (v.legality.shown) {
+      problems.push('a legal deck was given a legality line saying '
+        + `${JSON.stringify(v.legality.banned)} / ${JSON.stringify(v.legality.offIdentity)}`);
+    }
 
     // Which daily snapshot is on screen, and whether the kept copy is being
     // used. Caching that silently stops working costs 2.9 MB a visit and looks
@@ -2339,10 +2622,20 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
         : '';
       const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
-      const stuckNote = `${v.stuck.rows} one slot away (${v.stuck.missing.join(', ')})`;
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
+      // Which branch the rows took, and the width that chose it: the pair is what
+      // makes a changed threshold visible in the output rather than only in a failure.
+      const legalNote = v.legality.shown
+        ? `illegal [banned ${JSON.stringify(v.legality.banned)}, off-colour ${JSON.stringify(v.legality.offIdentity)}]`
+        : 'nothing illegal';
+      const unknownNote = v.unknownCards.shown
+        ? `unrecognized [${v.unknownCards.names.join(', ')}]`
+        : 'every card recognized';
+      const linked = v.numberColumns.filter((c) => c.rowLinks.length);
+      const linkNote = `links ${linked.some((c) => c.rowLinks.every((r) => r.beside)) ? 'beside' : 'below'} the name `
+        + `in ${linked.map((c) => c.column + 'px').join('/')} column(s)`;
       // The x the row's divider is drawn at, and where the blocks beside it start.
       // One number for the line because every piece of it agrees, which is the thing
       // being asserted; and the shape the choice of card took in the column it had,
@@ -2362,7 +2655,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${dividerNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${linkNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

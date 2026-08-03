@@ -97,11 +97,20 @@
       <div id="diagnostics" hidden></div>
 
       <section id="results" hidden>
+        <!-- Cards in the pasted list that the snapshot has no card by that name for
+             — a misspelling, a token line, or a card newer than the data. First,
+             above the answer, because it says the answer is smaller than the deck
+             deserves. Absent entirely when there are none. -->
+        <div id="unrecognized"></div>
         <div id="identity"></div>
         <!-- Which Commander bracket the list is still eligible for. Two of the
              bracket criteria are readable off a decklist; the rest are judgement
              calls, and the panel says which it did not check. -->
         <div id="bracket"></div>
+        <!-- And whether the list is *allowed*: cards outside the commander's colour
+             identity, and cards banned in Commander. Two different accusations, so
+             two lines, and nothing at all when there is neither. -->
+        <div id="legality"></div>
         <div id="included"></div>
         <!-- The same question, answered on our own authority rather than
              Spellbook's: combos found by substituting cards Spellbook itself
@@ -111,10 +120,6 @@
              same combo needs. Under the lists it summarises, and redrawn from
              scratch by every search, so adding a card moves the map too. -->
         <div id="graph"></div>
-        <!-- Combos you hold every named card for and cannot assemble because
-             nothing fills their slot. Kept apart from the combos above, which
-             the deck can actually pull off. -->
-        <div id="slots"></div>
         <div id="pieces"></div>
         <div id="suggestions"></div>
       </section>

@@ -67,6 +67,33 @@ test('the page after a search is clean', async ({ page }) => {
   await expectClean(page);
 });
 
+// The notice above the results naming cards the snapshot did not recognise. It is
+// the newest block of colour on the page — --text and --muted on --panel, with an
+// accent rule down its left edge — and the deck above is clean, so nothing else here
+// ever renders it. Contrast is exactly the kind of thing that breaks quietly when a
+// token moves.
+test('the notice about unrecognized cards is clean', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.locator('#decklist').fill(DECKS.misspelled);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+  await expect(page.locator('#unrecognized .unknown-cards')).toBeVisible();
+  await expect(page.locator('#unrecognized .unknown-list li').first()).toContainText('Sol Rimg');
+  await expectClean(page);
+});
+
+// The legality line, which is the one place --error is used on a claim rather than
+// on an error report — a banned card is the format refusing the deck. Contrast on
+// that pairing is checked here, and so is the off-colour line beside it, which is
+// deliberately *not* --error and so a different colour on the same background.
+test('the legality line is clean', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.locator('#decklist').fill(DECKS.illegal);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+  await expect(page.locator('#legality .is-banned')).toBeVisible();
+  await expect(page.locator('#legality .is-off-identity')).toBeVisible();
+  await expectClean(page);
+});
+
 // The three controls that build DOM when pressed, so their opened state is
 // checked rather than assumed: the bracket explanation, a steps disclosure, and
 // the map's own filter.

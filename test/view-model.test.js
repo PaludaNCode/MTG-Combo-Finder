@@ -367,3 +367,224 @@ test('fileRefusal: a file with no name is still a sentence', () => {
   const said = View.fileRefusal('empty', '', 1024 * 1024);
   assert.match(said, /^That file is empty/);
 });
+
+// ---- cards the snapshot has never heard of ---------------------------------
+//
+// The wording is a count and a pluralisation, and the decision to say anything at
+// all is a judgement about whether the data can support the claim. Both render
+// exactly as happily when wrong, which is why they are here and not in app.js.
+
+const found = (names, checked, mapped) => ({ names, checked, mapped: mapped === undefined ? 30000 : mapped });
+
+test('unrecognizedNote: a misspelled card is named', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg'], 100));
+  assert.match(note.sentence, /^One card in your list isn’t in this snapshot/);
+  assert.deepStrictEqual(note.names, ['Sol Rimg']);
+  assert.equal(note.count, 1);
+  assert.equal(note.more, 0);
+});
+
+test('unrecognizedNote: several are counted and pluralised', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg', 'Treasure', 'Lightning Bolt?'], 100));
+  assert.match(note.sentence, /^3 cards in your list aren’t/);
+  assert.equal(note.names.length, 3);
+});
+
+// A deck with nothing wrong says nothing at all — no empty box, no "0 unrecognized".
+test('unrecognizedNote: a clean deck says nothing', () => {
+  assert.equal(View.unrecognizedNote(found([], 100)), null);
+});
+
+test('unrecognizedNote: nothing to compare against says nothing', () => {
+  assert.equal(View.unrecognizedNote(found(['Sol Rimg'], 0)), null);
+  assert.equal(View.unrecognizedNote(null), null);
+  assert.equal(View.unrecognizedNote({}), null);
+});
+
+// The rule the whole feature rests on, pinned here rather than left to the fixtures
+// happening to be small. `cardIdentity: {}` has shipped once already — it made colour
+// filtering silently inert — and that payload reports every card in the deck as
+// unknown. So: an absent or empty map says nothing, whatever the deck.
+test('unrecognizedNote: an absent identity map says nothing', () => {
+  const everything = Array.from({ length: 100 }, (_, i) => 'Card ' + i);
+  assert.equal(View.unrecognizedNote(found(everything, 100, 0)), null);
+});
+
+// And a map too thin to answer, which is the test fixtures' own case: 14 entries
+// against a deck of 85. The answer there is about the data, not the deck.
+test('unrecognizedNote: a thin identity map says nothing', () => {
+  const most = Array.from({ length: 71 }, (_, i) => 'Card ' + i);
+  assert.equal(View.unrecognizedNote(found(most, 85, 14)), null);
+  // Exactly at the limit still speaks: half a deck is the line, and being at it is
+  // not being over it.
+  assert.ok(View.unrecognizedNote(found(most.slice(0, 42), 84)));
+  assert.equal(View.unrecognizedNote(found(most.slice(0, 43), 84)), null);
+});
+
+// A small paste is the case a fraction rule can get wrong: three cards with one
+// typo is 33% unknown and still worth saying.
+test('unrecognizedNote: one typo in a three-card paste still speaks', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg'], 3));
+  assert.ok(note);
+  assert.match(note.sentence, /^One card/);
+});
+
+test('unrecognizedNote: a wall of names is capped, and says how many are left', () => {
+  const many = Array.from({ length: 26 }, (_, i) => 'Card ' + i);
+  const note = View.unrecognizedNote(found(many, 200));
+  assert.equal(note.names.length, View.UNKNOWN_NAMED);
+  assert.equal(note.more, 26 - View.UNKNOWN_NAMED);
+  assert.match(note.sentence, /^26 cards/, 'the count is of all of them, not of the ones shown');
+});
+
+// The data is a nightly snapshot, so the honest claim is about the snapshot and not
+// about the card. "Sol Rimg is not a real card" is wrong the day a set is released.
+test('unrecognizedNote: the claim is about the snapshot, not about the card', () => {
+  const note = View.unrecognizedNote(found(['Sol Rimg'], 100));
+  assert.match(note.sentence, /this snapshot/);
+  assert.doesNotMatch(note.sentence, /does not exist|not a (real|valid) card/i);
+  // And it does not blame the reader: a token line and a card newer than the
+  // snapshot both land here too.
+  assert.match(note.why, /token/);
+  assert.match(note.why, /since the snapshot/);
+});
+
+// ---- whether the decklist is allowed ---------------------------------------
+//
+// Two accusations that must stay apart, a claim that must not become a green tick,
+// and the same thin-map rule the unrecognized note uses. Every one of them renders
+// perfectly while being wrong, which is what puts them here.
+
+const check = (over) => Object.assign({
+  offIdentity: [],
+  banned: [],
+  commanders: ['Kinnan, Bonder Prodigy'],
+  allowed: ['G', 'U'],
+  canCheckIdentity: true,
+  hasBanList: true,
+  checked: 99,
+  mapped: 30000,
+}, over);
+
+test('legalityProse: a legal deck says nothing at all', () => {
+  assert.equal(View.legalityProse(check()), null);
+  assert.equal(View.legalityProse(null), null);
+});
+
+test('legalityProse: a banned card is named and called a ban', () => {
+  const said = View.legalityProse(check({ banned: ['Golos, Tireless Pilgrim'] }));
+  assert.match(said.bannedSentence, /^One card in your list is banned in Commander:/);
+  assert.deepStrictEqual(said.banned, ['Golos, Tireless Pilgrim']);
+  assert.equal(said.offIdentity.length, 0, 'and it is not also called a colour problem');
+});
+
+test('legalityProse: an off-identity card names the identity it is outside, in pips', () => {
+  const said = View.legalityProse(check({ offIdentity: [{ card: 'Heliod, Sun-Crowned', colours: 'W' }] }));
+  // WUBRG is the printed order, so Simic reads {U}{G} — the same order the mana pips
+  // and identityString() put it in.
+  assert.match(said.identitySentence, /^One card is outside your commander’s colour identity \(\{U\}\{G\}\):/);
+  assert.deepStrictEqual(said.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: '{W}' }]);
+  assert.equal(said.banned.length, 0);
+});
+
+test('legalityProse: pips are in WUBRG order whatever order the colours arrive in', () => {
+  const said = View.legalityProse(check({
+    allowed: ['U', 'G'],
+    offIdentity: [{ card: 'Murderous Redcap', colours: 'RB' }],
+  }));
+  assert.match(said.identitySentence, /\(\{U\}\{G\}\)/);
+  assert.equal(said.offIdentity[0].colours, '{B}{R}');
+});
+
+test('legalityProse: both findings are reported, and stay separate', () => {
+  const said = View.legalityProse(check({
+    banned: ['Golos, Tireless Pilgrim'],
+    offIdentity: [{ card: 'Heliod, Sun-Crowned', colours: 'W' }],
+  }));
+  assert.equal(said.banned.length, 1);
+  assert.equal(said.offIdentity.length, 1);
+  assert.match(said.bannedSentence, /banned/);
+  assert.doesNotMatch(said.identitySentence, /banned/);
+});
+
+test('legalityProse: plural counts agree with the lists', () => {
+  const said = View.legalityProse(check({
+    banned: ['A', 'B'],
+    offIdentity: [{ card: 'C', colours: 'W' }, { card: 'D', colours: 'B' }, { card: 'E', colours: 'R' }],
+  }));
+  assert.match(said.bannedSentence, /^2 cards in your list are banned/);
+  assert.match(said.identitySentence, /^3 cards are outside/);
+});
+
+// What went unanswered rides along with a finding. It is not worth a panel of its
+// own on a legal deck — that is an empty panel with a caveat in it — but a reader
+// looking at one banned card should know the other half went unchecked.
+test('legalityProse: no commander says the colour half was not checked', () => {
+  const said = View.legalityProse(check({
+    banned: ['Golos, Tireless Pilgrim'],
+    commanders: [],
+    canCheckIdentity: false,
+  }));
+  assert.ok(said.unchecked.some((s) => /No commander was named/.test(s)));
+});
+
+test('legalityProse: a commander the snapshot does not know says which reason it is', () => {
+  const said = View.legalityProse(check({
+    banned: ['Golos, Tireless Pilgrim'],
+    commanders: ['Sol Rimg'],
+    canCheckIdentity: false,
+  }));
+  assert.ok(said.unchecked.some((s) => /does not know your commander/.test(s)));
+});
+
+test('legalityProse: no ban list says nothing was checked against one', () => {
+  const said = View.legalityProse(check({
+    offIdentity: [{ card: 'Heliod, Sun-Crowned', colours: 'W' }],
+    hasBanList: false,
+  }));
+  assert.ok(said.unchecked.some((s) => /no ban list/.test(s)));
+});
+
+// The same rule the unrecognized note uses, and the reason it exists: the published
+// data has zeroed real cards' colour identities once already, and a commander whose
+// identity came back empty makes every coloured card in the deck read as illegal.
+test('legalityProse: half a deck reading as off-identity is about the data', () => {
+  const many = Array.from({ length: 60 }, (_, i) => ({ card: 'Card ' + i, colours: 'W' }));
+  assert.equal(View.legalityProse(check({ offIdentity: many, checked: 99 })), null);
+  // A banned card alongside it still gets reported; the identity half is what is
+  // being disbelieved, not the whole panel.
+  const said = View.legalityProse(check({ offIdentity: many, checked: 99, banned: ['Golos, Tireless Pilgrim'] }));
+  assert.equal(said.offIdentity.length, 0);
+  assert.deepStrictEqual(said.banned, ['Golos, Tireless Pilgrim']);
+});
+
+// Only two of the format's rules are readable off a card list. A tick would be read
+// as covering singleton and deck size, which nothing here looks at.
+test('legalityProse: it says what it did not check', () => {
+  const said = View.legalityProse(check({ banned: ['Golos, Tireless Pilgrim'] }));
+  assert.match(said.note, /Singleton, deck size/);
+  assert.match(said.note, /two legality rules/);
+});
+
+// One card must not collect two accusations. A banned card in the wrong colours is
+// on both lists — the ban list is not filtered by colour — and two lines about one
+// card read as two problems where there is one card to cut.
+test('legalityProse: a banned card is not also accused of its colours', () => {
+  const said = View.legalityProse(check({
+    banned: ['Murderous Redcap'],
+    offIdentity: [{ card: 'Murderous Redcap', colours: 'BR' }, { card: 'Heliod, Sun-Crowned', colours: 'W' }],
+  }));
+  assert.deepStrictEqual(said.banned, ['Murderous Redcap']);
+  assert.deepStrictEqual(said.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: '{W}' }]);
+  assert.match(said.identitySentence, /^One card is outside/, 'and the count follows the shorter list');
+});
+
+// A card whose only problem is the ban still leaves nothing on the colour line, and
+// the panel does not render an empty one.
+test('legalityProse: nothing survives the filter means no colour line at all', () => {
+  const said = View.legalityProse(check({
+    banned: ['Murderous Redcap'],
+    offIdentity: [{ card: 'Murderous Redcap', colours: 'BR' }],
+  }));
+  assert.equal(said.offIdentity.length, 0);
+});

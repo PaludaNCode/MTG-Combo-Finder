@@ -289,8 +289,161 @@
     return `Loaded ${parts.join(' + ')} from “${name}”.${tail}`;
   }
 
+  // ---- cards the snapshot has never heard of ---------------------------------
+
+  // How many names to write out before the list stops being readable. Twenty is
+  // already an unusual paste; past that the count is the information.
+  const UNKNOWN_NAMED = 20;
+
+  // Above this fraction of the deck, the answer is about the data and not about the
+  // deck. It is the guard the whole feature rests on, for the reason `deckIdentity()`
+  // already returns null rather than guessing: when the identity map cannot answer,
+  // say nothing.
+  //
+  // The case is not hypothetical in either direction. The test fixture's
+  // `cardIdentity` has 14 entries against decks of 85 and 103 cards, so the naive
+  // version reports 83% of the tuning deck as unrecognized in `npm run verify` and
+  // `npm run test:ui`. And the published payload has shipped `cardIdentity: {}` once
+  // already, which made colour filtering silently inert — that same payload would
+  // report *every card in the deck* as unknown.
+  //
+  // A half rather than something tighter, because the rule has to survive a small
+  // paste: a reader checking three cards with one typo is 33% unknown and deserves
+  // to be told. Nobody's real decklist is half misspelled, and a map thin enough to
+  // be broken misses almost everything — the fixtures are at 83% and 100%, not 55%.
+  const UNKNOWN_LIMIT = 0.5;
+
+  // The rule itself, in one place, because two features need it and a second copy is
+  // a second thing to get wrong: a claim about more than half the deck is a claim
+  // about the data. Used by unrecognizedNote() below and by legalityProse().
+  function tooMuchOfTheDeck(count, checked) {
+    return !checked || count / checked > UNKNOWN_LIMIT;
+  }
+
+  // What to say about the cards the snapshot did not recognise, or null for nothing
+  // at all — which is the answer whenever the data cannot support the claim.
+  //
+  // The wording is careful about what is actually known. The data is a nightly
+  // snapshot of Scryfall by way of Spellbook, so the honest sentence is that *this
+  // snapshot* has no card by that name, not that the card does not exist. A page
+  // that says "Sol Rimg is not a real card" is wrong the day a set is released.
+  function unrecognizedNote(found) {
+    const names = (found && found.names) || [];
+    const checked = Number(found && found.checked) || 0;
+    if (!names.length || !checked) return null;
+    // No map at all cannot distinguish an unknown card from an unknown database.
+    if (!Number(found.mapped)) return null;
+    if (tooMuchOfTheDeck(names.length, checked)) return null;
+
+    const shown = names.slice(0, UNKNOWN_NAMED);
+    const rest = names.length - shown.length;
+    const sentence = names.length === 1
+      ? 'One card in your list isn’t in this snapshot of the card list, so no combo was looked for it:'
+      : `${names.length} cards in your list aren’t in this snapshot of the card list, `
+        + 'so no combo was looked for them:';
+    return {
+      count: names.length,
+      names: shown,
+      more: rest > 0 ? rest : 0,
+      sentence,
+      // Every cause, because the reader cannot tell them apart from here and only
+      // one of them is their mistake.
+      why: 'Usually a misspelling. A card printed since the snapshot, an older or '
+        + 'alternate name, and a token line pasted out of a deck export all land here too.',
+    };
+  }
+
+  // ---- whether the decklist is allowed ---------------------------------------
+
+  // The colours a card carries that its commander does not, as mana symbols read the
+  // way the pips are: "{W}" rather than "W", and in WUBRG order, since that is the
+  // order Magic prints them in — so a Simic commander reads {U}{G} and never {G}{U}.
+  //
+  // The order is written out here rather than borrowed from identityString() in
+  // combos.js or the pips in render-rows.js, which both hold their own copy: this
+  // file is a pure function of a search result and requires nothing, which is what
+  // lets `node --test` reach it. Five letters in a fixed order is the cheapest thing
+  // in the repository to keep in three places.
+  const WUBRG_ORDER = ['W', 'U', 'B', 'R', 'G'];
+  const pips = (colours) => WUBRG_ORDER
+    .filter((c) => String(colours || '').includes(c))
+    .map((c) => '{' + c + '}')
+    .join('');
+
+  // What to say about a decklist's legality, or null for nothing at all.
+  //
+  // Two findings, kept apart the whole way, because they are different accusations:
+  // a card outside the commander's colour identity is a decklist mistake, and a
+  // banned card is a format rule. Running them together would be alarming where the
+  // panel should be useful.
+  //
+  // Nothing to report is *silence*, not a clean bill of health. "0 problems" is a
+  // claim this cannot support — only two of the format's rules are readable off a
+  // card list, exactly as with the bracket, and a green tick would be read as
+  // covering singleton, deck size, and everything else nobody checked.
+  //
+  // What it did not check comes along with a finding rather than standing on its own,
+  // for the same reason: a panel that appears on a legal deck to say what it skipped
+  // is an empty panel with a caveat in it.
+  function legalityProse(check) {
+    if (!check) return null;
+    const banned = (check.banned || []).slice();
+    let off = (check.offIdentity || []).slice();
+
+    // The rule shared with unrecognizedNote(). Off-identity is computed only over
+    // cards the map knows, so it cannot invent a card — but it *can* be wrong about
+    // all of them at once, which is what a commander whose own identity came back
+    // empty looks like. The published data has zeroed real cards' identities once
+    // already, and half a deck reading as illegal is that, not a deck.
+    if (off.length && tooMuchOfTheDeck(off.length, Number(check.checked) || 0)) off = [];
+
+    // One card, one accusation, and the graver one. A banned card in the wrong
+    // colours is on both lists — the ban list is not filtered by colour — and naming
+    // it twice reads as two problems where there is one card to cut. The ban is the
+    // format refusing it; the colours would stop mattering the moment it went.
+    if (banned.length && off.length) {
+      const onBanList = new Set(banned.map((name) => name.toLowerCase()));
+      off = off.filter((o) => !onBanList.has(String(o.card).toLowerCase()));
+    }
+
+    if (!banned.length && !off.length) return null;
+
+    const unchecked = [];
+    // Said only alongside a finding, and worth saying then: a reader looking at one
+    // banned card should know the other half of the question went unanswered.
+    if (!check.canCheckIdentity) {
+      unchecked.push((check.commanders || []).length
+        ? 'This snapshot does not know your commander, so colour identity was not checked.'
+        : 'No commander was named, so colour identity was not checked.');
+    }
+    if (!check.hasBanList) {
+      unchecked.push('This snapshot carries no ban list, so nothing was checked against one.');
+    }
+
+    return {
+      banned,
+      bannedSentence: banned.length === 1
+        ? 'One card in your list is banned in Commander:'
+        : `${banned.length} cards in your list are banned in Commander:`,
+      offIdentity: off.map((o) => ({ card: o.card, colours: pips(o.colours) })),
+      identitySentence: off.length === 1
+        ? `One card is outside your commander’s colour identity (${pips((check.allowed || []).join(''))}):`
+        : `${off.length} cards are outside your commander’s colour identity `
+          + `(${pips((check.allowed || []).join(''))}):`,
+      unchecked,
+      // The floor of the claim, the same shape the bracket panel uses: this is two of
+      // the format's rules and never a verdict on the whole list.
+      note: 'Only two legality rules can be read off a card list, and those are the two '
+        + 'above. Singleton, deck size and everything else are not checked here.',
+    };
+  }
+
   const api = {
     pickedSentence,
+    unrecognizedNote,
+    legalityProse,
+    UNKNOWN_NAMED,
+    UNKNOWN_LIMIT,
     sizePills,
     rowNumbers,
     bracketProse,

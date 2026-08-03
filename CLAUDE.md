@@ -79,7 +79,8 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `render-suggestions.js` | `RenderSuggestions` | the suggestions, pieces, slots and unofficial panels |
 | `render-map.js` | `RenderMap` | the combo map's drawing half — `graph.js` is its arithmetic |
 | `deck-io.js` | `DeckIO` | keeping the decklist, the share link, the dropped file |
-| `app.js` | — | wiring, the search, the bracket panel — what is left after the split |
+| `app.js` | — | wiring, the search, the bracket and legality lines — what is left after the split |
+| `sw.js` | `ServiceWorkerShell` | the service worker: the shell offline. Network-first HTML, cache-first for stamped URLs only |
 | `tiers-page.js` | — | the DOM of `tiers.html` |
 | `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
 
@@ -249,6 +250,28 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   DOM-free modules. If getting it wrong would produce a page that looks right and
   says something false — a count, a pluralisation, a bracket's reasoning — it is a
   decision, and it belongs in `view-model.js`, where `node --test` can reach it.
+- **`verify-layout.js`'s `HARNESS` is a template literal, so a regex in it loses its
+  backslashes.** `/\d+ combos/` becomes `/d+ combos/` before the browser ever sees it,
+  and an assertion that matches nothing passes — the exact failure `check:readme` exists
+  to stop, one file over. Write `\\d` inside the harness. Two of these were written and
+  caught in one session; the second only because the run reported *every* row failing,
+  which is what a regex matching nothing looks like from the outside.
+- **Assert what a reader sees, not `textContent`.** Some row text is in the DOM twice
+  with CSS showing one reading — the official/unofficial split is `17+7` in a narrow
+  column and `17 official · 7 unofficial` in a wide one, both always present. A check
+  reading `textContent` there passes on a page that has lost the rule and is showing
+  both at once. `visibleTextIn()` in `verify-layout.js` walks the tree skipping
+  `display: none`, and that is what the split's assertions read.
+- **Row layout is keyed on the row's own column, not the viewport, and the two
+  disagree.** The results column is 704px wide at a 768px window and 442px at 900px,
+  because 900 is where the two-column shell hands 370px to the decklist. So
+  `min-width: 900px` styles the *narrower* of those two as though it were roomier: use
+  the `rows` container (`@container rows (min-width: …)`, declared on the two panel
+  bodies) for anything that depends on how much room a row actually has. There are two
+  thresholds and they are deliberately different — the split spells itself out at 560px
+  of column, the links join the name at 750px — because each was measured against what
+  it costs the card name, not chosen to match the other. Only measured numbers go in
+  there, and `npm run verify` prints the column width per viewport.
 - **Load order is load-bearing.** `combos.js` reads the tier inventory at load time
   and `search.js` reads `combos.js` the same way. Adding a script means adding it in
   the right place in `index.html` *and* in `search-worker.js`.
@@ -259,6 +282,10 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   serves whatever the CDN cached, so the bug is invisible outside production.
   `unofficial.js`, `graph.js`, and for a long time `theme.js`, all shipped that way.
   The worker is not in the HTML and stamps its own imports from its query string.
+  The same run writes `sw.js`'s precache list (`--worker sw.js`) from the same walk, so
+  the service worker's shell cannot drift from what the pages ask for. **`sw.js` is
+  cache-first only for URLs carrying a stamp** — an unstamped one is not immutable, and
+  local work, `npm run verify` and `npm run test:ui` all serve this page unstamped.
   `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
   so the test and the deploy cannot disagree — they did, for a while.
 - **The line down a suggestion row is not one element.** It is the gutter's

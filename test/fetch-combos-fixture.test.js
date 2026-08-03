@@ -210,6 +210,15 @@ test('fixture: colour identities and Game Changers come through', () => {
   assert.deepStrictEqual(published.gameChangers, ['Basalt Monolith', 'Rings of Brighthearth']);
 });
 
+// The ban list travels the same path as the Game Changers above — published as its own
+// field, empty published as empty — and the page reads a missing one as "cannot say".
+// Scurry Oak is not banned in Commander; which cards are is Scryfall's business, and a
+// fixture that pinned the real list would be a second copy of it going stale here.
+test('fixture: the ban list comes through as its own field', () => {
+  assert.deepStrictEqual(published.banned, ['Scurry Oak']);
+  assert.match(log, /banned/i);
+});
+
 test('fixture: a result missing from the tier inventory is reported, not hidden', () => {
   assert.match(log, /result\(s\) are not in result-tiers\.js/);
 });

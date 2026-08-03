@@ -32,14 +32,24 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   floor, never a verdict; hover, focus or tap the pips for the reasoning, the Game
   Changers behind it and the criteria it did not check — see
   [Classifying the decklist](#classifying-the-decklist-which-bracket-is-it).
-- **What each recommendation's count is made of** — `Thassa's Oracle +3` reads
-  *1 × 2-card · 1 × 3-card · 1 × 4-card*, on the card's own line, smallest first. A
-  two-card combo is a far easier thing to assemble in a game than a four-card one, and a
-  count hides the difference entirely — see
+- **Whether the list is *allowed*** — beside the bracket: cards outside the commander's
+  colour identity, and cards banned in Commander. Two lines, because they are two
+  different accusations, and nothing at all when there is neither — see
+  [Whether the list is allowed](#whether-the-list-is-allowed-is-a-different-question-from-how-strong-it-is).
+- **What each recommendation's count is made of** — a `+3` in the row's number gutter
+  reads *1 × 2-card · 1 × 3-card · 1 × 4-card* underneath, smallest first. A two-card
+  combo is a far easier thing to assemble in a game than a four-card one, and a count
+  hides the difference entirely — see
   [What the count is made of](#what-the-count-is-made-of).
-- **One slot away** — combos you hold every named card for and cannot assemble because
-  nothing in your deck fills their slot ("a Persist Creature"). Reported separately, never
-  counted among the combos you have — see [Template slots](#template-slots-a-persist-creature).
+- **It works with the network off** — a second visit renders and searches from what is
+  already on the device: the shell in a service worker's cache, the snapshot in the one
+  `search.js` keeps. See
+  [The shell offline](#the-shell-offline-and-why-the-html-is-the-one-thing-not-cached-first).
+- **Cards it did not recognise are named** — a section above the results, listing the
+  cards you pasted that this snapshot has no card by that name for. `1 Sol Rimg` is a
+  perfectly good card line, so it lands in the deck, matches nothing, and used to be
+  never mentioned again — see
+  [Telling the reader which cards were not recognised](#telling-the-reader-which-cards-were-not-recognised).
 - **Interchangeable cards are one decision, not many** — Spellbook stores one variant per
   concrete card list, so a combo its own site shows as *"Spike Feeder + 1 of 8 cards"*
   arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
@@ -318,16 +328,27 @@ large: a two-card combo needs two cards on the table, a four-card one needs four
 found, cast and kept alive. "+6" reads identically whether it is six two-carders or five
 four-carders and a two.
 
-So every recommendation carries its own breakdown, on the card's own line:
+So every recommendation carries its own breakdown, on the last line of its own column:
 
 ```
-1. Thassa's Oracle  +3   1 × 2-card   1 × 3-card   1 × 4-card
-5. Mana Crypt       +1   3-card
+  +3    │ Thassa's Oracle
+COMBOS  │ EDHREC · Scryfall · + Add to deck
+  2+1   │ 1 × 2-card   1 × 3-card   1 × 4-card
+
+  +1    │ Mana Crypt
+COMBOS  │ EDHREC · Scryfall · + Add to deck
+        │ 3-card
 ```
+
+That is the narrow reading, which is the one every width used to get. Two of those three
+lines change shape where the row's column is wide enough to afford it — the split spells
+itself out, and the links move up beside the name — and both are keyed on the column
+rather than the window. See
+[The card's links share its name's line where the row is wide](#the-cards-links-share-its-names-line-where-the-row-is-wide-and-that-threshold-is-not-the-splits).
 
 **And so does every card in *Cards carrying your combos***, where the same argument applies
-in reverse. That panel exists to answer "what would cutting this cost me", and *in 9 combos*
-is one number covering nine different propositions:
+in reverse. That panel exists to answer "what would cutting this cost me", and a bare
+*9* in the gutter is one number covering nine different propositions:
 
 ```
    5    │ Basalt Monolith
@@ -472,8 +493,8 @@ action so it is a single press.
 **Both links sit above the result chips, not below them.** What a combo *needs* is read
 before what it *does* — the cards decide whether the row is worth reading at all, and a
 reader after the steps or the card images should not have to scroll past a wall of
-result chips to find the way out. All three row types do it in that order: an ordinary
-combo, a collapsed choice, and a *one slot away* row. The layout test compares the two
+result chips to find the way out. Both row types do it in that order: an ordinary
+combo and a collapsed choice. The layout test compares the two
 elements' document positions and fails if the links drop below the chips. Named cards only — a template slot has no card to open, and the row
 already names what fills it. A collapsed row's link covers its shared cards *plus* all
 the interchangeable ones, since that whole set is what the reader is choosing between.
@@ -608,8 +629,8 @@ Four rules, all of them about not overclaiming:
   suggest for "a Creature with Haste" — 612 cards fill it — so a template combo
   only counts once the deck already fills every slot it has. Templates with no
   query (29 of 178) can never be filled and are never counted, exactly as before.
-  What changed is that not counting a combo no longer means saying nothing about
-  it — see "One slot away" below.
+  A combo whose slot the deck cannot fill is not reported anywhere — see "The panel
+  that could not answer its own question" below.
 - **Every slot gets its own card.** A card cannot hold two slots, and a card the
   combo already names cannot also fill one. Assignment is a real matching
   (Kuhn's algorithm), not a greedy pass: taking the first candidate for each slot
@@ -624,41 +645,57 @@ Four rules, all of them about not overclaiming:
   and the data branch update independently, and a stale `combos.json` must never
   start claiming combos.
 
-### One slot away
+### The panel that could not answer its own question
 
-Not counting a combo is right. *Silence* about it was not: a deck holding Rings of
-Brighthearth and short only of a Persist Creature is one card from a combo, and the
-old behaviour was to drop the row and mention nothing. It's now its own section,
-below the combos the deck can actually assemble and never counted among them.
+There used to be a fifth panel here, **One slot away**: combos the deck held every named
+card for and could not assemble because nothing in it filled their slot. It is gone, and
+this section is the record of that rather than a description of it, because removing it
+reverses what this section used to argue.
 
-Four decisions, all narrowing:
+**What it was for.** Not counting these combos is right — the deck genuinely cannot do
+them. *Silence* about them looked wrong: "you hold Rings of Brighthearth and need any
+Persist Creature" is a real deckbuilding fact, and the original behaviour was to drop the
+row and mention nothing. So the panel narrowed hard — one gap and nothing else missing,
+inside the deck's colours, and only slots whose id the data could actually read — and then
+reported the slot, how many cards fill it, and six of them ranked by how many of your own
+stuck combos each would unstick.
 
-- **One gap, and nothing else missing.** Every card the combo names is in the deck and
-  exactly one slot is unfilled. Two unfilled slots is two cards away; a missing named card
-  *plus* a slot is likewise two, and the existing one-card-away suggestions already refuse
-  to cross that line.
-- **Inside the deck's colours.** A combo the deck could not legally run is not a decision
-  anyone has to make. (The off-colour tab exists for *suggestions*, where the card is the
-  subject; here the combo is.)
-- **A slot with no id says nothing.** `compact()` writes `null` for a requirement it could
-  not read, and data predating template resolution records only a slot count. Neither can
-  say what would fill it, so neither appears — the same rule as everywhere else here.
-- **It is not phrased as a recommendation.** There is no single card to recommend for a slot
-  394 cards fill. The row names the slot, counts the cards that fill it, says how many are
-  in your colours, and lists a few.
+**Why it went.** It is the one section that could not answer its own question. A slot 394
+cards fill has no card to recommend, so every row reduced to a slot name, a count and a
+handful of examples, and left the reader to do the rest. The four panels around it each
+end in something you can act on — a card to add, a card to cut, a combo to look for. This
+one ended in a research task.
 
-Which few is itself read off the data: candidates are **ranked by how many of your own stuck
-combos each one would complete**, then alphabetically. A card that unsticks three of them is
-a better thing to know about than a card that unsticks one, and that ordering needs nothing
-known about the card itself. Cards already in the deck are never offered, and off-colour
-cards are counted but not named.
+**What was given up, plainly.** The fact itself. A reader who wants it now has to ask from
+a terminal — `node tools/deck-gaps.js deck.txt` answers exactly this question and more
+besides — and that is a different audience from somebody pasting a decklist into a web
+page. This is the cost of the removal and it is not zero; it is accepted rather than
+worked around.
 
-**Making the slot nameable cost one field.** The published data carried names only for
-templates that resolved, so a combo blocked by *Haste Enabler* — one of the 29 with no
-Scryfall query — could only be described as needing "a card". `unresolvable` (43 short
-names, all told) is now published alongside, so the row reads "Needs Haste Enabler — no card
-list published for this slot yet". It cannot make a combo count, because matching only ever
-consults the card lists. `tools/try-deck.js` was already reading that field.
+**What did not go with it.** Template slots are untouched, and the distinction is the
+whole reason the removal is safe:
+
+- A combo whose slot the deck *does* fill still renders that slot in its own row in
+  "Combos in your deck", and still names the card credited with filling it.
+- A filled slot still **counts as a card** in the size breakdown: `Rings of Brighthearth
+  + a Persist Creature` is a two-card combo, and counting only the named cards would file
+  it as a one-card one.
+- `resolveSlots()`, `assignSlots()` and `templates.json` all stay exactly as they were.
+
+What went is the panel, the row shape it needed, and `slotCandidates()` — which existed
+only to feed it. `test/template-slots.test.js` is what is left of the tests: it holds the
+line that matters, which is that a combo the deck cannot assemble is never counted among
+the ones it can, plus the surviving half about filled slots. `npm run verify` now expects
+four panels, and asserts that the fixture's one-slot-short combo appears **nowhere** in
+the results rather than in a panel of its own — across every combo link on the page, since
+the way this could go wrong is it surfacing somewhere it would read as a combo the deck has.
+
+**One field outlived it.** `unresolvable` — names for the 29 templates with no Scryfall
+query — was published so a blocked row could read "Needs Haste Enabler" instead of "needs a
+card". It is still published and still merged into the template names, because it is what
+`tools/combos-with.js` and `tools/try-deck.js` read, and because a template with no card
+list must still be a slot the deck cannot fill rather than an unnamed one. The page just no
+longer has anywhere to print it.
 
 **Resolving against the Scryfall bulk file was considered and rejected.** We
 already download it for colour identity, so it looks free. It isn't: the bulk
@@ -1296,6 +1333,61 @@ Basalt Monolith + Rings of Brighthearth loops all day and wins nothing, so it is
 not one. A filled template slot counts as one of the two cards — something has to
 occupy it, and your deck is what does.
 
+### Whether the list is allowed is a different question from how strong it is
+
+The bracket says what power level a list sits at and never says whether the list is
+*legal*. Two neighbouring questions come nearly free from machinery that was already
+here, and they are answered on a line under the bracket:
+
+- **Cards outside the commander's colour identity.** No new data at all: `cardIdentity`
+  covers every card in Scryfall's oracle-cards file rather than only the ones that
+  appear in combos.
+- **Cards banned in Commander.** New data, but the same shape as the Game Changers and
+  read in the same pass over the same bulk file — `legalities.commander === 'banned'` —
+  so the page stays on one request.
+
+**Only `banned`, and not `not_legal`.** That value covers every card that has simply
+never been in the format: Alchemy rebalances, un-cards, most of Arena. Reporting those
+as illegal would flag a lot of paper decks that are fine.
+
+**The identity is the commander's, not the deck's**, and that is the whole point of the
+rule. Colours elsewhere on this page are read off the cards — see "Colours come from
+the cards" — and reading them off the cards *here* would make every list legal by
+construction, since the union of a deck's colours always contains the deck's colours.
+So the claim needs a commander, and there is no claim without one.
+
+**Two accusations, kept apart.** A card in the wrong colours is a decklist mistake the
+reader fixes by cutting a card; a banned card is the format saying no. Two lines, and
+only the ban takes `--error` — colouring both the same would overstate the first. But
+**one card only ever collects one accusation**: a banned card in the wrong colours is on
+both lists, since the ban list is not filtered by colour, and naming it twice reads as
+two problems where there is one card to cut. The ban wins, because the colours stop
+mattering the moment the card goes.
+
+**Silence is not a clean bill of health, so silence is what a legal deck gets.** No line,
+no green tick, no "0 problems" — the same discipline the bracket panel keeps. Two of the
+format's rules are readable off a card list and the footnote says so; a tick would be
+read as covering singleton, deck size and everything else nobody checked. What *was* not
+checked rides along with a finding rather than standing on its own: a reader looking at
+one banned card should know the colour half went unanswered, but a panel that appears on
+a legal deck to list what it skipped is an empty panel with a caveat in it.
+
+**The thin-map rule is the same one, shared rather than copied.** Off-identity is
+computed only over cards the map knows, so it cannot invent a card — but it can be wrong
+about all of them at once, which is exactly what a commander whose own identity came back
+empty looks like, and the published data has zeroed real cards' identities once already.
+So the same guard applies as for
+[unrecognized cards](#telling-the-reader-which-cards-were-not-recognised): more than half
+the deck reading as off-identity is a claim about the data, and the colour half goes
+quiet. `tooMuchOfTheDeck()` in `view-model.js` is that rule, in one place, used by both.
+
+The publisher gates the new list the way it gates the others: `check-snapshot.js` compares
+the count against the last snapshot, and the fetcher says so in the log when the list comes
+back short — a ban list that came back empty is a `legalities` shape change, not a format
+that banned nothing, and the page would go quiet rather than wrong. The layout test runs a
+deck that is illegal two ways at once and a second with no commander named, and every other
+deck it runs is the silent branch.
+
 ### The Game Changer list is read, not kept
 
 `tools/fetch-combos.js` publishes the list off **Scryfall's own `game_changer`
@@ -1755,7 +1847,7 @@ Consequences worth knowing:
   not live. Which snapshot you have is printed at the bottom of the page.
 - Combos requiring a *template* ("a Persist Creature") are excluded from
   suggestions, since no single named card completes them — but not from results,
-  and no longer from the page: see "Template slots" and "One slot away" above.
+  where the deck fills the slot: see "Template slots" above.
 - Deck colour identity is the union of the colours of the cards pasted in. If
   none of them is recognised, colour filtering is switched off rather than
   guessed at.
@@ -1882,6 +1974,69 @@ would couple those assertions to synthetic numbers while saying nothing more abo
 page. The rebuild path is covered where it belongs: `test/decode.test.js` drives
 `rebuildId()` directly, and the encoding was checked against all 103,737 published rows
 before it shipped.
+
+### The shell offline, and why the HTML is the one thing not cached first
+
+The data survived going offline and the page did not, which was the wrong way round. A
+reader who has searched once holds the entire snapshot on the device — `search.js` keeps
+it in Cache Storage — and then plane mode failed on `index.html`, so none of it was
+reachable. For a tool you would plausibly use at a table with bad wifi, that is backwards.
+
+**Why this repository is unusually well placed to run a service worker.** The classic
+failure is shipping an update nobody receives, and the machinery against that was already
+here: `tools/stamp-assets.js` rewrites every local `src=`/`href=` to carry `?v=<commit
+sha>` at deploy time, so every asset URL is immutable and every deploy mints a fresh set.
+A cache-first worker over immutable URLs cannot serve a half-updated mix. The CSP needed
+no change either — `worker-src 'self'` was already in both heads.
+
+**The asymmetry, which is not a simplification waiting to be made.** `index.html` is
+deliberately *not* stamped: it is the document that carries the new stamps, so it has to
+stay cacheable-but-fresh. So the worker is **network-first for the document and
+cache-first for everything else**. A cache-first HTML would pin a reader to one deploy
+for as long as the cache lived — the exact bug the stamping exists to prevent,
+reintroduced one layer up.
+
+**And the rule extends past the HTML: cache-first is only for URLs that carry a stamp.**
+A bare `app.js` is not immutable. It is what this page is served as locally, under `npm
+run verify`, and under `npm run test:ui`, so trusting one from the cache would mean
+editing a file and being served yesterday's copy for as long as the cache lived. Stamped
+is immutable and cached hard; unstamped is asked for and only falls back to the cache
+when the network cannot answer. Both are *stored* either way, which is what makes an
+unstamped local page work offline too.
+
+**The precache list is not maintained by hand.** `tools/stamp-assets.js` writes it into
+`sw.js` at deploy time from the same `localAssets()` walk that stamps the pages, and
+fails the deploy if the markers it rewrites have gone — a worker precaching last week's
+URLs would be worse than one precaching none, and would look identical from outside. So
+adding a `<script>` to a page is still just adding a `<script>` to a page.
+
+**The exception, named out loud.** Five files no `src=` references, because `app.js`
+constructs the search worker and both it and the no-`Worker` fallback load their scripts
+themselves: `search-worker.js`, `result-tiers.js`, `combos.js`, `unofficial.js`,
+`search.js`. The walk cannot see them, so they are the one list in the worker written by
+hand — and `test/service-worker.test.js` reads the names back out of `app.js` and
+`search-worker.js` and fails if it stops covering them. Precached rather than accepted as
+online-only, because a reader whose `Worker` failed being handed a page that cannot
+search is the one part of going offline that would look like a bug rather than a limit.
+
+**The payload is not the worker's business.** `search.js` already owns that URL, with its
+own versioned cache name, its own revalidation and its own deadline discipline. Two
+caching layers over one URL is the kind of thing that looks fine until they disagree
+about which copy is current, so the worker skips it — by name as well as by origin, since
+both test harnesses serve the fixture from their own origin and this must not start
+depending on that.
+
+**What is tested, and where.** The worker's whole decision is which strategy a request
+gets, and it is a pure function — so `test/service-worker.test.js` asserts it directly:
+the document is never cache-first, a stamped asset always is, an unstamped one never is,
+and the payload is skipped. That is the property that makes a fresh deploy visible at
+all, and it should not need a deploy to check. The rest is `e2e/offline.spec.js`, the only
+harness that can run a real worker: a second visit with the network off renders and
+searches, a changed page is picked up on the next load with no hard refresh, and a browser
+that refuses to give us a worker still gets a working page. Proving the update path meant
+changing what the server sends mid-test, since Playwright's interception does not apply to
+requests a service worker makes — `/__deploy` in `e2e/server.js` is that, and it is the
+one mutable thing in the suite.
 
 ### Downloading the database once, not once a visit
 
@@ -2131,6 +2286,74 @@ The fetcher now drops `token` / `double_faced_token` / `emblem` / `art_series` /
 `vanguard` layouts, and `identityIndex()` additionally refuses to let a
 colourless entry displace a coloured one, so already-published data is repaired
 in the page without waiting for a refresh.
+
+### Telling the reader which cards were not recognised
+
+A misspelled card used to parse cleanly and then do nothing. `1 Sol Rimg` is a card
+line by every rule in `parser.js` — a quantity, a name, no set code — so it lands in
+the deck, is sent to the search, matches no combo, and is never mentioned again. The
+page reported *Searching combos for 100 cards…* and returned a smaller answer than the
+deck deserved, with nothing on screen saying why. An old or alternate spelling, a card
+printed since the snapshot, and a token line out of a deck export all failed the same
+silent way — the publisher drops `token` / `double_faced_token` / `emblem` /
+`art_series` / `vanguard` layouts, so `Treasure` on a line of its own is not a card as
+far as the data is concerned.
+
+This is the failure class this file already worries about in the other direction — *a
+wrong rule-out is invisible: it produces no row, no test failure and no complaint* —
+except here it happened in front of a reader, on their own deck, on every search.
+
+**The signal already existed and was thrown away.** `cardIdentity` is keyed by every
+card in Scryfall's oracle-cards bulk file, not only the 7,364 that appear in combos, and
+`deckIdentity()` already walked the deck against it and skipped what it could not find.
+`unrecognizedCards()` is that same walk keeping the misses. No new download, no new
+request, no second pass over the payload.
+
+**Three populations, and only one is worth a word.** In the map and in no combo is
+ordinary — most of any deck. In the map and in combos the deck cannot complete is what
+the suggestions panel is for. Not in the map at all is the one nobody can see.
+
+**It says so above the results, not in a disclosure.** The complaint being answered is
+that nothing on screen said why the answer was small, and a closed `<details>` is
+nothing on screen. It is also not `showDiagnostics()`' population: that lists lines the
+parser *dropped*, and an unrecognized card is one the parser accepted. So the names are
+written out, in the reader's own spelling — that is what they have to find in the box to
+fix — with one line saying every cause, because from here they cannot be told apart and
+only one of them is the reader's mistake.
+
+**The wording claims what is known and no more.** The data is a nightly snapshot of
+Scryfall by way of Spellbook, so the sentence is that *this snapshot* has no card by
+that name. "Sol Rimg is not a real card" would be wrong the day a set is released.
+
+**The constraint that decides the whole feature: a thin map must produce silence.** The
+test fixture's `cardIdentity` has 14 entries, so a naive version reports most of an
+85-card deck as unrecognized in `npm run verify` and `npm run test:ui`. That is not a
+fixture problem to paper over — the published payload has shipped `cardIdentity: {}`
+once already (see above), and *that* payload would report every card in the deck. The
+rule is the one `deckIdentity()` already uses: when the map cannot answer, say nothing.
+So an absent or empty map says nothing at all, and more than **half the deck** unknown
+says nothing either, on the grounds that the answer is then about the data rather than
+the deck.
+
+Half, and not something tighter, because the rule has to survive a small paste: a reader
+checking three cards with one typo is 33% unknown and deserves to be told. Nobody's real
+decklist is half misspelled, and a map thin enough to be broken misses almost
+everything — the fixtures sit at 83% and 100%, not at 55%.
+
+**Where the three pieces live**, which is the usual split here: `combos.js` identifies
+them and returns facts only — which names missed, how many were checked, how big the map
+was — beside the `identityIndex()`/`deckIdentity()` that own `nameKey()` and the dataset.
+`view-model.js` decides whether any of it is worth saying and how it is phrased, because
+a count and a pluralisation that could be confidently wrong is exactly what belongs where
+`node --test` can reach it — the thin-map rule is there too. `app.js` draws it and does
+nothing else with it.
+
+The layout test runs the tuning deck with `1 Sol Rimg` and `1 Treasure` appended, and
+asserts the section names both, claims two cards, says a token line lands here too, and
+sits **above** the first panel of results — measured, since a notice qualifying an answer
+it renders below is a notice nobody reads. Every other deck it runs is the other branch:
+nothing unrecognized, and no section at all. The thin-map and empty-map rules are pinned
+in `test/view-model.test.js` rather than left to the fixtures happening to be small.
 
 ### Testing the publisher against a fixture
 
@@ -2807,22 +3030,30 @@ Which reading appears is decided by **the width of the row's own column, not the
 window** — a container query on the panel body, and this is the case that makes the
 difference concrete rather than theoretical:
 
-| window | the results column | reading |
+| window | the row's column | reading |
 |---|---:|---|
-| 390px | 349px | `10+5` |
-| 768px | 704px | `10 official · 5 unofficial` |
-| 900px | 442px | `10+5` |
-| 1024px | 566px | `10 official · 5 unofficial` |
-| 1440px | 982px | `10 official · 5 unofficial` |
+| 390px | 334px | `10+5` |
+| 768px | 689px | `10 official · 5 unofficial` |
+| 900px | 427px | `10+5` |
+| 1024px | 551px | `10+5` |
+| 1440px | 967px | `10 official · 5 unofficial` |
+| 1920px | 1042px | `10 official · 5 unofficial` |
+
+These are the widths `npm run verify` prints — the panel body's **content box**, which
+is the width a container query is answered against. This table used to quote each of
+them 15px larger, and one row was wrong because of it: a 1024px window is 551px of
+column, which is *under* the threshold, so it reads `10+5` and not the words. The
+number to trust is the one the layout test reports, since that is the number the
+browser is deciding on.
 
 The column is **wider at 768px than at 900px**, because 900 is where the two-column
 shell starts and hands 370px of the window to the decklist. A `min-width: 900px` media
 query would spell the words out in the narrower of those two and not the wider one, so
 the viewport is the wrong thing to ask.
 
-Both numbers are measured. **560px** of column is the threshold because at 566px — a
-1024px window — a 12rem gutter still leaves the card name 331px, more than the 248px it
-gets on a phone, so nothing is worse off than the layout being replaced. **12rem** is
+Both numbers are measured. **560px** of column is the threshold because at that width a
+12rem gutter still leaves the card name 325px, more than the 248px it gets on a phone,
+so nothing is worse off than the layout being replaced. **12rem** is
 what `0 official · 1889 unofficial` needs at 177px, and Hammerhead makes that a real row
 rather than a hypothetical one; `white-space: normal` is the safety valve, so a row with
 four digits on both sides wraps to two lines instead of running over the card name.
@@ -2835,6 +3066,50 @@ appear) and a dropped query (words appear on a phone) both fail it. It also runs
 deck whose whole case is ours at 390px as well as 1440px, because otherwise the compact
 reading is asserted nowhere: the tuning deck has no unofficial combos, so no other
 viewport draws a split at all.
+
+### The card's links share its name's line where the row is wide, and that threshold is not the split's
+
+On a phone the card name has a line to itself and `EDHREC · Scryfall · + Add to deck`
+sits on the line below it. That is forced: on a shared line the links held their place
+beside 5 of 11 real names at 390px and 0 of 11 at 320px, so their left edge went ragged
+down a list of eighty rows. A desktop has no such constraint, so there the links move up
+beside the name and the row loses a line — same three children in the same order, and
+the stylesheet decides, keyed on the row's own column like the split above it.
+
+**The threshold is 750px of column, not the split's 560px**, and the reason is the thing
+that looked free and was not. The line being moved is not the two links, which are 108px.
+It is the links *and* the add button, which is 245px. At 560px of column that leaves the
+name 80px, and the links held their place on **2 of 198** real card names — the ragged
+list the phone layout exists to avoid, arrived at from the other side.
+
+Measured over the 198 names in `card-text.json`, which run to 55 characters with a median
+of 17, at the column widths the layout test reports:
+
+| the row's column | `.row-main` | names whose links stay on the name's line |
+|---:|---:|---:|
+| 560px | 325px | 2 / 198 |
+| 689px | 454px | 137 / 198 |
+| **750px** | 515px | **191 / 198**, and no name wraps |
+| 967px | 732px | 197 / 198 |
+| 1042px | 807px | 198 / 198 |
+
+So a 768px window keeps the stacked reading and a desktop does not. The seven names that
+still do not fit at 750px are not a break: `flex-wrap` drops their links to the line
+below, which is the layout they had anyway. Nothing is clipped and nothing leaves the
+column at any width, which the layout test asserts separately from which line they are on.
+
+**Two thresholds rather than one**, because they answer different questions — the gutter
+needs room for two words, this needs room for a card name beside 245px of controls — and
+one number would mean picking whichever question is louder and being wrong about the
+other. The size breakdown still closes the row on a line of its own either way: it is
+what the count is made of, not another thing you can do with the card, and beside the
+links it would read as one run of pills and controls.
+
+The layout test checks it as a rule, the same way it checks the split: it reads the
+column's width and the rendered geometry, and asserts the links are beside the name
+exactly where the column is wide enough. A dropped rule (never beside) and a leaked one
+(beside on a phone) both fail, and both branches are covered by viewports it already
+runs — 967px of column at 1440px, 334px at 390px.
 
 ### Matching the unofficial rows costs one pass, however many rules there are
 

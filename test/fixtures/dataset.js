@@ -30,6 +30,12 @@ const FIXTURE = {
   // two are in the deck (floor 3), and Bloom Tender is not, so a list of three
   // must still report two.
   gameChangers: ['Bloom Tender', 'Palinchron', 'Rings of Brighthearth'],
+  // The Commander ban list, as the fetcher publishes it. Which cards are really on
+  // it is Scryfall's business and not this test's — a fixture pinning the real list
+  // would be a second copy of it, going stale here. Murderous Redcap is not banned
+  // in Commander; it is a card this fixture already knows, off the tuning deck's
+  // colours, which is what makes it usable for both halves of the legality check.
+  banned: ['Murderous Redcap'],
   // A combo slot that names a property rather than a card, and the deck's
   // Walking Ballista filling it. The rendered row has to say so — a combo that
   // appears because of a slot but cannot show which card filled it reads as
@@ -85,11 +91,11 @@ const FIXTURE = {
     { id: '5', c: ['Walking Ballista', 'Heliod, Sun-Crowned'], p: ['Infinite damage'], i: 'W' },
     // Complete only because the deck fills the slot.
     { id: '11', c: ['Rings of Brighthearth'], t: [42], p: ['Infinite damage'], i: 'C', pop: 70 },
-    // Every named card present, one slot short. Not a combo the deck can pull
-    // off, so it must not be listed with those — and not a combo to say nothing
-    // about either, so it belongs in "One slot away" with the slot named and
-    // the cards that fill it offered. Bloom Tender is one; Murderous Redcap
-    // fills it too but is off-colour, so it is counted and not named.
+    // Every named card present, one slot short — the deck cannot pull it off, so it
+    // must appear nowhere at all. It used to have a panel of its own; the layout test
+    // now asserts this id is absent from every combo link on the page, which is what
+    // keeps the removal honest. Bloom Tender and Murderous Redcap both fill the slot
+    // and neither is in the deck.
     { id: '13', c: ['Basalt Monolith'], t: [55], p: ['Infinite damage'], i: 'G', pop: 60 },
     // Short of a slot Spellbook publishes no query for: nameable, never
     // fillable, so the row has to admit there is nothing to offer.
@@ -144,6 +150,28 @@ const DECKS = {
   // for that card is carried entirely by combos nobody published — the case the
   // page could not express at all until the second count existed.
   unofficialAlmost: ['1 Scurry Oak', '1 Necrosynthesis'].join('\n'),
+  // The tuning deck with a misspelling in it, and a token line of the kind deck
+  // sites export. Both parse as perfectly good card lines — quantity, name, no set
+  // code — so both reach the search and match nothing, which is exactly the failure
+  // the page has to say something about. Every other card here is in the fixture's
+  // `cardIdentity`, so the unknown fraction stays low enough for the page to speak;
+  // that is the point of the deck, and `marked` is the other branch of the same
+  // rule, where nothing is unknown and nothing is said.
+  misspelled: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
+    .concat(REST, ['1 Sol Rimg', '1 Treasure']).join('\n'),
+  // The tuning deck made illegal two different ways, which is one deck because the
+  // two findings have to be shown together to be shown apart: Heliod is white and
+  // the commander is {G}{U}, so it is off-identity, and Murderous Redcap is on this
+  // fixture's ban list. Both are in `cardIdentity`, so neither is an unrecognized
+  // card as well — one card must not collect two accusations.
+  illegal: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
+    .concat(REST, ['1 Heliod, Sun-Crowned', '1 Murderous Redcap']).join('\n'),
+  // The same cards with no commander named, which is the case the identity half
+  // cannot answer at all: a Commander deck's identity is its commander's, and there
+  // is no commander to read. It has to say that rather than fall back on the deck's
+  // own colours, which would make every list legal by construction.
+  illegalNoCommander: ['1 Kinnan, Bonder Prodigy']
+    .concat(REST, ['1 Heliod, Sun-Crowned', '1 Murderous Redcap']).join('\n'),
 };
 
 // ---- the shape the deploy actually publishes --------------------------------

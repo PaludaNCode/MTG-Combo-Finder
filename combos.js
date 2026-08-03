@@ -410,6 +410,38 @@
     return known ? colours : null;
   }
 
+  // The cards the identity map has never heard of — the same lookup deckIdentity()
+  // does, keeping the misses instead of skipping them.
+  //
+  // `cardIdentity` is keyed by every card in Scryfall's oracle-cards bulk file and
+  // not only the ones that appear in combos, so a name missing from it is a name
+  // Scryfall does not publish under that spelling: a typo, an old or alternate
+  // wording, a card printed after the snapshot, or a token line out of a deck site's
+  // export. `1 Sol Rimg` is a perfectly good card line by every rule in parser.js,
+  // so it reaches the search, matches nothing, and without this is never mentioned
+  // again.
+  //
+  // Facts only — how many were looked at, how big the map was, and which names
+  // missed. Whether any of that is worth saying to a reader is DeckView's decision,
+  // because a thin map makes *everything* a miss and a wall of names would be worse
+  // than silence. Deduplicated by comparison key: a card in the deck and in the
+  // command zone is one card, and one mention.
+  function unrecognizedCards(cardIdentity, deckEntries) {
+    const byKey = identityIndex(cardIdentity);
+    const names = [];
+    const seen = new Set();
+    let checked = 0;
+    for (const entry of deckEntries || []) {
+      const name = (entry && entry.card) || '';
+      const key = nameKey(name);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      checked += 1;
+      if (byKey[key] === undefined) names.push(name);
+    }
+    return { names, checked, mapped: Object.keys(byKey).length };
+  }
+
   function withinIdentity(combo, identity) {
     if (!identity) return true; // no colour data -> don't split by colour
     for (const c of String(combo.i || '')) {
@@ -528,73 +560,6 @@
     return slots.fills;
   }
 
-  // ---- the cards that would fill a slot you are short of ---------------------
-  //
-  // A slot has no single card to suggest — 394 cards are a "Noncreature Artifact
-  // with MV<=1" — so this does not pretend to make a recommendation. It reports
-  // how many cards fill the slot, and names a few, ranked by how many of *your*
-  // blocked combos each one would complete. That ranking is read off your own
-  // list rather than from anything about the card.
-
-  // key -> the spelling Scryfall uses, front face only. The published template
-  // lists are keyed by comparison key, so without this a candidate could only be
-  // shown lowercased.
-  function spellingIndex(cardIdentity) {
-    const byKey = Object.create(null);
-    for (const name of Object.keys(cardIdentity || {})) {
-      const key = nameKey(name);
-      if (byKey[key]) continue;
-      byKey[key] = name.split('//')[0].trim();
-    }
-    return byKey;
-  }
-
-  // rows: the one-slot-away combos, each carrying its `gaps`.
-  // Returns { [templateId]: { total, inColour, names } } — `total` counts every
-  // card Spellbook's query matched, `names` only the ones your deck could play.
-  function slotCandidates(dataset, rows, deckNames, identity, limit) {
-    const wanted = new Map(); // template id (as string) -> combos waiting on it
-    for (const row of rows || []) {
-      for (const gap of (row && row.gaps) || []) {
-        if (gap.id === null || gap.id === undefined) continue;
-        const id = String(gap.id);
-        wanted.set(id, (wanted.get(id) || 0) + 1);
-      }
-    }
-    const out = Object.create(null);
-    if (!wanted.size) return out;
-
-    const lookup = (dataset && dataset.templateCards) || {};
-    const identities = identityIndex(dataset && dataset.cardIdentity);
-    const spelling = spellingIndex(dataset && dataset.cardIdentity);
-    for (const id of wanted.keys()) out[id] = { total: 0, inColour: 0, names: [] };
-
-    const scored = new Map(); // template id -> [{ name, score }]
-    for (const key of Object.keys(lookup)) {
-      const ids = (lookup[key] || []).map(String).filter((id) => wanted.has(id));
-      if (!ids.length) continue;
-      for (const id of ids) out[id].total += 1;
-      // A card you already play is not an addition, and a card outside your
-      // colours is noise — the same line the suggestion tabs draw.
-      if (deckNames && deckNames.has(key)) continue;
-      if (!withinIdentity({ i: identities[key] }, identity)) continue;
-      // How many of the combos you are short on this one card would complete.
-      const score = ids.reduce((sum, id) => sum + wanted.get(id), 0);
-      for (const id of ids) {
-        out[id].inColour += 1;
-        if (!scored.has(id)) scored.set(id, []);
-        scored.get(id).push({ name: spelling[key] || key, score });
-      }
-    }
-
-    const cap = limit || 6;
-    for (const [id, cards] of scored) {
-      cards.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
-      out[id].names = cards.slice(0, cap).map((c) => c.name);
-    }
-    return out;
-  }
-
   // Splits the dataset against a deck the same way find-my-combos does:
   // complete combos, those one card short, and those one card short but
   // outside the deck's colours.
@@ -613,7 +578,6 @@
     const included = [];
     const almost = [];
     const almostByAddingColors = [];
-    const oneSlotAway = [];
 
     for (const combo of combos) {
       const cards = combo.c || [];
@@ -633,21 +597,11 @@
       const slots = combo.t ? resolveSlots(combo, byTemplate, templateNames) : { fills: [], gaps: [] };
       if (!slots) continue;
 
-      if (slots.gaps.length) {
-        // Not claimable — but silence is the wrong answer. A deck holding every
-        // card a combo names and short of one slot is one card from the combo,
-        // and that card is a real deckbuilding decision. Reported apart from the
-        // combos the deck can actually assemble, and never counted among them.
-        //
-        // Only one gap, only when nothing else is missing, and only inside the
-        // deck's colours: two gaps is two cards away, and a slot whose id the
-        // data could not record has nothing to say about what would fill it.
-        if (missing === 0 && slots.gaps.length === 1 && slots.gaps[0].id !== null
-          && withinIdentity(combo, identity)) {
-          oneSlotAway.push(Object.assign({}, combo, { fills: slots.fills, gaps: slots.gaps }));
-        }
-        continue;
-      }
+      // A gap is a slot nothing in the deck fills, so the combo is not claimable
+      // and drops out here. It used to be kept when it was the *only* thing
+      // missing, and reported in a panel of its own; that panel is gone — see the
+      // README's "The panel that could not answer its own question".
+      if (slots.gaps.length) continue;
 
       const row = slots.fills.length ? Object.assign({}, combo, { fills: slots.fills }) : combo;
 
@@ -665,12 +619,9 @@
     included.sort(bySizeThenPopularity);
     almost.sort(byPopularity);
     almostByAddingColors.sort(byPopularity);
-    oneSlotAway.sort(byPopularity);
     return {
       identity,
       included,
-      oneSlotAway,
-      slotCandidates: slotCandidates(dataset, oneSlotAway, deckNames, identity),
       almostIncluded: almost,
       almostIncludedByAddingColors: almostByAddingColors,
     };
@@ -1129,6 +1080,95 @@
     return { gameChangers, twoCardWins, floor };
   }
 
+  // ---- whether the decklist is allowed ---------------------------------------
+  //
+  // The bracket says what power level a list sits at and never says whether it is
+  // *legal*. Two neighbouring questions, answered from data that is already here:
+  //
+  //   - cards outside the commander's colour identity, which is a decklist mistake
+  //   - cards banned in Commander, which is a format rule
+  //
+  // Kept apart all the way through, because they are different accusations and a
+  // panel that ran them together would be alarming where it should be useful.
+  //
+  // Facts only, like everything else this file returns: which cards, and what could
+  // not be checked. Whether any of it is worth saying, and how, is DeckView's — see
+  // legalityProse() there, and the thin-map rule it shares with unrecognizedNote().
+  //
+  // deckEntries carries `commander: true` on the cards the parser found in the
+  // command zone, from either the marker or the commander box. The identity claim
+  // rests on those and not on the deck's own colours: a Commander deck's identity is
+  // its commanders', which is the whole point of the rule — reading it off every card
+  // would make every deck legal by construction.
+  function legalityCheck(dataset, deckEntries) {
+    const cardIdentity = (dataset && dataset.cardIdentity) || null;
+    const byKey = identityIndex(cardIdentity);
+    const mapped = Object.keys(byKey).length;
+    const entries = (deckEntries || []).filter((e) => e && e.card);
+    const commanders = entries.filter((e) => e.commander);
+
+    // The commanders' own identity, as a set of colours. Read through the same
+    // index every other colour question here uses.
+    const allowed = new Set();
+    let commandersKnown = 0;
+    for (const entry of commanders) {
+      const identity = byKey[nameKey(entry.card)];
+      if (identity === undefined) continue;
+      commandersKnown += 1;
+      for (const c of String(identity)) if (c !== 'C') allowed.add(c);
+    }
+
+    // Off-identity is only answerable when a commander was named *and* the map knows
+    // it. A commander it cannot look up would produce an empty identity, against
+    // which every coloured card in the deck reads as illegal.
+    const canCheckIdentity = commanders.length > 0 && commandersKnown === commanders.length;
+    const offIdentity = [];
+    let checked = 0;
+    if (canCheckIdentity) {
+      const seen = new Set();
+      for (const entry of entries) {
+        if (entry.commander) continue;
+        const key = nameKey(entry.card);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        const identity = byKey[key];
+        // A card the map has never heard of is #116's business, not this one: it is
+        // an unknown name rather than an illegal card, and saying both about the same
+        // card twice would be two accusations for one typo.
+        if (identity === undefined) continue;
+        checked += 1;
+        const outside = [...String(identity)].filter((c) => c !== 'C' && !allowed.has(c));
+        if (outside.length) offIdentity.push({ card: entry.card, colours: outside.join('') });
+      }
+    }
+
+    // The ban list is its own published field, and a missing one means "cannot say"
+    // rather than "nothing is banned" — the same rule bracketCheck() uses for the
+    // Game Changers, and for the same reason.
+    const published = (dataset && dataset.banned) || null;
+    const hasBanList = Array.isArray(published) && published.length > 0;
+    const deckKeys = new Set(entries.map((e) => nameKey(e.card)));
+    const banned = hasBanList
+      ? published
+        .filter((name) => deckKeys.has(nameKey(name)))
+        .map((name) => name.split('//')[0].trim())
+        .sort((a, b) => a.localeCompare(b))
+      : [];
+
+    return {
+      offIdentity,
+      banned,
+      // What the answer rests on, so the page can say what it did not check rather
+      // than implying it passed.
+      commanders: commanders.map((e) => e.card),
+      allowed: [...allowed].sort(),
+      canCheckIdentity,
+      hasBanList,
+      checked,
+      mapped,
+    };
+  }
+
   // The order a combo's cards are named in on screen.
   //
   // Alphabetical is the base. Spellbook lists them in the order the combo was
@@ -1230,11 +1270,11 @@
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
     matchDeck, matchUnofficial, standInRows, identityString,
-    deckIdentity, withinIdentity, expand, summarizeResults, comboPieces, comboCardIndex,
+    deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
     groupSuggestions, groupVariants, variantSignature,
-    deckTemplateIndex, fillTemplates, resolveSlots, slotCandidates,
-    comboSize, sizeBreakdown, bracketCheck,
+    deckTemplateIndex, fillTemplates, resolveSlots,
+    comboSize, sizeBreakdown, bracketCheck, legalityCheck,
     decode, rebuildId,
   };
 
