@@ -86,6 +86,9 @@ const PAGE = {
   PageDom: 'readonly',
   RenderMap: 'readonly',
   DeckIO: 'readonly',
+  RenderRows: 'readonly',
+  RenderCombos: 'readonly',
+  RenderSuggestions: 'readonly',
 };
 
 const NODE = {
@@ -147,6 +150,7 @@ export default [
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
       'combo-steps.js', 'steps-source.js', 'view-model.js',
       'page-dom.js', 'render-map.js', 'deck-io.js',
+      'render-rows.js', 'render-combos.js', 'render-suggestions.js',
     ],
     languageOptions: {
       ecmaVersion: 2022,

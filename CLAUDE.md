@@ -37,7 +37,10 @@ node tools/fetch-combos.js out.json --fixture test/fixtures/export.json
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
-node tools/lookup-card.js "Card name"          # oracle text: Scryfall, else Forge
+node tools/lookup-card.js "Card name"          # oracle text: cache, else Scryfall, else Forge
+node tools/cache-card-text.js "Card name"      # fetch it from Scryfall into card-text.json.
+                          # Needs a runner — see the "Cache card text" workflow. Never
+                          # hand-edit that file; the point is that it is not recollection.
 node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
 node tools/deck-gaps.js [deck.txt]             # which gaps THIS deck exposes
@@ -69,8 +72,14 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `combo-steps.js` | `ComboSteps` | a combo's prerequisites and steps: `normalize()` for the page, `pick()` for the publisher |
 | `steps-source.js` | `StepsSource` | where a combo's steps live — the id → URL rule both ends share |
 | `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
-| `app.js` | — | the only file that touches the DOM of `index.html` |
-| `tiers-page.js` | — | the same for `tiers.html` |
+| `page-dom.js` | `PageDom` | the DOM helpers, `setStatus`, and the collapsible `panel` |
+| `render-rows.js` | `RenderRows` | the shared vocabulary every result row is built from |
+| `render-combos.js` | `RenderCombos` | a combo as a row, and its steps disclosure |
+| `render-suggestions.js` | `RenderSuggestions` | the suggestions, pieces, slots and unofficial panels |
+| `render-map.js` | `RenderMap` | the combo map's drawing half — `graph.js` is its arithmetic |
+| `deck-io.js` | `DeckIO` | keeping the decklist, the share link, the dropped file |
+| `app.js` | — | wiring, the search, the bracket panel — what is left after the split |
+| `tiers-page.js` | — | the DOM of `tiers.html` |
 | `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
 
 `research-log.js` is the one file that breaks the shape above: the browser never loads it,
@@ -110,15 +119,29 @@ in that order (each reads the previous at load time). It does **not** load
 > That is deliberate: an instruction was already here saying to work from card text, and
 > it was not enough.
 >
-> **Getting the text in this sandbox:** `tools/lookup-card.js` works again. Scryfall is
-> still refused by the network policy — `api.scryfall.com` 403s at CONNECT, and so does
-> WebFetch — so the tool asks Scryfall first and falls back to Forge's card scripts on
-> `raw.githubusercontent.com`, which the policy does allow. Everything it answers from
-> Forge is banner-marked as Forge's wording. **Cross-check anything the reasoning turns
-> on against XMage**, whose implementation is on the same host. WebSearch and a card the
-> user pastes are both still fine. Published Spellbook steps (`steps/` on the data
-> branch) are good corroboration for what a loop *does*, but they are not oracle text and
-> do not satisfy this rule.
+> **Getting the text in this sandbox:** `tools/lookup-card.js` asks three sources in
+> order, and the first is the one to reach for.
+>
+> 1. **`card-text.json`, the committed cache.** Scryfall's own wording, fetched on a
+>    runner by the *Cache card text* workflow and committed. No request, so it works here,
+>    and no banner, because it *is* Scryfall. Every entry carries the date it was read and
+>    the tool prints how old that makes it. **If the cards you need are not in it, run that
+>    workflow first** — it takes a semicolon-separated list, commits to your branch, and
+>    turns the expensive half of a research pass into a diff somebody reads once.
+> 2. **Scryfall live**, which is refused by the network policy here — `api.scryfall.com`
+>    403s at CONNECT, and so does WebFetch — but works on a runner.
+> 3. **Forge's card scripts** on `raw.githubusercontent.com`, which the policy does allow.
+>    Everything it answers is banner-marked as Forge's wording. **Cross-check anything the
+>    reasoning turns on against XMage**, whose implementation is on the same host.
+>
+> WebSearch and a card the user pastes are both still fine. Published Spellbook steps
+> (`steps/` on the data branch) are good corroboration for what a loop *does*, but they are
+> not oracle text and do not satisfy this rule.
+>
+> **Never hand-write an entry into `card-text.json`.** It exists so that a reading is
+> Scryfall's word rather than somebody's recollection; a typed entry makes it a source of
+> exactly the unverified text the rule above was written to stop, and one that now looks
+> authoritative. Only the workflow writes that file.
 
 `research-log.js` is the index of what has been swept. **Before starting a deep dive,
 read it; after finishing one, add to it.** A pass that is not in it did not happen as
@@ -218,8 +241,10 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 
 ## Things that will bite you
 
-- **`app.js` and `tiers-page.js` are not covered by the unit tests** — by design.
-  They are the layout test's job. Logic you want tested belongs in one of the
+- **The DOM files are not covered by the unit tests** — by design. `app.js`,
+  `tiers-page.js`, `page-dom.js` and the four `render-*.js` are the layout test's job
+  (`npm run verify`) and the browser suite's (`npm run test:ui`). A green `npm test` says
+  nothing about any of them, which is worth remembering before trusting one. Logic you want tested belongs in one of the
   DOM-free modules. If getting it wrong would produce a page that looks right and
   says something false — a count, a pluralisation, a bracket's reasoning — it is a
   decision, and it belongs in `view-model.js`, where `node --test` can reach it.

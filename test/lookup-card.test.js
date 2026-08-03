@@ -273,3 +273,40 @@ test('banner: Forge’s answer says what it is and what it is missing', () => {
   assert.match(lines, /no colour identity, no legality, no printings/);
   assert.ok(lines.split('\n').every((l) => l.startsWith('>')), 'it has to render as a blockquote');
 });
+
+// ---- the cache outranks both ------------------------------------------------
+//
+// A third source, ahead of the other two. What is in `card-text.json` *is* Scryfall's
+// wording — a runner read it and committed it — so asking Scryfall again buys a fresher
+// date and nothing else, at the cost of a request this sandbox cannot make anyway.
+//
+// The ordering is the decision worth pinning. If a live fetch outranked the cache, then
+// every pass run from the sandbox would fall through to Forge exactly as before and the
+// cache would be dead weight that looked like it was working.
+
+test('verdict: the cache answers first, ahead of a live Scryfall card', () => {
+  const v = verdict({ card: { name: 'Basalt Monolith' } }, null, { fetched: '2026-08-03' });
+  assert.strictEqual(v.source, 'cache');
+});
+
+test('verdict: the cache answers even when Scryfall is refused and Forge has the card', () => {
+  // The case the whole thing is for: no network, Forge available, and the answer is still
+  // Scryfall's wording rather than Forge's.
+  const v = verdict({ blocked: 'HTTP 403' }, FACES, { fetched: '2026-08-03' });
+  assert.strictEqual(v.source, 'cache');
+});
+
+test('verdict: a cached entry carries its age, so a stale reading cannot pass as fresh', () => {
+  const old = verdict({ blocked: 'HTTP 403' }, null, { fetched: '2024-01-01' });
+  assert.strictEqual(old.source, 'cache');
+  assert.match(old.age, /read from Scryfall/);
+  assert.match(old.age, /errata/);
+});
+
+test('verdict: nothing cached falls through to the behaviour that was already pinned', () => {
+  // Passing null must change nothing about the four outcomes above — the cache is an
+  // addition, not a rewrite.
+  assert.deepStrictEqual(verdict({ card: { name: 'X' } }, null, null), { source: 'scryfall' });
+  assert.strictEqual(verdict({ blocked: 'HTTP 403' }, FACES, null).source, 'forge');
+  assert.strictEqual(verdict({ missing: true }, null, null).source, 'none');
+});
