@@ -285,7 +285,13 @@
     // should not be told it has 23. Each row says how many versions it holds.
     const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
     if (groups.length) {
-      groups.forEach((g) => includedBody.appendChild(RenderCombos.comboGroupCard(g)));
+      // What each row differs from the rest of the panel by, so an uncollapsed row
+      // sends that card last like the collapsed ones do. Read across the whole panel
+      // rather than per group: these rows are read down one column, and a family that
+      // grouping split — two combos one card apart that do different things — is still
+      // two rows side by side to the reader.
+      const trails = DeckCombos.interchangeableIn(included);
+      groups.forEach((g) => includedBody.appendChild(RenderCombos.comboGroupCard(g, trails)));
     } else {
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }

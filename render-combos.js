@@ -241,8 +241,18 @@
   // A combo you can already assemble, with the parts that are interchangeable
   // shown as a choice rather than as separate combos. The variants are real and
   // still reachable — each keeps its own link to Spellbook.
-  function comboGroupCard(group) {
-    if (group.choices.length < 2) return comboCard(group.variants[0], null, null, null, { steps: true });
+  // `trails` is the panel's answer to "what does this row differ from its neighbours
+  // by", from DeckCombos.interchangeableIn() over every combo in the panel. A row this
+  // function collapses has a better answer of its own — its group's choices, which is
+  // the set the heading is counting — so the lookup is only consulted for the rows that
+  // stay whole. Those sit between collapsed rows that do line up, and reading
+  // alphabetically while their neighbours read shared-then-different was the one place
+  // this panel still moved the difference around.
+  function comboGroupCard(group, trails) {
+    if (group.choices.length < 2) {
+      const only = group.variants[0];
+      return comboCard(only, null, null, trails && trails.get(only), { steps: true });
+    }
 
     const card = el('article', 'combo');
 
