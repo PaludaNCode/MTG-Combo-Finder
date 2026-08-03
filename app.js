@@ -27,7 +27,10 @@
     ComboSteps.setSource(StepsSource.reader({ base: STEPS_BASE }));
   }
 
-  const $ = (id) => document.getElementById(id);
+  // The DOM helpers and the collapsible panel live in page-dom.js now: every renderer
+  // split out of this file wanted the same four, and a second copy of el() is how two
+  // parts of one page stop agreeing about markup.
+  const { $, el, link, panel, setStatus } = PageDom;
 
   // The deploy rewrites every asset URL in the HTML to carry `?v=<commit sha>`,
   // because the Pages CDN caches by full URL and a deploy purges nothing — so
@@ -39,27 +42,6 @@
     const query = src.indexOf('?');
     return query === -1 ? '' : src.slice(query);
   })();
-
-  function setStatus(msg, isError) {
-    const el = $('status');
-    el.textContent = msg || '';
-    el.classList.toggle('error', Boolean(isError));
-  }
-
-  function el(tag, className, text) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text != null) node.textContent = text;
-    return node;
-  }
-
-  function link(href, text) {
-    const a = el('a', null, text);
-    a.href = href;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    return a;
-  }
 
   // ---- Rendering -----------------------------------------------------------
 
@@ -461,7 +443,7 @@
     // card: it never enters the deck, so the next search still suggests it and the
     // button looks like it did nothing. DeckParser knows where the sections are.
     box.value = DeckParser.addMainDeckCard(box.value, name, 1);
-    saveDeck();
+    DeckIO.saveDeck();
     addedNote = name;
     setStatus('Added ' + name + ' — searching again…');
 
@@ -691,68 +673,6 @@
     return card;
   }
 
-  // ---- collapsible sections -----------------------------------------------
-
-  // Remember which sections the reader closed, so a new search doesn't reopen
-  // everything they just tidied away.
-  const COLLAPSE_KEY = 'mtg-combo-finder.collapsed';
-
-  function readCollapsed() {
-    try {
-      return JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {};
-    } catch (err) {
-      return {}; // private mode, or someone put junk in there
-    }
-  }
-
-  function writeCollapsed(state) {
-    try {
-      localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state));
-    } catch (err) {
-      /* not worth bothering the reader about */
-    }
-  }
-
-  // A titled section whose header is the collapse control. Using a real
-  // <button> gets keyboard and screen-reader behaviour for free.
-  function panel(container, key, title, count) {
-    container.textContent = '';
-
-    const section = el('section', 'panel');
-    const head = el('button', 'panel-head');
-    head.type = 'button';
-    const bodyId = 'panel-' + key;
-    head.setAttribute('aria-controls', bodyId);
-
-    head.appendChild(el('span', 'chev', '▸'));
-    head.appendChild(el('h2', 'panel-title', title));
-    if (count != null) head.appendChild(el('span', 'panel-count', String(count)));
-
-    const body = el('div', 'panel-body');
-    body.id = bodyId;
-
-    const apply = (collapsed) => {
-      section.classList.toggle('is-collapsed', collapsed);
-      head.setAttribute('aria-expanded', String(!collapsed));
-      head.title = collapsed ? 'Expand' : 'Collapse';
-      body.hidden = collapsed;
-    };
-    apply(Boolean(readCollapsed()[key]));
-
-    head.addEventListener('click', () => {
-      const collapsed = !section.classList.contains('is-collapsed');
-      apply(collapsed);
-      const state = readCollapsed();
-      state[key] = collapsed;
-      writeCollapsed(state);
-    });
-
-    section.appendChild(head);
-    section.appendChild(body);
-    container.appendChild(section);
-    return body;
-  }
-
   // One of your cards, with the combos it holds together.
   function pieceCard(piece, rank) {
     const card = el('article', 'combo suggestion');
@@ -918,410 +838,6 @@
     pieces.forEach((p, i) => body.appendChild(pieceCard(p, i + 1)));
   }
 
-  // ---- the combo map -------------------------------------------------------
-  //
-  // The same combos as a picture: a dot per card, a line between two cards a
-  // combo needs together. Redrawn from scratch on every search, which is what
-  // makes it keep up with "+ Add to deck" — the added card is in the next
-  // render's `included`, so it turns up in the map with the rest of them, and
-  // ComboGraph places the graph deterministically so the picture around it is
-  // the one that was there before rather than a reshuffle.
-  //
-  // Hand-drawn SVG rather than a charting library: the page's CSP allows scripts
-  // from nowhere but itself, so a library would have to be vendored into the
-  // repository, and this is ~60 lines.
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-  // How far outside a dot a press still counts as that card's.
-  const HIT_MARGIN = 5;
-
-  function svgEl(tag, className) {
-    const node = document.createElementNS(SVG_NS, tag);
-    if (className) node.setAttribute('class', className);
-    return node;
-  }
-
-  // What the lines mean, in the lines themselves. Two kinds of relation on one
-  // picture is one more than a reader can be expected to infer, and the dashes
-  // are the half that is not guessable: a dashed line between two cards that are
-  // never in a combo together looks like a mistake until something says what it
-  // is for.
-  const LEGEND = [
-    { className: 'tier-win', width: 3, text: 'a combo needs both — green ends the game' },
-    { className: 'tier-decisive', width: 2, text: 'yellow is value to convert' },
-    { className: 'tier-other', width: 1.5, text: 'grey is plumbing' },
-    { className: 'swap', width: 2, text: 'either card works — they stand in for each other' },
-  ];
-
-  // A knot of 162 lines is two questions drawn on top of each other. This lets
-  // either be asked on its own — "what works together" and "what stands in for
-  // what" — without moving a single card: the layout is the same picture, and
-  // only which lines are drawn changes. Which is the point of laying it out from
-  // both relations at once.
-  // The first three ask which *relation* to draw. The fourth asks what the combo
-  // behind a line is worth, which is a different question on the same picture — and on
-  // a deck whose map runs to a hundred lines it is the one that makes it readable.
-  //
-  // Interchangeable lines are not in the game-ending view, deliberately: a swap line
-  // says "these two do the same job", there is no combo behind it and so no tier to
-  // filter it by. The title says so rather than leaving it to be noticed.
-  const MAP_VIEWS = [
-    { id: 'all', label: 'Both', spoken: 'Show every line' },
-    { id: 'combo', label: 'Works together', spoken: 'Show only pairs a combo needs' },
-    { id: 'swap', label: 'Interchangeable', spoken: 'Show only cards that stand in for each other' },
-    {
-      id: 'win',
-      label: 'Game-ending',
-      spoken: 'Show only pairs whose combo wins the game — interchangeable lines are not shown, '
-        + 'since they are not combos and have no result',
-    },
-  ];
-
-  function mapFilter(svg) {
-    const row = el('div', 'map-filter');
-    row.setAttribute('role', 'group');
-    row.setAttribute('aria-label', 'Which lines to show');
-    const buttons = [];
-    const select = (view) => {
-      svg.classList.remove('show-all', 'show-combo', 'show-swap', 'show-win');
-      svg.classList.add('show-' + view);
-      buttons.forEach((b) => {
-        const on = b.dataset.view === view;
-        b.classList.toggle('is-active', on);
-        b.setAttribute('aria-pressed', String(on));
-      });
-    };
-    MAP_VIEWS.forEach((view) => {
-      const button = el('button', 'chip', view.label);
-      button.type = 'button';
-      button.dataset.view = view.id;
-      button.title = view.spoken;
-      button.addEventListener('click', () => select(view.id));
-      buttons.push(button);
-      row.appendChild(button);
-    });
-    select('all');
-    return row;
-  }
-
-  function mapLegend() {
-    const list = el('ul', 'map-legend');
-    LEGEND.forEach((item) => {
-      const row = el('li');
-      const swatch = svgEl('svg', 'swatch');
-      swatch.setAttribute('viewBox', '0 0 28 8');
-      swatch.setAttribute('aria-hidden', 'true');
-      const line = svgEl('line', 'edge ' + item.className);
-      line.setAttribute('x1', '1');
-      line.setAttribute('y1', '4');
-      line.setAttribute('x2', '27');
-      line.setAttribute('y2', '4');
-      line.setAttribute('stroke-width', String(item.width));
-      swatch.appendChild(line);
-      row.appendChild(swatch);
-      row.appendChild(el('span', null, item.text));
-      list.appendChild(row);
-    });
-    const numbers = el('li', 'map-legend-note');
-    numbers.appendChild(el('span', null,
-      'Thicker means more of your combos, and the number on a line says how many.'));
-    list.appendChild(numbers);
-    return list;
-  }
-
-  function renderGraph(container, included) {
-    if (!included.length) {
-      container.textContent = '';
-      return;
-    }
-    const graph = ComboGraph.build(included);
-    const swaps = graph.links.filter((l) => l.kind === 'swap').length;
-    // The panel comes first because the canvas depends on it: the SVG is scaled
-    // into this column, and everything drawn on it is a fixed size in canvas
-    // units, so how wide the column is decides how big a dot ends up. Measured
-    // rather than assumed from the window — at 1000px the page is two columns
-    // and this one is not the window.
-    const body = panel(container, 'graph', 'How your combos connect', graph.nodes.length);
-    // The canvas grows with the deck — 28 cards in the box that suits 8 is a knot
-    // — and turns portrait on a phone, where a landscape one wastes the screen
-    // twice over.
-    ComboGraph.layout(graph, ComboGraph.sizeFor(graph.nodes.length, body.clientWidth));
-    // The layout hands back the box it actually used, which is the one to draw
-    // in: the canvas it was given is working space, and whatever it did not need
-    // would otherwise be empty screen around the picture.
-    const size = { width: graph.width, height: graph.height };
-
-    body.appendChild(el('p', 'empty',
-      'Two cards are joined when a combo needs both of them — a solid line, in the colour of the best '
-      + 'result those combos produce — or when they do the same job: a dashed line, meaning one can be '
-      + 'swapped for the other and you still have a combo. Both carry the count, so cards that overlap '
-      + 'a lot are drawn heavier and say by how much, and cards that stand in for each other end up '
-      + 'side by side. Hover a card to name it and pick out what it touches; press two or three to '
-      + 'compare them, and the line under the map says what they share and what cutting them costs.'));
-
-    const svg = svgEl('svg', 'combo-map');
-    svg.setAttribute('viewBox', '0 0 ' + size.width + ' ' + size.height);
-    // The type size the layout reserved room for, handed to the stylesheet so
-    // the text drawn is the text that was measured. On a narrow column both are
-    // larger — see sizeFor() — and if only one of them were, the names would
-    // overlap or the map would waste the space it saved for them.
-    svg.style.setProperty('--map-type', graph.fontSize + 'px');
-    // A group of controls, not a picture: every card on it can be pressed to pin
-    // it, and a press changes what the page says. The label below is what a
-    // screen reader hears on the way in; the cards themselves are buttons, and
-    // the comparison they produce is announced.
-    svg.setAttribute('role', 'group');
-    const described = 'Combo map: ' + graph.nodes.length + ' cards, '
-      + (graph.links.length - swaps) + ' pairs a combo needs together and '
-      + swaps + ' pairs that can stand in for each other.';
-    svg.setAttribute('aria-label', described);
-    const title = svgEl('title');
-    title.textContent = described;
-    svg.appendChild(title);
-
-    // Interchangeable lines go in their own layer *above* the combo lines. They
-    // are the answer to "which of these do the same job", and underneath a
-    // hundred and fourteen green ones they were the hardest thing on the map to
-    // see — which is precisely backwards.
-    const edgeLayer = svgEl('g', 'edges');
-    const swapLayer = svgEl('g', 'edges swaps');
-    const countLayer = svgEl('g', 'counts');
-    const nodeLayer = svgEl('g', 'nodes');
-    svg.appendChild(edgeLayer);
-    svg.appendChild(swapLayer);
-    svg.appendChild(countLayer);
-    svg.appendChild(nodeLayer);
-
-    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-    // What each card touches, so picking one out is a lookup rather than a search
-    // of the DOM on every pointer move — and every line with both its ends, for
-    // the same reason.
-    const touching = new Map(graph.nodes.map((n) => [n.id, { nodes: new Set([n.id]) }]));
-    const drawn = [];
-
-    graph.links.forEach((linkData) => {
-      const a = byId.get(linkData.source);
-      const b = byId.get(linkData.target);
-      const swap = linkData.kind === 'swap';
-      const line = svgEl('line', 'edge ' + (swap ? 'swap' : 'tier-' + linkData.tier));
-      line.setAttribute('x1', a.x);
-      line.setAttribute('y1', a.y);
-      line.setAttribute('x2', b.x);
-      line.setAttribute('y2', b.y);
-      // Heavier the more the two overlap, on both meanings of overlap, and capped
-      // so one very busy pair does not draw a bar across the map. Interchangeable
-      // counts run much higher than shared-combo ones — six cards that all stand
-      // in for each other are interchangeable in every combo the group appears in
-      // — so it takes more of them to earn the same width.
-      line.setAttribute('stroke-width', String(swap
-        ? 1 + Math.min(linkData.swap - 1, 12) * 0.28
-        : 1 + Math.min(linkData.together - 1, 4) * 0.7));
-      const hint = svgEl('title');
-      hint.textContent = swap
-        ? a.name + ' or ' + b.name + ' — either one works in ' + linkData.swap
-          + ' of your combos'
-        : a.name + ' + ' + b.name + ' — ' + linkData.together
-          + ' combo' + (linkData.together === 1 ? '' : 's') + ' need both';
-      line.appendChild(hint);
-      (swap ? swapLayer : edgeLayer).appendChild(line);
-
-      // The number itself. The strongest few stay on screen; the rest are drawn
-      // and hidden, and come back when either of their cards is picked out —
-      // where they are one card's dozen lines rather than the map's hundred and
-      // fifty, and there is room for all of them.
-      let count = null;
-      if (linkData.countX != null) {
-        // The tier goes on the number as well as on the line, so a filter by tier
-        // takes the pair together. Without it the game-ending view hid every count,
-        // including the ones belonging to the lines it was showing.
-        count = svgEl('text', 'count' + (swap ? ' swap' : ' tier-' + linkData.tier)
-          + (linkData.countShown ? '' : ' is-crowded'));
-        count.setAttribute('x', linkData.countX);
-        count.setAttribute('y', linkData.countY + 3.5);
-        count.textContent = String(linkData.count);
-        countLayer.appendChild(count);
-      }
-
-      // Both ends kept on the line itself, so lighting a comparison can ask "is
-      // this line between two of the picked cards" without searching the DOM.
-      drawn.push({ a: a.id, b: b.id, parts: count ? [line, count] : [line] });
-
-      [[a, b], [b, a]].forEach(([from, to]) => {
-        const near = touching.get(from.id);
-        near.nodes.add(to.id);
-      });
-    });
-
-    const groups = new Map();
-    graph.nodes.forEach((node) => {
-      const g = svgEl('g', 'node');
-      // A card on this map is something you press: pressing it pins the card so
-      // two or three can be compared, which is a button whatever it is drawn as.
-      // So it is one — focusable, named, and reporting whether it is pinned —
-      // rather than a shape a mouse happens to be able to hit.
-      g.setAttribute('role', 'button');
-      g.setAttribute('tabindex', '0');
-      g.setAttribute('aria-pressed', 'false');
-      g.setAttribute('aria-label', node.name + ', in ' + node.combos
-        + ' combo' + (node.combos === 1 ? '' : 's') + '. Pick to compare.');
-      // An invisible ring of forgiveness around the dot. The smallest card on
-      // the map is a 5-unit circle, which on a phone — a 900-unit canvas scaled
-      // into a 330px column — is under two physical pixels of target. This does
-      // not make it a thumb-sized one, but it makes a near miss count, and it
-      // costs nothing: the gap the layout leaves between two dots is wider than
-      // this, so no card can steal another's presses.
-      const hit = svgEl('circle', 'hit');
-      hit.setAttribute('cx', node.x);
-      hit.setAttribute('cy', node.y);
-      hit.setAttribute('r', String(node.r + HIT_MARGIN));
-      const dot = svgEl('circle', 'dot');
-      dot.setAttribute('cx', node.x);
-      dot.setAttribute('cy', node.y);
-      dot.setAttribute('r', String(node.r));
-      // Where the label goes — and whether there was room for one at all — is the
-      // layout's decision, since it is the half that knows what is next to what.
-      // A card whose label was dropped still names itself on hover, which is one
-      // label rather than forty.
-      const label = svgEl('text', node.labelDy == null ? 'label is-crowded' : 'label');
-      label.setAttribute('x', node.x + node.labelDx);
-      label.setAttribute('y', node.y + (node.labelDy == null ? node.r + 11 : node.labelDy));
-      // Centred is the stylesheet's default; a label placed beside its dot has to
-      // grow away from it rather than through it.
-      if (node.labelAnchor !== 'middle') label.setAttribute('text-anchor', node.labelAnchor);
-      label.textContent = node.label;
-      const hint = svgEl('title');
-      hint.textContent = node.name + ' — in ' + node.combos
-        + ' combo' + (node.combos === 1 ? '' : 's');
-      g.appendChild(hint);
-      g.appendChild(hit);
-      g.appendChild(dot);
-      g.appendChild(label);
-      nodeLayer.appendChild(g);
-      groups.set(node.id, g);
-    });
-
-    // ---- picking cards out ----
-    //
-    // Lighting up one card dims the rest, which is the only way to read a map
-    // this dense: "what is Basalt Monolith actually in" is a question the picture
-    // cannot answer while every line is drawn at the same weight.
-    //
-    // Hovering asks that about one card. Pressing cards *pins* two or three, and
-    // then the question is a different one — these look like the same effect,
-    // which do I keep? — so what lights is what they have in common: the lines
-    // between them, and the cards every one of them combos with. Everything else
-    // goes quiet, and the line under the map counts it out.
-    const picked = [];
-    const lit = [];
-    const summary = el('p', 'map-picked');
-    // The comparison is the answer to a press, and a press has to say what it did
-    // to someone who cannot see the map light up.
-    summary.setAttribute('role', 'status');
-
-    const clear = () => {
-      svg.classList.remove('is-lit');
-      lit.forEach((node) => node.classList.remove('is-lit'));
-      lit.length = 0;
-    };
-
-    // ids: the cards to light. One of them lights everything it touches; several
-    // light only what they have in common.
-    const light = (ids) => {
-      clear();
-      if (!ids.length) return;
-      const chosen = new Set(ids);
-      const near = ids.map((id) => (touching.get(id) || { nodes: new Set() }).nodes);
-      const shared = ids.length === 1
-        ? [...near[0]]
-        : [...near[0]].filter((id) => !chosen.has(id) && near.every((set) => set.has(id)));
-      const on = new Set([...ids, ...shared]);
-      svg.classList.add('is-lit');
-      on.forEach((id) => {
-        const g = groups.get(id);
-        if (g) { g.classList.add('is-lit'); lit.push(g); }
-      });
-      // A line counts when it joins two lit cards and at least one of them was
-      // picked: between two shared partners is a relation of theirs, not of the
-      // comparison.
-      drawn.forEach((line) => {
-        if (!on.has(line.a) || !on.has(line.b)) return;
-        if (!chosen.has(line.a) && !chosen.has(line.b)) return;
-        line.parts.forEach((part) => { part.classList.add('is-lit'); lit.push(part); });
-      });
-    };
-
-    const describe = () => {
-      summary.textContent = picked.length ? DeckView.pickedSentence(ComboGraph.compare(graph, picked)) : '';
-      summary.classList.toggle('is-empty', !picked.length);
-      groups.forEach((g, id) => g.setAttribute('aria-pressed', String(picked.includes(id))));
-    };
-
-    // What is on screen when nothing is being hovered: the pinned cards, or
-    // nothing at all.
-    const rest = () => light(picked);
-
-    const toggle = (id) => {
-      const at = picked.indexOf(id);
-      if (at === -1) picked.push(id);
-      else picked.splice(at, 1);
-      groups.forEach((g, other) => g.classList.toggle('is-picked', picked.includes(other)));
-      describe();
-      rest();
-    };
-
-    groups.forEach((g, id) => {
-      // Hovering is a look, pressing is a decision: a hover previews one card and
-      // is undone the moment the pointer leaves, and it leaves the pinned
-      // selection alone underneath.
-      g.addEventListener('pointerenter', () => light([id]));
-      g.addEventListener('click', () => toggle(id));
-      g.addEventListener('keydown', (e) => {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        e.preventDefault(); // Space scrolls the page otherwise
-        toggle(id);
-      });
-      g.addEventListener('focus', () => light(picked.includes(id) ? picked : [id]));
-      g.addEventListener('blur', rest);
-    });
-    svg.addEventListener('pointerleave', rest);
-
-    const clearPicked = () => {
-      if (!picked.length) return;
-      picked.length = 0;
-      groups.forEach((g) => g.classList.remove('is-picked'));
-      describe();
-      rest();
-    };
-    // A press on the background is how every other selection on a screen is
-    // undone, and Escape is how a keyboard does it.
-    svg.addEventListener('click', (e) => {
-      if (!e.target.closest('.node')) clearPicked();
-    });
-    svg.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') clearPicked();
-    });
-
-    // Built after the SVG because all three describe it — the filter drives it,
-    // the legend is drawn with the same classes the map is so it cannot describe
-    // a line the map no longer has, and the summary answers a press. Inserted
-    // around it all the same.
-    body.appendChild(mapFilter(svg));
-    body.appendChild(mapLegend());
-    body.appendChild(svg);
-    describe();
-    body.appendChild(summary);
-
-    if (graph.omitted) {
-      body.appendChild(el('p', 'note',
-        'Showing the ' + graph.nodes.length + ' cards in the most combos. '
-        + graph.omitted + ' more take part in your combos and are listed under '
-        + '“Cards carrying your combos”.'));
-    }
-  }
-
-  // Suggestions in two tabs. An off-colour card is still worth knowing about —
-  // decks get rebuilt — but if your deck isn't red, a red card is noise while
-  // you're reading the list, so it goes behind a tab instead of sitting in the
-  // flow underneath.
   function renderSuggestions(container, onColour, offColour, deckNames, identity) {
     const total = onColour.length + offColour.length;
     const colours = identity && identity.size ? [...identity].join('').toUpperCase() : null;
@@ -1552,7 +1068,7 @@
     // combos" draws, so the two panels cannot disagree about what a card is in.
     // Rebuilt on every search, including the one "+ Add to deck" fires, so the
     // picture is never a search behind the list beside it.
-    renderGraph($('graph'), included);
+    RenderMap.renderGraph($('graph'), included);
 
     renderSlots($('slots'), results.oneSlotAway || [], results.slotCandidates || {});
 
@@ -1883,7 +1399,7 @@
         + 'Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
       renderResults(results, deckNames);
       renderDataAge(results.meta);
-      saveDeck();
+      DeckIO.saveDeck();
       if (unparsed.length) showDiagnostics(null, parsed, 'notice');
     } catch (err) {
       setStatus('Combo search failed: ' + err.message, true);
@@ -1930,212 +1446,24 @@
     line.hidden = false;
   }
 
-  // ---- keeping the decklist ------------------------------------------------
+  // ---- wiring ---------------------------------------------------------------
   //
-  // A reload used to lose whatever was pasted in, which is a strange thing for a
-  // page whose entire input is a long paste. The list is kept locally — it never
-  // leaves the browser — and a link can carry it deliberately.
-  const DECK_KEY = 'mtg-combo-finder.deck';
-
-  function saveDeck() {
-    try {
-      localStorage.setItem(DECK_KEY, JSON.stringify({
-        decklist: $('decklist').value,
-        commanders: $('commanders').value,
-      }));
-    } catch (err) {
-      /* private mode, or over quota — not worth bothering the reader about */
-    }
-  }
-
-  // base64url, because a decklist is full of newlines and commas and the URL has
-  // to survive being pasted into a chat window.
-  function encodeDeck(text) {
-    const bytes = new TextEncoder().encode(text);
-    let binary = '';
-    for (const b of bytes) binary += String.fromCharCode(b);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  function decodeDeck(param) {
-    const padded = param.replace(/-/g, '+').replace(/_/g, '/');
-    const binary = atob(padded + '='.repeat((4 - (padded.length % 4)) % 4));
-    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-    return new TextDecoder().decode(bytes);
-  }
-
-  function shareLink() {
-    const url = new URL(location.href);
-    url.search = '';
-    url.searchParams.set('deck', encodeDeck($('decklist').value));
-    const commanders = $('commanders').value.trim();
-    if (commanders) url.searchParams.set('cmd', encodeDeck(commanders));
-    return url.href;
-  }
-
-  // A link wins over the stored list: someone who opens a shared deck means to
-  // see that deck, not the one they were last working on.
-  function restoreDeck() {
-    const params = new URLSearchParams(location.search);
-    if (params.has('deck')) {
-      try {
-        $('decklist').value = decodeDeck(params.get('deck'));
-        $('commanders').value = params.has('cmd') ? decodeDeck(params.get('cmd')) : '';
-        setStatus('Deck loaded from the link. Press “Find combos”.');
-        return;
-      } catch (err) {
-        setStatus('That shared link’s decklist could not be read — paste the list below instead.', true);
-      }
-    }
-    try {
-      const saved = JSON.parse(localStorage.getItem(DECK_KEY)) || {};
-      if (saved.decklist) $('decklist').value = saved.decklist;
-      if (saved.commanders) $('commanders').value = saved.commanders;
-    } catch (err) {
-      /* nothing kept, or junk in there */
-    }
-  }
-
-  function clearDeck() {
-    $('decklist').value = '';
-    $('commanders').value = '';
-    $('deck-url').value = '';
-    try {
-      localStorage.removeItem(DECK_KEY);
-    } catch (err) {
-      /* nothing to remove */
-    }
-    // Leaving ?deck= in the address bar would resurrect the list on reload.
-    if (location.search) history.replaceState(null, '', location.pathname);
-    $('results').hidden = true;
-    $('diagnostics').hidden = true;
-    const age = $('data-age');
-    if (age) age.hidden = true;
-    setStatus('Cleared.');
-    $('decklist').focus();
-  }
-
-  // ---- a deck that arrives as a file -----------------------------------------
-  //
-  // Every deck site exports a text file, including the ones whose API a browser
-  // can never read — so this is the one import path that works everywhere, and it
-  // needs no CORS, no API and no new origin in the CSP.
-  //
-  // Both ways in, because they are not interchangeable: dragging is the obvious
-  // one on a desktop and impossible on a phone or from a keyboard, and the file
-  // picker is the one screen readers can drive.
-  //
-  // Only the wiring is here. Whether a file is worth reading (parser.js
-  // acceptDeckFile/looksLikeText) and what the page then says (view-model.js
-  // fileLoaded/fileRefusal) live where `node --test` can reach them.
-  function refuse(reason, name) {
-    setStatus(DeckView.fileRefusal(reason, name, DeckParser.MAX_DECK_FILE_BYTES), true);
-  }
-
-  function useDeckFile(file) {
-    const verdict = DeckParser.acceptDeckFile(file);
-    if (!verdict.ok) {
-      refuse(verdict.reason, verdict.name);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onerror = () => refuse('unreadable', file.name);
-    reader.onload = () => {
-      const text = String(reader.result || '');
-      // The check that matters, and the only honest one: a .txt extension is a
-      // claim, and this is the test. A binary file decoded as UTF-8 arrives full
-      // of replacement characters and would otherwise land in the box as a wall
-      // of lines the parser silently threw away.
-      if (!DeckParser.looksLikeText(text)) {
-        refuse('unreadable', file.name);
-        return;
-      }
-      const parsed = DeckParser.parseDecklist(text);
-      if (!parsed.main.length && !parsed.commanders.length) {
-        refuse('no-cards', file.name);
-        return;
-      }
-
-      // Into the box rather than straight into a search: the reader can see what
-      // arrived, fix a line, and press the button themselves. It also means a
-      // dropped file behaves exactly like a paste from here on.
-      $('decklist').value = text.trim();
-      // Commanders marked inline (*CMDR*) are the parser's business and stay in
-      // the list; the separate box is only cleared so a previous deck's
-      // commanders cannot survive into this one.
-      $('commanders').value = '';
-      saveDeck();
-      setStatus(DeckView.fileLoaded(file.name, {
-        main: parsed.main.length,
-        commanders: parsed.commanders.length,
-        skipped: (parsed.skipped || []).length,
-      }));
-    };
-    reader.readAsText(file);
-  }
-
-  function wireDeckFiles() {
-    const box = $('decklist');
-    const picker = $('deck-file');
-    const zone = $('deck-form');
-
-    if (picker) {
-      picker.addEventListener('change', () => {
-        if (picker.files && picker.files[0]) useDeckFile(picker.files[0]);
-        // Cleared so choosing the same file twice fires `change` again — without
-        // this, fixing the file and re-picking it does nothing at all.
-        picker.value = '';
-      });
-      const button = $('choose-file');
-      if (button) button.addEventListener('click', () => picker.click());
-    }
-
-    if (!zone) return;
-    // dragover must be cancelled or the browser navigates to the file and the
-    // page is simply gone, decklist and all.
-    const over = (on) => (e) => {
-      if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') === -1) return;
-      e.preventDefault();
-      box.classList.toggle('dropping', on);
-    };
-    zone.addEventListener('dragover', over(true));
-    zone.addEventListener('dragenter', over(true));
-    zone.addEventListener('dragleave', over(false));
-    zone.addEventListener('drop', (e) => {
-      const files = e.dataTransfer && e.dataTransfer.files;
-      if (!files || !files.length) return;
-      e.preventDefault();
-      box.classList.remove('dropping');
-      // One deck at a time. Silently reading the first of five would look like
-      // the other four failed.
-      if (files.length > 1) {
-        setStatus('Drop one decklist at a time — ' + files.length + ' files arrived together.', true);
-        return;
-      }
-      useDeckFile(files[0]);
-    });
-  }
-
-  let saveTimer = null;
-  function saveDeckSoon() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveDeck, 400);
-  }
+  // What is left of this file after the split: read the form, ask for a search, draw
+  // what comes back, and connect the controls to the modules that do the work.
 
   $('deck-form').addEventListener('submit', onSubmit);
   $('load-deck').addEventListener('click', loadDeckUrl);
-  $('decklist').addEventListener('input', saveDeckSoon);
-  $('commanders').addEventListener('input', saveDeckSoon);
-  $('clear-deck').addEventListener('click', clearDeck);
-  wireDeckFiles();
+  $('decklist').addEventListener('input', DeckIO.saveDeckSoon);
+  $('commanders').addEventListener('input', DeckIO.saveDeckSoon);
+  $('clear-deck').addEventListener('click', DeckIO.clearDeck);
+  DeckIO.wireDeckFiles();
   $('copy-link').addEventListener('click', () => {
     const button = $('copy-link');
     if (!$('decklist').value.trim() && !$('commanders').value.trim()) {
       setStatus('Nothing to share yet — paste a decklist first.', true);
       return;
     }
-    const href = shareLink();
+    const href = DeckIO.shareLink();
     history.replaceState(null, '', href);
     navigator.clipboard.writeText(href).then(
       () => { button.textContent = 'Link copied'; setTimeout(() => { button.textContent = 'Copy link'; }, 2000); },
@@ -2143,5 +1471,5 @@
     );
   });
 
-  restoreDeck();
+  DeckIO.restoreDeck();
 })();
