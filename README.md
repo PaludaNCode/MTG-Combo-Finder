@@ -3137,6 +3137,13 @@ there is: shrinking COMBOS was tried first and bought nothing, since 46px of lab
 sits under 51px of split, and the split cannot wrap instead because `0+1889` has no space
 in it to break at. The test fails if either stops fitting.
 
+**And the air around the text was trimmed with it.** Two paddings stack before a card name
+gets anything — the panel's and the card's — and `npm run verify` prints the pair as one
+number: at 390px that was **47px of air around 309px of text**, an eighth of the column
+spent on margin twice over. At `.55rem` / `.5rem` / `.6rem` it is 35px of air and **321px of
+text**, 12px more for a name. Only at this end of the range: a 1440px column has 935px of
+text and the same 64px of air, where the air is doing what padding is for.
+
 That measurement also caught the change breaking itself: an editing slip closed the
 gutter's comment early, which left prose as CSS, dropped the whole `.combo.suggestion`
 rule, and put the divider at 23px instead of 93px. Nothing lints CSS here — `npm run

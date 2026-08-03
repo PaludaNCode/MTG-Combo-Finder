@@ -1782,11 +1782,20 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   body { padding: 1rem .6rem 2rem; }
   .url-row { flex-direction: column; }
 
-  /* Reclaim horizontal space; combo lines are the thing worth reading. */
-  .panel-head { padding: .8rem .7rem; gap: .5rem; }
-  .panel-body { padding: 0 .7rem .8rem; }
+  /* Reclaim horizontal space; combo lines are the thing worth reading.
+   *
+   * Two paddings stack before a card name gets anything — the panel's and the card's —
+   * and `npm run verify` prints the pair as one number: at 390px it was 47px of air
+   * around 309px of text, so an eighth of the column was margin twice over. Trimmed to
+   * 35px, which is 321px of text: 12px more for a name, on a page whose longest are
+   * "Lunarch Veteran // Luminous Phantom" and "Chatterfang, Squirrel General".
+   *
+   * Only at this end of the range. A 1440px column has 935px of text and the same 64px
+   * of air, where the air is doing what padding is for. */
+  .panel-head { padding: .8rem .55rem; gap: .5rem; }
+  .panel-body { padding: 0 .5rem .8rem; }
   .panel-title { font-size: 1rem; }
-  .combo { padding: .7rem .75rem; }
+  .combo { padding: .7rem .6rem; }
   .why { margin-left: 0; }
   ul.why { padding-left: .9rem; }
   /* The gutter keeps its width here — it is what the numbers line up in, and the

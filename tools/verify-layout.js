@@ -538,7 +538,23 @@ function measure(win, doc) {
       head.style.whiteSpace = was.ws;
       head.style.width = was.w;
     }
-    return { rows: rows.length, stacked, sharing, split, wants, column, example, splitExample };
+    // How much room the text in a row actually has, and how much of the column is spent
+    // on air either side of it. The column width alone does not answer that: a panel and a
+    // card each take a padding out of it before a card name gets any.
+    let text = 0;
+    let air = 0;
+    const firstHead = rows.find((h) => h.getBoundingClientRect().width);
+    if (firstHead) {
+      text = Math.round(firstHead.getBoundingClientRect().width);
+      const body = firstHead.closest('.panel-body');
+      if (body) {
+        air = Math.round(body.getBoundingClientRect().width - text);
+      }
+    }
+    return {
+      rows: rows.length, stacked, sharing, split, wants, column, example, splitExample,
+      text, air,
+    };
   })();
 
   // The link line's separators, read as what a reader sees. A dot is only ever a
@@ -2868,7 +2884,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const cardsNote = v.headingShape && v.headingShape.rows
         ? `headings ${v.headingShape.sharing ? 'inline' : 'one card per line'} in `
           + `${v.headingShape.column}px (needs ${v.headingShape.wants}px inline), `
-          + `${v.linkLine ? v.linkLine.seps : 0} link separator(s)`
+          + `${v.linkLine ? v.linkLine.seps : 0} link separator(s), text ${v.headingShape.text}px `
+          + `with ${v.headingShape.air}px of air`
         : 'no headings measured';
       const compareNote = v.grouped.compare.length
         ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
