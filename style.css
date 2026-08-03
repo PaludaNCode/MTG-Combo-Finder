@@ -533,6 +533,10 @@ button:disabled { opacity: .6; cursor: wait; }
   grid-template-columns: 4.2rem minmax(0, 1fr);
   column-gap: var(--col-gap);
   align-items: start;
+  /* 2px tighter than the .combo default. These two panels are read as ranked
+     lists rather than as individual cards, so the rows want to sit closer
+     together than a standalone combo row does. */
+  margin-bottom: .625rem;
 }
 /* Everything below the numbers is the card's, so all of it lives in the card's
  * column: the interchangeable cards, and "Combos this unlocks" — which is the list
@@ -555,6 +559,12 @@ button:disabled { opacity: .6; cursor: wait; }
   padding-left: var(--col-gap);
   border-left: 1px solid var(--line);
 }
+/* A hair of air above "The combos it holds together" / "Combos this unlocks" so
+   the summary is not sitting straight on the block above it. Padding and not
+   margin, like everything else in this column: the border-left is drawn over the
+   padding, so the divider stays one unbroken line, where a margin would open a
+   1px hole in it. */
+.combo.suggestion > details { padding-top: 1px; }
 
 .row-numbers {
   display: flex;
