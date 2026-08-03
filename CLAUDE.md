@@ -16,7 +16,7 @@ Combo data comes from a nightly snapshot of Commander Spellbook published to the
 ## Commands
 
 ```bash
-npm test                  # unit tests, node:test, zero deps (~370 tests, ~1s)
+npm test                  # unit tests, node:test, zero deps (564 tests, ~2s)
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change
@@ -31,6 +31,7 @@ node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
 node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
+node tools/deck-gaps.js [deck.txt]             # which gaps THIS deck exposes
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works
@@ -61,6 +62,12 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
 | `app.js` | — | the only file that touches the DOM of `index.html` |
 | `tiers-page.js` | — | the same for `tiers.html` |
+| `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
+
+`research-log.js` is the one file that breaks the shape above: the browser never loads it,
+so it is a plain CommonJS module and is linted with the tools rather than with the shipped
+files. `test/lint-config.test.js` fails if a script matches no block, which is how that gets
+noticed.
 
 `search-worker.js` `importScripts` result-tiers → combos → unofficial → search,
 in that order (each reads the previous at load time). It does **not** load
@@ -151,14 +158,20 @@ Three different questions, and it is worth not confusing them:
 |---|---|
 | which existing rows can this deck assemble? | `matchUnofficial()`, pinned in `test/unofficial.test.js`. **`try-deck.js` does not cover the unofficial panel.** |
 | which of this deck's cards are worth sweeping? | `tools/deck-cards.js --unswept`, and `/deck-deep-dive` on top of it |
-| which gaps does *this deck* expose? | **nothing yet** |
+| which gaps does *this deck* expose? | `tools/deck-gaps.js` |
 
-The third is still unbuilt. It is the pass above with step 2 restricted to shapes whose
-cards the deck already holds — how the lifegain pass found 51 candidates nobody had
-looked for — and it is a genuinely different query from the second: `deck-cards.js`
-chooses *subjects* from a deck and then sweeps each one across the whole database, where
-a deck-scoped sweep would bound the candidate shapes as well. Until it exists,
-`/deck-deep-dive` is the close approximation.
+The third is the pass above with step 2 restricted to shapes whose cards the deck already
+holds — how the lifegain pass found 51 candidates nobody had looked for. It is genuinely
+different from the second: `deck-cards.js` chooses *subjects* from a deck and then sweeps
+each across the whole database, where `deck-gaps.js` bounds the candidate shapes too, so
+every hit is a combo the deck could cast tonight.
+
+**It re-proposes what has already been ruled out.** The first sweep threw out
+`Scurry Oak + Sadistic Glee` — the Squirrel cannot sacrifice itself where Broodscale's
+Spawn can — and `deck-gaps.js` offers it again, because that decision is a sentence in
+`research-log.js` and not a card set. Read the log first. Wiring them together means
+giving every rule-out a machine-readable set of cards, which is a change to the log's
+shape nobody has made.
 
 ### The two fixture decks
 
@@ -269,3 +282,23 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - No style rules in the lint config on purpose. Match the surrounding code.
 - Trunk-based: short-lived `feat/…` / `fix/…` branches off `main`, PR, auto-merge
   when green. Merging to `main` *is* the release.
+- **Outstanding work is a GitHub issue.** `IMPROVEMENTS.md` is the record of a review
+  whose items are all settled — history, not a queue. Anything still to do goes in an
+  issue so it can be closed, assigned and linked from the PR that finishes it.
+
+### Writing an issue here: point, do not restate
+
+An issue that copies the current state becomes a second source of truth, and the
+unchecked copy is the one that rots. "16 cards are unread" is wrong the moment somebody
+reads one, and then the log and the issue disagree — which is the exact shape of the
+failure this repository spent a day fixing, where prose said *nothing remains open* and
+the data said otherwise.
+
+So an issue names **where the live answer lives** and **what finishing looks like**:
+
+> The live list is in `research-log.js` — do not restate it here. Grep for `UNREAD`.
+> Finish condition: `UNREAD_DEBT` in `test/research-log.test.js` reaches 0.
+
+Carry detail in the issue only when it exists nowhere else machine-readable — a design
+constraint, a specific failing case, a decision somebody has to make. Never a count that
+a file already holds and a test already checks.
