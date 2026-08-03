@@ -208,8 +208,12 @@
   // that is out of order and all of it reads as unsorted, because a reader scanning
   // for a card has no idea what the play counts are.
   //
-  // Compared on the names as drawn, so the order on screen is the order the
-  // comparator produced and there is no second arrangement to reconcile.
+  // Compared on the alphabetical names, which is the order these rows are drawn in
+  // wherever no pin applies. Where one does — a nested list, which leads with the card
+  // it sits under and sends the card that changes last — the drawn order and this key
+  // part company, and a family of rows can be split by a row that sorts between them.
+  // See interchangeableIn(): lining the rows up inside themselves came first because
+  // it is per row, and ordering the list by what it draws needs the pins passed in.
   const nameSignature = (variant) => orderComboNames(
     variant && variant.uses ? variantCardNames(variant) : ((variant && variant.c) || [])
   ).join(' + ');
@@ -340,6 +344,66 @@
     // and grouping must not quietly reshuffle the most-played combo down the page.
     groups.sort((a, b) => a.at - b.at);
     return groups.map(({ at, ...group }) => group);
+  }
+
+  // The card that changes, for every variant in a list, as a lookup the render side
+  // can ask one row at a time: variant -> the cards that vary across its siblings,
+  // ready to hand to orderComboNames() as its `trail`.
+  //
+  // "The card that changes" is a fact about a *set* of rows and never about one on its
+  // own, so this takes the list exactly as it will be drawn. The lists that needed it
+  // are the ones that never collapse — a suggestion's combos, a piece's combos and the
+  // unofficial panel are one row per variant, so nothing was asking and every row fell
+  // back to alphabetical.
+  //
+  // **Cards only, deliberately unlike groupVariants().** That function also requires
+  // the same results, and it must: merging two combos that do different things would
+  // tell the reader one thing when the data says two. This decides where a name sits
+  // on a line, which merges nothing and hides nothing, and the reader comparing eight
+  // rows under Chatterfang does not care that one of them also drains — they care that
+  // the piece that differs is in the same place on all eight. Held to the stricter bar
+  // it aligned five of those eight, which reads as a rule that half works.
+  //
+  // Keyed by the variant object, because the caller is the loop that draws those very
+  // objects. A copy would miss the lookup and the row would read alphabetically —
+  // no worse than before this existed, rather than wrong.
+  function interchangeableIn(variants) {
+    const list = variants || [];
+
+    // Every way each row could be "all of these cards, but one" — the same first step
+    // groupVariants() takes, without the results in the key.
+    const buckets = new Map();
+    list.forEach((variant, index) => {
+      const names = variantCardNames(variant);
+      names.forEach((name, omit) => {
+        const k = sortedKeys(names.filter((_, i) => i !== omit));
+        if (!buckets.has(k)) buckets.set(k, []);
+        buckets.get(k).push({ index, name });
+      });
+    });
+
+    // Biggest family first, so a row that differs from one neighbour by card X and
+    // from another by card Y takes the version that lines it up with more rows. Ties
+    // break on the key, so the answer never depends on iteration order. Unlike
+    // grouping, a row is not consumed by the family that claims it: nothing here is
+    // merged, so the only question is which set of siblings it is ordered against.
+    const trails = new Map();
+    const claimed = new Map();
+    const order = [...buckets.entries()].sort(
+      (a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1)
+    );
+    for (const [, members] of order) {
+      // One row is not a family: there is nothing it differs from, so nothing to send
+      // last, and the row stays alphabetical.
+      if (members.length < 2) continue;
+      const choices = members.map((m) => m.name);
+      for (const m of members) {
+        if ((claimed.get(m.index) || 0) >= members.length) continue;
+        claimed.set(m.index, members.length);
+        trails.set(list[m.index], choices);
+      }
+    }
+    return trails;
   }
 
   // ---- matching against the bundled combo dataset -------------------------
@@ -1176,23 +1240,30 @@
   // different orders — and with no description shown, that order carries nothing.
   // Alphabetical makes a row scannable and two rows comparable.
   //
-  // Two things outrank it, both about where the reader's eye has to go:
+  // Two things outrank it, both about where the reader's eye has to go, and they
+  // apply together rather than one instead of the other:
   //
   // `lead` is the card the reader is already looking at — the card a suggestion is
   // about, or the one whose combos are being listed. A list of combos under "Scurry
   // Oak" that buries Scurry Oak mid-line makes them find it again on every row.
   //
-  // `trail` is the same argument from the other end, for the versions of a collapsed
-  // group. Those rows are identical but for one card, and alphabetical order puts
-  // that card wherever its name happens to fall:
+  // `trail` is the same argument from the other end, for rows that differ from the
+  // rows beside them by one card. Those rows are identical but for that card, and
+  // alphabetical order puts it wherever its name happens to fall:
   //
   //     Chatterfang + Essence Warden + Warren Soultrader
   //     Chatterfang + Soul Warden + Warren Soultrader
   //
   // so the difference moves around and the eye has to hunt for it on each line.
-  // Sending the interchangeable cards last gives every version the shape its own
-  // heading already has — "X + Y + the one that changes" — and the difference lands
-  // in the same column every time.
+  // Sending the interchangeable cards last gives every row the shape a collapsed
+  // group's heading already has — "X + Y + the one that changes" — and the difference
+  // lands in the same column every time.
+  //
+  // A lead used to *replace* a trail rather than sit in front of one, which read as
+  // alphabetical everywhere a list was both about a card and made of near-identical
+  // rows — which is both nested lists, the two places a reader compares rows most
+  // closely. The bands are the fix: what the row is about, what every one of these
+  // rows shares, then what makes this row this row.
   //
   // Both are orderings, never filters: every card in the combo is still named.
   function orderComboNames(names, opts) {
@@ -1200,23 +1271,25 @@
     const sorted = (xs) => xs.slice().sort((a, b) => a.localeCompare(b));
     const o = opts || {};
 
-    if (o.lead) {
-      const key = nameKey(o.lead);
-      // A lead not in this combo simply does not match, and the row stays
-      // alphabetical rather than losing a card or gaining one.
-      const first = list.filter((n) => nameKey(n) === key);
-      return first.concat(sorted(list.filter((n) => nameKey(n) !== key)));
-    }
+    // A lead or a trail naming nothing in this combo simply does not match, and the
+    // row keeps whatever order the rest of the rule gives it rather than losing a
+    // card or gaining one.
+    const leadKey = o.lead ? nameKey(o.lead) : null;
+    const trailKeys = new Set((o.trail || []).map((n) => nameKey(n)));
+    // The lead is the one card whose place is not up for discussion, so a lead that
+    // is *also* interchangeable leads and is not named again at the end. That is the
+    // ordinary case in the suggestion panel rather than an edge of it: the card you
+    // would be adding is usually the card that varies between its own rows.
+    if (leadKey !== null) trailKeys.delete(leadKey);
 
-    if (o.trail && o.trail.length) {
-      const keys = new Set(o.trail.map((n) => nameKey(n)));
-      // Each side sorted, so a version naming two of the interchangeable cards is
-      // still ordered rather than left in whatever order the data arrived in.
-      return sorted(list.filter((n) => !keys.has(nameKey(n))))
-        .concat(sorted(list.filter((n) => keys.has(nameKey(n)))));
-    }
+    const isLead = (n) => leadKey !== null && nameKey(n) === leadKey;
+    const isTrail = (n) => trailKeys.has(nameKey(n));
 
-    return sorted(list);
+    // Each band sorted within itself, so a row naming two of the interchangeable
+    // cards is still ordered rather than left in whatever order the data arrived in.
+    return list.filter(isLead)
+      .concat(sorted(list.filter((n) => !isLead(n) && !isTrail(n))))
+      .concat(sorted(list.filter((n) => !isLead(n) && isTrail(n))));
   }
 
   // EDHREC card page slug: "Kinnan, Bonder Prodigy" -> "kinnan-bonder-prodigy"
@@ -1272,7 +1345,7 @@
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
-    groupSuggestions, groupVariants, variantSignature,
+    groupSuggestions, groupVariants, interchangeableIn, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
     comboSize, sizeBreakdown, bracketCheck, legalityCheck,
     decode, rebuildId,

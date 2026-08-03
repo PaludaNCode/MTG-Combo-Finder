@@ -4,7 +4,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const {
-  groupSuggestions, groupVariants, computeSuggestions, deckNameSet, variantSignature,
+  groupSuggestions, groupVariants, interchangeableIn, orderComboNames,
+  computeSuggestions, deckNameSet, variantSignature,
 } = require('../combos.js');
 
 // The real shape: cards under `uses`, results under `produces`.
@@ -148,4 +149,65 @@ test('groupVariants: same cards, different results, stays separate', () => {
 test('groupVariants: nothing in, nothing out', () => {
   assert.deepStrictEqual(groupVariants([]), []);
   assert.deepStrictEqual(groupVariants(null), []);
+});
+
+// ---- what a nested list's rows differ by ------------------------------------
+//
+// The same relation, asked one row at a time, for the lists that are drawn as
+// separate rows rather than collapsed: a suggestion's combos and a piece's combos.
+// Those rows are compared against each other just as closely as a collapsed
+// group's versions are, and until this existed every one of them was alphabetical.
+
+test('interchangeableIn: every row of a family learns what varies across it', () => {
+  const variants = [
+    variant('1', ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Essence Warden'], ['Infinite lifegain']),
+    variant('2', ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Soul Warden'], ['Infinite lifegain']),
+    variant('3', ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Aunt May'], ['Infinite lifegain']),
+  ];
+  const trails = interchangeableIn(variants);
+  assert.strictEqual(trails.size, 3, 'every row of the family is in the lookup');
+  for (const v of variants) {
+    assert.deepStrictEqual(
+      trails.get(v).slice().sort(),
+      ['Aunt May', 'Essence Warden', 'Soul Warden'],
+      `row ${v.id} did not learn the whole set of choices`
+    );
+  }
+});
+
+test('interchangeableIn: a row with nothing to compare against gets no trail', () => {
+  const alone = variant('1', ['A', 'B'], ['Infinite mill']);
+  const trails = interchangeableIn([alone]);
+  assert.strictEqual(trails.get(alone), undefined, 'one row is not a family');
+  // Which is the case the render side hands to orderComboNames() as `undefined`,
+  // and it has to mean "alphabetical" rather than throwing.
+  assert.deepStrictEqual(orderComboNames(['B', 'A'], { trail: trails.get(alone) }), ['A', 'B']);
+});
+
+// The screenshot that prompted this: a nested list under Chatterfang, whose rows
+// differed only in the gainer and named it in the middle on every line. Asserted as
+// the drawn strings, because that is the thing that was wrong.
+test('interchangeableIn: a lead-first list still sends the card that changes last', () => {
+  const lead = 'Chatterfang, Squirrel General';
+  const variants = [
+    variant('1', [lead, 'Warren Soultrader', 'Essence Warden'], ['Infinite lifegain']),
+    variant('2', [lead, 'Warren Soultrader', 'Lunarch Veteran // Luminous Phantom'], ['Infinite lifegain']),
+    variant('3', [lead, 'Warren Soultrader', 'Soul Warden'], ['Infinite lifegain']),
+  ];
+  const trails = interchangeableIn(variants);
+  const drawn = variants.map((v) => orderComboNames(
+    v.uses.map((u) => u.card.name), { lead, trail: trails.get(v) }
+  ).join(' + '));
+
+  assert.deepStrictEqual(drawn, [
+    'Chatterfang, Squirrel General + Warren Soultrader + Essence Warden',
+    'Chatterfang, Squirrel General + Warren Soultrader + Lunarch Veteran // Luminous Phantom',
+    'Chatterfang, Squirrel General + Warren Soultrader + Soul Warden',
+  ]);
+  // The invariant the shape rests on, stated once: every row of the list opens with
+  // the card it is listed under and closes with the card that makes it this row.
+  drawn.forEach((line) => {
+    assert.ok(line.startsWith(lead), `"${line}" does not lead with the card it is under`);
+    assert.ok(line.includes(' + Warren Soultrader + '), `"${line}" moved the shared card`);
+  });
 });

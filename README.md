@@ -231,7 +231,31 @@ group's representative would put the wrong card first on most rows. It is the ca
 does not hold — which is also why it renders in the "missing" colour, so what you would be
 adding reads first and reads differently.
 
-**And where a row differs from the rows around it by one card, that card goes last.**
+**And where a row differs from the rows around it by one card, that card goes last** —
+in those nested lists too, not only in a collapsed group. The two rules apply together:
+the card the list is under, then the cards every row shares, then the card that changes.
+
+```
+1. Chatterfang, Squirrel General  11
+   ▾ The combos it holds together
+       Chatterfang, Squirrel General + Warren Soultrader + Academy Manufactor
+       Chatterfang, Squirrel General + Warren Soultrader + Essence Warden
+       Chatterfang, Squirrel General + Warren Soultrader + Soul Warden
+```
+
+A lead used to *replace* a trail rather than sit in front of one, so those lists were
+lead-first and then alphabetical, and the card that changed landed mid-line on every row
+— "Chatterfang + Essence Warden + Warren Soultrader", with the difference in a different
+place each time. That is the one place a reader compares rows most closely, and it was the
+one place the rule was off.
+
+Which rows count as a family, for ordering, is decided **from the cards alone** —
+deliberately unlike [collapsing](#collapsing-interchangeable-cards), which also requires
+the same results and must: merging two combos that do different things would say one
+thing where the data says two. Ordering merges nothing and hides nothing, and on the eight
+Chatterfang rows above the stricter bar aligned five, which reads as a rule that half
+works. `DeckCombos.interchangeableIn()` answers it per list, since "the card that changes"
+only means anything beside the rows it changes against.
 The versions of a collapsed group are identical but for one piece, and alphabetical
 order puts that piece wherever its name happens to fall, so the difference moves from
 line to line and the eye has to hunt for it:
@@ -259,11 +283,18 @@ Chatterfang, Squirrel General + Warren Soultrader + any of 4
 ```
 
 All three rules are one function, `DeckCombos.orderComboNames(names, {lead, trail})`,
-kept beside the data it orders so it can be tested without a browser — ten tests in
-`test/name-order.test.js`. A lead outranks a trail, which is what the suggestion panel
-needs: the card you would be adding leads there, and it is often one of the
-interchangeable ones. Both are orderings and never filters, and a pin naming nothing
-in the combo leaves the row alphabetical rather than throwing or emptying it.
+kept beside the data it orders so it can be tested without a browser — twelve tests in
+`test/name-order.test.js`. Where the lead is *itself* one of the interchangeable cards it
+leads and is not named again at the end, which is the ordinary case in the suggestion
+panel rather than an edge of it: the card you would be adding is usually the card that
+varies between its own rows. Both are orderings and never filters, and a pin naming
+nothing in the combo leaves the row alphabetical rather than throwing or emptying it.
+
+One thing the pins do **not** yet reach: the order of the list itself. Rows are sorted on
+their alphabetical signature, so a family whose rows now align inside themselves can still
+be split by a row that sorts between them — under Chatterfang the Academy Manufactor
+version sits two rows above the rest of its family. Lining each row up came first because
+it is per row; sorting a list by what it draws needs the pins passed into the comparator.
 
 Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that

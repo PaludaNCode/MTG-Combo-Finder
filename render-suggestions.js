@@ -97,7 +97,14 @@
     // cards has a different one of them in each of its combos.
     const shortOf = (v) => DeckCombos.variantCardNames(v)
       .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
-    group.unlocks.forEach((v) => details.appendChild(RenderCombos.comboCard(v, deckNames, shortOf(v))));
+    // …and the card that varies between these rows goes last, so the list reads as
+    // one shape: the card you would add, the cards it works with, then the piece
+    // this row swaps. Worked out over the list as drawn, since that is what the
+    // reader is comparing — and separately for ours below, which is its own list.
+    const trails = DeckCombos.interchangeableIn(group.unlocks);
+    group.unlocks.forEach((v) => details.appendChild(
+      RenderCombos.comboCard(v, deckNames, shortOf(v), trails.get(v))
+    ));
     // Ours below the published ones and under their own heading, for the same
     // reason they get their own panel rather than a badge: the difference is not
     // a property of a row, it is whether somebody published it.
@@ -105,7 +112,10 @@
       details.appendChild(el('p', 'ours-head', ours === 1
         ? 'And one this project believes in, which Spellbook has not published:'
         : 'And ' + ours + ' this project believes in, which Spellbook has not published:'));
-      group.unofficial.forEach((v) => details.appendChild(RenderCombos.comboCard(v, deckNames, shortOf(v))));
+      const ourTrails = DeckCombos.interchangeableIn(group.unofficial);
+      group.unofficial.forEach((v) => details.appendChild(
+        RenderCombos.comboCard(v, deckNames, shortOf(v), ourTrails.get(v))
+      ));
     }
     card.appendChild(details);
 
@@ -146,7 +156,12 @@
 
     const details = el('details');
     details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
-    piece.combos.forEach((v) => details.appendChild(RenderCombos.comboCard(v, null, piece.card)));
+    // The card whose combos these are leads every row, and what differs between them
+    // goes last — the same shape the suggestion above uses, for the same reason.
+    const trails = DeckCombos.interchangeableIn(piece.combos);
+    piece.combos.forEach((v) => details.appendChild(
+      RenderCombos.comboCard(v, null, piece.card, trails.get(v))
+    ));
     card.appendChild(details);
 
     return card;
@@ -188,7 +203,12 @@
     // Already expanded by search.js, like every other list here. Expanding twice
     // reads `c` and `p` off a row that no longer has them and quietly renders a
     // combo with no cards and no results.
-    rows.forEach((row) => body.appendChild(RenderCombos.comboCard(row, null, null, null, { steps: true })));
+    // These rows sit side by side in one panel and several of them are the same swap
+    // over a different gainer, so the card that changes goes last here too.
+    const trails = DeckCombos.interchangeableIn(rows);
+    rows.forEach((row) => body.appendChild(
+      RenderCombos.comboCard(row, null, null, trails.get(row), { steps: true })
+    ));
   }
 
   function renderPieces(container, included, unofficial) {

@@ -71,15 +71,42 @@ test('names: every card survives every ordering', () => {
     });
 });
 
-// A lead names one card; a trail names a set. Where both are given the lead wins,
-// which is what the suggestion panel relies on — the card you would be adding reads
-// first there, and it is often one of the interchangeable ones.
-test('names: a lead outranks a trail', () => {
+// A lead names one card; a trail names a set. Where the lead is *itself* one of the
+// interchangeable cards it leads and is not named again at the end — which is the
+// ordinary case in the suggestion panel, not an edge of it: the card you would be
+// adding is usually the card that varies between its own rows.
+test('names: a lead that is also interchangeable leads, and is not named twice', () => {
   assert.deepStrictEqual(
     order(['Chatterfang, Squirrel General', 'Warren Soultrader', 'Essence Warden'],
       { lead: 'Essence Warden', trail: ['Essence Warden'] }),
     ['Essence Warden', 'Chatterfang, Squirrel General', 'Warren Soultrader']
   );
+});
+
+// Both pins at once, which is what a nested list needs and what it did not get: the
+// lead used to replace the trail rather than sit in front of one, so the card that
+// varied fell back to alphabetical and landed mid-line on every row. Three bands —
+// the card the list is under, the cards every row shares, the card that changes.
+test('names: a lead and a trail apply together, in three bands', () => {
+  assert.deepStrictEqual(
+    order(['Chatterfang, Squirrel General', 'Essence Warden', 'Warren Soultrader'],
+      { lead: 'Chatterfang, Squirrel General', trail: ['Essence Warden', 'Soul Warden'] }),
+    ['Chatterfang, Squirrel General', 'Warren Soultrader', 'Essence Warden']
+  );
+});
+
+// The regression the change is for, stated over a whole family: whatever the varying
+// card is called, the row reads lead + shared + that card. Alphabetically 'Aunt May'
+// sorts above both shared cards and 'Soul Warden' below them, so a rule that only
+// half works shows up here.
+test('names: a lead-first row always ends on the card that changes', () => {
+  const lead = 'Chatterfang, Squirrel General';
+  const choices = ['Aunt May', 'Essence Warden', 'Soul Warden', 'Lunarch Veteran // Luminous Phantom'];
+
+  choices.forEach((choice) => {
+    const out = order([lead, 'Warren Soultrader', choice], { lead, trail: choices });
+    assert.deepStrictEqual(out, [lead, 'Warren Soultrader', choice], `wrong order with ${choice}`);
+  });
 });
 
 // Matching is by the deck's own name key, so casing and spacing from a decklist do
