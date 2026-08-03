@@ -67,8 +67,9 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   them; **dashed** means they do the same job — swap one for the other and you
   still have a combo — so your four sacrifice outlets end up in one cluster
   instead of four corners. Both are drawn heavier the more they overlap and
-  carry the count as a number, and three chips let you read either relation on
-  its own. **Press two or three cards** and the map shows what they have in
+  carry the count as a number, and four chips let you read either relation on
+  its own — or **Game-ending**, which is the only line that matters on a map with
+  a hundred of them. **Press two or three cards** and the map shows what they have in
   common, with a line under it saying what cutting them would actually cost —
   which is not the sum of their combo counts, because a combo whose slot another
   of your cards can fill survives losing this one. Redrawn from scratch by every
@@ -930,6 +931,31 @@ still settled nearer the payoff than its own alternatives.
 On the tuning deck the result is six legible groups: the sacrifice outlets, the
 lifegain triggers, the counter payoffs, the lifegain payoffs, and two smaller
 pairs — none of which existed as a shape on the map before.
+
+### Filtering by what the line is worth, not just by what it is
+
+Three of the four chips ask **which relation** to draw: both, works-together, or
+interchangeable. The fourth asks a different question about the same picture — what the
+combo behind the line is *worth* — and on a deck whose map runs to over a hundred lines
+it is the one that makes it readable. *Show me only the lines that end the game.*
+
+The data was already there. `graph.js` puts the best tier of any combo behind an edge on
+the edge itself, so the filter is a class on the `<svg>` and a CSS rule, exactly like the
+relation views: the cards do not move, the layout is still worked out from both relations
+at once, and switching is the same picture with lines taken away.
+
+**Interchangeable lines are not in that view, and that is a decision rather than a side
+effect.** A swap line says "these two do the same job" — there is no combo behind it, so
+there is no result and no tier it could be filtered by. Leaving them in would answer a
+question about game-enders with a screenful of lines that are not combos at all. The
+chip's title says so, because a filter that silently drops a category is worse than one
+that does not filter.
+
+The part that needed a test was smaller and easier to get wrong: **the tier has to be on
+the number as well as on the line.** It was on the line only, so the first version of
+this view hid every count on the map, including the counts belonging to the lines it was
+showing — a filter that removes the information it was opened to read. The layout test
+asserts the count survives, and confirms it by failing when the class is taken off again.
 
 ### The number on a line
 
@@ -2074,6 +2100,45 @@ The fetcher now drops `token` / `double_faced_token` / `emblem` / `art_series` /
 colourless entry displace a coloured one, so already-published data is repaired
 in the page without waiting for a refresh.
 
+### Testing the publisher against a fixture
+
+`tools/fetch-combos.js` was, by a wide margin, the least-covered code here, and it is
+the only code in the repository that force-pushes a branch unattended. Everything
+*downstream* of it was well guarded — `check-snapshot.js` has its own suite, the publish
+gate checks four counts and every row's shape, `--steps` walks every file against
+`StepsSource.pathFor()`. None of that watched the code that produces the thing the gate
+inspects, and a payload can satisfy every gate while still being wrong in the way that
+matters most: a permalink that resolves and shows a different combo.
+
+So `--fixture <file>` replaces both third parties with one local file — the variants
+Spellbook would have streamed and the card data Scryfall would have — and everything
+between those two boundaries is the same code that runs at 04:17. There is one
+`onVariant` callback either way on purpose; a second path through `compact()` and the
+steps writer would prove something else.
+
+**`test/fixtures/export.json` is deliberately not a happy path.** Nine variants, each
+there for a shape that can go wrong quietly: a template slot, a requirement whose
+template id is missing (recorded as `null`, which must never become a `0` in a URL), two
+cards that appear nowhere else so their ids cannot be solved, utility-only results, a
+utility mixed with a real one, and a variant with no cards at all, which is dropped. The
+assertions are made on the far side of `DeckCombos.decode()` rather than on the raw file,
+because decoding is the reader's view and a payload that parses but decodes wrong is the
+whole point.
+
+The run derives 4 of 6 card ids, drops the 6 rows whose ids rebuild exactly, and leaves
+the 2 that cannot keep theirs. `npm test` runs it, so CI does.
+
+**One thing it cannot prove, and one that bit while writing it.** It cannot prove the
+export's *shape* is still Spellbook's — a fixture is somebody else's format, frozen. That
+is what `peek-variant.yml` is for, and the fixture records which run of it the field
+names came from. And every id in it has to be numeric-dash, because `deriveCardIds()`
+reads a row's id *as* the card ids in it: the first draft used a readable label,
+`no-rebuild-1`, whose parts intersected with the real ones and unsolved every card in
+its row. The fixture then derived nothing at all and the round-trip test still passed,
+because all eight rows had simply kept their literal ids. Which is the same class of
+invisible wrongness the fixture exists to catch, found by reading the log rather than by
+a failing assertion — so `no id is rejected as an unsafe filename` is now a test.
+
 ### API contract notes
 
 Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend):
@@ -2654,6 +2719,47 @@ come out, updated every night and closed by the job itself once the list empties
 is the whole maintenance loop: rows arrive by hand, and leave because a machine noticed
 they had stopped being needed.
 
+### What the file costs, and the size at which it stops being source
+
+`unofficial.js` is the largest single script the page loads, and almost all of it is
+data: the rows, plus one rule. Graduation is the only thing that ever takes a row out,
+and research passes put them in faster than Spellbook publishes them, so the trend is up.
+
+No figure for today's size is written here on purpose. It would be stale within a
+research pass, and pinning a compressed size in CI is a check that can fail on a zlib
+version rather than on anything anybody did — the mistake the test count in CLAUDE.md
+made in the cheap direction and this would make in the expensive one.
+`gzip -9 -c unofficial.js | wc -c` is the live answer.
+
+It stays in the repository, and this section is not a plan to move it. Rows being
+versioned alongside the matching logic they depend on is worth real weight:
+`npm run verify:unofficial` is a test somebody runs before merging rather than a gate
+that fires after publishing, and `test/unofficial.test.js` pins the *exact* rows the
+standing deck unlocks — a check that cannot exist if the rows arrive over the network.
+
+What is worth fixing in advance is the number at which that trade flips, because it is a
+much worse decision to make while looking at a slow page.
+
+**At 50 KB gzipped, `COMBOS` moves to the `data` branch as JSON**, fetched by the worker
+and nothing else. The mechanics are already paid for: `connect-src` names that host,
+Cache Storage is already how the combo database gets there, and the nightly job already
+writes two artefacts beside each other. Roughly double today's rows, so this is not
+close — which is exactly why the number belongs here now rather than in the commit that
+has to act on it.
+
+**And what it would cost, in the same breath**, because a threshold with only the
+benefit written down is a decision nobody can argue with later:
+
+- rows stop being versioned with the code, so a row and the matching logic it needs can
+  ship apart — the failure being a row that matches nothing, silently;
+- `verify:unofficial` becomes a publish-time gate, which changes *when* a broken
+  citation is found from "before merge" to "after somebody is already reading it";
+- the exact-row assertion in `test/unofficial.test.js` needs somewhere to live that is
+  still a unit test, and that is the part with no obvious answer.
+
+The last one is the real cost. The first two are inconveniences; that one deletes a
+check which has already caught a row matching on something too loose.
+
 ### The audit, and what it ruled out
 
 44 candidates, from pairs of cards that Spellbook itself treats as interchangeable
@@ -2986,6 +3092,13 @@ and offers the export hint, which happens to be the truth.
 ```bash
 # Build the combo database locally (one large download; reads templates.json)
 node tools/fetch-combos.js
+
+# The same publisher over a canned export instead of the two live third parties:
+# no network, about a second. This is what test/fetch-combos-fixture.test.js runs,
+# so `npm test` already covers it — the flag is for reading the output by hand.
+# See "Testing the publisher against a fixture" below for what it can and cannot
+# prove, and test/fixtures/export.json for what each variant in it is there for.
+node tools/fetch-combos.js out.json --fixture test/fixtures/export.json
 
 # Regenerate templates.json — ~13 minutes, only the templates a combo asks for
 # (--all resolves every queryable one, ~16 minutes, useful only for measuring).

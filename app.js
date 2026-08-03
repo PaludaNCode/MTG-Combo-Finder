@@ -957,10 +957,23 @@
   // what" — without moving a single card: the layout is the same picture, and
   // only which lines are drawn changes. Which is the point of laying it out from
   // both relations at once.
+  // The first three ask which *relation* to draw. The fourth asks what the combo
+  // behind a line is worth, which is a different question on the same picture — and on
+  // a deck whose map runs to a hundred lines it is the one that makes it readable.
+  //
+  // Interchangeable lines are not in the game-ending view, deliberately: a swap line
+  // says "these two do the same job", there is no combo behind it and so no tier to
+  // filter it by. The title says so rather than leaving it to be noticed.
   const MAP_VIEWS = [
     { id: 'all', label: 'Both', spoken: 'Show every line' },
     { id: 'combo', label: 'Works together', spoken: 'Show only pairs a combo needs' },
     { id: 'swap', label: 'Interchangeable', spoken: 'Show only cards that stand in for each other' },
+    {
+      id: 'win',
+      label: 'Game-ending',
+      spoken: 'Show only pairs whose combo wins the game — interchangeable lines are not shown, '
+        + 'since they are not combos and have no result',
+    },
   ];
 
   function mapFilter(svg) {
@@ -969,7 +982,7 @@
     row.setAttribute('aria-label', 'Which lines to show');
     const buttons = [];
     const select = (view) => {
-      svg.classList.remove('show-all', 'show-combo', 'show-swap');
+      svg.classList.remove('show-all', 'show-combo', 'show-swap', 'show-win');
       svg.classList.add('show-' + view);
       buttons.forEach((b) => {
         const on = b.dataset.view === view;
@@ -1117,7 +1130,10 @@
       // fifty, and there is room for all of them.
       let count = null;
       if (linkData.countX != null) {
-        count = svgEl('text', 'count' + (swap ? ' swap' : '')
+        // The tier goes on the number as well as on the line, so a filter by tier
+        // takes the pair together. Without it the game-ending view hid every count,
+        // including the ones belonging to the lines it was showing.
+        count = svgEl('text', 'count' + (swap ? ' swap' : ' tier-' + linkData.tier)
           + (linkData.countShown ? '' : ' is-crowded'));
         count.setAttribute('x', linkData.countX);
         count.setAttribute('y', linkData.countY + 3.5);
@@ -1613,7 +1629,60 @@
     });
   }
 
+  // What the in-page fallback needs and the page does not otherwise have, in load
+  // order — search.js reads UnofficialCombos at load time, so unofficial.js goes first.
+  //
+  // **Two files, not four, and the difference is worth writing down** because the
+  // review that proposed this said four. `result-tiers.js` and `combos.js` cannot leave
+  // index.html: app.js uses `DeckCombos` throughout the rendering, graph.js and
+  // view-model.js read it too, and combos.js reads the tier inventory at load. Only
+  // `unofficial.js` and `search.js` are touched by nothing on the page except
+  // inPageSearch() below — which is now the only thing that loads them.
+  //
+  // That is still 34.5 KB gzipped of a 143 KB shell, and unofficial.js is the largest
+  // single script the page had. It saves no bytes: the worker fetches the same URLs and
+  // the HTTP cache serves one download. What it saves is building the 235-row table on
+  // the main thread, ahead of first paint, for a path that almost never runs — and it
+  // stops that cost growing every time somebody adds a row.
+  //
+  // Stamped from ASSET_VERSION exactly as the worker's own URL is. That makes three
+  // hops the deploy's rewrite cannot reach — these two, the worker's URL, and the
+  // worker's own importScripts — and an unstamped one is invisible: it resolves
+  // perfectly well and serves whatever the CDN last cached. The stamped/no-worker
+  // viewport in tools/verify-layout.js is what proves these carry it, and it had to be
+  // added for this change: `desktop (no worker)` runs unstamped and
+  // `desktop (asset-stamped)` asserts the search went through the *worker*, so nothing
+  // covered the stamped page path until now.
+  const FALLBACK_SCRIPTS = ['unofficial.js', 'search.js'];
+  let fallbackReady = null;
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = src;
+      el.addEventListener('load', () => resolve());
+      el.addEventListener('error', () => reject(new Error('could not load ' + src)));
+      document.head.appendChild(el);
+    });
+  }
+
+  // Loaded once per page, however many searches fall back. Chained rather than fired
+  // in parallel with `async = false`: the ordering guarantee for injected scripts is
+  // real but easy to lose to a later refactor, and there is nothing to gain here —
+  // this path is already the slow one by definition.
+  function loadFallback() {
+    if (typeof ComboSearch !== 'undefined') return Promise.resolve();
+    if (!fallbackReady) {
+      fallbackReady = FALLBACK_SCRIPTS.reduce(
+        (chain, src) => chain.then(() => loadScript(src + ASSET_VERSION)),
+        Promise.resolve(),
+      );
+    }
+    return fallbackReady;
+  }
+
   async function inPageSearch(entries) {
+    await loadFallback();
     try {
       const out = await ComboSearch.run(new URL(DATA_URL, location.href).href, entries);
       lastDiagnostics = out.diagnostics;

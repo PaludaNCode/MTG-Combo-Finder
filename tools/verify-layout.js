@@ -56,6 +56,20 @@ const VIEWPORTS = [
   // production looks fine while running half-stale JS. Hence asserting that the
   // search still went through the *worker* on a stamped page.
   { name: 'desktop (asset-stamped)', width: 1440, height: 900, deck: 'marked', kind: 'stamped' },
+  // And the same page with no Worker, which is the combination nothing covered until
+  // unofficial.js and search.js left index.html. Those two are now injected by app.js,
+  // making a third hop the deploy's rewrite cannot reach — and an unstamped one is
+  // invisible in production, since it resolves fine and serves whatever the CDN
+  // cached. That is how unofficial.js, graph.js and theme.js each shipped stale. The
+  // sandbox 404s unstamped .js, so this run fails rather than a reader's.
+  {
+    name: 'desktop (asset-stamped, no worker)',
+    width: 1440,
+    height: 900,
+    deck: 'marked',
+    kind: 'stamped',
+    noWorker: true,
+  },
   // Also not a layout check: the theme control overriding the system, remembering
   // the answer, and carrying it to the second page.
   { name: 'theme toggle', width: 1440, height: 900, kind: 'theme' },
@@ -413,11 +427,18 @@ function measure(win, doc) {
     const chips = [...doc.querySelectorAll('#graph .map-filter .chip')];
     const chip = (view) => chips.find((c) => c.dataset.view === view);
     const filtered = {};
-    for (const view of ['swap', 'combo']) {
+    const winEdges = [...svg.querySelectorAll('.edge.tier-win')];
+    const counts = [...svg.querySelectorAll('.count')];
+    for (const view of ['swap', 'combo', 'win']) {
       if (chip(view)) chip(view).click();
       filtered[view] = {
         combos: combos.filter((e) => win.getComputedStyle(e).display !== 'none').length,
         swaps: swapEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        // What the game-ending view is for, and the thing that made it worth a test:
+        // the numbers on the lines carry the tier too, and without that the view hid
+        // every count including the ones belonging to the lines it was showing.
+        wins: winEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        countsShown: counts.filter((e) => win.getComputedStyle(e).display !== 'none').length,
         pressed: chip(view) ? chip(view).getAttribute('aria-pressed') : null,
         moved: [...svg.querySelectorAll('.node .dot')]
           .some((c, i) => c.cx.baseVal.value !== before[i][0] || c.cy.baseVal.value !== before[i][1]),
@@ -721,6 +742,12 @@ async function runStamped(vp) {
   try {
     const { win, doc } = await load('/stamped/index.html', vp.width);
     win.localStorage.clear();
+    // The combination nothing covered until unofficial.js and search.js stopped being
+    // in the HTML. The no-worker viewport proves the fallback runs; this proves the
+    // scripts it injects carry the stamp — and the sandbox 404s any .js that does not,
+    // so an unstamped injection fails here rather than silently serving a CDN copy in
+    // production. app.js reads Worker lazily, so removing it after load is enough.
+    if (vp.noWorker) delete win.Worker;
     doc.getElementById('decklist').value = DECKS[vp.deck];
     doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
     await settled(doc, '.combo');
@@ -731,8 +758,11 @@ async function runStamped(vp) {
       requested: vp.width,
       stamped: {
         via: age ? age.dataset.via : null,
+        noWorker: !!vp.noWorker,
         panels: doc.querySelectorAll('.panel').length,
         stuckRows: doc.querySelectorAll('#slots .combo').length,
+        // Read after the search, so the two scripts app.js injects are in the DOM by
+        // now and their URLs are part of what gets checked for the stamp.
         scripts: [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')),
       },
     };
@@ -1206,14 +1236,25 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!s.scripts.every((src) => src.includes(STAMP))) {
         wrong.push(`an unstamped script survived: ${s.scripts.filter((x) => !x.includes(STAMP)).join(', ')}`);
       }
-      if (s.via !== 'worker') {
-        wrong.push(`the search ran in the ${s.via} — a stamped worker or one of its imports did not load`);
+      const expectVia = s.noWorker ? 'page' : 'worker';
+      if (s.via !== expectVia) {
+        wrong.push(s.noWorker
+          ? `the search ran in the ${s.via}, expected the page — Worker was removed`
+          : `the search ran in the ${s.via} — a stamped worker or one of its imports did not load`);
       }
-      // The stamp has to travel two hops that no sed can reach: app.js building
-      // the worker's URL, and the worker building its importScripts URLs. The
-      // sandbox already fails the run if either is dropped — this only says
-      // which one, since "the search ran in the page" is a symptom, not a cause.
-      for (const file of ['search-worker.js', 'result-tiers.js', 'combos.js', 'unofficial.js', 'search.js']) {
+      // The stamp has to travel three hops that no sed can reach: app.js building the
+      // worker's URL, the worker building its importScripts URLs, and app.js injecting
+      // unofficial.js and search.js when there is no worker at all. The sandbox already
+      // fails the run if any is dropped — this only says which, since "the search ran
+      // in the page" is a symptom, not a cause.
+      //
+      // Which files to expect depends on which path ran: with no worker, search-worker.js
+      // is never requested and the two lazy scripts are, injected by app.js. With a
+      // worker they all arrive, because the worker imports them.
+      const expectStamped = s.noWorker
+        ? ['unofficial.js', 'search.js']
+        : ['search-worker.js', 'result-tiers.js', 'combos.js', 'unofficial.js', 'search.js'];
+      for (const file of expectStamped) {
         if (!REQUESTS.some((u) => u === `/stamped/${file}${STAMP}`)) {
           wrong.push(`${file} was never requested with the stamp — it would be served from whatever the CDN cached`);
         }
@@ -1224,7 +1265,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
-        console.log(`ok   ${v.name} — ${s.scripts.length} stamped scripts, searched in the worker, ${s.panels} panels`);
+        // Reads `via` rather than asserting it in prose. The line said "searched in the
+        // worker" unconditionally, which on the no-worker run reported the opposite of
+        // what happened next to a tick.
+        console.log(`ok   ${v.name} — ${s.scripts.length} stamped scripts, searched in the ${s.via}, ${s.panels} panels`);
       }
       continue;
     }
@@ -1890,6 +1934,17 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (m.filtered.combo.swaps || !m.filtered.combo.combos) {
         problems.push(`"works together" left ${m.filtered.combo.swaps} interchangeable lines on screen`);
       }
+      // Only the game-enders, and no interchangeable lines — which is a decision, not
+      // a side effect: a swap line has no combo behind it and so no tier to filter by.
+      const w = m.filtered.win;
+      if (!w.wins) problems.push('"game-ending" left no game-ending lines on screen at all');
+      if (w.combos !== w.wins) {
+        problems.push(`"game-ending" left ${w.combos} combo lines on screen but only ${w.wins} of them end the game`);
+      }
+      if (w.swaps) problems.push(`"game-ending" left ${w.swaps} interchangeable lines on screen`);
+      // A view that hides every number is a view with no counts, which is what the
+      // first version of this did — the tier class was on the line and not the text.
+      if (!w.countsShown) problems.push('"game-ending" hid every count on the map');
       if (m.filtered.swap.pressed !== 'true') problems.push('the filter does not report which view is on');
       if (m.filtered.swap.moved || m.filtered.combo.moved) {
         problems.push('filtering the lines moved the cards');

@@ -818,6 +818,19 @@ button:disabled { opacity: .6; cursor: wait; }
 .combo-map.show-swap .edge:not(.swap),
 .combo-map.show-swap .count:not(.swap) { display: none; }
 
+/* And the third question, which is not about the relation but about what the combo
+   behind the line is worth: on a real deck's map, "show only the lines that end the
+   game" is the view that makes a hundred-line picture readable.
+
+   Interchangeable lines go too, and that is a decision rather than a side effect. A
+   swap line says "these two do the same job" — there is no combo behind it and so no
+   tier it could be filtered by, and leaving them in would answer a question about
+   game-enders with a screenful of lines that are not combos at all. The chip's title
+   says so, because a filter that silently drops a category is worse than one that
+   does not filter. */
+.combo-map.show-win .edge:not(.tier-win),
+.combo-map.show-win .count:not(.tier-win) { display: none; }
+
 /* The count on a line. Small, in the map's own background halo, and centred on
    the line it belongs to. */
 .combo-map .count {

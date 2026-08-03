@@ -349,3 +349,64 @@ test('steps: ids are rebuilt the way the page rebuilds them', () => {
   assert.deepStrictEqual(checkSteps(dir, data).failures, []);
   drop(dir);
 });
+
+// ---- the wire size ----------------------------------------------------------
+//
+// The gate checked counts and row shapes and not the one number this project has spent
+// the most effort on. Interning and dropping the derivable combo id took the payload
+// from 2.73 MB to 1.28 MB on the wire, the download is still 94% of a cold search on a
+// phone, and one field creeping back into compact() would undo all of it with every
+// other check green — the only symptom being on somebody else's phone.
+
+const zlib = require('node:zlib');
+const crypto = require('node:crypto');
+const { checkWireSize, WIRE_CEILING_BYTES } = require('../tools/check-snapshot.js');
+
+// A file that will not compress, so its size on the wire is about its size on disk and
+// the assertions below are about the ceiling rather than about gzip. Genuinely random
+// bytes, because a *pattern* is not enough: the first version of this helper used
+// `(i * 2654435761) % 256`, which reduces to `(i * 177) % 256` — period 256, and gzip
+// took 200 KB of it under 50 KB and failed the test that was meant to fail.
+function fileOf(bytes) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wire-'));
+  const file = path.join(dir, 'combos.json');
+  fs.writeFileSync(file, crypto.randomBytes(bytes));
+  return file;
+}
+
+test('a payload under the ceiling passes and reports its size', () => {
+  const out = checkWireSize(fileOf(1024), 50_000);
+  assert.deepStrictEqual(out.failures, []);
+  assert.match(out.lines[0], /MB gzipped on the wire \(ceiling 0\.05 MB\)/);
+});
+
+test('a payload over the ceiling is refused, and named as a shape change', () => {
+  const out = checkWireSize(fileOf(200_000), 50_000);
+  assert.strictEqual(out.failures.length, 1);
+  // The message has to point at the likely cause. "Too big" is not actionable; "a
+  // field came back into compact()" is where somebody should actually look.
+  assert.match(out.failures[0], /past the 0\.05 MB ceiling/);
+  assert.match(out.failures[0], /field creeping back into compact\(\)/);
+  assert.match(out.failures[0], /raise WIRE_CEILING_BYTES deliberately/);
+});
+
+// The distinction that makes this safe to run unattended. A compressed length depends
+// on the encoder, so pinning today's figure would be a gate that goes red on a Node
+// upgrade. A ceiling with headroom cannot.
+test('the ceiling is a ceiling, not an equality, and has real headroom', () => {
+  const file = fileOf(64);
+  const measured = checkWireSize(file, WIRE_CEILING_BYTES).wire;
+  assert.ok(measured < WIRE_CEILING_BYTES);
+  // Against the live payload's ~1.28 MB on the wire. Enough room for a different zlib
+  // and a normal day's growth, not enough for a field coming back.
+  assert.ok(WIRE_CEILING_BYTES > 1_300_000, 'no headroom over the live payload');
+  assert.ok(WIRE_CEILING_BYTES < 2_000_000, 'so much headroom it would never fire');
+});
+
+test('what it measures is the bytes on the wire, not the file on disk', () => {
+  const file = fileOf(120_000);
+  const raw = fs.statSync(file).size;
+  const out = checkWireSize(file, WIRE_CEILING_BYTES);
+  assert.notStrictEqual(out.wire, raw, 'gzip has to have been applied');
+  assert.strictEqual(out.wire, zlib.gzipSync(fs.readFileSync(file), { level: 9 }).length);
+});
