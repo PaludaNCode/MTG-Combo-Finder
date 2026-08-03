@@ -525,9 +525,12 @@ button:disabled { opacity: .6; cursor: wait; }
  * spell the words out in the *narrower* of those two and not the wider one. The
  * row's column is the thing that decides, so the row's column is what is asked.
  *
- * 560px is measured: at 566px of column — a 1024px window — a 12rem gutter still
- * leaves the card name 331px, which is more than the 248px it gets on a phone, so
- * nothing is worse off than the layout this replaces. Below that the gutter would
+ * 560px is measured: at that column width a 12rem gutter still leaves the card name
+ * 325px, which is more than the 248px it gets on a phone, so nothing is worse off
+ * than the layout this replaces. (Not "a 1024px window", as this said before it was
+ * checked against the tool: that window is 551px of column and stays compact. The
+ * widths `npm run verify` prints are the ones the query is answered against.)
+ * Below that the gutter would
  * be taking a third of the row to say in words what "17+7" says in five
  * characters.
  *
@@ -550,6 +553,51 @@ button:disabled { opacity: .6; cursor: wait; }
      "17 official + 7 unofficial", which reads as arithmetic on two labelled
      quantities. The dot is the separator the split line used before this. */
   .row-split > .sign { display: none; }
+}
+
+/* ---- and where it has room to put the links beside the name ----
+ *
+ * A second threshold rather than the split's, and much wider than the 560px it
+ * looked like it wanted, because the line being moved is not just the two links.
+ * It is the links *and* `+ Add to deck`, and measured on this stylesheet that line
+ * is 245px, not the ~108px the links alone take. At 560px of column the row-main
+ * is 325px, which leaves the name 80px: the links held their place on 2 of 198 real
+ * card names. That is the ragged list the phone layout exists to avoid, arrived at
+ * from the other direction.
+ *
+ * 750px is where it holds — measured over the 198 names in card-text.json, which
+ * run to 55 characters and have a median of 17, at the column widths `npm run verify`
+ * reports rather than at round numbers:
+ *
+ *   column   row-main   names whose links stay on the name's line
+ *    560px     325px      2 / 198   (where the split's threshold is)
+ *    689px     454px    137 / 198   (a 768px window)
+ *    750px     515px    191 / 198   ← and no name wraps at all
+ *    967px     732px    197 / 198   (a 1440px window)
+ *   1042px     807px    198 / 198   (a 1920px window)
+ *
+ * So a 768px window keeps the stacked reading and a desktop does not. The seven
+ * names that still overflow at 750px are not a break: flex-wrap drops their links
+ * to the line below, which is exactly the layout they had before. Nothing is
+ * clipped and nothing overflows the column at any width.
+ *
+ * Two thresholds and not one because they are answering different questions — the
+ * gutter needs room for two words, this needs room for a card name beside 245px of
+ * controls — and collapsing them to a single number would mean picking whichever
+ * question is louder and being wrong about the other. */
+@container rows (min-width: 750px) {
+  .combo.suggestion > .row-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: .6rem;
+  }
+  /* The margins that separated three stacked lines; on one line the gap places them. */
+  .combo.suggestion > .row-main > .card-links { margin: 0; }
+  /* The breakdown still closes the row on a line of its own. It is what the count is
+     made of, not another thing you can do with the card, and beside the links it
+     would read as one run of pills and controls. */
+  .combo.suggestion > .row-main > .sizes { flex-basis: 100%; }
 }
 
 /* One thing per line down the card's column: the name, then everywhere you can

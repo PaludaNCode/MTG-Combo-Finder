@@ -14,11 +14,17 @@
   // the card, where to read about it, and what its combos cost to assemble — one
   // per line, in that order.
   //
-  // The name gets a line to itself rather than sharing one with the links, which
-  // is what lets it be a card name and not a measurement problem: on a shared line
-  // the links fit beside names of up to about twelve characters at 390px and were
-  // pushed to the next line by everything longer, so their position went ragged
-  // down the list. Measured over eleven real names at four widths.
+  // The name gets a line to itself on a phone rather than sharing one with the
+  // links, which is what lets it be a card name and not a measurement problem: on a
+  // shared line the links fit beside names of up to about twelve characters at 390px
+  // and were pushed to the next line by everything longer, so their position went
+  // ragged down the list. Measured over eleven real names at four widths.
+  //
+  // Where the row's column is wide enough they do share the line, and the row loses
+  // a line — the stylesheet decides, on the column's width rather than the window's,
+  // so this builds the same three children either way. The threshold is much wider
+  // than it looks like it should be because the line carries the add button too; the
+  // measurement is in style.css beside the rule.
   function suggestionCard(group, deckNames) {
     const card = el('article', 'combo suggestion');
     const [first, ...rest] = group.cards;
@@ -37,7 +43,8 @@
 
     // The links and the button on one line: everything you can do with this card
     // without leaving the row. They share it down to about 390px and the button
-    // takes its own line below that, which costs height and nothing else.
+    // takes its own line below that, which costs height and nothing else. Above
+    // 750px of column that whole line moves up beside the name.
     const links = el('p', 'card-links');
     links.appendChild(RenderRows.cardLinks(first));
     links.appendChild(RenderRows.addButton(first));

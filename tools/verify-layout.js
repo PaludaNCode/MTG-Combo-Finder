@@ -190,6 +190,31 @@ function measure(win, doc) {
           const cs = win.getComputedStyle(body);
           return Math.round(body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
         })(),
+        // Where the card's links sit relative to its name. Beside it where the row's
+        // column has room for both, on a line of their own below where it has not —
+        // and this is the only check that can tell those apart, because both are the
+        // same three children in the same order and only the geometry differs.
+        // Rendered rows only, for the same reason the totals are filtered above.
+        rowLinks: [...p.querySelectorAll('.combo.suggestion')].map((row) => {
+          const main = row.querySelector(':scope > .row-main');
+          const name = main && main.querySelector(':scope > .row-name');
+          const links = main && main.querySelector(':scope > .card-links');
+          if (!name || !links) return null;
+          const nb = name.getBoundingClientRect();
+          const lb = links.getBoundingClientRect();
+          if (!nb.width || !lb.width) return null;
+          return {
+            name: name.textContent,
+            // Sharing the name's line: starting after the name ends, and starting
+            // before the name's own box does.
+            beside: lb.left >= nb.right - 1 && lb.top < nb.bottom,
+            below: lb.top >= nb.bottom - 1,
+            // Whichever branch is taken, the line has to stay inside the column.
+            // A links line running past the row's own right edge is the failure
+            // mode this rule can produce and a screenshot of a short name hides.
+            overflows: Math.round(lb.right) > Math.round(main.getBoundingClientRect().right) + 1,
+          };
+        }).filter(Boolean),
         splits: [...p.querySelectorAll('.row-split')].map((s) => ({
           // What a reader actually sees. Both readings of the split are in the
           // markup and CSS shows one, so textContent would report the words even
@@ -1585,6 +1610,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // gutter has started sizing itself to its content again.
     if (!v.numberColumns.length) {
       problems.push('no row totals rendered at all, so the number column is untested');
+    } else if (!v.numberColumns.some((c) => c.rowLinks.length)) {
+      problems.push('no card links measured on any row, so which line they sit on is untested');
     } else {
       for (const col of v.numberColumns) {
         if (col.edges.length !== 1) {
@@ -1602,6 +1629,28 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         // restated: if the container declaration were dropped the words would never
         // appear, and if the query were dropped they would appear on a phone. Both
         // fail here. The breakpoint is in style.css and nowhere else.
+        // The card's links share its name's line where the row's column has room for
+        // both, and take a line of their own where it has not. Checked as the rule and
+        // not as a restated breakpoint, the same way the split above is: a run whose
+        // column is over the threshold must show one branch and a run under it the
+        // other, so dropping either declaration fails here rather than in front of a
+        // reader. Both branches are covered by the viewports this tool already runs —
+        // a 1440px window puts the column at 982px and a phone at 349px.
+        //
+        // 750px and not the split's 560px because the line carries `+ Add to deck`
+        // as well as the two links; the measurement is in style.css beside the rule.
+        const roomForLinks = col.column >= 750;
+        for (const row of col.rowLinks) {
+          if (row.overflows) {
+            problems.push(`the links on "${row.name}" run past the row's column in "${col.panel}"`);
+          }
+          if (roomForLinks && !row.beside) {
+            problems.push(`the links on "${row.name}" are not beside the name in a ${col.column}px column`);
+          }
+          if (!roomForLinks && !row.below) {
+            problems.push(`the links on "${row.name}" share the name's line in a ${col.column}px column`);
+          }
+        }
         const roomForWords = col.column >= 560;
         for (const split of col.splits) {
           // "17+7" is numerals and two colours. Neither is available to a screen
@@ -2209,6 +2258,11 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
+      // Which branch the rows took, and the width that chose it: the pair is what
+      // makes a changed threshold visible in the output rather than only in a failure.
+      const linked = v.numberColumns.filter((c) => c.rowLinks.length);
+      const linkNote = `links ${linked.some((c) => c.rowLinks.every((r) => r.beside)) ? 'beside' : 'below'} the name `
+        + `in ${linked.map((c) => c.column + 'px').join('/')} column(s)`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
@@ -2218,7 +2272,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${linkNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

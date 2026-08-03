@@ -2746,22 +2746,30 @@ Which reading appears is decided by **the width of the row's own column, not the
 window** — a container query on the panel body, and this is the case that makes the
 difference concrete rather than theoretical:
 
-| window | the results column | reading |
+| window | the row's column | reading |
 |---|---:|---|
-| 390px | 349px | `10+5` |
-| 768px | 704px | `10 official · 5 unofficial` |
-| 900px | 442px | `10+5` |
-| 1024px | 566px | `10 official · 5 unofficial` |
-| 1440px | 982px | `10 official · 5 unofficial` |
+| 390px | 334px | `10+5` |
+| 768px | 689px | `10 official · 5 unofficial` |
+| 900px | 427px | `10+5` |
+| 1024px | 551px | `10+5` |
+| 1440px | 967px | `10 official · 5 unofficial` |
+| 1920px | 1042px | `10 official · 5 unofficial` |
+
+These are the widths `npm run verify` prints — the panel body's **content box**, which
+is the width a container query is answered against. This table used to quote each of
+them 15px larger, and one row was wrong because of it: a 1024px window is 551px of
+column, which is *under* the threshold, so it reads `10+5` and not the words. The
+number to trust is the one the layout test reports, since that is the number the
+browser is deciding on.
 
 The column is **wider at 768px than at 900px**, because 900 is where the two-column
 shell starts and hands 370px of the window to the decklist. A `min-width: 900px` media
 query would spell the words out in the narrower of those two and not the wider one, so
 the viewport is the wrong thing to ask.
 
-Both numbers are measured. **560px** of column is the threshold because at 566px — a
-1024px window — a 12rem gutter still leaves the card name 331px, more than the 248px it
-gets on a phone, so nothing is worse off than the layout being replaced. **12rem** is
+Both numbers are measured. **560px** of column is the threshold because at that width a
+12rem gutter still leaves the card name 325px, more than the 248px it gets on a phone,
+so nothing is worse off than the layout being replaced. **12rem** is
 what `0 official · 1889 unofficial` needs at 177px, and Hammerhead makes that a real row
 rather than a hypothetical one; `white-space: normal` is the safety valve, so a row with
 four digits on both sides wraps to two lines instead of running over the card name.
@@ -2774,6 +2782,50 @@ appear) and a dropped query (words appear on a phone) both fail it. It also runs
 deck whose whole case is ours at 390px as well as 1440px, because otherwise the compact
 reading is asserted nowhere: the tuning deck has no unofficial combos, so no other
 viewport draws a split at all.
+
+### The card's links share its name's line where the row is wide, and that threshold is not the split's
+
+On a phone the card name has a line to itself and `EDHREC · Scryfall · + Add to deck`
+sits on the line below it. That is forced: on a shared line the links held their place
+beside 5 of 11 real names at 390px and 0 of 11 at 320px, so their left edge went ragged
+down a list of eighty rows. A desktop has no such constraint, so there the links move up
+beside the name and the row loses a line — same three children in the same order, and
+the stylesheet decides, keyed on the row's own column like the split above it.
+
+**The threshold is 750px of column, not the split's 560px**, and the reason is the thing
+that looked free and was not. The line being moved is not the two links, which are 108px.
+It is the links *and* the add button, which is 245px. At 560px of column that leaves the
+name 80px, and the links held their place on **2 of 198** real card names — the ragged
+list the phone layout exists to avoid, arrived at from the other side.
+
+Measured over the 198 names in `card-text.json`, which run to 55 characters with a median
+of 17, at the column widths the layout test reports:
+
+| the row's column | `.row-main` | names whose links stay on the name's line |
+|---:|---:|---:|
+| 560px | 325px | 2 / 198 |
+| 689px | 454px | 137 / 198 |
+| **750px** | 515px | **191 / 198**, and no name wraps |
+| 967px | 732px | 197 / 198 |
+| 1042px | 807px | 198 / 198 |
+
+So a 768px window keeps the stacked reading and a desktop does not. The seven names that
+still do not fit at 750px are not a break: `flex-wrap` drops their links to the line
+below, which is the layout they had anyway. Nothing is clipped and nothing leaves the
+column at any width, which the layout test asserts separately from which line they are on.
+
+**Two thresholds rather than one**, because they answer different questions — the gutter
+needs room for two words, this needs room for a card name beside 245px of controls — and
+one number would mean picking whichever question is louder and being wrong about the
+other. The size breakdown still closes the row on a line of its own either way: it is
+what the count is made of, not another thing you can do with the card, and beside the
+links it would read as one run of pills and controls.
+
+The layout test checks it as a rule, the same way it checks the split: it reads the
+column's width and the rendered geometry, and asserts the links are beside the name
+exactly where the column is wide enough. A dropped rule (never beside) and a leaked one
+(beside on a phone) both fail, and both branches are covered by viewports it already
+runs — 967px of column at 1440px, 334px at 390px.
 
 ### Matching the unofficial rows costs one pass, however many rules there are
 
