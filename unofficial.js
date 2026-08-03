@@ -5209,6 +5209,4529 @@
         'Infinite Clue tokens',
       ],
     },
+
+    // ---- Ghave, Guru of Spores, against Ulasht, the Hate Seed -----------------
+    //
+    // Ghave's first ability is Ulasht's with one word changed, and the word is the
+    // one that matters:
+    //
+    //   Ulasht, the Hate Seed   {1}, Remove a +1/+1 counter from Ulasht:
+    //                           Create a 1/1 green Saproling creature token.
+    //   Ghave, Guru of Spores   {1}, Remove a +1/+1 counter from A CREATURE YOU
+    //                           CONTROL: Create a 1/1 green Saproling creature token.
+    //
+    // Same cost, same token, and Ghave will take the counter off anything. Every
+    // loop below puts a counter back on the engine and spends it again, so Ghave
+    // runs each of them by taking the counter off himself — and he has a second
+    // ability, "{1}, Sacrifice a creature: Put a +1/+1 counter on target creature",
+    // which Ulasht has no equivalent of at all.
+    //
+    // Ulasht's other mode, "deals 1 damage to target creature", is the half Ghave
+    // lacks; nothing here uses it. The Ramos lines are the ones worth a second look:
+    // they blink the engine to refill its counters, and Ulasht enters with a counter
+    // per other red or green creature where Ghave enters with a flat five, so those
+    // three work for Ghave on an empty board and for Ulasht only on a full one.
+    {
+      cards: [
+        'Ramos, Dragon Engine',
+        'Agatha\'s Soul Cauldron',
+        'Deadeye Navigator',
+        'Ghave, Guru of Spores',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '546-1409-3192-4613',
+        cards: [
+          'Ramos, Dragon Engine',
+          'Agatha\'s Soul Cauldron',
+          'Deadeye Navigator',
+          'Ulasht, the Hate Seed',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite blinking', 'Infinite colored mana'],
+    },
+    {
+      cards: [
+        'Ramos, Dragon Engine',
+        'Agatha\'s Soul Cauldron',
+        'Emiel the Blessed',
+        'Ghave, Guru of Spores',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '546-3192-4499-4613',
+        cards: [
+          'Ramos, Dragon Engine',
+          'Agatha\'s Soul Cauldron',
+          'Emiel the Blessed',
+          'Ulasht, the Hate Seed',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite blinking', 'Infinite colored mana'],
+    },
+    {
+      cards: [
+        'Ramos, Dragon Engine',
+        'Agatha\'s Soul Cauldron',
+        'Lilysplash Mentor',
+        'Ghave, Guru of Spores',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '546-3192-4613-5900',
+        cards: [
+          'Ramos, Dragon Engine',
+          'Agatha\'s Soul Cauldron',
+          'Lilysplash Mentor',
+          'Ulasht, the Hate Seed',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite blinking', 'Infinite colored mana'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Death\'s Presence', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2249-3192-5231',
+        cards: ['Ulasht, the Hate Seed', 'Death\'s Presence', 'Thermopod'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '692-2034-3192-4613',
+        cards: ['Ulasht, the Hate Seed', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Utopia Mycon'],
+      confidence: 'verified',
+      from: {
+        id: '692-3192-4214-4613',
+        cards: ['Ulasht, the Hate Seed', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Utopia Mycon'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '692-3192-4613-5231',
+        cards: ['Ulasht, the Hate Seed', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Thermopod'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '692-3192-4050-4613',
+        cards: ['Ulasht, the Hate Seed', 'Agatha\'s Soul Cauldron', 'Wildwood Mentor', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Blade of the Bloodchief', 'Utopia Mycon'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3192-4214',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Utopia Mycon'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Blade of the Bloodchief', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3192-5231',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Thermopod'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Blade of the Bloodchief', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3192-4050',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Blade of the Bloodchief', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2034-3192',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Ghave, Guru of Spores',
+        'Slimefoot, the Stowaway',
+        'Valentin, Dean of the Vein // Lisette, Dean of the Root',
+        'Ashnod\'s Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-2775-3097-3192',
+        cards: [
+          'Ulasht, the Hate Seed',
+          'Slimefoot, the Stowaway',
+          'Valentin, Dean of the Vein // Lisette, Dean of the Root',
+          'Ashnod\'s Altar',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite +1/+1 counters on most creatures you control',
+        'Infinite damage',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Cathars\' Crusade', 'Utopia Mycon'],
+      confidence: 'verified',
+      from: {
+        id: '2744-3192-4214',
+        cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Utopia Mycon'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite +1/+1 counters on most creatures you control',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Slimefoot, the Stowaway', 'Archangel of Thune', 'Utopia Mycon'],
+      confidence: 'verified',
+      from: {
+        id: '2775-2919-3192-4214',
+        cards: ['Ulasht, the Hate Seed', 'Slimefoot, the Stowaway', 'Archangel of Thune', 'Utopia Mycon'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite damage',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: [
+        'Ghave, Guru of Spores',
+        'Slimefoot, the Stowaway',
+        'Archangel of Thune',
+        'Phyrexian Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2775-2919-3192-4050',
+        cards: [
+          'Ulasht, the Hate Seed',
+          'Slimefoot, the Stowaway',
+          'Archangel of Thune',
+          'Phyrexian Altar',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite damage',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: [
+        'Ghave, Guru of Spores',
+        'Slimefoot, the Stowaway',
+        'Archangel of Thune',
+        'Ashnod\'s Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-2775-2919-3192',
+        cards: [
+          'Ulasht, the Hate Seed',
+          'Slimefoot, the Stowaway',
+          'Archangel of Thune',
+          'Ashnod\'s Altar',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite damage',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite creature tokens',
+        'Infinite +1/+1 counters on creatures you control',
+      ],
+    },
+    {
+      cards: [
+        'Ivy Lane Denizen',
+        'Ghave, Guru of Spores',
+        'Jaheira, Friend of the Forest',
+        'Tuktuk Rubblefort',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1563-2850-3192-4885',
+        cards: [
+          'Ivy Lane Denizen',
+          'Ulasht, the Hate Seed',
+          'Jaheira, Friend of the Forest',
+          'Tuktuk Rubblefort',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite ETB', 'Infinite tapped creature tokens'],
+    },
+    {
+      cards: [
+        'Ivy Lane Denizen',
+        'Ghave, Guru of Spores',
+        'Jaheira, Friend of the Forest',
+        'Fires of Yavimaya',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1563-2850-3192-5223',
+        cards: [
+          'Ivy Lane Denizen',
+          'Ulasht, the Hate Seed',
+          'Jaheira, Friend of the Forest',
+          'Fires of Yavimaya',
+        ],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite ETB', 'Infinite tapped creature tokens'],
+    },
+    {
+      cards: ['Ivy Lane Denizen', 'Ghave, Guru of Spores', 'Jaheira, Friend of the Forest', 'Fervor'],
+      confidence: 'verified',
+      from: {
+        id: '969-1563-2850-3192',
+        cards: ['Ivy Lane Denizen', 'Ulasht, the Hate Seed', 'Jaheira, Friend of the Forest', 'Fervor'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: ['Infinite ETB', 'Infinite tapped creature tokens'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Mazirek, Kraul Death Priest', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '317-3192-5231',
+        cards: ['Ulasht, the Hate Seed', 'Mazirek, Kraul Death Priest', 'Thermopod'],
+      },
+      swap: { out: 'Ulasht, the Hate Seed', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'Ulasht’s ability is “{1}, Remove a +1/+1 counter from Ulasht: … Create a 1/1 green '
+        + 'Saproling creature token” and Ghave’s is “{1}, Remove a +1/+1 counter from a creature '
+        + 'you control: Create a 1/1 green Saproling creature token”. Same cost, same token, and '
+        + 'Ghave may take the counter off anything he controls where Ulasht may only take it off '
+        + 'itself — so every loop that feeds the counter back to Ulasht can feed it to Ghave '
+        + 'instead, and Ghave has a second ability that can put it there himself.',
+      produces: [
+        'Infinite +1/+1 counters on most creatures you control',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- and against the artifact engines, where the doubler carries it --------
+    //
+    // Pentavus, Thopter Squadron and Triskelavus have Ghave's two abilities fused
+    // into one card, and all three are artifacts making artifact tokens, which is
+    // what most of their combos are actually about — see the rule-out in
+    // research-log.js. These are the shapes where the artifact is not read. A token
+    // doubler splits the engine's one token in two: one pays the free outlet, the
+    // other pays the ability that puts the counter back. Ghave does both halves,
+    // and at instant speed, where Thopter Squadron's two abilities are sorcery-only.
+    {
+      cards: ['Ghave, Guru of Spores', 'Ashnod\'s Altar', 'Bard, King of Dale'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2762-7824',
+        cards: ['Thopter Squadron', 'Ashnod\'s Altar', 'Bard, King of Dale'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Krark-Clan Ironworks', 'Bard, King of Dale'],
+      confidence: 'verified',
+      from: {
+        id: '2762-4659-7824',
+        cards: ['Thopter Squadron', 'Krark-Clan Ironworks', 'Bard, King of Dale'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Kaya, Geist Hunter', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '2762-4094-4659',
+        cards: ['Thopter Squadron', 'Kaya, Geist Hunter', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Ashnod\'s Altar', 'Kaya, Geist Hunter'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2762-4094',
+        cards: ['Thopter Squadron', 'Ashnod\'s Altar', 'Kaya, Geist Hunter'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Krark-Clan Ironworks', 'Exalted Sunborn'],
+      confidence: 'verified',
+      from: {
+        id: '2762-4659-6753',
+        cards: ['Thopter Squadron', 'Krark-Clan Ironworks', 'Exalted Sunborn'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Ashnod\'s Altar', 'Exalted Sunborn'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2762-6753',
+        cards: ['Thopter Squadron', 'Ashnod\'s Altar', 'Exalted Sunborn'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Krark-Clan Ironworks', 'Elspeth, Storm Slayer'],
+      confidence: 'verified',
+      from: {
+        id: '2762-4659-6441',
+        cards: ['Thopter Squadron', 'Krark-Clan Ironworks', 'Elspeth, Storm Slayer'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Ashnod\'s Altar', 'Elspeth, Storm Slayer'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2762-6441',
+        cards: ['Thopter Squadron', 'Ashnod\'s Altar', 'Elspeth, Storm Slayer'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Queen Allenal of Ruadach', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '560-2034-2762',
+        cards: ['Thopter Squadron', 'Queen Allenal of Ruadach', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Thopter Squadron', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'A doubler turns the engine’s one token into two: one pays the free outlet, the other '
+        + 'pays the ability that puts the counter back. Ghave runs both halves of that — “{1}, '
+        + 'Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling” and '
+        + '“{1}, Sacrifice a creature: Put a +1/+1 counter on target creature” — where Thopter '
+        + 'Squadron and Pentavus each read only their own token and only their own counter, and '
+        + 'Thopter Squadron’s two abilities are sorcery-speed where Ghave’s are not.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+
+    // ---- and the one Earthcraft line -------------------------------------------
+    //
+    // Earthcraft taps a creature you control to untap a basic land. The cost is
+    // Earthcraft's rather than the token's, so a Saproling that just arrived pays it
+    // exactly as a Pentavite does, and Intruder Alarm untaps it again on the next
+    // token. Pentavus's "{1}, Sacrifice a Pentavite" becomes Ghave's "{1}, Sacrifice
+    // a creature", which is the same line one card less restrictive.
+    {
+      cards: ['Ghave, Guru of Spores', 'Earthcraft', 'Intruder Alarm'],
+      confidence: 'verified',
+      from: {
+        id: '1183-1636-2757',
+        cards: ['Pentavus', 'Earthcraft', 'Intruder Alarm'],
+      },
+      swap: { out: 'Pentavus', in: 'Ghave, Guru of Spores', inId: 5189 },
+      why: 'The published loop taps the Pentavite for Earthcraft to untap a basic land, spends '
+        + 'that mana on another token, and Intruder Alarm untaps the token when the next one '
+        + 'enters. Ghave’s Saproling is a creature Earthcraft can tap exactly as well — the cost '
+        + 'is Earthcraft’s, not the token’s, so a Saproling with summoning sickness pays it — '
+        + 'and Ghave’s “{1}, Sacrifice a creature” replaces Pentavus’s “{1}, Sacrifice a '
+        + 'Pentavite”.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite mana basic lands you control can produce',
+        'Infinite mana creatures you control can produce',
+        'Infinite sacrifice triggers',
+        'Infinite untap of creatures',
+      ],
+    },
+
+    // ---- Insidious Roots, the half that reads your graveyard -------------------
+    //
+    // Three cards share its trigger word for word — "whenever one or more CREATURE
+    // CARDS leave your graveyard" — and differ only in the token they answer with:
+    //
+    //   Skeleton Crew      a 2/2 black Skeleton Pirate
+    //   Desecrated Tomb    a 1/1 black Bat with flying
+    //   Chalk Outline      a 2/2 Detective, then investigate
+    //   Insidious Roots    a 0/1 green Plant, then a +1/+1 counter on each Plant
+    //
+    // So every one of their combos is a candidate and the question is only ever what
+    // the token has to be. Here it has to be a creature Shilgengar can eat for the
+    // next Blood token, and a 0/1 Plant is one: Shilgengar reads toughness only when
+    // what it ate was an Angel. The Blood is the artifact that returns Ovalchase
+    // Daredevil, and the discard outlet puts it back.
+    {
+      cards: [
+        'Shilgengar, Sire of Famine',
+        'Ovalchase Daredevil',
+        'Insidious Roots',
+        'Hardened Academic',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '4798-5631-5686-7435',
+        cards: [
+          'Shilgengar, Sire of Famine',
+          'Ovalchase Daredevil',
+          'Skeleton Crew',
+          'Hardened Academic',
+        ],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite Blood tokens',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite self-discard triggers',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Iron-Shield Elf'],
+      confidence: 'verified',
+      from: {
+        id: '4798-5631-5686-7178',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Iron-Shield Elf'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite Blood tokens',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite self-discard triggers',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Aeromoeba'],
+      confidence: 'verified',
+      from: {
+        id: '3365-4798-5631-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Aeromoeba'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Psychic Frog'],
+      confidence: 'verified',
+      from: {
+        id: '4798-5631-5636-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Psychic Frog'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+        'Infinite +1/+1 counters on a creature',
+      ],
+    },
+    {
+      cards: [
+        'Shilgengar, Sire of Famine',
+        'Ovalchase Daredevil',
+        'Insidious Roots',
+        'Witch-king of Angmar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '4798-5436-5631-5686',
+        cards: [
+          'Shilgengar, Sire of Famine',
+          'Ovalchase Daredevil',
+          'Skeleton Crew',
+          'Witch-king of Angmar',
+        ],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Skirge Familiar'],
+      confidence: 'verified',
+      from: {
+        id: '1742-4798-5631-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Skirge Familiar'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite black mana',
+        'Infinite Blood tokens',
+        'Infinite draw triggers',
+        'Infinite rummaging',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Putrid Imp'],
+      confidence: 'verified',
+      from: {
+        id: '4798-5014-5631-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Putrid Imp'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: [
+        'Shilgengar, Sire of Famine',
+        'Ovalchase Daredevil',
+        'Insidious Roots',
+        'Prognostic Sphinx',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '4798-5437-5631-5686',
+        cards: [
+          'Shilgengar, Sire of Famine',
+          'Ovalchase Daredevil',
+          'Skeleton Crew',
+          'Prognostic Sphinx',
+        ],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: [
+        'Shilgengar, Sire of Famine',
+        'Ovalchase Daredevil',
+        'Insidious Roots',
+        'Noose Constrictor',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '4444-4798-5631-5686',
+        cards: [
+          'Shilgengar, Sire of Famine',
+          'Ovalchase Daredevil',
+          'Skeleton Crew',
+          'Noose Constrictor',
+        ],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+        'Infinitely large creature until end of turn',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Mind Over Matter'],
+      confidence: 'verified',
+      from: {
+        id: '4067-4798-5631-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Mind Over Matter'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite mana permanents you control can produce',
+        'Infinite Blood tokens',
+        'Infinite draw triggers',
+        'Infinite rummaging',
+      ],
+    },
+    {
+      cards: [
+        'Shilgengar, Sire of Famine',
+        'Ovalchase Daredevil',
+        'Insidious Roots',
+        'Jadzi, Oracle of Arcavios // Journey to the Oracle',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1401-4798-5631-5686',
+        cards: [
+          'Shilgengar, Sire of Famine',
+          'Ovalchase Daredevil',
+          'Skeleton Crew',
+          'Jadzi, Oracle of Arcavios // Journey to the Oracle',
+        ],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Ghostly Pilferer'],
+      confidence: 'verified',
+      from: {
+        id: '3017-4798-5631-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Ghostly Pilferer'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Dream Trawler'],
+      confidence: 'verified',
+      from: {
+        id: '4798-5435-5631-5686',
+        cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Skeleton Crew', 'Dream Trawler'],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+      ],
+    },
+    {
+      cards: [
+        'Shilgengar, Sire of Famine',
+        'Ovalchase Daredevil',
+        'Insidious Roots',
+        'Birgi, God of Storytelling // Harnfel, Horn of Bounty',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '392-4798-5631-5686',
+        cards: [
+          'Shilgengar, Sire of Famine',
+          'Ovalchase Daredevil',
+          'Skeleton Crew',
+          'Birgi, God of Storytelling // Harnfel, Horn of Bounty',
+        ],
+      },
+      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
+      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
+        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
+        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
+        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
+        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
+        + 'nothing.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite self-discard triggers',
+        'Infinite Blood tokens',
+        'Exile your library with the ability to play the exiled cards until end of turn',
+      ],
+    },
+
+    // ---- the same trigger, where the token is eaten for mana -------------------
+    //
+    // A recursive creature comes back from the graveyard, the trigger answers with a
+    // token, and the token is sacrificed to a free altar for the mana to do it again.
+    // The card leaving the graveyard is a creature card in all of them — Ebondeath,
+    // Gutterbones, Squee, Golgari Thug, whatever Whisper returns — which is what the
+    // Roots need and what separates them from the peers that read any card at all.
+    // The Bat's flying and its 1/1 body are never read; the Plant just has to be a
+    // creature. The two Sage of the Falls lines are the exception worth naming: there
+    // the token has to be a NON-HUMAN creature entering, to trigger Sage again, and
+    // a Plant is that too.
+    {
+      cards: [
+        'Norman Osborn // Green Goblin',
+        'Squee, the Immortal',
+        'Insidious Roots',
+        'Phyrexian Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '394-3705-4050-6896',
+        cards: [
+          'Norman Osborn // Green Goblin',
+          'Squee, the Immortal',
+          'Desecrated Tomb',
+          'Phyrexian Altar',
+        ],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Sage of the Falls', 'Necroplasm', 'Insidious Roots'],
+      confidence: 'verified',
+      from: {
+        id: '394-1570-3674',
+        cards: ['Sage of the Falls', 'Necroplasm', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite self-mill',
+        'Near-infinite creature tokens',
+        'Near-infinite ETB',
+        'Near-infinite self-discard triggers',
+      ],
+    },
+    {
+      cards: ['Sage of the Falls', 'Golgari Thug', 'Insidious Roots'],
+      confidence: 'verified',
+      from: {
+        id: '394-1570-5010',
+        cards: ['Sage of the Falls', 'Golgari Thug', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: ['Infinite self-mill'],
+    },
+    {
+      cards: ['Ebondeath, Dracolich', 'Insidious Roots', 'Ashnod\'s Altar', 'Initiates of the Ebon Hand'],
+      confidence: 'verified',
+      from: {
+        id: '394-2034-2948-4484',
+        cards: [
+          'Ebondeath, Dracolich',
+          'Desecrated Tomb',
+          'Ashnod\'s Altar',
+          'Initiates of the Ebon Hand',
+        ],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Ebondeath, Dracolich', 'Insidious Roots', 'Ashnod\'s Altar', 'Bog Initiate'],
+      confidence: 'verified',
+      from: {
+        id: '394-2034-3537-4484',
+        cards: ['Ebondeath, Dracolich', 'Desecrated Tomb', 'Ashnod\'s Altar', 'Bog Initiate'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Lier, Disciple of the Drowned',
+        'Merfolk Secretkeeper // Venture Deeper',
+        'Phyrexian Altar',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '394-3029-4050-4408',
+        cards: [
+          'Lier, Disciple of the Drowned',
+          'Merfolk Secretkeeper // Venture Deeper',
+          'Phyrexian Altar',
+          'Desecrated Tomb',
+        ],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite mill',
+        'Infinite sacrifice triggers',
+        'Infinite colored mana',
+        'Infinite LTB',
+        'Infinite death triggers',
+      ],
+    },
+    {
+      cards: ['Cleaving Reaper', 'Insidious Roots', 'Peace of Mind', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '394-517-2383-4050',
+        cards: ['Cleaving Reaper', 'Desecrated Tomb', 'Peace of Mind', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Embalmer\'s Tools', 'Phyrexian Altar', 'Insidious Roots', 'Gutterbones'],
+      confidence: 'verified',
+      from: {
+        id: '308-394-2299-4050',
+        cards: ['Embalmer\'s Tools', 'Phyrexian Altar', 'Desecrated Tomb', 'Gutterbones'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Whisper, Blood Liturgist', 'Thornbite Staff', 'Insidious Roots', 'Zulaport Cutthroat'],
+      confidence: 'verified',
+      from: {
+        id: '394-1385-2178-4283',
+        cards: ['Whisper, Blood Liturgist', 'Thornbite Staff', 'Desecrated Tomb', 'Zulaport Cutthroat'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite lifeloss',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Whisper, Blood Liturgist', 'Thornbite Staff', 'Insidious Roots', 'Blood Artist'],
+      confidence: 'verified',
+      from: {
+        id: '394-2178-2842-4283',
+        cards: ['Whisper, Blood Liturgist', 'Thornbite Staff', 'Desecrated Tomb', 'Blood Artist'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite lifeloss',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Squee, the Immortal', 'Insidious Roots', 'Runaway Steam-Kin', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '394-3101-3705-4050',
+        cards: ['Squee, the Immortal', 'Desecrated Tomb', 'Runaway Steam-Kin', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Insidious Roots', inId: 5477 },
+      why: 'Desecrated Tomb’s trigger is Insidious Roots’ trigger word for word — “whenever one '
+        + 'or more creature cards leave your graveyard” — and in each of these the card leaving '
+        + 'is a creature card being recast or returned, so the Roots see it too. The token’s '
+        + 'whole job is to be a creature the outlet can eat for mana, or a non-Human creature '
+        + 'entering; a 0/1 green Plant is both, where the Bat’s flying and its 1/1 body are '
+        + 'never read.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+
+    // ---- Insidious Roots, the half that makes mana -----------------------------
+    //
+    // Its first line is Springleaf Parade's second, word for word:
+    //
+    //   Springleaf Parade   Creature tokens you control have "{T}: Add one mana of
+    //                       any color."
+    //   Insidious Roots     Creature tokens you control have "{T}: Add one mana of
+    //                       any color."
+    //
+    // One shape behind twenty-four haste enablers, and the haste is the point: Abby,
+    // Merciless Soldier is cast from the command zone, Mirror of Life Trapping sends
+    // her back, and her Cordyceps Infected tokens tap for the {R}{G} to recast her
+    // the turn they arrive. Springleaf Parade's own ETB Shapeshifters take no part
+    // in it, which is the only thing the Roots lack — so the swap is the granted
+    // ability alone, read once and true twenty-four times.
+    //
+    // Jaheira, Friend of the Forest is NOT a source here even though she grants a
+    // token mana ability: hers adds {G} only, and this loop needs {R}{G}.
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Purphoros, Bronze-Blooded',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-3480-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Purphoros, Bronze-Blooded',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Hammer of Purphoros',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1115-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Hammer of Purphoros',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Tannuk, Steadfast Second',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6791-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Tannuk, Steadfast Second',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Tuktuk Rubblefort',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-4885-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Tuktuk Rubblefort',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Gimli\'s Reckless Might',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6970-7296-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Gimli\'s Reckless Might',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Lavaleaper',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6970-7175-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Lavaleaper',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Akroma\'s Memorial',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-3499-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Akroma\'s Memorial',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Shang-Chi, Master of Kung Fu',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6970-7730-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Shang-Chi, Master of Kung Fu',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Fires of Yavimaya',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-5223-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Fires of Yavimaya',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Fervor',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '969-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Fervor',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Cyclops of Eternal Fury',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-4460-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Cyclops of Eternal Fury',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Kratos, God of War',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6968-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Kratos, God of War',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Anger',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-4068-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Anger',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Smellerbee, Rebel Fighter',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6970-7060-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Smellerbee, Rebel Fighter',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Samut, Tyrant Smasher',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '206-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Samut, Tyrant Smasher',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'The Fire Crystal',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6633-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'The Fire Crystal',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Mass Hysteria',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1849-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Mass Hysteria',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Roar of Resistance',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-4478-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Roar of Resistance',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Barbarian Class',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-6970-7297-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Barbarian Class',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Thousand-Year Elixir',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-5295-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Thousand-Year Elixir',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Concordant Crossroads',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1322-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Concordant Crossroads',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Yarus, Roar of the Old Gods',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2034-5434-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Yarus, Roar of the Old Gods',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Urabrask the Hidden',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '647-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Urabrask the Hidden',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: [
+        'Abby, Merciless Soldier',
+        'Ashnod\'s Altar',
+        'Mirror of Life Trapping',
+        'Rising of the Day',
+        'Insidious Roots',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1879-2034-6970-7763-7850',
+        cards: [
+          'Abby, Merciless Soldier',
+          'Ashnod\'s Altar',
+          'Mirror of Life Trapping',
+          'Rising of the Day',
+          'Springleaf Parade',
+        ],
+      },
+      swap: { out: 'Springleaf Parade', in: 'Insidious Roots', inId: 5477 },
+      why: 'Insidious Roots’ first line is Springleaf Parade’s second, word for word: “Creature '
+        + 'tokens you control have “{T}: Add one mana of any color.”” The published loop taps '
+        + 'two of Abby’s Cordyceps Infected tokens for {R}{G} and eats a third on Ashnod’s '
+        + 'Altar, and the haste enabler is what lets tokens tap the turn they arrive. Springleaf '
+        + 'Parade’s own ETB Shapeshifters take no part in it, which is the only thing the Roots '
+        + 'lack.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite colored mana',
+        'Infinite colorless mana',
+        'Infinite commander casts',
+        'Infinite creature tokens with haste',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+
+    // ---- Bogwater Lumaret and Elas il-Kor, where the peer is wider -------------
+    //
+    // The stand-in rule at the bottom of this file covers these two against the four
+    // cards whose trigger is theirs exactly. Soul Warden, Soul's Attendant and
+    // Essence Warden are not those cards — they read "whenever ANOTHER creature
+    // enters", an opponent's included — so their combos are written out here one at
+    // a time instead, each read for whose creature it is that enters.
+    //
+    // In all thirty-three it is yours. Spellbook itself keeps the two apart: the
+    // loops that hand an opponent a creature (Questing Phelddagrif, Hive Mind with
+    // Storm Herd) are published with Suture Priest, whose second ability is the one
+    // that reads an opponent's board.
+    {
+      cards: ['Animation Module', 'Scion of the Swarm', 'Phyrexian Altar', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-2161-3490-4050',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Phyrexian Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Scion of the Swarm', 'Krark-Clan Ironworks', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-2161-3490-4659',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Krark-Clan Ironworks', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Animation Module', 'Scion of the Swarm', 'Ashnod\'s Altar', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-2034-2161-3490',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Ashnod\'s Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Pandemonium', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Darien, King of Kjeldor', 'Pandemonium', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Warstorm Surge', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Darien, King of Kjeldor', 'Warstorm Surge', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Terror of the Peaks', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Darien, King of Kjeldor', 'Terror of the Peaks', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Elesh Norn, Mother of Machines',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1770-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Elesh Norn, Mother of Machines',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Virtue of Knowledge // Vantress Visions',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1418-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Virtue of Knowledge // Vantress Visions',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Panharmonicon',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2397-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Panharmonicon',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Yarok, the Desecrated',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2499-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Yarok, the Desecrated',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Ratchet, Field Medic // Ratchet, Rescue Racer',
+        'Preston, the Vanisher',
+        'Bogwater Lumaret',
+        'Ephemerate',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-4605-5118-5144',
+        cards: [
+          'Ratchet, Field Medic // Ratchet, Rescue Racer',
+          'Preston, the Vanisher',
+          'Soul Warden',
+          'Ephemerate',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+      ],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Mondrak, Glory Dominus',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4365-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Mondrak, Glory Dominus',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Primal Vigor',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-3129-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Primal Vigor',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Parallel Lives',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2557-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Parallel Lives',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Doubling Season',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4591-4740-4772',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Doubling Season',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-661-5118',
+        cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Anointed Procession',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1308-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Anointed Procession',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Rhox Faithmender',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1071-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Rhox Faithmender',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Alhammarret\'s Archive',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4435-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Alhammarret\'s Archive',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Boon Reflection',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1841-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Boon Reflection',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Drogskol Reaver', 'Nadir Kraken', 'Ashnod\'s Altar', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-444-1722-2034',
+        cards: ['Drogskol Reaver', 'Nadir Kraken', 'Ashnod\'s Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Bogwater Lumaret', 'Darien, King of Kjeldor', 'Dingus Staff', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-2034',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Bogwater Lumaret', 'Darien, King of Kjeldor', 'Dingus Staff', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-4050',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite colored mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Bogwater Lumaret', 'Darien, King of Kjeldor', 'Dingus Staff', 'Altar of Dementia'],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-5256',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Altar of Dementia'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite mill',
+        'Infinite sacrifice triggers',
+        'Infinite self-mill',
+      ],
+    },
+    {
+      cards: ['Yawgmoth, Thran Physician', 'Fiend Hunter', 'Karmic Guide', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '360-1734-4279-4681',
+        cards: ['Yawgmoth, Thran Physician', 'Fiend Hunter', 'Karmic Guide', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Carnival of Souls', 'Bogwater Lumaret', 'Panharmonicon'],
+      confidence: 'verified',
+      from: {
+        id: '360-2397-2530-5189',
+        cards: ['Ghave, Guru of Spores', 'Carnival of Souls', 'Soul Warden', 'Panharmonicon'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Bogwater Lumaret', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Darien, King of Kjeldor', 'Soul Warden', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Chatterfang, Squirrel General',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-3000-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul\'s Attendant',
+          'Chatterfang, Squirrel General',
+        ],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Bogwater Lumaret',
+        'Adrix and Nev, Twincasters',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '567-851-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul\'s Attendant',
+          'Adrix and Nev, Twincasters',
+        ],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Hapatra, Vizier of Poisons',
+        'Anointed Procession',
+        'Bogwater Lumaret',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1308-2228-2741-4279',
+        cards: [
+          'Yawgmoth, Thran Physician',
+          'Hapatra, Vizier of Poisons',
+          'Anointed Procession',
+          'Essence Warden',
+        ],
+      },
+      swap: { out: 'Essence Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite creature tokens',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Hapatra, Vizier of Poisons',
+        'Parallel Lives',
+        'Bogwater Lumaret',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2228-2557-2741-4279',
+        cards: [
+          'Yawgmoth, Thran Physician',
+          'Hapatra, Vizier of Poisons',
+          'Parallel Lives',
+          'Essence Warden',
+        ],
+      },
+      swap: { out: 'Essence Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite creature tokens',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Hapatra, Vizier of Poisons',
+        'Doubling Season',
+        'Bogwater Lumaret',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2228-2741-4279-4772',
+        cards: [
+          'Yawgmoth, Thran Physician',
+          'Hapatra, Vizier of Poisons',
+          'Doubling Season',
+          'Essence Warden',
+        ],
+      },
+      swap: { out: 'Essence Warden', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
+        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
+        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
+        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
+        + 'control. That difference is exactly why this is a row and not part of the stand-in '
+        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
+        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
+        + 'slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite creature tokens',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- and where the peer is an enchantment ----------------------------------
+    //
+    // Ajani's Welcome is one line and it is the subject's line. It is kept out of the
+    // stand-in rule for one reason: it is an enchantment and both subjects are
+    // creatures. Nothing in these five loops reads the lifegainer's card type, but a
+    // rule would be claiming that of every Ajani's Welcome combo there will ever be.
+    {
+      cards: ['Trudge Garden', 'Intruder Alarm', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '1636-1874-2308',
+        cards: ['Trudge Garden', 'Intruder Alarm', 'Ajani\'s Welcome'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+      ],
+    },
+    {
+      cards: ['Wall of Limbs', 'Animation Module', 'Bogwater Lumaret', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-3708',
+        cards: ['Wall of Limbs', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ajani\'s Pridemate', 'Animation Module', 'Bogwater Lumaret', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '701-1874-2034-3490',
+        cards: ['Ajani\'s Pridemate', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ageless Entity', 'Animation Module', 'Bogwater Lumaret', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-4159',
+        cards: ['Ageless Entity', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Karlov of the Ghost Council', 'Animation Module', 'Bogwater Lumaret', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-3514',
+        cards: ['Karlov of the Ghost Council', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Bogwater Lumaret', inId: 7399 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- the same thirty-three for Elas il-Kor ---------------------------------
+    //
+    // Elas reads "whenever another creature you control enters", which is the same
+    // sentence again, and adds a second half — "whenever another creature you control
+    // dies, each opponent loses 1 life" — that several of these loops turn into a
+    // win. `produces` is carried from the published combo rather than extended,
+    // because a claim the source never made is not this file's to add.
+    {
+      cards: [
+        'Animation Module',
+        'Scion of the Swarm',
+        'Phyrexian Altar',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-2161-3490-4050',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Phyrexian Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Animation Module',
+        'Scion of the Swarm',
+        'Krark-Clan Ironworks',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-2161-3490-4659',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Krark-Clan Ironworks', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Animation Module',
+        'Scion of the Swarm',
+        'Ashnod\'s Altar',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-2034-2161-3490',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Ashnod\'s Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Pandemonium', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Darien, King of Kjeldor', 'Pandemonium', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Warstorm Surge', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Darien, King of Kjeldor', 'Warstorm Surge', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Terror of the Peaks', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Darien, King of Kjeldor', 'Terror of the Peaks', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Elesh Norn, Mother of Machines',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1770-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Elesh Norn, Mother of Machines',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Virtue of Knowledge // Vantress Visions',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1418-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Virtue of Knowledge // Vantress Visions',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Panharmonicon',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2397-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Panharmonicon',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Yarok, the Desecrated',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2499-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Yarok, the Desecrated',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Ratchet, Field Medic // Ratchet, Rescue Racer',
+        'Preston, the Vanisher',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Ephemerate',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-4605-5118-5144',
+        cards: [
+          'Ratchet, Field Medic // Ratchet, Rescue Racer',
+          'Preston, the Vanisher',
+          'Soul Warden',
+          'Ephemerate',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+      ],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Mondrak, Glory Dominus',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4365-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Mondrak, Glory Dominus',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Primal Vigor',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-3129-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Primal Vigor',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Parallel Lives',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2557-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Parallel Lives',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Doubling Season',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4591-4740-4772',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Doubling Season',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Ratchet, Field Medic // Ratchet, Rescue Racer',
+        'Sculpting Steel',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-661-5118',
+        cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Anointed Procession',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1308-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Anointed Procession',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Rhox Faithmender',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1071-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Rhox Faithmender',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Alhammarret\'s Archive',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4435-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Alhammarret\'s Archive',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Boon Reflection',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1841-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul Warden',
+          'Boon Reflection',
+        ],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Drogskol Reaver', 'Nadir Kraken', 'Ashnod\'s Altar', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '360-444-1722-2034',
+        cards: ['Drogskol Reaver', 'Nadir Kraken', 'Ashnod\'s Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Darien, King of Kjeldor',
+        'Dingus Staff',
+        'Ashnod\'s Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-2034',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Darien, King of Kjeldor',
+        'Dingus Staff',
+        'Phyrexian Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-4050',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite colored mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Darien, King of Kjeldor',
+        'Dingus Staff',
+        'Altar of Dementia',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-5256',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Altar of Dementia'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite mill',
+        'Infinite sacrifice triggers',
+        'Infinite self-mill',
+      ],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Fiend Hunter',
+        'Karmic Guide',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-1734-4279-4681',
+        cards: ['Yawgmoth, Thran Physician', 'Fiend Hunter', 'Karmic Guide', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Infinite draw triggers',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Ghave, Guru of Spores',
+        'Carnival of Souls',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Panharmonicon',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '360-2397-2530-5189',
+        cards: ['Ghave, Guru of Spores', 'Carnival of Souls', 'Soul Warden', 'Panharmonicon'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Elas il-Kor, Sadistic Pilgrim', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Darien, King of Kjeldor', 'Soul Warden', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Chatterfang, Squirrel General',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-3000-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul\'s Attendant',
+          'Chatterfang, Squirrel General',
+        ],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Darien, King of Kjeldor',
+        'Aetherflux Reservoir',
+        'Platinum Angel',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Adrix and Nev, Twincasters',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '567-851-1981-4591-4740',
+        cards: [
+          'Darien, King of Kjeldor',
+          'Aetherflux Reservoir',
+          'Platinum Angel',
+          'Soul\'s Attendant',
+          'Adrix and Nev, Twincasters',
+        ],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Hapatra, Vizier of Poisons',
+        'Anointed Procession',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1308-2228-2741-4279',
+        cards: [
+          'Yawgmoth, Thran Physician',
+          'Hapatra, Vizier of Poisons',
+          'Anointed Procession',
+          'Essence Warden',
+        ],
+      },
+      swap: { out: 'Essence Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite creature tokens',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Hapatra, Vizier of Poisons',
+        'Parallel Lives',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2228-2557-2741-4279',
+        cards: [
+          'Yawgmoth, Thran Physician',
+          'Hapatra, Vizier of Poisons',
+          'Parallel Lives',
+          'Essence Warden',
+        ],
+      },
+      swap: { out: 'Essence Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite creature tokens',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Yawgmoth, Thran Physician',
+        'Hapatra, Vizier of Poisons',
+        'Doubling Season',
+        'Elas il-Kor, Sadistic Pilgrim',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '2228-2741-4279-4772',
+        cards: [
+          'Yawgmoth, Thran Physician',
+          'Hapatra, Vizier of Poisons',
+          'Doubling Season',
+          'Essence Warden',
+        ],
+      },
+      swap: { out: 'Essence Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
+        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
+        + 'so the swap holds only where the creature entering is yours. In every one of these it '
+        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
+        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
+        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
+        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
+        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
+      produces: [
+        'Infinite card draw',
+        'Near-infinite -1/-1 counters',
+        'Near-infinite creature tokens',
+        'Near-infinite death triggers',
+        'Near-infinite ETB',
+        'Near-infinite lifegain',
+        'Near-infinite lifegain triggers',
+        'Near-infinite LTB',
+        'Near-infinite sacrifice triggers',
+      ],
+    },
+
+    // ---- and Elas il-Kor's five --------------------------------------------------
+    {
+      cards: ['Trudge Garden', 'Intruder Alarm', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '1636-1874-2308',
+        cards: ['Trudge Garden', 'Intruder Alarm', 'Ajani\'s Welcome'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+      ],
+    },
+    {
+      cards: ['Wall of Limbs', 'Animation Module', 'Elas il-Kor, Sadistic Pilgrim', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-3708',
+        cards: ['Wall of Limbs', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Ajani\'s Pridemate',
+        'Animation Module',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Ashnod\'s Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '701-1874-2034-3490',
+        cards: ['Ajani\'s Pridemate', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ageless Entity', 'Animation Module', 'Elas il-Kor, Sadistic Pilgrim', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-4159',
+        cards: ['Ageless Entity', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: [
+        'Karlov of the Ghost Council',
+        'Animation Module',
+        'Elas il-Kor, Sadistic Pilgrim',
+        'Ashnod\'s Altar',
+      ],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-3514',
+        cards: ['Karlov of the Ghost Council', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
+      why: 'Ajani’s Welcome is one line, “Whenever a creature you control enters, you gain 1 '
+        + 'life”, and that is the subject’s sentence for every creature the loop makes. It is an '
+        + 'enchantment where the subject is a creature, which is the only reason this is written '
+        + 'out rather than left to the stand-in rule: nothing in these loops reads the '
+        + 'lifegainer’s card type, but a rule would be claiming that of every combo Ajani’s '
+        + 'Welcome is ever published in.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite colorless mana',
+        'Infinite creature tokens',
+        'Infinite death triggers',
+        'Infinite ETB',
+        'Infinite lifegain',
+        'Infinite lifegain triggers',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
@@ -5280,6 +9803,147 @@
             + '— he eats artifacts as well. Free and repeatable either way, and a creature '
             + 'is what this loop feeds it. Spellbook publishes the Feeder version and has '
             + 'never used Hammerhead in a combo at all.',
+        },
+      ],
+    },
+
+    // Bogwater Lumaret and Elas il-Kor, Sadistic Pilgrim, against the Soul Warden
+    // family — the second and third rules here, and the case the mechanism was
+    // built for.
+    //
+    // Spellbook enumerates this slot by name. Nine cards fill it across the same
+    // loops, and four of them say one thing and only that thing:
+    //
+    //   Kor Celebrant           {2}{W}  1/4  Whenever THIS CREATURE OR another
+    //                                        creature you control enters, you
+    //                                        gain 1 life.
+    //   Impassioned Orator      {1}{W}  2/2  Whenever another creature you
+    //                                        control enters, you gain 1 life.
+    //   Hinterland Sanctifier   {W}     1/2  (the same sentence)
+    //   Social Climber          {2}{G}  3/2  (the same sentence, under Alliance,
+    //                                        which is an ability word and no more)
+    //
+    //   Bogwater Lumaret        {B}{G}  2/2  Whenever THIS CREATURE OR another
+    //                                        creature you control enters, you
+    //                                        gain 1 life.
+    //   Elas il-Kor             {W}{B}  2/2  Deathtouch. Whenever another creature
+    //                                        you control enters, you gain 1 life.
+    //                                        Whenever another creature you control
+    //                                        dies, each opponent loses 1 life.
+    //
+    // Bogwater Lumaret is Kor Celebrant's sentence with nothing else on the card,
+    // and he is in 60 published combos where Kor Celebrant is in 115, Impassioned
+    // Orator 119, Hinterland Sanctifier 106 and Social Climber 107. The gap is that
+    // he is Spellbook card 7399 and they have not caught up, not that anything
+    // differs. Elas il-Kor is the same trigger plus a drain half, so he is the
+    // strictly larger card and closes everything the four close.
+    //
+    // The two rules come to 61 card sets for Bogwater and 38 for Elas that are
+    // neither published nor written out above. They produce 121 rows each against
+    // the whole database; the rest are combos Spellbook has already published with
+    // the subject in them, and matchUnofficial() drops those on sight.
+    //
+    // Read against the published steps for a dozen of these, the job is always the
+    // one sentence: a creature token you control enters, the lifegainer gains 1
+    // life, and something turns that life back into a counter, an untap or a
+    // sacrifice. Nothing reads the lifegainer's colour, cost, body or type. The
+    // Defiler of Faith lines were the ones to check, since Defiler cares what
+    // colour a spell is — it is Kor Skyfisher and Whitemane Lion being recast
+    // there, never the lifegainer.
+    //
+    // Five cards that fill the same slot are deliberately NOT sources, and the
+    // rows above are what they produce instead. Soul Warden, Soul's Attendant and
+    // Essence Warden read "whenever ANOTHER creature enters" — an opponent's too,
+    // which neither subject sees. Prosperous Innkeeper's ETB Treasure and
+    // Distinguished Conjurer's blink ability are what their loops actually run on.
+    // Suture Priest's second half reads an opponent's board and Haliya, Guided by
+    // Light's trigger reads artifacts. A rule is unconditional, and those five are
+    // five conditions.
+    //
+    // Kor Celebrant is ranked last for Elas il-Kor on purpose: he triggers on
+    // himself entering and Elas does not, so of the four he is the one whose text
+    // Elas does not quite reach. It costs nothing in a loop whose creature is a
+    // token, and the other three are cited first wherever Spellbook published them.
+    {
+      card: 'Bogwater Lumaret',
+      cardId: 7399,
+      confidence: 'verified',
+      for: [
+        {
+          card: 'Kor Celebrant',
+          cardId: 4268,
+          why: 'Bogwater Lumaret and Kor Celebrant have one ability each and it is the '
+            + 'same sentence: “Whenever this creature or another creature you control '
+            + 'enters, you gain 1 life.” Nothing else is printed on either card. Bogwater '
+            + 'is {B}{G} where Kor Celebrant is {2}{W}, which is the only difference that '
+            + 'reaches the table — and it is the useful one, because it puts the ability '
+            + 'in Golgari colours that Spellbook only ever writes into a combo in white.',
+        },
+        {
+          card: 'Impassioned Orator',
+          cardId: 2999,
+          why: 'Impassioned Orator’s only ability is “Whenever another creature you '
+            + 'control enters, you gain 1 life”, and Bogwater Lumaret’s is that plus his '
+            + 'own arrival — strictly the larger trigger, and the extra half can only ever '
+            + 'fire once. Every loop here is fed by a token entering, which both see.',
+        },
+        {
+          card: 'Hinterland Sanctifier',
+          cardId: 6097,
+          why: 'Hinterland Sanctifier’s only ability is “Whenever another creature you '
+            + 'control enters, you gain 1 life” — Bogwater Lumaret’s sentence, less his own '
+            + 'arrival. A 1/2 Rabbit Cleric against a 2/2 Spirit Frog; no loop in this '
+            + 'family reads the lifegainer’s body.',
+        },
+        {
+          card: 'Social Climber',
+          cardId: 3188,
+          why: 'Social Climber’s only ability is “Alliance — Whenever another creature you '
+            + 'control enters, you gain 1 life”. Alliance is an ability word and changes '
+            + 'nothing about when it triggers, so this is Bogwater Lumaret’s sentence with '
+            + 'a label on it.',
+        },
+      ],
+    },
+    {
+      card: 'Elas il-Kor, Sadistic Pilgrim',
+      cardId: 2811,
+      confidence: 'verified',
+      for: [
+        {
+          card: 'Impassioned Orator',
+          cardId: 2999,
+          why: 'Impassioned Orator’s only ability is “Whenever another creature you '
+            + 'control enters, you gain 1 life”, which is Elas il-Kor’s second line word '
+            + 'for word. Elas adds deathtouch and “whenever another creature you control '
+            + 'dies, each opponent loses 1 life”, so he is the strictly larger card — the '
+            + 'drain turns several of these loops into a win, but the loop itself runs on '
+            + 'the lifegain either way.',
+        },
+        {
+          card: 'Hinterland Sanctifier',
+          cardId: 6097,
+          why: 'Hinterland Sanctifier’s only ability is “Whenever another creature you '
+            + 'control enters, you gain 1 life” — Elas il-Kor’s second line exactly. Elas '
+            + 'carries two abilities the Sanctifier does not, and neither takes anything '
+            + 'away from the one they share.',
+        },
+        {
+          card: 'Social Climber',
+          cardId: 3188,
+          why: 'Social Climber’s only ability is “Alliance — Whenever another creature you '
+            + 'control enters, you gain 1 life”. Alliance is an ability word and no part of '
+            + 'the trigger condition, so this is Elas il-Kor’s second line with a label.',
+        },
+        {
+          card: 'Kor Celebrant',
+          cardId: 4268,
+          why: 'Kor Celebrant reads “whenever THIS CREATURE or another creature you '
+            + 'control enters” where Elas il-Kor reads only “another”, so Elas is the one '
+            + 'card here whose trigger is narrower than its source — he does not fire on '
+            + 'his own arrival. Every loop in this family is fed by a token entering '
+            + 'afterwards, so nothing turns on it; he is cited last so that the three '
+            + 'exact matches are preferred wherever Spellbook published them.',
         },
       ],
     },

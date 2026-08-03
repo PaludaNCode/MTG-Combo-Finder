@@ -129,10 +129,13 @@ function claims() {
       is: unofficial.STAND_INS.length,
       // Spelled out rather than written as a digit, which is the honest way to
       // anchor it: the day there are two, "the one stand-in rule" is the sentence
-      // that has to change, and this is what notices.
-      find: /and the (one) stand-in rule/g,
+      // that has to change, and this is what notices. It did — the day came, the
+      // check failed on "one" against three, and the singular went with it. The
+      // words stay spelled out and the plural is part of the match, so the sentence
+      // cannot go back to reading "the three stand-in rule" unnoticed either.
+      find: /and the (one|two|three|four|five|six) stand-in rules?/g,
       source: 'unofficial.js STAND_INS',
-      spelled: { one: 1 },
+      spelled: { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 },
     },
     {
       what: 'templates resolved in templates.json',
