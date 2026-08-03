@@ -718,7 +718,13 @@ test('args: nothing at all', () => {
 // the decision in the README comes due, and the failure message says so.
 const zlib = require('node:zlib');
 
-const MOVE_TO_DATA_BRANCH_AT = 50 * 1024;
+// Raised from 50 KB, deliberately, which is what the failure message below asks for. The
+// reasoning is in the README section named there; the short version is that this file is
+// `importScripts`'d by the worker and is in no HTML, so it is never parsed on the main
+// thread — it delays a first search that is already waiting on a 1.28 MB database, not a
+// first paint. 43 KB today, and one four-card sweep has cost 14 KB, so this is a dozen
+// passes of headroom rather than a hundred.
+const MOVE_TO_DATA_BRANCH_AT = 200 * 1024;
 
 test('unofficial.js is still small enough to ship as source', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'unofficial.js'));
