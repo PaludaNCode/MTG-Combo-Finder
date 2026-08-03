@@ -72,8 +72,14 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `combo-steps.js` | `ComboSteps` | a combo's prerequisites and steps: `normalize()` for the page, `pick()` for the publisher |
 | `steps-source.js` | `StepsSource` | where a combo's steps live — the id → URL rule both ends share |
 | `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
-| `app.js` | — | the only file that touches the DOM of `index.html` |
-| `tiers-page.js` | — | the same for `tiers.html` |
+| `page-dom.js` | `PageDom` | the DOM helpers, `setStatus`, and the collapsible `panel` |
+| `render-rows.js` | `RenderRows` | the shared vocabulary every result row is built from |
+| `render-combos.js` | `RenderCombos` | a combo as a row, and its steps disclosure |
+| `render-suggestions.js` | `RenderSuggestions` | the suggestions, pieces, slots and unofficial panels |
+| `render-map.js` | `RenderMap` | the combo map's drawing half — `graph.js` is its arithmetic |
+| `deck-io.js` | `DeckIO` | keeping the decklist, the share link, the dropped file |
+| `app.js` | — | wiring, the search, the bracket panel — what is left after the split |
+| `tiers-page.js` | — | the DOM of `tiers.html` |
 | `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
 
 `research-log.js` is the one file that breaks the shape above: the browser never loads it,
@@ -235,8 +241,10 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 
 ## Things that will bite you
 
-- **`app.js` and `tiers-page.js` are not covered by the unit tests** — by design.
-  They are the layout test's job. Logic you want tested belongs in one of the
+- **The DOM files are not covered by the unit tests** — by design. `app.js`,
+  `tiers-page.js`, `page-dom.js` and the four `render-*.js` are the layout test's job
+  (`npm run verify`) and the browser suite's (`npm run test:ui`). A green `npm test` says
+  nothing about any of them, which is worth remembering before trusting one. Logic you want tested belongs in one of the
   DOM-free modules. If getting it wrong would produce a page that looks right and
   says something false — a count, a pluralisation, a bracket's reasoning — it is a
   decision, and it belongs in `view-model.js`, where `node --test` can reach it.
