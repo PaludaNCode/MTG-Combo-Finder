@@ -3303,6 +3303,15 @@ The `data` branch is not covered, and if it ever is, **it must not block force-p
 that branch — including one that catches it by glob — breaks the job that publishes the
 combo database.
 
+**Secret scanning and push protection are on** (Settings → Advanced Security, which is the
+live answer). Push protection is the half that earns its keep: it refuses a push carrying
+something that looks like a credential, rather than telling you afterwards, and afterwards
+is too late — a secret pushed to a public repository is a secret to rotate, not to remove.
+Nothing here needs a credential today; the one place a real one is handled is
+`update-data.yml` interpolating `secrets.GITHUB_TOKEN` into a push URL, which is exactly
+the shape of thing that gets copied into a second workflow with the token written out
+literally.
+
 ## Deploying
 
 `.github/workflows/deploy.yml` publishes the repo root to GitHub Pages on every push
