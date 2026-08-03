@@ -1,0 +1,584 @@
+{
+ "generated": "2026-08-03",
+ "count": 42,
+ "cards": {
+  "Ajani's Welcome": {
+   "fetched": "2026-08-03",
+   "name": "Ajani's Welcome",
+   "mana": "{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Whenever a creature you control enters, you gain 1 life."
+    }
+   ]
+  },
+  "Animation Module": {
+   "fetched": "2026-08-03",
+   "name": "Animation Module",
+   "mana": "{1}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "Whenever one or more +1/+1 counters are put on a permanent you control, you may pay {1}. If you do, create a 1/1 colorless Servo artifact creature token.\n{3}, {T}: Choose a counter on target permanent or player. Give that permanent or player another counter of that kind."
+    }
+   ]
+  },
+  "Answered Prayers": {
+   "fetched": "2026-08-03",
+   "name": "Answered Prayers",
+   "mana": "{1}{W}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Whenever a creature you control enters, you gain 1 life. If this enchantment isn't a creature, it becomes a 3/3 Angel creature with flying in addition to its other types until end of turn."
+    }
+   ]
+  },
+  "Bogwater Lumaret": {
+   "fetched": "2026-08-03",
+   "name": "Bogwater Lumaret",
+   "mana": "{B}{G}",
+   "identity": "BG",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Spirit Frog",
+     "oracle": "Whenever this creature or another creature you control enters, you gain 1 life.",
+     "pt": "2/2"
+    }
+   ]
+  },
+  "Boss's Chauffeur": {
+   "fetched": "2026-08-03",
+   "name": "Boss's Chauffeur",
+   "mana": "{4}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Elf Citizen",
+     "oracle": "This creature enters with a number of +1/+1 counters on it equal to one plus the number of other creatures you control.\nAlliance — Whenever another creature you control enters, put a +1/+1 counter on this creature.\nWhen this creature dies, create a 1/1 green and white Citizen creature token for each +1/+1 counter on it.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Chalk Outline": {
+   "fetched": "2026-08-03",
+   "name": "Chalk Outline",
+   "mana": "{3}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")"
+    }
+   ]
+  },
+  "Cryptolith Rite": {
+   "fetched": "2026-08-03",
+   "name": "Cryptolith Rite",
+   "mana": "{1}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Creatures you control have \"{T}: Add one mana of any color.\""
+    }
+   ]
+  },
+  "Custodi Soulbinders": {
+   "fetched": "2026-08-03",
+   "name": "Custodi Soulbinders",
+   "mana": "{3}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Cleric",
+     "oracle": "This creature enters with X +1/+1 counters on it, where X is the number of other creatures on the battlefield.\n{2}{W}, Remove a +1/+1 counter from this creature: Create a 1/1 white Spirit creature token with flying.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Desecrated Tomb": {
+   "fetched": "2026-08-03",
+   "name": "Desecrated Tomb",
+   "mana": "{3}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "Whenever one or more creature cards leave your graveyard, create a 1/1 black Bat creature token with flying."
+    }
+   ]
+  },
+  "Distinguished Conjurer": {
+   "fetched": "2026-08-03",
+   "name": "Distinguished Conjurer",
+   "mana": "{1}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Wizard",
+     "oracle": "Whenever another creature you control enters, you gain 1 life.\n{4}{W}, {T}: Exile another target creature you control, then return it to the battlefield under its owner's control.",
+     "pt": "1/2"
+    }
+   ]
+  },
+  "Elas il-Kor, Sadistic Pilgrim": {
+   "fetched": "2026-08-03",
+   "name": "Elas il-Kor, Sadistic Pilgrim",
+   "mana": "{W}{B}",
+   "identity": "BW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Phyrexian Kor Cleric",
+     "oracle": "Deathtouch\nWhenever another creature you control enters, you gain 1 life.\nWhenever another creature you control dies, each opponent loses 1 life.",
+     "pt": "2/2"
+    }
+   ]
+  },
+  "Elven Chorus": {
+   "fetched": "2026-08-03",
+   "name": "Elven Chorus",
+   "mana": "{3}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "You may look at the top card of your library any time.\nYou may cast creature spells from the top of your library.\nCreatures you control have \"{T}: Add one mana of any color.\""
+    }
+   ]
+  },
+  "Essence Warden": {
+   "fetched": "2026-08-03",
+   "name": "Essence Warden",
+   "mana": "{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Elf Shaman",
+     "oracle": "Whenever another creature enters, you gain 1 life.",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Garrison Excavator": {
+   "fetched": "2026-08-03",
+   "name": "Garrison Excavator",
+   "mana": "{3}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Orc Sorcerer",
+     "oracle": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.",
+     "pt": "3/4"
+    }
+   ]
+  },
+  "Ghave, Guru of Spores": {
+   "fetched": "2026-08-03",
+   "name": "Ghave, Guru of Spores",
+   "mana": "{2}{W}{B}{G}",
+   "identity": "BGW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Fungus Shaman",
+     "oracle": "Ghave enters with five +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling creature token.\n{1}, Sacrifice a creature: Put a +1/+1 counter on target creature.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Haliya, Guided by Light": {
+   "fetched": "2026-08-03",
+   "name": "Haliya, Guided by Light",
+   "mana": "{2}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Soldier",
+     "oracle": "Whenever Haliya or another creature or artifact you control enters, you gain 1 life.\nAt the beginning of your end step, draw a card if you've gained 3 or more life this turn.\nWarp {W} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)",
+     "pt": "3/3"
+    }
+   ]
+  },
+  "Hinterland Sanctifier": {
+   "fetched": "2026-08-03",
+   "name": "Hinterland Sanctifier",
+   "mana": "{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Rabbit Cleric",
+     "oracle": "Whenever another creature you control enters, you gain 1 life.",
+     "pt": "1/2"
+    }
+   ]
+  },
+  "Impassioned Orator": {
+   "fetched": "2026-08-03",
+   "name": "Impassioned Orator",
+   "mana": "{1}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Cleric",
+     "oracle": "Whenever another creature you control enters, you gain 1 life.",
+     "pt": "2/2"
+    }
+   ]
+  },
+  "Insidious Roots": {
+   "fetched": "2026-08-03",
+   "name": "Insidious Roots",
+   "mana": "{B}{G}",
+   "identity": "BG",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Creature tokens you control have \"{T}: Add one mana of any color.\"\nWhenever one or more creature cards leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control."
+    }
+   ]
+  },
+  "Jaheira, Friend of the Forest": {
+   "fetched": "2026-08-03",
+   "name": "Jaheira, Friend of the Forest",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Elf Druid",
+     "oracle": "Tokens you control have \"{T}: Add {G}.\"\nChoose a Background (You can have a Background as a second commander.)",
+     "pt": "2/3"
+    }
+   ]
+  },
+  "Kor Celebrant": {
+   "fetched": "2026-08-03",
+   "name": "Kor Celebrant",
+   "mana": "{2}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Kor Cleric",
+     "oracle": "Whenever this creature or another creature you control enters, you gain 1 life.",
+     "pt": "1/4"
+    }
+   ]
+  },
+  "Leyline of Vitality": {
+   "fetched": "2026-08-03",
+   "name": "Leyline of Vitality",
+   "mana": "{2}{G}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "If this card is in your opening hand, you may begin the game with it on the battlefield.\nCreatures you control get +0/+1.\nWhenever a creature you control enters, you may gain 1 life."
+    }
+   ]
+  },
+  "Marionette Master": {
+   "fetched": "2026-08-03",
+   "name": "Marionette Master",
+   "mana": "{4}{B}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Artificer",
+     "oracle": "Fabricate 3 (When this creature enters, put three +1/+1 counters on it or create three 1/1 colorless Servo artifact creature tokens.)\nWhenever an artifact you control is put into a graveyard from the battlefield, target opponent loses life equal to this creature's power.",
+     "pt": "1/3"
+    }
+   ]
+  },
+  "Melira, Sylvok Outcast": {
+   "fetched": "2026-08-03",
+   "name": "Melira, Sylvok Outcast",
+   "mana": "{1}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Scout",
+     "oracle": "You can't get poison counters.\nCreatures you control can't have -1/-1 counters put on them.\nCreatures your opponents control lose infect.",
+     "pt": "2/2"
+    }
+   ]
+  },
+  "Mikaeus, the Unhallowed": {
+   "fetched": "2026-08-03",
+   "name": "Mikaeus, the Unhallowed",
+   "mana": "{3}{B}{B}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Zombie Cleric",
+     "oracle": "Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)\nWhenever a Human deals damage to you, destroy it.\nOther non-Human creatures you control get +1/+1 and have undying. (When a creature with undying dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)",
+     "pt": "5/5"
+    }
+   ]
+  },
+  "Pentavus": {
+   "fetched": "2026-08-03",
+   "name": "Pentavus",
+   "mana": "{7}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Construct",
+     "oracle": "This creature enters with five +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Pentavite artifact creature token with flying.\n{1}, Sacrifice a Pentavite: Put a +1/+1 counter on this creature.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Prosperous Innkeeper": {
+   "fetched": "2026-08-03",
+   "name": "Prosperous Innkeeper",
+   "mana": "{1}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Halfling Citizen",
+     "oracle": "When this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nWhenever another creature you control enters, you gain 1 life.",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Quintorius, Field Historian": {
+   "fetched": "2026-08-03",
+   "name": "Quintorius, Field Historian",
+   "mana": "{3}{R}{W}",
+   "identity": "RW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Elephant Cleric",
+     "oracle": "Spirits you control get +1/+0.\nWhenever one or more cards leave your graveyard, create a 3/2 red and white Spirit creature token.",
+     "pt": "2/4"
+    }
+   ]
+  },
+  "Quintorius, History Chaser": {
+   "fetched": "2026-08-03",
+   "name": "Quintorius, History Chaser",
+   "mana": "{2}{R}{W}",
+   "identity": "RW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Planeswalker — Quintorius",
+     "oracle": "Whenever one or more cards leave your graveyard, create a 3/2 red and white Spirit creature token.\n+1: You may discard a card. If you do, draw two cards, then mill a card.\n−4: Spirits you control gain double strike and vigilance until end of turn.\nQuintorius, History Chaser can be your commander.",
+     "loyalty": "5"
+    }
+   ]
+  },
+  "Skeleton Crew": {
+   "fetched": "2026-08-03",
+   "name": "Skeleton Crew",
+   "mana": "{3}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Skeleton Pirate",
+     "oracle": "Each other creature you control that's a Skeleton or Pirate gets +1/+1.\nWhenever one or more creature cards leave your graveyard, create a 2/2 black Skeleton Pirate creature token. (This ability triggers only from the battlefield.)\n{5}{B}: Return this card from your graveyard to the battlefield tapped.",
+     "pt": "3/3"
+    }
+   ]
+  },
+  "Social Climber": {
+   "fetched": "2026-08-03",
+   "name": "Social Climber",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Druid",
+     "oracle": "Alliance — Whenever another creature you control enters, you gain 1 life.",
+     "pt": "3/2"
+    }
+   ]
+  },
+  "Soul Warden": {
+   "fetched": "2026-08-03",
+   "name": "Soul Warden",
+   "mana": "{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Cleric",
+     "oracle": "Whenever another creature enters, you gain 1 life.",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Soul's Attendant": {
+   "fetched": "2026-08-03",
+   "name": "Soul's Attendant",
+   "mana": "{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Cleric",
+     "oracle": "Whenever another creature enters, you may gain 1 life.",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Spiteful Squad": {
+   "fetched": "2026-08-03",
+   "name": "Spiteful Squad",
+   "mana": "{2}{W}{B}",
+   "identity": "BW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Warlock",
+     "oracle": "Deathtouch\nThis creature enters with two +1/+1 counters on it.\nWhen this creature dies, put its counters on target creature you control.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Springleaf Parade": {
+   "fetched": "2026-08-03",
+   "name": "Springleaf Parade",
+   "mana": "{X}{G}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "When this enchantment enters, create X 1/1 colorless Shapeshifter creature tokens with changeling. (They're every creature type.)\nCreature tokens you control have \"{T}: Add one mana of any color.\""
+    }
+   ]
+  },
+  "Suture Priest": {
+   "fetched": "2026-08-03",
+   "name": "Suture Priest",
+   "mana": "{1}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Phyrexian Cleric",
+     "oracle": "Whenever another creature you control enters, you may gain 1 life.\nWhenever a creature an opponent controls enters, you may have that player lose 1 life.",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Teval, the Balanced Scale": {
+   "fetched": "2026-08-03",
+   "name": "Teval, the Balanced Scale",
+   "mana": "{1}{B}{G}{U}",
+   "identity": "BGU",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Spirit Dragon",
+     "oracle": "Flying\nWhenever Teval attacks, mill three cards. Then you may return a land card from your graveyard to the battlefield tapped.\nWhenever one or more cards leave your graveyard, create a 2/2 black Zombie Druid creature token.",
+     "pt": "4/4"
+    }
+   ]
+  },
+  "Thopter Squadron": {
+   "fetched": "2026-08-03",
+   "name": "Thopter Squadron",
+   "mana": "{5}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Thopter",
+     "oracle": "Flying\nThis creature enters with three +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Thopter artifact creature token with flying. Activate only as a sorcery.\n{1}, Sacrifice another Thopter: Put a +1/+1 counter on this creature. Activate only as a sorcery.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Threefold Thunderhulk": {
+   "fetched": "2026-08-03",
+   "name": "Threefold Thunderhulk",
+   "mana": "{7}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Gnome",
+     "oracle": "This creature enters with three +1/+1 counters on it.\nWhenever this creature enters or attacks, create a number of 1/1 colorless Gnome artifact creature tokens equal to its power.\n{2}, Sacrifice another artifact: Put a +1/+1 counter on this creature.",
+     "pt": "0/0"
+    }
+   ]
+  },
+  "Tormod, the Desecrator": {
+   "fetched": "2026-08-03",
+   "name": "Tormod, the Desecrator",
+   "mana": "{3}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Zombie Wizard",
+     "oracle": "Whenever one or more cards leave your graveyard, create a tapped 2/2 black Zombie creature token.\nPartner (You can have two commanders if both have partner.)",
+     "pt": "4/2"
+    }
+   ]
+  },
+  "Triskelavus": {
+   "fetched": "2026-08-03",
+   "name": "Triskelavus",
+   "mana": "{7}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Construct",
+     "oracle": "Flying\nThis creature enters with three +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Triskelavite artifact creature token with flying. It has \"Sacrifice this token: This token deals 1 damage to any target.\"",
+     "pt": "1/1"
+    }
+   ]
+  },
+  "Ulasht, the Hate Seed": {
+   "fetched": "2026-08-03",
+   "name": "Ulasht, the Hate Seed",
+   "mana": "{2}{R}{G}",
+   "identity": "GR",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Hellion Hydra",
+     "oracle": "Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control.\n{1}, Remove a +1/+1 counter from Ulasht: Choose one —\n• Ulasht deals 1 damage to target creature.\n• Create a 1/1 green Saproling creature token.",
+     "pt": "0/0"
+    }
+   ]
+  }
+ }
+}
