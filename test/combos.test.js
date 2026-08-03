@@ -145,3 +145,61 @@ test('computeSuggestions: equal reach puts the published unlocks first', () => {
   const order = computeSuggestions(published, deck, unofficial).map((s) => s.card);
   assert.deepStrictEqual(order, ['Theirs', 'Ours']);
 });
+
+// ---- the order a drawn list reads in ----------------------------------------
+//
+// Aligning each row inside itself is only half of it. The rows are sorted too, and
+// sorting them on their alphabetical names put a family's members at positions 2, 4
+// and 7 of Carrion Feeder's real list, split by a Cauldron Familiar row and two Herd
+// Baloth rows — so the difference sat in one column and the eye still had to hunt for
+// which rows to compare. Sorted on the drawn name they sort by what they share first.
+
+test('comboPieces: rows that share their cards sit together, not wherever they sort', () => {
+  // The shape from the live list. "Archangel of Thune" and "Animation Module" sort
+  // above the shared cards, which is exactly what used to scatter these.
+  const published = [
+    variant('1', 'Carrion Feeder', 'Kitchen Finks', 'Archangel of Thune'),
+    variant('2', 'Carrion Feeder', 'Cauldron Familiar', 'Samwise Gamgee'),
+    variant('3', 'Carrion Feeder', 'Kitchen Finks', 'Heliod, Sun-Crowned'),
+    variant('4', 'Carrion Feeder', 'Herd Baloth', 'Necrosynthesis'),
+    variant('5', 'Carrion Feeder', 'Pitiless Plunderer', 'Animation Module'),
+    variant('6', 'Carrion Feeder', 'Kitchen Finks', 'Heroic Feast'),
+    variant('7', 'Carrion Feeder', 'Herd Baloth', 'Sadistic Glee'),
+  ];
+  const piece = comboPieces(published, []).find((p) => p.card === 'Carrion Feeder');
+  const ids = piece.combos.map((v) => v.id);
+
+  const at = (id) => ids.indexOf(id);
+  const adjacent = (...family) => {
+    const seats = family.map(at).sort((a, b) => a - b);
+    return seats[seats.length - 1] - seats[0] === family.length - 1;
+  };
+  assert.ok(adjacent('1', '3', '6'), `the Kitchen Finks rows are split: ${ids.join(', ')}`);
+  assert.ok(adjacent('4', '7'), `the Herd Baloth rows are split: ${ids.join(', ')}`);
+});
+
+test('comboPieces: a family stays together across the official / unofficial split', () => {
+  // The Heroic Feast row in the live list is one of ours, and it belongs beside the
+  // published Kitchen Finks rows rather than wherever a second sort would put it.
+  const published = [
+    variant('1', 'Carrion Feeder', 'Kitchen Finks', 'Archangel of Thune'),
+    variant('2', 'Carrion Feeder', 'Cauldron Familiar', 'Samwise Gamgee'),
+  ];
+  const unofficial = [ours('u1', undefined, 'Carrion Feeder', 'Kitchen Finks', 'Heroic Feast')];
+  const ids = comboPieces(published, unofficial)
+    .find((p) => p.card === 'Carrion Feeder').combos.map((v) => v.id);
+  assert.strictEqual(Math.abs(ids.indexOf('1') - ids.indexOf('u1')), 1,
+    `ours was separated from the family it belongs to: ${ids.join(', ')}`);
+});
+
+// Smallest first still outranks it: a 4-card row never sorts up among the 3-card rows
+// it happens to share cards with, because the size breakdown on the row above says the
+// same thing and a 4-card line at the top reads as a recommendation to build it.
+test('comboPieces: size still leads, whatever the names do', () => {
+  const published = [
+    variant('1', 'Carrion Feeder', 'Kitchen Finks', 'Archangel of Thune', 'Sol Ring'),
+    variant('2', 'Carrion Feeder', 'Kitchen Finks', 'Archangel of Thune'),
+  ];
+  const ids = comboPieces(published, []).find((p) => p.card === 'Carrion Feeder').combos.map((v) => v.id);
+  assert.deepStrictEqual(ids, ['2', '1']);
+});

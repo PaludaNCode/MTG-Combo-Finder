@@ -153,11 +153,13 @@
     }
     // Smallest first — the size breakdown printed on the row above says the same,
     // and a 4-card line at the top of that list reads as a recommendation to build
-    // the harder combo — then alphabetically, so a reader can find a card in the
-    // list. Popularity still ranks the suggestions themselves; see bySizeThenName.
+    // the harder combo — then by the names as drawn, so a reader can find a card in
+    // the list and the rows of one family sit together. Every row here is short of
+    // exactly this entry's card, which is therefore what each of them leads with.
+    // Popularity still ranks the suggestions themselves; see byDrawnName.
     for (const entry of byCard.values()) {
-      entry.unlocks.sort(bySizeThenName);
-      entry.unofficial.sort(bySizeThenName);
+      entry.unlocks = byDrawnName(entry.unlocks, entry.card);
+      entry.unofficial = byDrawnName(entry.unofficial, entry.card);
     }
     return [...byCard.values()].sort(
       (a, b) => (b.unlocks.length + b.unofficial.length) - (a.unlocks.length + a.unofficial.length)
@@ -196,9 +198,9 @@
   // are ordered by how hard they are before how popular they are.
   const bySizeThenPopularity = (a, b) => comboSize(a) - comboSize(b) || popularity(b) - popularity(a);
 
-  // Smallest first, then alphabetically by the cards themselves. For the lists that
-  // sit *under* one card — the combos a suggestion unlocks, the combos one of your
-  // cards holds together — where the job is finding a particular combo in a list of
+  // Smallest first, then by the cards themselves. For the lists that sit *under* one
+  // card — the combos a suggestion unlocks, the combos one of your cards holds together,
+  // the unofficial panel — where the job is finding a particular combo in a list of
   // seventeen rather than being told which to build.
   //
   // Popularity is wrong for those, even though it is right for ranking the cards
@@ -208,17 +210,29 @@
   // that is out of order and all of it reads as unsorted, because a reader scanning
   // for a card has no idea what the play counts are.
   //
-  // Compared on the alphabetical names, which is the order these rows are drawn in
-  // wherever no pin applies. Where one does — a nested list, which leads with the card
-  // it sits under and sends the card that changes last — the drawn order and this key
-  // part company, and a family of rows can be split by a row that sorts between them.
-  // See interchangeableIn(): lining the rows up inside themselves came first because
-  // it is per row, and ordering the list by what it draws needs the pins passed in.
-  const nameSignature = (variant) => orderComboNames(
-    variant && variant.uses ? variantCardNames(variant) : ((variant && variant.c) || [])
-  ).join(' + ');
-  const bySizeThenName = (a, b) => comboSize(a) - comboSize(b)
-    || nameSignature(a).localeCompare(nameSignature(b));
+  // **Compared on the names as the row will be drawn**, which is not the same string as
+  // the alphabetical one wherever a pin applies — and comparing the alphabetical one is
+  // what split a family. Three rows of Carrion Feeder's list are "Carrion Feeder +
+  // Kitchen Finks + <the one that changes>", and their alphabetical keys start Archangel
+  // / Carrion / Carrion, so they landed at positions 2, 4 and 7 with a Cauldron Familiar
+  // row and two Herd Baloth rows between them. Aligning each row inside itself put the
+  // difference in one column and then the list moved the rows apart, which gives most of
+  // the benefit back. On the drawn name they sort by their shared cards first and by the
+  // card that changes only after, so a family lands together and the column reads down.
+  //
+  // `leadFor` answers "what does this row lead with" — a card, or a function of the row
+  // for the lists whose lead is per row, and null where nothing leads. It has to be the
+  // same answer the render side gives, or the list is sorted on strings nobody sees.
+  function byDrawnName(variants, leadFor) {
+    const list = (variants || []).slice();
+    const trails = interchangeableIn(list);
+    const drawn = new Map(list.map((v) => [v, orderComboNames(variantCardNames(v), {
+      lead: typeof leadFor === 'function' ? leadFor(v) : leadFor,
+      trail: trails.get(v),
+    }).join(' + ')]));
+    return list.sort((a, b) => comboSize(a) - comboSize(b)
+      || drawn.get(a).localeCompare(drawn.get(b)));
+  }
 
   // What a set of combos is made of, smallest first:
   // [{ size, count }] — "one 2-card combo and nine 3-card ones".
@@ -749,7 +763,10 @@
       });
     }
 
-    return out.sort(bySizeThenName);
+    // No lead: these are top-level rows in a panel of their own, so only the card that
+    // changes is pinned — and the list is ordered by that same drawn name, since the
+    // panel is several of the same swap over a different gainer and those belong together.
+    return byDrawnName(out, null);
   }
 
   // Unofficial rows worked out from a stand-in rule rather than written by hand.
@@ -1006,7 +1023,9 @@
         card: e.card,
         count: e.combos.length,
         unofficial: e.unofficial.length,
-        combos: e.combos.concat(e.unofficial).sort(bySizeThenName),
+        // One list, ours and Spellbook's together, ordered by what it draws: this card
+        // leads every row, so the rows sort on what they share with each other.
+        combos: byDrawnName(e.combos.concat(e.unofficial), e.card),
       }))
       .sort((a, b) => (b.count + b.unofficial) - (a.count + a.unofficial)
         || b.count - a.count

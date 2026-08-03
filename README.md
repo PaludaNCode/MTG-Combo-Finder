@@ -290,11 +290,35 @@ panel rather than an edge of it: the card you would be adding is usually the car
 varies between its own rows. Both are orderings and never filters, and a pin naming
 nothing in the combo leaves the row alphabetical rather than throwing or emptying it.
 
-One thing the pins do **not** yet reach: the order of the list itself. Rows are sorted on
-their alphabetical signature, so a family whose rows now align inside themselves can still
-be split by a row that sorts between them — under Chatterfang the Academy Manufactor
-version sits two rows above the rest of its family. Lining each row up came first because
-it is per row; sorting a list by what it draws needs the pins passed into the comparator.
+**The list is sorted on the same drawn names**, and that is the other half of it. Sorting
+on the alphabetical signature scattered the families the row ordering had just lined up:
+three rows of Carrion Feeder's real list are *Carrion Feeder + Kitchen Finks + the one
+that changes*, their alphabetical keys start Archangel / Carrion / Carrion, and they
+landed at positions 2, 4 and 7 with a Cauldron Familiar row and two Herd Baloth rows
+between them. The difference sat in one column and the eye still had to work out which
+rows to compare it across.
+
+```
+before                                              after
+1. Carrion Feeder + Pitiless Plunderer + Anim…      1. Carrion Feeder + Cauldron Familiar + Samwise…
+2. Carrion Feeder + Kitchen Finks + Archangel…      2. Carrion Feeder + Herd Baloth + Necrosynthesis
+3. Carrion Feeder + Cauldron Familiar + Samwise…    3. Carrion Feeder + Herd Baloth + Sadistic Glee
+4. Carrion Feeder + Kitchen Finks + Heliod…        4. Carrion Feeder + Kitchen Finks + Archangel…
+5. Carrion Feeder + Herd Baloth + Necrosynthesis    5. Carrion Feeder + Kitchen Finks + Heliod…
+6. Carrion Feeder + Herd Baloth + Sadistic Glee     6. Carrion Feeder + Kitchen Finks + Heroic Feast
+7. Carrion Feeder + Kitchen Finks + Heroic Feast    7. Carrion Feeder + Necrosynthesis + Scurry Oak
+```
+
+`byDrawnName()` compares what the row will actually say, so rows sort by their shared
+cards first and by the card that changes only after. Size still leads — a 4-card row never
+sorts up among the 3-card rows it shares cards with — and the lead it sorts under has to
+be the one the render side draws, or the list is ordered on strings nobody sees. It orders
+all three of these lists, ours and Spellbook's rows together, so a row of ours sits beside
+the family it belongs to rather than wherever a second sort would put it.
+
+**Combos in your deck** is deliberately left out: it is ranked by size and play count, and
+`groupVariants()` hands its rows back in the order they arrived precisely so grouping
+cannot reshuffle the most-played combo down the page.
 
 Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that
