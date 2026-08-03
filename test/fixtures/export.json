@@ -1,0 +1,142 @@
+{
+  "_comment": [
+    "A stand-in for Commander Spellbook's bulk export and Scryfall's oracle bulk file,",
+    "for `node tools/fetch-combos.js out.json --fixture test/fixtures/export.json`.",
+    "",
+    "The field names are the ones their export actually uses, read off a real variant by",
+    "`.github/workflows/peek-variant.yml` — run 2290-2919, the default that workflow",
+    "carries. THAT WORKFLOW IS WHAT RE-CHECKS THIS FILE. A fixture is a shape somebody",
+    "else controls, frozen, so if it ever stops matching, this is the file that is wrong",
+    "and not the tool.",
+    "",
+    "Deliberately not a happy path. Every variant below is here for a shape that can go",
+    "wrong quietly, and test/fetch-combos-fixture.test.js says which:",
+    "",
+    "  101-202      two cards, ids that rebuild exactly",
+    "  101-303      the same, sharing a card so the intern table has to fold it",
+    "  202-303      the third pair, which is what solves all three card ids",
+    "  101-202--7   a template slot, whose id lands in the rebuilt permalink",
+    "  101-303--9   a requirement with no template id: compact() records null, so the",
+    "               id cannot be rebuilt and the row must keep the literal one",
+    "  606-707      two cards that appear nowhere else, so neither id can be solved",
+    "               and this row keeps its literal id too",
+    "",
+    "Every id here is numeric-dash, because deriveCardIds() reads a row's id AS the",
+    "card ids in it. A made-up id like `no-rebuild-1` is not a harmless label: its",
+    "parts intersect with the real ones and unsolve every card in the row. The first",
+    "draft of this file did exactly that and quietly derived nothing at all, which is",
+    "the same class of invisible wrongness the whole fixture is here to catch.",
+    "  101-404      utility-only results, which fall back to being shown",
+    "  303-404      a mix, where the utility half is dropped and the rest kept",
+    "  (last)       no `uses` at all, which compact() drops entirely — so the count",
+    "               out is one lower than the count in"
+  ],
+
+  "variants": [
+    {
+      "id": "101-202",
+      "identity": "G",
+      "popularity": 412,
+      "uses": [
+        { "card": { "name": "Basalt Monolith" }, "zoneLocations": ["B"] },
+        { "card": { "name": "Rings of Brighthearth" }, "zoneLocations": ["B"] }
+      ],
+      "produces": [{ "feature": { "name": "Infinite colorless mana", "status": "" } }],
+      "manaNeeded": "{3}",
+      "notablePrerequisites": "Basalt Monolith is untapped.",
+      "description": "Activate Basalt Monolith's ability.\nCopy it with Rings of Brighthearth."
+    },
+    {
+      "id": "101-303",
+      "identity": "GU",
+      "popularity": 88,
+      "uses": [
+        { "card": { "name": "Basalt Monolith" } },
+        { "card": { "name": "Walking Ballista" } }
+      ],
+      "produces": [
+        { "feature": { "name": "Infinite colorless mana", "status": "" } },
+        { "feature": { "name": "Damage to each opponent", "status": "" } }
+      ],
+      "description": "Make infinite mana, then grow and shoot."
+    },
+    {
+      "id": "202-303",
+      "identity": "U",
+      "uses": [
+        { "card": { "name": "Rings of Brighthearth" } },
+        { "card": { "name": "Walking Ballista" } }
+      ],
+      "produces": [{ "feature": { "name": "Damage to each opponent", "status": "" } }]
+    },
+    {
+      "id": "101-202--7",
+      "identity": "G",
+      "uses": [
+        { "card": { "name": "Basalt Monolith" } },
+        { "card": { "name": "Rings of Brighthearth" } }
+      ],
+      "requires": [{ "template": { "id": 7, "name": "Persist Creature" }, "quantity": 1 }],
+      "produces": [{ "feature": { "name": "Infinite colorless mana", "status": "" } }]
+    },
+    {
+      "id": "101-303--9",
+      "identity": "B",
+      "uses": [
+        { "card": { "name": "Basalt Monolith" } },
+        { "card": { "name": "Walking Ballista" } }
+      ],
+      "requires": [{ "quantity": 1 }],
+      "produces": [{ "feature": { "name": "Infinite colorless mana", "status": "" } }]
+    },
+    {
+      "id": "606-707",
+      "identity": "R",
+      "uses": [
+        { "card": { "name": "Fixture Only Alpha" } },
+        { "card": { "name": "Fixture Only Beta" } }
+      ],
+      "produces": [{ "feature": { "name": "Infinite turns", "status": "" } }]
+    },
+    {
+      "id": "101-404",
+      "identity": "G",
+      "uses": [
+        { "card": { "name": "Basalt Monolith" } },
+        { "card": { "name": "Scurry Oak" } }
+      ],
+      "produces": [
+        { "feature": { "name": "Mana to spend on nothing", "status": "HU" } },
+        { "feature": { "name": "Internal scaffolding", "status": "PU" } }
+      ]
+    },
+    {
+      "id": "303-404",
+      "identity": "GU",
+      "uses": [
+        { "card": { "name": "Walking Ballista" } },
+        { "card": { "name": "Scurry Oak" } }
+      ],
+      "produces": [
+        { "feature": { "name": "Internal scaffolding", "status": "PU" } },
+        { "feature": { "name": "Infinite creature tokens", "status": "" } }
+      ]
+    },
+    {
+      "id": "no-cards-at-all",
+      "identity": "W",
+      "produces": [{ "feature": { "name": "Nothing anybody can cast", "status": "" } }]
+    }
+  ],
+
+  "cardIdentity": {
+    "Basalt Monolith": "",
+    "Rings of Brighthearth": "",
+    "Walking Ballista": "",
+    "Scurry Oak": "G",
+    "Fixture Only Alpha": "R",
+    "Fixture Only Beta": "R"
+  },
+
+  "gameChangers": ["Rings of Brighthearth", "Basalt Monolith"]
+}

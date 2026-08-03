@@ -30,6 +30,10 @@ npm run verify:unofficial # every unofficial row still cites a real published co
 npm run check:readme      # the README's countable numbers still match the files
 
 node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,737 files
+node tools/fetch-combos.js out.json --fixture test/fixtures/export.json
+                          # the whole publisher over a canned export, no network.
+                          # What test/fetch-combos-fixture.test.js runs, so `npm test`
+                          # already covers it — this is for looking at the output.
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]

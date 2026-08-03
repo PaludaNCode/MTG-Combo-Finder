@@ -37,12 +37,33 @@ const TEMPLATES_FILE = path.join(__dirname, '..', 'templates.json');
 // 4 req/s died after 120 pages; slowing to 1 req/s died *earlier*, at 78, and
 // two full minutes of backoff never cleared it. Don't reintroduce paging.
 const BULK_URL = 'https://json.commanderspellbook.com/variants.json';
-const ARGS = process.argv.slice(2).filter((a) => a !== '--no-steps');
+
+// `--fixture <file>` replaces both third parties with one local file: the variants
+// Spellbook would have streamed, and the card data Scryfall would have. Everything
+// between the two boundaries is the same code as a live run, which is the only reason
+// a fixture proves anything about the live one.
+//
+// It exists because this file was the least-tested code in the repository and the only
+// code here that force-pushes a branch, unattended, at 04:17. Everything downstream was
+// well guarded — check-snapshot.js, the publish gate, `--steps` walking every file —
+// and none of it watched the code that produces the thing the gate inspects.
+function takeFixtureFlag(argv) {
+  const at = argv.indexOf('--fixture');
+  if (at === -1) return { fixture: null, rest: argv };
+  const file = argv[at + 1];
+  if (!file || file.startsWith('--')) {
+    throw new Error('--fixture needs a file: node tools/fetch-combos.js out.json --fixture test/fixtures/export.json');
+  }
+  return { fixture: file, rest: argv.slice(0, at).concat(argv.slice(at + 2)) };
+}
+
+const { fixture: FIXTURE, rest: RAW_ARGS } = takeFixtureFlag(process.argv.slice(2));
+const ARGS = RAW_ARGS.filter((a) => a !== '--no-steps');
 const OUT = ARGS[0] || path.join(__dirname, '..', 'combos.json');
 // Beside the combos file unless told otherwise, because the two are published
 // together and a steps tree from a different run is worse than none: it would
 // answer for combos that no longer exist and go quiet on ones that do.
-const STEPS_DIR = process.argv.includes('--no-steps')
+const STEPS_DIR = RAW_ARGS.includes('--no-steps')
   ? null
   : (ARGS[1] || path.join(path.dirname(path.resolve(OUT)), 'steps'));
 
@@ -302,6 +323,34 @@ const NON_CARD_LAYOUTS = new Set(['token', 'double_faced_token', 'emblem', 'art_
 
 function isRealCard(card) {
   return Boolean(card) && typeof card.name === 'string' && !NON_CARD_LAYOUTS.has(card.layout);
+}
+
+// A fixture stands in for both third parties at once, because both are read at the
+// same two boundaries: the variants Spellbook streams and the card data Scryfall does.
+// Returned in exactly the shapes those two produce, so main() cannot tell which it got.
+//
+// A fixture is a shape somebody else controls, frozen — which is the standing risk with
+// this whole approach. `.github/workflows/peek-variant.yml` is what re-checks that
+// shape, and the fixture records which run of it the wording came from.
+function readFixture(file) {
+  const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (!Array.isArray(doc.variants) || !doc.variants.length) {
+    throw new Error(`${file}: no "variants" array. A fixture holds the variants Spellbook `
+      + 'would have sent, under the same key their export uses.');
+  }
+  // Object.create(null) to match fetchCardIdentities(), whose map has no prototype —
+  // a card called "constructor" is not a hypothetical in a game with 30,000 cards.
+  const identities = Object.create(null);
+  for (const [name, id] of Object.entries(doc.cardIdentity || {})) identities[name] = String(id);
+  return {
+    variants: doc.variants,
+    cardData: {
+      identities,
+      // Sorted the same way the live path sorts, so a fixture cannot accidentally
+      // assert an order the real thing does not produce.
+      gameChangers: (doc.gameChangers || []).slice().sort((a, b) => a.localeCompare(b)),
+    },
+  };
 }
 
 async function fetchCardIdentities() {
@@ -670,13 +719,19 @@ function createStepsWriter(dir) {
 }
 
 async function main() {
-  console.log('Downloading the combo database from', BULK_URL);
+  const fixture = FIXTURE ? readFixture(FIXTURE) : null;
+  console.log(fixture
+    ? `Reading a fixture export from ${FIXTURE} — no network`
+    : `Downloading the combo database from ${BULK_URL}`);
 
   const combos = [];
   const steps = createStepsWriter(STEPS_DIR);
   let seen = 0;
 
-  const bytes = await streamVariants(BULK_URL, (variant) => {
+  // One callback either way, deliberately. The fixture's whole value is that
+  // compact(), the steps writer and everything after them are the same code that
+  // runs at 04:17; a second path through them would prove something else.
+  const onVariant = (variant) => {
     seen += 1;
     const row = compact(variant);
     if (row) {
@@ -686,17 +741,37 @@ async function main() {
       steps.write(variant);
     }
     if (seen % 25000 === 0) console.log(`  ${seen} variants read…`);
-  });
-  console.log(`  read ${seen} variants from ${(bytes / 1024 / 1024).toFixed(0)} MB`);
+  };
+
+  let bytes = 0;
+  if (fixture) {
+    for (const variant of fixture.variants) onVariant(variant);
+    console.log(`  read ${seen} variants from the fixture`);
+  } else {
+    bytes = await streamVariants(BULK_URL, onVariant);
+    console.log(`  read ${seen} variants from ${(bytes / 1024 / 1024).toFixed(0)} MB`);
+  }
 
   if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
   if (STEPS_DIR) steps.report(combos.length);
 
-  const { identities: cardIdentity, gameChangers } = await fetchCardIdentities();
+  const { identities: cardIdentity, gameChangers } = fixture
+    ? fixture.cardData
+    : await fetchCardIdentities();
   // An empty map silently disables colour filtering in the page, which is how
   // this went unnoticed the first time. Fail loudly instead.
+  //
+  // Not applied to a fixture, and this is the one gate that gets an exemption: it is
+  // about a Scryfall stream coming back thin, and a fixture never made that request.
+  // Requiring a thousand identities in one would mean 990 rows of noise for the sake
+  // of a check on something that did not happen. Said out loud rather than skipped
+  // silently, so a reader of the log knows which gates ran.
   if (Object.keys(cardIdentity).length < 1000) {
-    throw new Error(`Only ${Object.keys(cardIdentity).length} card identities — refusing to publish without colour data`);
+    if (!fixture) {
+      throw new Error(`Only ${Object.keys(cardIdentity).length} card identities — refusing to publish without colour data`);
+    }
+    console.log(`  fixture: ${Object.keys(cardIdentity).length} card identities, and the `
+      + '1,000 floor is not applied — that gate is about a Scryfall stream this run did not make.');
   }
 
   reportUnclassified(combos);
@@ -769,6 +844,8 @@ module.exports = {
   streamVariants, BULK_URL,
   deriveCardIds, rebuildId, dropDerivableIds, intern,
   createStepsWriter,
+  // The fixture path, for the test that runs the whole tool against one.
+  takeFixtureFlag, readFixture,
 };
 
 if (require.main === module) {

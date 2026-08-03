@@ -2074,6 +2074,45 @@ The fetcher now drops `token` / `double_faced_token` / `emblem` / `art_series` /
 colourless entry displace a coloured one, so already-published data is repaired
 in the page without waiting for a refresh.
 
+### Testing the publisher against a fixture
+
+`tools/fetch-combos.js` was, by a wide margin, the least-covered code here, and it is
+the only code in the repository that force-pushes a branch unattended. Everything
+*downstream* of it was well guarded — `check-snapshot.js` has its own suite, the publish
+gate checks four counts and every row's shape, `--steps` walks every file against
+`StepsSource.pathFor()`. None of that watched the code that produces the thing the gate
+inspects, and a payload can satisfy every gate while still being wrong in the way that
+matters most: a permalink that resolves and shows a different combo.
+
+So `--fixture <file>` replaces both third parties with one local file — the variants
+Spellbook would have streamed and the card data Scryfall would have — and everything
+between those two boundaries is the same code that runs at 04:17. There is one
+`onVariant` callback either way on purpose; a second path through `compact()` and the
+steps writer would prove something else.
+
+**`test/fixtures/export.json` is deliberately not a happy path.** Nine variants, each
+there for a shape that can go wrong quietly: a template slot, a requirement whose
+template id is missing (recorded as `null`, which must never become a `0` in a URL), two
+cards that appear nowhere else so their ids cannot be solved, utility-only results, a
+utility mixed with a real one, and a variant with no cards at all, which is dropped. The
+assertions are made on the far side of `DeckCombos.decode()` rather than on the raw file,
+because decoding is the reader's view and a payload that parses but decodes wrong is the
+whole point.
+
+The run derives 4 of 6 card ids, drops the 6 rows whose ids rebuild exactly, and leaves
+the 2 that cannot keep theirs. `npm test` runs it, so CI does.
+
+**One thing it cannot prove, and one that bit while writing it.** It cannot prove the
+export's *shape* is still Spellbook's — a fixture is somebody else's format, frozen. That
+is what `peek-variant.yml` is for, and the fixture records which run of it the field
+names came from. And every id in it has to be numeric-dash, because `deriveCardIds()`
+reads a row's id *as* the card ids in it: the first draft used a readable label,
+`no-rebuild-1`, whose parts intersected with the real ones and unsolved every card in
+its row. The fixture then derived nothing at all and the round-trip test still passed,
+because all eight rows had simply kept their literal ids. Which is the same class of
+invisible wrongness the fixture exists to catch, found by reading the log rather than by
+a failing assertion — so `no id is rejected as an unsafe filename` is now a test.
+
 ### API contract notes
 
 Verified against [the backend source](https://github.com/SpaceCowMedia/commander-spellbook-backend):
@@ -3027,6 +3066,13 @@ and offers the export hint, which happens to be the truth.
 ```bash
 # Build the combo database locally (one large download; reads templates.json)
 node tools/fetch-combos.js
+
+# The same publisher over a canned export instead of the two live third parties:
+# no network, about a second. This is what test/fetch-combos-fixture.test.js runs,
+# so `npm test` already covers it — the flag is for reading the output by hand.
+# See "Testing the publisher against a fixture" below for what it can and cannot
+# prove, and test/fixtures/export.json for what each variant in it is there for.
+node tools/fetch-combos.js out.json --fixture test/fixtures/export.json
 
 # Regenerate templates.json — ~13 minutes, only the templates a combo asks for
 # (--all resolves every queryable one, ~16 minutes, useful only for measuring).
