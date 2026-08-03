@@ -236,24 +236,102 @@ function measure(win, doc) {
         + (head.querySelector(':scope > .either') ? 1 : 0);
     }),
   }));
+  // Where the row's divider runs, and where the blocks beside it start. The line is
+  // drawn in pieces — the gutter's right border, and a left border on every block in
+  // the card's column, each reaching back across the column gap to meet the one
+  // above — so "one line down the row" is a fact about three or four boxes agreeing
+  // and nothing in the CSS says it. Changing the column gap, dropping the stretch
+  // off .row-numbers, putting a block back in column 1, or giving one a margin where
+  // it should have padding each breaks it, and each leaves a page that renders
+  // perfectly. A row offering interchangeable cards is the case that carries three
+  // pieces, which is why it is measured as a list rather than as a pair.
+  const dividers = [...doc.querySelectorAll('.tab-pane:not([hidden]) .combo.suggestion, #pieces .combo.suggestion')].map((row) => {
+    const num = row.querySelector(':scope > .row-numbers');
+    const main = row.querySelector(':scope > .row-main');
+    const det = row.querySelector(':scope > details');
+    const sum = det && det.querySelector(':scope > summary');
+    if (!num || !main || !det || !sum) return null;
+    const numBox = num.getBoundingClientRect();
+    // Each piece's own border, read as the x it is drawn at — the inner edge of the
+    // gutter's right border and the outer edge of a block's left one, which are the
+    // same pixel when they are one line. Comparing the boxes instead reports a 1px
+    // difference that is only the border's own thickness.
+    const numLine = parseFloat(win.getComputedStyle(num).borderRightWidth) || 0;
+    return {
+      name: (row.querySelector('h3 > .card-name') || {}).textContent || '',
+      // Rounded: a sub-pixel difference is not a broken line. A piece that has lost
+      // its border reports the box edge instead, so it stops agreeing with the rest
+      // — which is the answer wanted, since part of a divider is not one.
+      gutterLine: Math.round(numBox.right - numLine),
+      // Where the gutter's piece ends. The next block has to start there, which is
+      // what the stretch on .row-numbers is for.
+      gutterEnd: Math.round(numBox.bottom),
+      gutterWidth: numLine,
+      // Every block in the card's column, in the order they are drawn: the
+      // interchangeable cards where there are any, then the disclosure.
+      blocks: [...row.querySelectorAll(':scope > .alternatives, :scope > details')].map((b) => {
+        const box = b.getBoundingClientRect();
+        return {
+          what: b.classList.contains('alternatives') ? 'the choice of card' : 'the disclosure',
+          line: Math.round(box.left),
+          width: parseFloat(win.getComputedStyle(b).borderLeftWidth) || 0,
+          top: Math.round(box.top),
+          bottom: Math.round(box.bottom),
+        };
+      }),
+      // The disclosure reads from the card's column, level with the name and the
+      // sizes above it — not from under the gutter, where it read as a third thing
+      // the row was about rather than the list behind the number.
+      summaryLeft: Math.round(sum.getBoundingClientRect().left),
+      mainLeft: Math.round(main.getBoundingClientRect().left),
+    };
+  }).filter(Boolean);
   const grouped = {
     // A combo row offering a choice of part, and a suggestion offering a choice
     // of card. Both exist in the fixture, so both must render.
     eitherRows: [...doc.querySelectorAll('#included .either')].map((e) => e.textContent),
     choiceRows: doc.querySelectorAll('#included .choices').length,
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
-    // Does the label and its comparison link fit on one row? Measured in lines, not
-    // characters: the wording, the font and the width all decide it together.
+    // The width the alternatives' container query is asked about: the suggestions
+    // panel body's content box, which is the row's own column and not the window.
+    // Reported so the two shapes below can be checked as a rule rather than as a
+    // breakpoint repeated in the test.
+    column: (() => {
+      const body = doc.querySelector('#suggestions .panel-body');
+      if (!body) return 0;
+      const cs = win.getComputedStyle(body);
+      return Math.round(body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+    })(),
+    // The label, its comparison pill, and how they share the card's column. Two
+    // separate questions, and only the first has one answer at every width:
+    //
+    // The *sentence* must never break. Measured over its own text node rather than
+    // the label's box, because the box holds the pill too — so a label reported as
+    // one line can still be "or these 2, same / combo:" with the pill beside it,
+    // which is what happened when the block moved into the card's column.
+    //
+    // Where the pill sits does depend on the room: beside the sentence where the
+    // column can hold both, on its own line below where it cannot. Reported as a
+    // fact about geometry, so the report can check the rule against the column's
+    // width rather than restate a breakpoint.
     altLabel: (() => {
       const label = doc.querySelector('.alternatives .alt-label');
       if (!label) return null;
       const lineHeight = parseFloat(win.getComputedStyle(label).lineHeight) || 16;
       const pill = label.querySelector('.alt-all');
       const box = label.getBoundingClientRect();
+      const sentence = doc.createRange();
+      sentence.selectNodeContents(label.firstChild);
+      const sentenceBox = sentence.getBoundingClientRect();
+      const pillBox = pill ? pill.getBoundingClientRect() : null;
       return {
         lines: Math.round(box.height / lineHeight),
+        // One client rect per line box the sentence occupies.
+        sentenceLines: sentence.getClientRects().length,
+        sentenceWidth: Math.round(sentenceBox.width),
         boxWidth: Math.round(box.width),
-        pillWidth: pill ? Math.round(pill.getBoundingClientRect().width) : 0,
+        pillWidth: pillBox ? Math.round(pillBox.width) : 0,
+        pillBeside: Boolean(pillBox) && Math.abs(pillBox.top - sentenceBox.top) < lineHeight / 2,
         text: label.textContent,
       };
     })(),
@@ -272,6 +350,7 @@ function measure(win, doc) {
         name: name.textContent,
         // Rounded: sub-pixel layout differences are not raggedness.
         addRight: Math.round(addBox.right),
+        nameWidth: Math.round(nameBox.width),
         sameLine: Math.abs(addBox.top - nameBox.top) < 12,
         // Clipped rather than shortened, so the text is all still there to be read.
         clipped: name.scrollWidth > name.clientWidth + 1,
@@ -623,6 +702,7 @@ function measure(win, doc) {
     dataAge,
     numberColumns,
     sizes,
+    dividers,
     included,
     map,
     width: win.innerWidth,
@@ -1690,6 +1770,34 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       }
     }
 
+    // One unbroken divider down every row, with everything below the numbers on the
+    // card's side of it — the same shape whether the row offers a choice of card or
+    // not, which is the whole claim.
+    if (!v.dividers.length) {
+      problems.push('no suggestion or piece row rendered, so the row divider is untested');
+    } else {
+      for (const d of v.dividers) {
+        if (d.summaryLeft !== d.mainLeft) {
+          problems.push(`"${d.name}"'s disclosure starts at ${d.summaryLeft}px, its name at ${d.mainLeft}px — not in the card's column`);
+        }
+        if (!d.gutterWidth) problems.push(`"${d.name}"'s gutter draws no divider`);
+        if (!d.blocks.length) problems.push(`"${d.name}" has nothing below its numbers, so the divider ends at them`);
+        // Each piece picks up where the one above left off, and all of them are drawn
+        // at the same x. Walked in order, so the report names the block that broke it.
+        let end = d.gutterEnd;
+        for (const b of d.blocks) {
+          if (!b.width) problems.push(`"${d.name}" draws no divider beside ${b.what}`);
+          if (b.line !== d.gutterLine) {
+            problems.push(`"${d.name}"'s divider steps sideways at ${b.what}: ${d.gutterLine}px then ${b.line}px`);
+          }
+          if (b.top !== end) {
+            problems.push(`"${d.name}"'s divider breaks above ${b.what}: the piece before it ends at ${end}px and it starts at ${b.top}px`);
+          }
+          end = b.bottom;
+        }
+      }
+    }
+
     if (v.tabs.length !== 2) {
       problems.push(`expected 2 suggestion tabs, got ${v.tabs.length}`);
     } else {
@@ -1724,29 +1832,55 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (g.choiceRows !== g.eitherRows.length) problems.push('a collapsed row did not list its choices');
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
     if (g.altGroups.some((t) => !/or (these \d+|this one), same combos?:/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
-    // One row, label and comparison link together. At 390px there is 298px for both
-    // and the link takes 108 of it, so the wording has to stay short — the previous
-    // "or any one of these N instead — same combos:" took two lines and pushed the
-    // link onto its own.
-    if (g.altLabel && g.altLabel.lines !== 1) {
-      problems.push(`the alternatives label needs ${g.altLabel.lines} rows for "${g.altLabel.text}" in ${g.altLabel.boxWidth}px`);
+    // The choice of card lives in the card's column like everything else in the row,
+    // so it has that column's width and not the row's: 233px of the 334px this panel
+    // gets at 390px, against 454px of 689px at 768px. Both shapes are asserted,
+    // because a rule that only holds at one end of the range is not the rule — and
+    // the threshold is read off the column rather than written twice, so a change to
+    // the stylesheet's 420px fails here instead of being quietly agreed with.
+    //
+    // The wording has to fit that column on one line either way — "or any one of
+    // these N instead — same combos:" is what this replaced, and it took two lines
+    // in a column half again as wide.
+    const roomy = g.column >= 420;
+    if (g.altLabel && g.altLabel.sentenceLines !== 1) {
+      problems.push(`the alternatives label breaks across ${g.altLabel.sentenceLines} lines: "${g.altLabel.text}" in ${g.altLabel.boxWidth}px`);
+    }
+    // And the Compare pill beside it exactly where there is room for it. Below that
+    // the two together needed 277px of a 233px column, which broke the sentence
+    // itself — so the pill takes its own line and the sentence stays whole.
+    if (g.altLabel && g.altLabel.pillBeside !== roomy) {
+      problems.push(roomy
+        ? `the Compare pill is not on the label's line, and the column is ${g.column}px`
+        : `the Compare pill shares the label's line in a ${g.column}px column, where the two need ${g.altLabel.sentenceWidth + g.altLabel.pillWidth}px`);
     }
     if (g.altNames < 1) problems.push('the alternatives list named no cards');
 
-    // Every + Add in a choice on the same line as its card, and every one of them on
-    // the same right edge. The second is the point: buttons that each start wherever
-    // the name before them happened to end make a list of four look like a mistake.
+    // Every + Add on the same right edge, whichever shape the list is in. That is the
+    // point of it: buttons that each start wherever the name before them happened to
+    // end make a list of four look like a mistake.
     if (!g.altRows.length) problems.push('no interchangeable row offered a + Add to measure');
-    const strays = g.altRows.filter((r) => !r.sameLine);
-    if (strays.length) {
-      problems.push(`${strays.length} + Add button(s) wrapped off their card's line, e.g. ${strays[0].name}`);
-    }
     const edges = [...new Set(g.altRows.map((r) => r.addRight))];
     if (edges.length > 1) {
       problems.push(`the + Add buttons sit on ${edges.length} different edges (${edges.join('px, ')}px), so they do not line up`);
     }
-    // A clipped name must still be readable some other way, or the row has lost
+    // Whether a button shares its card's line is the width's decision and not the
+    // name's, which is the difference between the two shapes and a wrapping row: in
+    // a narrow column every entry takes two lines, not the ones with long names.
+    const strays = g.altRows.filter((r) => r.sameLine !== roomy);
+    if (strays.length) {
+      problems.push(roomy
+        ? `${strays.length} + Add button(s) wrapped off their card's line in a ${g.column}px column, e.g. ${strays[0].name}`
+        : `${strays.length} + Add button(s) share their card's line in a ${g.column}px column, which leaves the name ${g.altRows[0].nameWidth}px`);
+    }
+    // The name gets the whole column on the two-line shape, which is the only reason
+    // that shape exists — an ellipsis at 81px is not a card name. Where it is clipped
+    // anyway it must still be readable some other way, or the row has lost
     // information rather than just space.
+    const cut = g.altRows.filter((r) => r.clipped);
+    if (cut.length && !roomy) {
+      problems.push(`${cut.length} name(s) still clipped with the column to themselves, e.g. ${cut[0].name} at ${cut[0].nameWidth}px`);
+    }
     const mute = g.altRows.filter((r) => !r.titled);
     if (mute.length) problems.push(`${mute.length} clipped name(s) carry no title, e.g. ${mute[0].name}`);
 
@@ -2209,6 +2343,16 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;
+      // The x the row's divider is drawn at, and where the blocks beside it start.
+      // One number for the line because every piece of it agrees, which is the thing
+      // being asserted; and the shape the choice of card took in the column it had,
+      // because that is the half of this the width decides.
+      const shape = v.grouped.altLabel
+        ? `, choice in ${v.grouped.column}px: pill ${v.grouped.altLabel.pillBeside ? 'beside' : 'below'} the label, `
+          + `${v.grouped.altRows[0] && v.grouped.altRows[0].sameLine ? 'one line' : 'two lines'} per card`
+        : '';
+      const dividerNote = `divider at ${v.dividers[0].gutterLine}px, ${v.dividers[0].blocks.length + 1} pieces,`
+        + ` blocks from ${v.dividers[0].summaryLeft}px${shape}`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
@@ -2218,7 +2362,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${stuckNote}, ${sizeNote}, ${dividerNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 
