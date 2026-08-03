@@ -154,3 +154,29 @@ test('nothing is anchored on the published snapshot', () => {
   const sources = claims().map((c) => c.source).join(' ');
   assert.doesNotMatch(sources, /combos\.json|data branch/i);
 });
+
+// ---- and against CLAUDE.md ---------------------------------------------------
+//
+// The checker anchors on the README, which means a countable claim written into any
+// other file is unwatched. CLAUDE.md carried one — a test count, in the `npm test`
+// comment — and it was wrong by 17 inside a fortnight. Nothing failed, because
+// nothing was looking.
+//
+// A test count is the one number this checker cannot own: it is not held in a file to
+// be counted, it is the output of running the suite, and having `check:readme` run
+// `node --test` to verify a comment would be slower than the suite it describes and
+// circular besides. So the fix was to delete the claim rather than to check it, and
+// this is what stops it coming back — the mechanism CLAUDE.md's note was never able
+// to be.
+test('CLAUDE.md states no test count', () => {
+  const doc = fs.readFileSync(path.join(__dirname, '..', 'CLAUDE.md'), 'utf8');
+  // Only a bare count of the suite. "590 tests" and "607 tests" match; the prose
+  // around research passes ("all 37 candidates", "1,197 of his 1,202") does not, and
+  // must not — those are history, and history is allowed to hold still.
+  const stated = [...doc.matchAll(/\b([\d,]+)\s+tests\b/gi)];
+  assert.deepStrictEqual(
+    stated.map((m) => m[0]), [],
+    'CLAUDE.md gives a test count. `npm test` prints the real one, and nothing here '
+    + 'watches a number in that file — say "a couple of seconds" instead.',
+  );
+});

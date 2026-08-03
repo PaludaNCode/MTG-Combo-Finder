@@ -16,7 +16,10 @@ Combo data comes from a nightly snapshot of Commander Spellbook published to the
 ## Commands
 
 ```bash
-npm test                  # unit tests, node:test, zero deps (590 tests, ~2s)
+npm test                  # unit tests, node:test, zero deps — a couple of seconds
+                          # No count here on purpose: it was wrong by 17 within a
+                          # fortnight, and `check:readme` anchors on the README, so
+                          # nothing was watching it. `npm test` prints the real one.
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change

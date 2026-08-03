@@ -68,6 +68,12 @@ show no download at all — roughly `ready in 0.1s (match 64ms)`. If it does not
 Cache Storage design is not doing what it claims, which would matter more than
 anything shipped here.
 
+> **Since answered — see the README's *What the search cost, in the footer*.** The
+> second-visit reading came back `ready in 0.2s (cache 39ms · parse 43ms · match 71ms)`,
+> and reading it is what exposed that a cached load was being labelled `download`. This
+> paragraph is left as written because this file is history, but it is no longer an open
+> question, and for a while it was the only thing in the repository claiming otherwise.
+
 ### All ten, and what each turned up
 
 | | | |
