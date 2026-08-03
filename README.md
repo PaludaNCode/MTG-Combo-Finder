@@ -1412,7 +1412,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 112 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 158 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -2526,7 +2526,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 112 hand-written rows cite a published combo. 87 of them and the one stand-in rule
+All 158 hand-written rows cite a published combo. 133 of them and the one stand-in rule
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -2613,8 +2613,8 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **183 candidates have been
-read, out of thousands proposed** — and which 183 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **257 candidates have been
+read, out of thousands proposed** — and which 257 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards
@@ -2629,6 +2629,52 @@ families turn on the added token being an artifact and a Squirrel is not one; an
 Chatterfang + Pitiless Plunderer is a published *two-card* combo, which makes every
 "Pitiless Plunderer and an outlet" shape a strict superset of something he already does.
 Five survived, and they are in the file.
+
+**Academy Manufactor is what a card the scope tool cannot see looks like.** She is named
+in 661 published combos and has exactly *one* substitution peer in all 103,737: Peregrin
+Took, sharing 54 shapes with her at a jaccard of **0.05**. That is nowhere near the 0.90
+bar `tools/substitution-scope.js` reports at, and it never will be — the score is a ratio,
+and a card in 661 combos cannot reach 0.90 against a peer that shares 54 of them. No scope
+run has ever named her, and the pass had to be started by reading the card. *Read the pair
+count, not the score, for a card this widely published.*
+
+The pair itself is a clean case of a high score meaning less than it looks:
+
+| | |
+|---|---|
+| Peregrin Took | If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. |
+| Academy Manufactor | If you would create a Clue, Food, or Treasure token, instead create one of each. |
+
+He reads *any* token and hands back a Food; she reads three types and hands back the other
+two. So **296 of the 338 candidates died on the token type alone** — a Squirrel, a Zombie,
+a Spirit, a Thopter, a Blood or a Myr is a token he is looking at and she is not, which
+took the whole Camellia and Ant Queen families out at once. Six more died on quantity: he
+*adds* a Food where she only *converts* one, so a Samwise Gamgee trigger is two Foods
+behind him and one behind her, and every loop needing the second one breaks. Four died on
+a mistake worth naming, because the score cannot see it either — those lines use Peregrin
+Took's *second* ability, "Sacrifice three Foods: Draw a card", as a free sacrifice outlet.
+That is not a replacement effect at all, and she has no equivalent of it.
+
+**32 survived**, all of them loops whose own token is a Clue or a Treasure — Chalk Outline
+investigating on top of its Detective, Kheru Goldkeeper's Treasure, Bootleggers' Stash
+under Clock of Omens. The last of those is the strongest evidence in the file: Spellbook
+publishes the identical four-card loop with Academy Manufactor in it for four of the eight
+artifact lands, and only with Peregrin Took for the other four.
+
+**Thirteen more rows came from the other side of the same shape.** Neither
+Cauldron Familiar nor Samwise Gamgee has a substitution peer at all — no card shares three
+combo shapes with either — so no amount of comparing proposes anything for them. What does
+is the outlet slot: Spellbook fills the free-sacrifice slot of the Cauldron Familiar loop
+by name, engine by engine, and the lists disagree. Sixteen outlets behind Peregrin Took,
+sixteen behind Samwise Gamgee but not the same sixteen, fifteen behind Eloise, Nephalia
+Sleuth, fifteen behind Pitiless Plunderer, six behind Ulvenwald Mysteries. Diffing them is
+the whole pass: **Spawning Pit** is in every Peregrin Took list and none of the other four,
+though "Sacrifice a creature: Put a charge counter on Spawning Pit" is free, repeatable and
+unfussy about what it eats; and Ulvenwald Mysteries, which investigates on a nontoken
+creature dying where Eloise investigates on another creature dying, is nine outlets short
+of her. Three candidates were ruled out and the reason is the good kind: Warren Soultrader
+makes his own Treasure, so `Cauldron Familiar + Warren Soultrader + Academy Manufactor` is
+a published *three*-card combo and every four-card row naming him is a strict superset.
 
 That third pass kept 49 of its 54, and they are the families in `unofficial.js` under
 *the token-creation half of the counter loops*. **Twenty are Rosie Cotton of South Lane**,

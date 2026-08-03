@@ -140,6 +140,60 @@ const PASSES = [
       + 'five kept. Worth keeping beside Rosie, who was not well covered, so the next reader '
       + 'knows both outcomes are normal.',
   },
+  {
+    subject: 'Academy Manufactor against Peregrin Took',
+    cards: ['Academy Manufactor', 'Peregrin Took', 'Chalk Outline', 'Kheru Goldkeeper'],
+    cardIds: [4231, 4321, 5632, 6462],
+    date: '2026-08-03',
+    method: 'every shape Academy Manufactor’s one substitution peer is published in and she is not',
+    proposed: 338,
+    examined: 58,
+    kept: 32,
+    ruledOut: [
+      { reason: 'the loop’s token is a Squirrel, a Zombie, a Spirit, a Thopter, a Blood, a Myr — '
+        + 'anything that is not a Clue, a Food or a Treasure. Peregrin Took reads *any* token and '
+        + 'adds a Food; Academy Manufactor reads three types and is not looking at the rest',
+      count: 296 },
+      { reason: 'the loop needs two Foods a cycle. Peregrin Took *adds* a Food to a creation where '
+        + 'Academy Manufactor only *converts* one — a Samwise Gamgee trigger is two Foods behind '
+        + 'him and one behind her', count: 6 },
+      { reason: 'the outlet is Peregrin Took’s own second ability, "Sacrifice three Foods: Draw a '
+        + 'card", which is not a replacement effect at all and which she has no equivalent of — '
+        + 'the Nuka-Cola Vending Machine, Experimental Confectioner and Lonis lines are all this',
+      count: 4 },
+    ],
+    notes: 'Academy Manufactor has exactly one peer in 103,737 combos and it is Peregrin Took, at '
+      + 'a jaccard of 0.05 — far under the 0.90 bar tools/substitution-scope.js reports at, which '
+      + 'is why no scope run has ever named her. The bar is a ratio and she is in 661 combos; a '
+      + 'peer sharing 54 shapes with her can never clear it. Read the pair count, not the score, '
+      + 'for a card this widely published. `examined` is the 32 kept plus 26 read one at a time; '
+      + 'the other 280 died to a fact about their engine card rather than to a reading.',
+  },
+  {
+    subject: 'The sacrifice outlet slot of the Cauldron Familiar loop',
+    cards: [
+      'Cauldron Familiar', 'Samwise Gamgee', 'Eloise, Nephalia Sleuth', 'Ulvenwald Mysteries',
+      'Pitiless Plunderer', 'Spawning Pit',
+    ],
+    cardIds: [856, 5270, 1808, 5267, 4871, 3899],
+    date: '2026-08-03',
+    method: 'the outlet slot Spellbook fills by name, compared across the engines that fill the same shape',
+    proposed: 16,
+    examined: 16,
+    kept: 13,
+    ruledOut: [
+      { reason: 'Warren Soultrader is an outlet that makes its own Treasure, so Cauldron Familiar '
+        + '+ Warren Soultrader + Academy Manufactor is a published *three*-card combo and every '
+        + 'four-card row naming him is a strict superset of it', count: 3 },
+    ],
+    notes: 'Neither Cauldron Familiar nor Samwise Gamgee has a substitution peer at all — no card '
+      + 'shares three combo shapes with either of them — so the method the rest of this file runs '
+      + 'on proposes nothing for them, and the hole had to be found from the other side. Spellbook '
+      + 'enumerates the free-sacrifice slot of the Cat loop engine by engine: sixteen outlets '
+      + 'behind Peregrin Took, sixteen behind Samwise Gamgee but not the same sixteen, fifteen '
+      + 'behind Eloise, Nephalia Sleuth, fifteen behind Pitiless Plunderer and six behind '
+      + 'Ulvenwald Mysteries. Diffing the lists is what the pass is.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.

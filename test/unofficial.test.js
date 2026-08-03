@@ -526,6 +526,7 @@ test('a real deck: the unofficial rows it unlocks are exactly these', () => {
     'Scurry Oak + Necrosynthesis + Hammerhead, Maggia Boss',
     'Scurry Oak + Necrosynthesis + Umbral Collar Zealot',
     'Scurry Oak + Necrosynthesis + Viscera Seer',
+    'Stridehangar Automaton + Warren Soultrader + Academy Manufactor',
     "Trudge Garden + Ashnod's Altar + Aunt May",
     "Trudge Garden + Ashnod's Altar + Case of the Uneaten Feast",
     'Trudge Garden + Pitiless Plunderer + Phyrexian Altar + Lunarch Veteran // Luminous Phantom',
