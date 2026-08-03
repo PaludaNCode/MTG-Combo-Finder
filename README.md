@@ -2712,29 +2712,44 @@ claim can be checked — it is invisible in a screenshot of a single row. The co
 also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
 was a second, weaker copy of the same ordering.
 
-**The divider runs the whole row, and the fold sits on the card's side of it.**
-*Combos this unlocks* used to start under the gutter, level with a number it is the
-expansion of, which made it read as a third thing the row was about rather than the
-list behind the total. It starts where the name, the links and the size pills start
-now, and the line between the two columns is carried down to it — so everything to the
-right of that line is one card's worth of reading, whether the fold is open or shut.
+**The divider runs the whole row, and everything below the numbers is on the card's
+side of it.** *Combos this unlocks* used to start under the gutter, level with a number
+it is the expansion of, which made it read as a third thing the row was about rather
+than the list behind the total. It starts where the name, the links and the size pills
+start now, and so do the interchangeable cards where a row offers them, and the line
+between the two columns is carried down past all of it — so everything to the right of
+that line is one card's worth of reading, and every row in a panel has one shape
+whether it offers a choice of card or not.
 
-The line is two borders that meet: the gutter's right one, stretched to the bottom of
-the card's column, and the disclosure's left one, which reaches back across the column
-gap with a negative margin to land on exactly the same pixel. That is a fact about two
-boxes agreeing and nothing in the CSS states it, so the layout test measures the x each
-half is drawn at and where the gutter's half ends, and fails on a divider that is two
-lines or a broken one. It earned that immediately: the gap is `.55rem` rather than
-`.7rem` below 480px, the disclosure was still reaching back `.7rem`, and the line was
-split by the .15rem of difference at phone width and nowhere else. The gap is one
-variable now, which is what makes the two impossible to override apart.
+The line is a border on each of those blocks: the gutter's right one, stretched to the
+bottom of the card's column, and a left one on each block below, reaching back across
+the column gap with a negative margin to land on exactly the same pixel as the piece
+above it. The blocks' own spacing is padding rather than margin for the same reason — a
+margin would open a hole in the line at both ends of the block. That is a fact about
+three or four boxes agreeing and nothing in the CSS states it, so the layout test walks
+the pieces in order and reports the block that stepped sideways, lost its border, or
+left a gap. It earned that immediately: the gap is `.55rem` rather than `.7rem` below
+480px, the disclosure was still reaching back `.7rem`, and the line was split by the
+.15rem of difference at phone width and nowhere else. The gap is one variable now,
+which is what makes the two impossible to override apart.
 
-**One block still takes the full width, and it is the exception the test reports:** the
-interchangeable cards under a suggestion. In the card's column at 390px they get 222px,
-and `or these 2, same combo:` with its *Compare all 3* pill needs two rows in that —
-measured, and the one-row fit is asserted, so the alternatives keep the row's whole
-width and the divider stops for that block. Rows offering a choice of card are the only
-ones where it is not continuous, and the layout run prints how many of them there were.
+**The card's column is narrower than the row, and the choice of card had to be measured
+against it rather than assumed into it.** At 390px that column is 233px of the panel's
+334px. `or these 2, same combo:` is 163px and its *Compare all 3* pill 108px, so on one
+line the pill broke the **sentence** — `or these 2, same / combo:` — and a card name
+beside its two links and its *+ Add*, which take 190px between them whatever is left,
+was down to 43px: every alternative drawn as an unreadable stub. So below 420px of
+column the pill takes its own line and each entry takes two, name above actions; above
+it, both are back on one line. One container query decides both, because one width
+decides both.
+
+Neither shape is a wrapping row, which is the failure this replaced long ago and must
+not come back: *every* entry changes shape at the threshold, not the ones whose names
+happen to be long, and the *+ Add* stays in the last grid column either way — so all
+of them share a right edge at every width, which the layout test asserts along with
+which shape the column's width should have produced. The narrow shape trades a line of
+height per alternative for names that say which card they are; the assertion that no
+name is clipped once it has the column to itself is what holds that trade honest.
 
 The width is measured rather than chosen. Four-digit totals are real — Hammerhead
 again — so the gutter has to hold `0+1889`, and at 3.4rem that clipped. Widening it

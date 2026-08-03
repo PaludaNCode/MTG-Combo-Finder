@@ -459,24 +459,21 @@ button:disabled { opacity: .6; cursor: wait; }
   column-gap: var(--col-gap);
   align-items: start;
 }
-/* "Combos this unlocks" is the list behind the number, so it belongs to the card:
- * it starts where the name, the links and the sizes start, and the divider runs
- * down its left edge to say so. Under the gutter — where it used to be — it read as
- * a third thing the row was about, level with a number it is the expansion of.
+/* Everything below the numbers is the card's, so all of it lives in the card's
+ * column: the interchangeable cards, and "Combos this unlocks" — which is the list
+ * behind the number, and under the gutter read as a third thing the row was about,
+ * level with a number it is the expansion of. Every block in a row now starts at
+ * the same left edge as the card's name, so every row in a panel has one shape.
  *
- * The line is the gutter's border continued, not a second one: the negative margin
- * puts this box's left edge on the gutter's right edge, 1px included, and the
- * padding hands the content back to where the column starts. The two segments abut
- * because there is no row gap, so what is drawn is one line down the whole row —
- * which is also what makes `align-self: stretch` on .row-numbers load-bearing
- * below: without it the gutter's half stops at the bottom of the numbers, two
- * lines short of where this one begins.
- *
- * The alternatives stay full-width: at 390px this column is 222px, and the
- * "or these 2, same combo:" label and its Compare pill need two rows in that —
- * measured, and the layout test fails on it. So a row offering a choice of card
- * breaks the line for that block, which is the one place it is not continuous. */
-.combo.suggestion > .alternatives { grid-column: 1 / -1; }
+ * Each block continues the divider rather than drawing a second one: the negative
+ * margin puts its left edge on the gutter's right edge, 1px included, and the
+ * padding hands the content back to where the column starts. The segments abut —
+ * no row gap, and the spacing inside these blocks is padding rather than margin so
+ * that nothing opens a hole in the line — so what is drawn is one line down the
+ * whole row. That is also what makes `align-self: stretch` on .row-numbers
+ * load-bearing below: without it the gutter's half stops at the bottom of the
+ * numbers, two lines short of where the next one begins. */
+.combo.suggestion > .alternatives,
 .combo.suggestion > details {
   grid-column: 2;
   margin-left: calc(-1 * var(--col-gap) - 1px);
@@ -814,13 +811,25 @@ button:disabled { opacity: .6; cursor: wait; }
 .candidates .card-links { margin-left: .3rem; }
 
 /* The alternatives under a suggestion. Same job, same combos — worth listing,
-   not worth shouting. */
-.alternatives {
-  margin: .1rem 0 .5rem;
-  padding-left: .6rem;
-  border-left: 2px solid var(--line);
-}
+   not worth shouting.
+
+   Its spacing is padding, not margin: the block carries a piece of the row's
+   divider on its left edge (see .combo.suggestion above), and a margin would put
+   a gap in that line at both ends of it. The 2px rule this used to draw on the
+   same edge is what the divider replaced — one line down the row says what a
+   second, heavier one beside it was saying. */
+.alternatives { padding-block: .1rem .5rem; }
 .alt-label { display: block; font-size: .82rem; color: var(--muted); }
+/* Under the sentence rather than beside it, which is what a 233px column has room
+   for: at 390px the sentence is 163px and the pill 108px, so keeping them on one
+   line broke the sentence itself — "or these 2, same / combo: [Compare all 3]".
+   The pill comes back onto the line where the column can hold both; see the
+   container query below for the measurement, which the alternatives list shares. */
+.alt-label > .alt-all {
+  display: block;
+  width: fit-content;
+  margin: .3rem 0 0;
+}
 /* "Compare all 16 on Scryfall", on the label's own line. Deliberately quieter
    than the + Add pills it sits above: adding a card is the decision, and this is
    the reading you do before making it. Same shape so it reads as pressable, but
@@ -846,29 +855,50 @@ button:disabled { opacity: .6; cursor: wait; }
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: .15rem;
+  /* Wider than the gap *inside* an entry, which is 0 on the two-line shape below:
+     an entry's own two lines have to read as one entry, and at the .15rem this used
+     to be for both, a name and the links under it were as far apart as two
+     different cards. The one-line shape has no inside to separate, so the container
+     query takes this back down. */
+  gap: .5rem;
 }
-/* Three columns, not a wrapping row: name, links, button. A flex row that wraps put
+/* A grid and never a wrapping row: name, links, button. A flex row that wraps put
    the + Add of a long name on a line of its own — "Spider-Man, Peter Parker" fits a
    phone, and the button after its two links does not — which left a list where some
-   rows are one line and some are two, and no two buttons share an edge.
+   rows are one line and some are two, and no two buttons share an edge. Areas rather
+   than a column count, because the shape changes with the room and the raggedness
+   must not: the button is in the last column either way, so every button in a list
+   shares an edge whichever shape the list is in.
+
+   Two lines here, and one where the column is wide enough — see the container query.
+   The name gets the whole column on the narrow shape because it cannot have it any
+   other way: the links and the button take 190px of a row whatever is left, so in the
+   233px a 390px phone gives the name is left 43px, which draws every alternative as
+   an unreadable stub. That is the choice the width forces — a line of height per
+   alternative, or a list of card names that do not say which cards they are.
 
    The name column is the one that gives: minmax(0, 1fr) lets it shrink below its
    content, and the ellipsis on .card-name below is what it shrinks to. Everything
    else keeps its natural width, so the buttons line up down the list whatever the
    names do.
 
-   No justify-self is needed and none is set: every row is its own grid, the link text
-   is the same on all of them, and the button column is exactly one button wide — so
-   pinning the button to either edge of that column is the same pixel. Tested: adding
-   `justify-self: start` changes nothing the layout run can measure. */
+   No justify-self is needed and none is set: the link text is the same on every row
+   and the button column is exactly one button wide, so pinning the button to either
+   edge of that column is the same pixel. Tested: adding `justify-self: start`
+   changes nothing the layout run can measure. */
 .alt-list li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name name'
+    'links add';
   align-items: baseline;
-  gap: .5rem;
+  gap: 0 .5rem;
   font-size: .9rem;
 }
+.alt-list li > .card-name { grid-area: name; }
+.alt-list li > .card-links { grid-area: links; }
+.alt-list li > .add-card { grid-area: add; }
 /* Clipped, not truncated: the full name stays in the DOM, so a screen reader reads
    it, a search inside the page finds it, and copying the row copies all of it. Only
    the drawing stops early. `title` puts it back within reach of a pointer. */
@@ -881,6 +911,38 @@ button:disabled { opacity: .6; cursor: wait; }
 /* Both links stay together on their own line-worth of space; breaking "EDHREC ·
    Scryfall" across a wrap was the other way this row lost its shape. */
 .alt-list .card-links { margin: 0; font-size: .78rem; white-space: nowrap; }
+
+/* ---- the same choice where the card's column has room for it on one line ----
+ *
+ * One query for both shapes, because one width decides both: how much of the row is
+ * left for the card's column after the gutter and the gap. Below 560px of container
+ * that column is the container less 101px, so 420px of container is 319px of column
+ * — enough for the label's 163px sentence beside its 108px pill, and enough that a
+ * name giving up 190px to its links and button still has ~130px, which holds a card
+ * name with an ellipsis on the longest. At the 334px a 390px phone gives, the column
+ * is 233px: the label needs 277px of it and the name would have 43px, so both take a
+ * second line there.
+ *
+ * Above 560px the gutter widens to 12rem and the card's column *narrows* by 134px,
+ * which is why the threshold is not simply "wider than a phone" — at 560px of
+ * container the name is back to 135px. That is the tightest the one-line shape ever
+ * gets, and it is the same ~130px this threshold was chosen for.
+ *
+ * Asked of the row's own column rather than the viewport for the same reason the
+ * 560px query is: at a 900px window this column is 442px and at 768px it is 704px,
+ * so the viewport is not what decides. */
+@container rows (min-width: 420px) {
+  .alt-label > .alt-all {
+    display: inline;
+    width: auto;
+    margin: 0 0 0 .4rem;
+  }
+  .alt-list { gap: .15rem; }
+  .alt-list li {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: 'name links add';
+  }
+}
 .alt-more { margin-top: .3rem; }
 .alt-more summary { font-size: .82rem; }
 .alt-more .alt-list { margin-top: .25rem; }
