@@ -53,7 +53,8 @@ npx serve .               # run it locally; any static file server works
 390/768/1440/1920px and catches the class of breakage that is invisible in a
 screenshot — a map with every node at one point is valid SVG and an empty panel.
 
-CI (`checks`) runs: syntax check → lint → `test:coverage` → `verify` → `test:ui`.
+CI (`checks`) runs: syntax check → lint → `test:coverage` → `check:readme` → `verify` →
+`test:ui`.
 
 ## Layout of the code
 
