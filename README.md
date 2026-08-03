@@ -2726,17 +2726,54 @@ links and buttons, and the one that means "the site talking" rather than "a prop
 of the combo". Green, khaki and grey are *win*, *decisive* and *other*, and a fourth
 hue in that family would read as a fourth result tier.
 
-**The words "official" and "unofficial" are no longer on the row**, and that reverses
-what this section used to say — that the claim must not depend on a tooltip. The
-reasoning it replaces is worth keeping, because the objection is right: `10+5` in two
-colours is unreadable to anyone who cannot see the colours. So the sentence did not go
-into a tooltip, it went into the split's **accessible name** — `role="img"` with
+**The words "official" and "unofficial" are dropped where the row is narrow**, and that
+reverses what this section used to say — that the claim must not depend on a tooltip.
+The reasoning it replaces is worth keeping, because the objection is right: `10+5` in
+two colours is unreadable to anyone who cannot see the colours. So the sentence did not
+go into a tooltip, it went into the split's **accessible name** — `role="img"` with
 `aria-label="10 published by Commander Spellbook, 5 unofficial"`, the same device the
 mana pips use to be heard as "green" rather than "G". A screen reader gets the claim in
 words, a pointer gets it on hover, and the column stays a column. The layout test
 asserts all three: the role, the sentence, and that the two halves do not compute to
 the same colour. Cutting the words *without* that would be the version of this change
 that hides half the answer.
+
+**And where the row is wide, they come back**: the gutter widens to 12rem and the split
+reads `10 official · 5 unofficial`. Both readings are in the markup and the stylesheet
+picks one, so a resize needs no re-render and no `matchMedia` listener.
+
+Which reading appears is decided by **the width of the row's own column, not the
+window** — a container query on the panel body, and this is the case that makes the
+difference concrete rather than theoretical:
+
+| window | the results column | reading |
+|---|---:|---|
+| 390px | 349px | `10+5` |
+| 768px | 704px | `10 official · 5 unofficial` |
+| 900px | 442px | `10+5` |
+| 1024px | 566px | `10 official · 5 unofficial` |
+| 1440px | 982px | `10 official · 5 unofficial` |
+
+The column is **wider at 768px than at 900px**, because 900 is where the two-column
+shell starts and hands 370px of the window to the decklist. A `min-width: 900px` media
+query would spell the words out in the narrower of those two and not the wider one, so
+the viewport is the wrong thing to ask.
+
+Both numbers are measured. **560px** of column is the threshold because at 566px — a
+1024px window — a 12rem gutter still leaves the card name 331px, more than the 248px it
+gets on a phone, so nothing is worse off than the layout being replaced. **12rem** is
+what `0 official · 1889 unofficial` needs at 177px, and Hammerhead makes that a real row
+rather than a hypothetical one; `white-space: normal` is the safety valve, so a row with
+four digits on both sides wraps to two lines instead of running over the card name.
+
+The layout test checks this as a rule and not as a repeated breakpoint: it reads the
+column's width and the split's *visible* text — both readings are in the DOM, so
+`textContent` would pass on a page showing both at once — and asserts the words appear
+exactly when the column is wide enough. A dropped container declaration (words never
+appear) and a dropped query (words appear on a phone) both fail it. It also runs the
+deck whose whole case is ours at 390px as well as 1440px, because otherwise the compact
+reading is asserted nowhere: the tuning deck has no unofficial combos, so no other
+viewport draws a split at all.
 
 ### Matching the unofficial rows costs one pass, however many rules there are
 

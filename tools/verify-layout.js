@@ -83,6 +83,11 @@ const VIEWPORTS = [
   // A deck one card short of an unofficial row and of nothing else: the whole
   // suggestion rests on combos nobody published, and both counts have to say so.
   { name: 'unofficial (suggested)', width: 1440, height: 900, deck: 'unofficialAlmost', kind: 'suggested' },
+  // The same deck on a phone, which is the only run where a real split is drawn in a
+  // narrow column. Without it the compact "0+1" reading is asserted nowhere: the
+  // tuning deck has no unofficial combos, so every other viewport draws no split at
+  // all and the desktop runs draw the words.
+  { name: 'unofficial (suggested, phone)', width: 390, height: 844, deck: 'unofficialAlmost', kind: 'suggested' },
 ];
 
 function findBrowser() {
@@ -120,7 +125,20 @@ const WIDTHS = ${JSON.stringify(VIEWPORTS)};
 const DECKS = ${JSON.stringify(DECKS)};
 const results = [];
 
+// What a reader sees, as opposed to what the markup holds. Some text on a row is
+// present in two readings with CSS showing one — the split, which spells itself out
+// where the row's column has room — so asserting on textContent would pass on a page
+// that had lost the rule and was showing both at once.
+function visibleTextIn(win, node) {
+  return [...node.childNodes].map((n) => {
+    if (n.nodeType === 3) return n.textContent;
+    if (n.nodeType !== 1) return '';
+    return win.getComputedStyle(n).display === 'none' ? '' : visibleTextIn(win, n);
+  }).join('');
+}
+
 function measure(win, doc) {
+  const visibleText = (node) => visibleTextIn(win, node);
   const panels = [...doc.querySelectorAll('.panel')].map((p) => ({
     title: p.querySelector('.panel-title').textContent,
     count: (p.querySelector('.panel-count') || {}).textContent || null,
@@ -164,8 +182,20 @@ function measure(win, doc) {
         wraps: [...new Set(totals.map((t) => win.getComputedStyle(t).whiteSpace))],
         // Every row's numbers carry the sentence, or cutting the words hid it.
         spoken: totals.filter((t) => /\\d+ combos?/.test(t.title || '')).length,
+        // The width the container query is asked about: the panel body's content
+        // box, which is the row's own column and not the window. Reported so the
+        // report can check the rule rather than restate the breakpoint.
+        column: (() => {
+          const body = p.querySelector('.panel-body');
+          const cs = win.getComputedStyle(body);
+          return Math.round(body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+        })(),
         splits: [...p.querySelectorAll('.row-split')].map((s) => ({
-          text: s.textContent,
+          // What a reader actually sees. Both readings of the split are in the
+          // markup and CSS shows one, so textContent would report the words even
+          // where they are hidden — and the phone assertion would pass on a page
+          // that had lost the rule entirely.
+          text: visibleText(s),
           spoken: s.getAttribute('aria-label') || '',
           role: s.getAttribute('role') || '',
           ours: s.querySelector('.ours') ? win.getComputedStyle(s.querySelector('.ours')).color : null,
@@ -833,7 +863,9 @@ async function runUnofficial(vp) {
         ours: doc.querySelectorAll('#pieces .row-split .ours').length,
         totals: doc.querySelectorAll('#pieces .row-numbers .row-total').length,
         text: (doc.querySelector('#pieces .row-total') || {}).textContent || null,
-        split: (doc.querySelector('#pieces .row-split') || {}).textContent || null,
+        split: doc.querySelector('#pieces .row-split')
+          ? visibleTextIn(win, doc.querySelector('#pieces .row-split'))
+          : null,
         // The words the numerals replaced. This deck has nothing published, so
         // "none published" is the whole point of its rows — and it is now said
         // here rather than on screen, which is exactly why it is asserted.
@@ -889,9 +921,17 @@ async function runSuggested(vp) {
       requested: vp.width,
       suggested: {
         rows: pane ? pane.querySelectorAll('.combo').length : 0,
+        // The row's own column, so the split's reading can be checked as a rule
+        // rather than pinned to whichever width this run happens to use.
+        column: (() => {
+          const body = doc.querySelector('#suggestions .panel-body');
+          if (!body) return 0;
+          const cs = win.getComputedStyle(body);
+          return Math.round(body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+        })(),
         ours: ours.length,
-        text: ours.length ? ours[0].textContent : null,
-        split: row ? row.querySelector('.row-split').textContent : null,
+        text: ours.length ? visibleTextIn(win, ours[0]) : null,
+        split: row ? visibleTextIn(win, row.querySelector('.row-split')) : null,
         // The claim the numerals stand for. On screen this row is "0+1"; that it
         // means "none published" is carried by the accessible name, so that is
         // where it gets checked.
@@ -1316,11 +1356,19 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const wrong = [];
       if (!g.rows) wrong.push('nothing was suggested at all');
       if (!g.ours) wrong.push('no unofficial count on any suggestion');
-      if (g.text !== '1') wrong.push(`the unofficial half reads "${g.text}"`);
+      // Spelled out where the row's column has room, compact where it has not —
+      // the same rule the main runs check, asked here of a row whose whole case is
+      // ours. This viewport list runs it at both widths on purpose.
+      const words = g.column >= 560;
+      if (g.text !== (words ? '1 unofficial' : '1')) {
+        wrong.push(`the unofficial half reads "${g.text}" in a ${g.column}px column`);
+      }
       // One total, carrying both halves; the split says what it is made of.
       if (g.totals !== 1) wrong.push(`${g.totals} totals on the row, expected 1`);
       if (g.total !== '+1') wrong.push(`the total reads "${g.total}"`);
-      if (g.split !== '0+1') wrong.push(`the split reads "${g.split}"`);
+      if (g.split !== (words ? '0 official · 1 unofficial' : '0+1')) {
+        wrong.push(`the split reads "${g.split}" in a ${g.column}px column`);
+      }
       // The numerals are half the claim and colour is the other half, so the
       // sentence has to survive somewhere a screen reader can reach it. A row whose
       // whole case is ours saying nothing about that is the bug this run exists for.
@@ -1387,10 +1435,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // One total per row, never two for the reader to add up.
       if (pc.totals !== 3) wrong.push(`${pc.totals} totals across 3 rows`);
       if (pc.text !== '1') wrong.push(`the total reads "${pc.text}"`);
-      // Nothing published for this deck, so the split is "0+1" — and what the 0
-      // means is said in words in the accessible name, since the words are no
-      // longer on screen to say it.
-      if (pc.split !== '0+1') wrong.push(`the split reads "${pc.split}"`);
+      // Nothing published for this deck, so the published half is 0 — and at this
+      // width the row says that in words. The accessible name says it either way,
+      // which is what the narrow rows rely on.
+      if (pc.split !== '0 official · 1 unofficial') wrong.push(`the split reads "${pc.split}"`);
       if (!/none published/.test(pc.spoken || '')) {
         wrong.push(`the split hides that nothing is published: "${pc.spoken}"`);
       }
@@ -1549,11 +1597,20 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         if (col.spoken !== col.rows) {
           problems.push(`${col.rows - col.spoken} total(s) in "${col.panel}" do not say what they count`);
         }
+        // Spelled out where the row's column has room for a 12rem gutter, compact
+        // where it does not. Checked as the *rule* rather than as a breakpoint
+        // restated: if the container declaration were dropped the words would never
+        // appear, and if the query were dropped they would appear on a phone. Both
+        // fail here. The breakpoint is in style.css and nowhere else.
+        const roomForWords = col.column >= 560;
         for (const split of col.splits) {
           // "17+7" is numerals and two colours. Neither is available to a screen
           // reader, so the sentence has to be, and role="img" is what makes the
           // label be read in place of the digits.
-          if (!/^\d+\+\d+$/.test(split.text)) problems.push(`a split reads "${split.text}"`);
+          const shape = roomForWords ? /^\d+ official · \d+ unofficial$/ : /^\d+\+\d+$/;
+          if (!shape.test(split.text)) {
+            problems.push(`a split in "${col.panel}" reads "${split.text}" in a ${col.column}px column`);
+          }
           if (split.role !== 'img') problems.push(`a split is not labelled for a screen reader: role="${split.role}"`);
           if (!/unofficial/.test(split.spoken)) problems.push(`a split has no spoken claim: "${split.spoken}"`);
           // Whose half is whose rests on the colour now, so the two halves must not

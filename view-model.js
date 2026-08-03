@@ -136,9 +136,18 @@
       // Only worth printing when the count has two halves, which most rows do
       // not. A card whose whole case is ours still says so, in the spoken half:
       // "none published" is the interesting part of that row, not a gap.
+      //
+      // The words come back too, because whether they are *shown* is not a
+      // decision this function can make — it depends on how wide the row's own
+      // column turns out to be, which only CSS knows. So both readings are built
+      // and the stylesheet picks: "17+7" where the gutter is 4.2rem, and
+      // "17 official · 7 unofficial" where it has room to be 12rem. Two readings
+      // of one pair of numbers, never two different pairs.
       split: ours ? {
         official: String(official),
         ours: String(ours),
+        officialWord: 'official',
+        oursWord: 'unofficial',
         spoken: (official
           ? official + ' published by Commander Spellbook'
           : 'none published by Commander Spellbook')

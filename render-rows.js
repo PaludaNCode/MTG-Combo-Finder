@@ -283,10 +283,24 @@
     wrap.appendChild(el('span', 'row-total-label', n.label));
 
     if (n.split) {
+      // Both readings of the same pair, and the stylesheet shows one: the words
+      // where the row's column is wide enough for a 12rem gutter, the bare "17+7"
+      // where it is not. Built here rather than swapped in by JS because a resize
+      // must not need a re-render — and because a phone that never widens has paid
+      // for two words of markup, which is cheaper than a matchMedia listener.
+      const half = (cls, count, word) => {
+        const span = el('span', cls, count);
+        span.appendChild(el('span', 'word', ' ' + word));
+        return span;
+      };
       const split = el('span', 'row-split');
-      split.appendChild(el('span', 'official', n.split.official));
+      split.appendChild(half('official', n.split.official, n.split.officialWord));
       split.appendChild(el('span', 'sign', '+'));
-      split.appendChild(el('span', 'ours', n.split.ours));
+      split.appendChild(el('span', 'dot', ' · '));
+      split.appendChild(half('ours', n.split.ours, n.split.oursWord));
+      // The label is the same either way, and it is what AT reads in place of the
+      // digits — so the words being hidden costs a screen reader nothing, and the
+      // words being shown does not make the label redundant, it makes it agree.
       split.setAttribute('role', 'img');
       split.setAttribute('aria-label', n.split.spoken);
       split.title = n.split.spoken;
