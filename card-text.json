@@ -1,6 +1,6 @@
 {
  "generated": "2026-08-03",
- "count": 194,
+ "count": 198,
  "cards": {
   "Abby, Merciless Soldier": {
    "fetched": "2026-08-03",
@@ -134,6 +134,20 @@
      "types": "Creature — Angel",
      "oracle": "Flying\nLifelink (Damage dealt by this creature also causes you to gain that much life.)\nWhenever you gain life, put a +1/+1 counter on each creature you control.",
      "pt": "3/4"
+    }
+   ]
+  },
+  "Arwen Undómiel": {
+   "fetched": "2026-08-03",
+   "name": "Arwen Undómiel",
+   "mana": "{G}{U}",
+   "identity": "GU",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Elf Noble",
+     "oracle": "Whenever you scry, put a +1/+1 counter on target creature.\n{4}{G}{U}: Scry 2.",
+     "pt": "2/2"
     }
    ]
   },
@@ -478,6 +492,20 @@
      "types": "Enchantment Creature — Cyclops",
      "oracle": "Creatures you control have haste.",
      "pt": "5/3"
+    }
+   ]
+  },
+  "Dargo, the Shipwrecker": {
+   "fetched": "2026-08-03",
+   "name": "Dargo, the Shipwrecker",
+   "mana": "{6}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Giant Pirate",
+     "oracle": "As an additional cost to cast this spell, you may sacrifice any number of artifacts and/or creatures. This spell costs {2} less to cast for each permanent sacrificed this way and {2} less to cast for each other artifact or creature you've sacrificed this turn.\nTrample\nPartner (You can have two commanders if both have partner.)",
+     "pt": "7/5"
     }
    ]
   },
@@ -1619,6 +1647,20 @@
     }
    ]
   },
+  "Phantom Train": {
+   "fetched": "2026-08-03",
+   "name": "Phantom Train",
+   "mana": "{3}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact — Vehicle",
+     "oracle": "Trample\nSacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn.",
+     "pt": "4/4"
+    }
+   ]
+  },
   "Phyrexian Altar": {
    "fetched": "2026-08-03",
    "name": "Phyrexian Altar",
@@ -2616,6 +2658,20 @@
      "types": "Legendary Creature — Wraith Noble",
      "oracle": "Flying\nWhenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you this turn. The Ring tempts you.\nDiscard a card: Witch-king of Angmar gains indestructible until end of turn. Tap it.",
      "pt": "5/3"
+    }
+   ]
+  },
+  "Woe Strider": {
+   "fetched": "2026-08-03",
+   "name": "Woe Strider",
+   "mana": "{2}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Horror",
+     "oracle": "When this creature enters, create a 0/1 white Goat creature token.\nSacrifice another creature: Scry 1.\nEscape—{3}{B}{B}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)\nThis creature escapes with two +1/+1 counters on it.",
+     "pt": "3/2"
     }
    ]
   },

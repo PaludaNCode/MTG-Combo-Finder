@@ -1438,7 +1438,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 391 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 392 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -2735,7 +2735,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 391 hand-written rows cite a published combo. 366 of them and the three stand-in rules
+All 392 hand-written rows cite a published combo. 367 of them and the three stand-in rules
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -2907,8 +2907,8 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **769 candidates have been
-read, out of thousands proposed** — and which 769 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **787 candidates have been
+read, out of thousands proposed** — and which 787 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards

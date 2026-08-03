@@ -306,7 +306,11 @@ const PASSES = [
       // repeatable outlet that will eat the Cat" is a question about each one's text.
       'Viscera Seer': 'Sacrifice a creature: Scry 1. Creature — Vampire Wizard 1/1 for {B}.',
       'Carrion Feeder': 'This creature can’t block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
-      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. Creature — Human Soldier 2/1 for {W}{B}.',
+      // Corrected 2026-08-03 against card-text.json: this said 'Creature — Human Soldier',
+      // which Scryfall contradicts. The ability text and mana were right, so nothing this
+      // pass concluded turned on it — but a type line from recollection sitting in the file
+      // whose whole job is verbatim text is the Chatterfang mistake happening again.
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. Legendary Creature — Vampire Knight 2/1 for {W}{B}.',
       'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on Bloodflow Connoisseur. Creature — Vampire 1/1 for {2}{B}.',
       'Yahenni, Undying Partisan': 'Haste. Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni. Sacrifice another creature: Yahenni gains indestructible until end of turn. Legendary Creature — Aetherborn Vampire 2/2 for {2}{B}.',
       'Woe Strider': 'When Woe Strider enters, create a 0/1 white Goat creature token. Sacrifice another creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. Creature — Horror 3/2 for {2}{B}.',
@@ -784,6 +788,142 @@ const PASSES = [
       + 'shapes of Cryptolith Rite and Elven Chorus touched: they grant the mana ability to '
       + 'every creature where the Roots grant it to tokens only, which is a real difference and '
       + 'a large space, and it is the biggest thing left open about this card.',
+    subject: 'Bartolomé del Presidio',
+    cards: ['Bartolomé del Presidio'],
+    cardIds: [2921],
+    date: '2026-08-03',
+    method: 'Substitution sweep against his six text-level peers, then the published steps '
+      + 'for the peer version of each shape read against the cards. The first pass since '
+      + 'card-text.json existed, so every text below is Scryfall\'s own wording rather than '
+      + 'Forge\'s, fetched by the Cache card text workflow and committed.',
+    read: {
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. Legendary Creature — Vampire Knight 2/1 for {W}{B}.',
+      // The six peers, by text rather than by score. The line that matters in every one of
+      // them is whether it says "a creature" or "another creature", and what the outlet
+      // does besides eating.
+      'Phantom Train': 'Trample. Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn. Artifact — Vehicle 4/4 for {3}{B}.',
+      'Woe Strider': 'When Woe Strider enters, create a 0/1 white Goat creature token. Sacrifice another creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. Creature — Horror 3/2 for {2}{B}.',
+      'Yahenni, Undying Partisan': 'Haste. Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni. Sacrifice another creature: Yahenni gains indestructible until end of turn. Legendary Creature — Aetherborn Vampire 2/2 for {2}{B}.',
+      'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Vampire 1/1 for {2}{B}.',
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. Creature — Vampire Wizard 1/1 for {B}.',
+      'Carrion Feeder': 'This creature can’t block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
+      // The engines behind the four shapes whose steps were read.
+      'Dargo, the Shipwrecker': 'As an additional cost to cast this spell, you may sacrifice any number of artifacts and/or creatures. This spell costs {2} less to cast for each permanent sacrificed this way and {2} less to cast for each other artifact or creature you’ve sacrificed this turn. Trample. Partner. Legendary Creature — Giant Pirate 7/5 for {6}{R}.',
+      'Earthcraft': 'Tap an untapped creature you control: Untap target basic land. Enchantment for {1}{G}.',
+      'Arwen Undómiel': 'Whenever you scry, put a +1/+1 counter on target creature. {4}{G}{U}: Scry 2. Legendary Creature — Elf Noble 2/2 for {G}{U}.',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 green Squirrel creature token. Creature — Treefolk 1/2 for {2}{G}.',
+      'Nim Deathmantle': 'Equipped creature gets +2/+2, has intimidate, and is a black Zombie. Whenever a nontoken creature is put into your graveyard from the battlefield, you may pay {4}. If you do, return that card to the battlefield and attach this Equipment to it. Equip {4}. Artifact — Equipment for {2}.',
+      'Ashnod’s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact for {3}.',
+    },
+    proposed: 280,
+    examined: 4,
+    kept: 1,
+    ruledOut: [
+      { reason: 'THE SCRY, and this is the widest finding of the pass. Woe Strider and Viscera '
+        + 'Seer both read "Sacrifice … : Scry 1", so their outlet\'s *effect* is a scry — and a '
+        + 'whole family of loops is built on converting that scry into something else. Arwen '
+        + 'Undómiel reads "whenever you SCRY, put a +1/+1 counter on target creature", which is '
+        + 'what feeds Scurry Oak in 997-1920-4186. Bartolomé\'s outlet scries nothing; it puts '
+        + 'its counter on himself, and Scurry Oak needs the counter on ITSELF. So Arwen never '
+        + 'triggers and the loop does not start. Bartolomé + Arwen + Scurry Oak looks identical '
+        + 'to the Necrosynthesis + Scurry Oak row already in unofficial.js and is not the same '
+        + 'thing at all — the row\'s enabler puts counters on directly',
+        count: 1,
+        sets: [['Arwen Undómiel', 'Scurry Oak', 'Bartolomé del Presidio']] },
+      { reason: 'THE GOAT. Woe Strider reads "When Woe Strider enters, create a 0/1 white Goat '
+        + 'creature token", and 997-2034-5003\'s published steps spend it: sacrifice him to '
+        + 'Ashnod’s Altar, Nim Deathmantle pays {4} to return him, "when Woe Strider enters, it '
+        + 'triggers, creating a creature token", and the token is the next sacrifice. Bartolomé '
+        + 'comes back from the Deathmantle with nothing free to eat, so the loop stops on its '
+        + 'first lap. Every Woe Strider shape that recurs him through a reanimator is this',
+        count: 1,
+        sets: [['Nim Deathmantle', 'Ashnod’s Altar', 'Bartolomé del Presidio']] },
+      { reason: 'Yahenni\'s SECOND ability, not his outlet. 3693-3967-4613 and 1495-3967-4613 run '
+        + 'on "whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni" '
+        + 'plus granted deathtouch — Agatha’s Soul Cauldron lends him Walking Ballista’s '
+        + 'counter-removal, and the counter comes back from the opponent\'s creature dying. '
+        + 'Bartolomé has exactly one ability and it is the outlet; there is no trigger for the '
+        + 'Cauldron to feed. The sacrifice half of Yahenni is not what these use',
+        count: 2,
+        sets: [['Agatha’s Soul Cauldron', 'Walking Ballista', 'Bartolomé del Presidio'],
+          ['Agatha’s Soul Cauldron', 'Triskelion', 'Bartolomé del Presidio']] },
+      { reason: 'categorical, and it is why Viscera Seer (234 surviving shapes) and Carrion '
+        + 'Feeder (197) dwarf the true peers at ten and under: both read "Sacrifice A creature", '
+        + 'so they can eat THEMSELVES, and Bartolomé reads "another". The same asymmetry this '
+        + 'file already records for Scurry Oak against Broodscale’s Spawn. Not enumerated as '
+        + 'sets — it is a property of the outlet, not of a card list — and NOT applied as a '
+        + 'blanket rule-out either: a loop that feeds the outlet a third card substitutes fine. '
+        + 'It is written down as the first thing to check on the 276 nobody read' },
+    ],
+    notes: 'FOUR OF 280 SHAPES WERE READ. kept: 1 is a real one and the 276 are simply unswept — '
+      + 'said plainly because this file has already been burned once by a kept: 0 that read as '
+      + 'diligence (see the Basking Broodscale entry, where reading the other 136 found 38 rows). '
+      + 'Bartolomé is the most-published card any pass here has taken on: 1,674 published combos '
+      + 'and six existing rows, and his peers share 1,555+ shapes with him, so the tail is thin '
+      + 'rather than rich. The four read were chosen from the two truest peers by text — Phantom '
+      + 'Train, which matches him word for word ("another artifact or creature"), and the two '
+      + '"another creature" outlets — and three of the four died to the peer doing something '
+      + 'besides eating: scrying, making a Goat, or triggering off an opponent\'s creature dying. '
+      + 'That is the shape of the remaining work: the question is never "is this a free '
+      + 'repeatable outlet" but "what else does the peer\'s ability DO", and the published steps '
+      + 'answer it in one line every time. Also the first pass to run with card-text.json in '
+      + 'place, which caught this file recording him as "Creature — Human Soldier" where Scryfall '
+      + 'says "Legendary Creature — Vampire Knight" — corrected above, and nothing had turned on '
+      + 'it, but a type line from recollection is exactly what the cache exists to stop.',
+  },
+  {
+    subject: 'Experimental Confectioner, a second time — and the method is out of proposals',
+    cards: ['Experimental Confectioner'],
+    cardIds: [2590],
+    date: '2026-08-03',
+    method: 'Peer discovery from the data rather than from the 0.9 threshold, then the one peer '
+      + 'it found swept exhaustively against today\'s snapshot. Asked because the earlier pass '
+      + 'on this card (2026-08-02) only ever looked at Camellia, and nobody had checked whether '
+      + 'he had other peers or whether newer combos had appeared since.',
+    read: {
+      'Experimental Confectioner': '{2}{B} Creature — Human Peasant 2/3. When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with “This token can’t block.”',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each Squirrel you control. Legendary Creature — Squirrel Druid 3/3 for {2}{B}{G}.',
+    },
+    proposed: 82,
+    examined: 82,
+    kept: 0,
+    ruledOut: [
+      { reason: 'NOTHING WAS LEFT TO PROPOSE, and the accounting closes exactly: of the 82 shapes '
+        + 'Camellia is published in that he is not, 25 are shapes he already has under a different '
+        + 'card list, 53 are strict supersets of a combo he already has (Spellbook does not publish '
+        + 'those), and 4 are already rows in unofficial.js from the 2026-08-02 pass. '
+        + '25 + 53 + 4 + 0 = 82, no remainder. This is a COMPLETE zero rather than a provisional '
+        + 'one, and the distinction matters here more than anywhere: the Basking Broodscale entry '
+        + 'warns that a kept: 0 reads as diligence, and it was right — but that zero sat on 136 '
+        + 'shapes nobody had read, where this one has nothing left to read. Subsumption is doing '
+        + 'most of the work, which is the shape of a well-covered card',
+        count: 82 },
+      { reason: 'HE HAS NO PEER AT THE THRESHOLD THE TOOL USES. Ranking every card by how many of '
+        + 'his 62 shapes it shares turned up exactly one above 3 shared — Camellia, at jaccard '
+        + '0.21 against a default bar of 0.9. So substitution-scope.js would never have proposed '
+        + 'him at all, and the only reason he has rows is that somebody swept him by hand from the '
+        + 'Camellia end. He is the second card recorded here that the method is simply silent '
+        + 'about, after Spike Feeder (83 published combos, no peer at any threshold). Worth '
+        + 'knowing that the work queue is not the same thing as the work' },
+      { reason: 'the gap this pass CANNOT close, named so nobody reads the zero above as '
+        + '"nothing remains". His function is "turn a sacrificed Food into a creature token", and '
+        + 'the method can only find a peer Spellbook has already published beside the same cards. '
+        + 'A card that does the same job and that Spellbook has never used in a combo is invisible '
+        + 'to all of this — the README says so under "What this cannot find". Answering it needs a '
+        + 'Scryfall query rather than the combo data: oracle:"sacrifice a Food" together with '
+        + 'oracle:"create", which a runner can ask and this sandbox cannot' },
+    ],
+    notes: 'A pass that added nothing, recorded because a card nobody has swept and a card swept '
+      + 'to exhaustion look identical from outside this file — which is the whole reason it exists. '
+      + 'The 2026-08-02 entry proposed 4, examined 4 and kept 4, and reading that alone would '
+      + 'suggest a rich card with more to give; re-running it against a newer snapshot and against '
+      + 'ALL his peers rather than the one somebody happened to pick says the opposite, and says it '
+      + 'with arithmetic that closes. The other half of this pair is settled too: the Camellia pass '
+      + 'took his shapes in the reverse direction, examined all 37 and ruled out 2 on the one real '
+      + 'difference between them — she reads "whenever you sacrifice ONE OR MORE Foods" for one '
+      + 'trigger per event, he reads "whenever you sacrifice A Food" for one per Food, so he is '
+      + 'strictly better in a loop that spends several and she is not worse anywhere. Both '
+      + 'directions of the only peer he has are now closed.',
   },
 ];
 
