@@ -63,7 +63,8 @@ test('research log: no pass reasons about a card whose text it did not record', 
       const text = pass.read[card];
       assert.ok(typeof text === 'string' && text.trim().length > 30,
         pass.subject + ': no oracle text recorded for ' + card
-        + '. Fetch it (WebSearch — Scryfall is blocked here) and paste it in.');
+        + '. Fetch it — node tools/lookup-card.js "' + card + '", which falls back to '
+        + 'Forge when Scryfall is blocked — and paste it in.');
     });
   });
 });

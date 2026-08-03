@@ -1412,7 +1412,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 116 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 162 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -2306,7 +2306,9 @@ identity for him is there, so the page knows the card — and he is named by
 
 **So the only way in is to read the card**, which is what `tools/lookup-card.js`
 and the *Look up card text* workflow are for — Scryfall answers, Actions has the
-network, and the text lands in the run summary. Hammerhead says:
+network, and the text lands in the run summary. (When it does *not* answer, there
+is a second source; see [Reading a card when Scryfall is
+unreachable](#reading-a-card-when-scryfall-is-unreachable).) Hammerhead says:
 
 > Sacrifice another creature or artifact: Put a +1/+1 counter on Hammerhead.
 
@@ -2327,6 +2329,90 @@ naming Bartolomé and none naming Hammerhead.
 The colour is the part that earns its keep. Hammerhead is mono-black where
 Bartolomé is white-black, so every one of those lines is an Orzhov combo that a
 Golgari deck can actually run, and had no way of being told about.
+
+### Reading a card when Scryfall is unreachable
+
+"Read the card" assumes a network that will serve you the card, and that assumption
+failed on 3 Aug 2026: an agent sandbox with an egress proxy allowlisting
+`raw.githubusercontent.com` got `CONNECT tunnel failed, response 403` for
+`api.scryfall.com`, `scryfall.com`, `data.scryfall.io`, `commanderspellbook.com`,
+`api.magicthegathering.io`, `mtgjson.com` and `gatherer.wizards.com` alike.
+`tools/lookup-card.js` printed *"Scryfall returned HTTP 403 — check the spelling"*
+and stopped, which is a diagnosis it had no way to make: a blocked host and a
+misspelling are identical from inside the tool, and it named the likelier one as
+though it knew. **It now asks Scryfall first and Forge second**, and only says
+"check the spelling" when Scryfall was reachable enough to say the name is unknown.
+
+**[Forge](https://github.com/Card-Forge/forge) publishes its card scripts as plain
+files in a GitHub repository, so they arrive over the one host that was reachable.**
+Each carries an `Oracle:` line, which is the card text verbatim:
+
+```bash
+curl -s https://raw.githubusercontent.com/Card-Forge/forge/master/forge-gui/res/cardsfolder/a/academy_manufactor.txt
+```
+```
+Name:Academy Manufactor
+ManaCost:3
+Types:Artifact Creature Assembly-Worker
+PT:1/3
+R:Event$ CreateToken | … | ValidToken$ Clue,Food,Treasure | …
+Oracle:If you would create a Clue, Food, or Treasure token, instead create one of each.
+```
+
+The path is `cardsfolder/<first letter of the slug>/<slug>.txt`, and the slug rule
+was derived by probing rather than guessed, because a documented URL rule that is
+wrong is worse than none. Four parts, each one a card the obvious rule got wrong:
+
+| | |
+|---|---|
+| **strip accents, then lowercase** | `Éomer, Marshal of Rohan` → `eomer_marshal_of_rohan` |
+| **apostrophes vanish; every other non-alphanumeric run becomes one `_`** | `Ashnod's Altar` → `ashnods_altar`, and `M.O.D.O.K.` → `m_o_d_o_k` — the dots are separators, not nothing |
+| **split and double-faced cards join *both* faces** | `Birgi, God of Storytelling // Harnfel, Horn of Bounty` → `birgi_god_of_storytelling_harnfel_horn_of_bounty`. Taking the front face alone 404s |
+| **recent sets live in `cardsfolder/upcoming/`, not the letter directory** | so a miss is two requests, not one, before it is a miss |
+
+Probed against **454 card names** drawn from the published combo data — 400 spread
+evenly across all 7,364 distinct names, plus 54 chosen for apostrophes, commas,
+accents, hyphens, digits, dots and `//` — the rule resolves **454 of 454**. Nine of
+the 54 were only in `upcoming/`, all of them from recent sets, which is why that
+second request is part of the rule and not an optimisation.
+
+Two things this is not. It is **not a replacement for Scryfall**: there are no
+colour identities, no legalities and no printings here, and `tools/lookup-card.js`
+asks Scryfall first because Scryfall is the better answer when it is available. And
+it is **not the same authority** — Forge's `Oracle:` line is maintained by that
+project rather than by Wizards, so it is a second opinion, not the gospel. Where a
+reading actually turned on the wording, both Forge and
+[XMage](https://github.com/magefree/mage) were read and agreed; that is how the
+Peregrin Took and Academy Manufactor texts above were settled. XMage files a card at
+`Mage.Sets/src/mage/cards/<letter>/<PascalCaseName>.java`, punctuation gone.
+
+So **every card Forge answers is printed under a banner saying so**, rather than the
+distinction living in a header nobody scrolls back to:
+
+> **From Forge's card script, not Scryfall.** Scryfall could not be reached (HTTP 403), which says nothing about the name.
+>
+> Oracle text only — no colour identity, no legality, no printings. Forge maintains
+> this wording rather than Wizards, so cross-check anything a reading turns on.
+
+That matters because this tool's output gets pasted into `unofficial.js` rows, which
+exist to cite their evidence. *Which source said this* has to survive the journey.
+
+**Four outcomes, and one of them was the bug.** `verdict()` decides which — a
+function of the two answers rather than branches buried in the printing, because
+both ways of getting it wrong are invisible to the reader: Forge's wording passed
+off as Scryfall's, and a refused network reported as a typo.
+
+| Scryfall | Forge | what it says |
+|---|---|---|
+| answered | not asked | the card, no banner — the ordinary case |
+| blocked | has it | the card, banner, and the blame on the network |
+| 404 | has it | the card, banner, and *Scryfall wants a different spelling of this name* |
+| blocked | no | both failed, and the network is the likely reason for both |
+| 404 | no | **the only case that says "check the spelling"** |
+
+`test/lookup-card.test.js` pins all five, and pins the slug rule case by case — a
+slug that reaches nothing is indistinguishable from a card Forge does not have, so
+without those the fallback could rot into uselessness in silence.
 
 ### One card, 1,889 combos: why this one is a rule and not rows
 
@@ -2532,7 +2618,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 116 hand-written rows cite a published combo. 91 of them and the one stand-in rule
+All 162 hand-written rows cite a published combo. 137 of them and the one stand-in rule
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -2642,8 +2728,8 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **264 candidates have been
-read, out of thousands proposed** — and which 183 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **338 candidates have been
+read, out of thousands proposed** — and which 338 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards
@@ -2666,6 +2752,52 @@ families turn on the added token being an artifact and a Squirrel is not one; an
 Chatterfang + Pitiless Plunderer is a published *two-card* combo, which makes every
 "Pitiless Plunderer and an outlet" shape a strict superset of something he already does.
 Five survived, and they are in the file.
+
+**Academy Manufactor is what a card the scope tool cannot see looks like.** She is named
+in 661 published combos and has exactly *one* substitution peer in all 103,737: Peregrin
+Took, sharing 54 shapes with her at a jaccard of **0.05**. That is nowhere near the 0.90
+bar `tools/substitution-scope.js` reports at, and it never will be — the score is a ratio,
+and a card in 661 combos cannot reach 0.90 against a peer that shares 54 of them. No scope
+run has ever named her, and the pass had to be started by reading the card. *Read the pair
+count, not the score, for a card this widely published.*
+
+The pair itself is a clean case of a high score meaning less than it looks:
+
+| | |
+|---|---|
+| Peregrin Took | If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. |
+| Academy Manufactor | If you would create a Clue, Food, or Treasure token, instead create one of each. |
+
+He reads *any* token and hands back a Food; she reads three types and hands back the other
+two. So **296 of the 338 candidates died on the token type alone** — a Squirrel, a Zombie,
+a Spirit, a Thopter, a Blood or a Myr is a token he is looking at and she is not, which
+took the whole Camellia and Ant Queen families out at once. Six more died on quantity: he
+*adds* a Food where she only *converts* one, so a Samwise Gamgee trigger is two Foods
+behind him and one behind her, and every loop needing the second one breaks. Four died on
+a mistake worth naming, because the score cannot see it either — those lines use Peregrin
+Took's *second* ability, "Sacrifice three Foods: Draw a card", as a free sacrifice outlet.
+That is not a replacement effect at all, and she has no equivalent of it.
+
+**32 survived**, all of them loops whose own token is a Clue or a Treasure — Chalk Outline
+investigating on top of its Detective, Kheru Goldkeeper's Treasure, Bootleggers' Stash
+under Clock of Omens. The last of those is the strongest evidence in the file: Spellbook
+publishes the identical four-card loop with Academy Manufactor in it for four of the eight
+artifact lands, and only with Peregrin Took for the other four.
+
+**Thirteen more rows came from the other side of the same shape.** Neither
+Cauldron Familiar nor Samwise Gamgee has a substitution peer at all — no card shares three
+combo shapes with either — so no amount of comparing proposes anything for them. What does
+is the outlet slot: Spellbook fills the free-sacrifice slot of the Cauldron Familiar loop
+by name, engine by engine, and the lists disagree. Sixteen outlets behind Peregrin Took,
+sixteen behind Samwise Gamgee but not the same sixteen, fifteen behind Eloise, Nephalia
+Sleuth, fifteen behind Pitiless Plunderer, six behind Ulvenwald Mysteries. Diffing them is
+the whole pass: **Spawning Pit** is in every Peregrin Took list and none of the other four,
+though "Sacrifice a creature: Put a charge counter on Spawning Pit" is free, repeatable and
+unfussy about what it eats; and Ulvenwald Mysteries, which investigates on a nontoken
+creature dying where Eloise investigates on another creature dying, is nine outlets short
+of her. Three candidates were ruled out and the reason is the good kind: Warren Soultrader
+makes his own Treasure, so `Cauldron Familiar + Warren Soultrader + Academy Manufactor` is
+a published *three*-card combo and every four-card row naming him is a strict superset.
 
 That third pass kept 49 of its 54, and they are the families in `unofficial.js` under
 *the token-creation half of the counter loops*. **Twenty are Rosie Cotton of South Lane**,

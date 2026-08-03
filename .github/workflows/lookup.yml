@@ -4,6 +4,11 @@ name: Look up card text
 # Scryfall into the run summary. It exists so that "what does this card actually
 # say?" is answered by reading the card rather than by inferring it from the
 # shape of the combo data.
+#
+# A runner reaches Scryfall, so this is the path that normally answers. The tool
+# falls back to Forge's card scripts when it does not — that is for sandboxes that
+# can only reach raw.githubusercontent.com, and anything it answers is banner-marked
+# as Forge's wording rather than Scryfall's.
 on:
   workflow_dispatch:
     inputs:

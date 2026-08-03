@@ -2350,6 +2350,1036 @@
       ],
     },
 
+    // ---- Academy Manufactor where Spellbook wrote only Peregrin Took ----------
+    //
+    // Academy Manufactor has exactly one substitution peer in 103,737 combos, and it
+    // is Peregrin Took. They share 54 combo shapes; Peregrin Took appears in 400 more
+    // that Academy Manufactor does not. Almost all 400 are his and not hers, and one
+    // line of card text says which:
+    //
+    //   Peregrin Took       If one or more tokens would be created under your control,
+    //                       those tokens plus an additional Food token are created instead.
+    //   Academy Manufactor  If you would create a Clue, Food, or Treasure token, instead
+    //                       create one of each.
+    //
+    // Peregrin Took reads *any* token and hands back a Food. Academy Manufactor reads
+    // three token types and hands back the other two. So a loop whose token is a
+    // Squirrel, a Zombie, a Spirit, a Thopter, a Blood or a Myr is his alone — she is
+    // not looking at it — and that is what killed 75 of the candidates outright,
+    // Camellia's Squirrels and the whole Ant Queen family among them.
+    //
+    // Two more distinctions did the rest. He *adds* a Food where she only *converts*
+    // one, so any loop needing two Foods a cycle breaks on her: that is the four
+    // Samwise Gamgee token-doubler lines and the Gingerbrute one. And his second
+    // ability, "Sacrifice three Foods: Draw a card", is a free sacrifice outlet she
+    // has no equivalent of — the Nuka-Cola Vending Machine, Experimental Confectioner
+    // and Lonis lines are that ability, not the replacement effect, and are his alone.
+    //
+    // What survived is the case where the loop's own token is a Clue or a Treasure.
+    // Then she sees it, and what comes back includes the Food he would have added —
+    // plus the two other artifacts, which is why every row below produces more than
+    // the combo it came from. Spellbook already publishes the shape with her in it
+    // for Eloise, Nephalia Sleuth and Pitiless Plunderer; these are the engines it
+    // did not.
+
+    // Chalk Outline investigates on top of its Detective token — thirteen outlets.
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Altar of Dementia', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-4321-5256-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Altar of Dementia', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Altar of Dementia eats the Cat for free, which is all the loop '
+        + 'asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite mill', 'Infinite self-mill',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens',
+        'Infinite lifeloss', 'Infinite Clue tokens', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Ashnod\'s Altar', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-2034-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Ashnod\'s Altar', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Ashnod\'s Altar eats the Cat for free, which is all the loop '
+        + 'asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Clue tokens',
+        'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Chalk Outline', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '856-2921-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Chalk Outline', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Bartolomé del Presidio eats the Cat for free, which is all the '
+        + 'loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite +1/+1 counters on a creature', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Blasting Station', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '413-856-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Blasting Station', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Blasting Station eats the Cat for free, which is all the loop '
+        + 'asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite Clue tokens', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Chalk Outline', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '856-2511-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Chalk Outline', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Bloodflow Connoisseur eats the Cat for free, which is all the '
+        + 'loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite +1/+1 counters on a creature', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Chalk Outline', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '856-2438-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Chalk Outline', 'Carrion Feeder'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Carrion Feeder eats the Cat for free, which is all the loop '
+        + 'asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite +1/+1 counters on a creature', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Goblin Bombardment', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-4321-5147-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Goblin Bombardment', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Goblin Bombardment eats the Cat for free, which is all the '
+        + 'loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite Clue tokens', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Phyrexian Altar', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-4050-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Phyrexian Altar', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Phyrexian Altar eats the Cat for free, which is all the loop '
+        + 'asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens',
+        'Infinite lifeloss', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Clue tokens', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Spawning Pit', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-3899-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Spawning Pit', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Spawning Pit eats the Cat for free, which is all the loop asks '
+        + 'of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Thermopod', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-4321-5231-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Thermopod', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Thermopod eats the Cat for free, which is all the loop asks of '
+        + 'the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite red mana', 'Infinite creature tokens', 'Infinite lifeloss',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Clue tokens',
+        'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Viscera Seer', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-2292-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Viscera Seer', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Viscera Seer eats the Cat for free, which is all the loop asks '
+        + 'of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Woe Strider', 'Chalk Outline'],
+      confidence: 'verified',
+      from: {
+        id: '856-997-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Woe Strider', 'Chalk Outline'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Woe Strider eats the Cat for free, which is all the loop asks '
+        + 'of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Chalk Outline', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '856-3967-4321-5632',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Chalk Outline', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Chalk Outline investigates on top of its Detective, and the Clue is what Academy '
+        + 'Manufactor sees: one Clue becomes a Clue, a Food and a Treasure, and the Food is the '
+        + 'one the Cat just ate. Yahenni, Undying Partisan eats the Cat for free, which is all '
+        + 'the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite creature tokens', 'Infinite lifeloss', 'Infinite Clue tokens',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+
+    // Kheru Goldkeeper makes the Treasure directly — the same thirteen outlets.
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Altar of Dementia', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-4321-5256-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Altar of Dementia', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Altar of Dementia eats the Cat for free, '
+        + 'which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite mill', 'Infinite self-mill',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite lifeloss',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Clue tokens',
+        'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Ashnod\'s Altar', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-2034-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Ashnod\'s Altar', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Ashnod\'s Altar eats the Cat for free, '
+        + 'which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite colorless mana', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite lifeloss', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Bartolomé del Presidio', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-2921-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Bartolomé del Presidio', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Bartolomé del Presidio eats the Cat for '
+        + 'free, which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite +1/+1 counters on a creature', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Blasting Station', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '413-856-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Blasting Station', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Blasting Station eats the Cat for free, '
+        + 'which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite lifeloss', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Bloodflow Connoisseur', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-2511-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Bloodflow Connoisseur', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Bloodflow Connoisseur eats the Cat for '
+        + 'free, which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite +1/+1 counters on a creature', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Carrion Feeder', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-2438-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Carrion Feeder', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Carrion Feeder eats the Cat for free, '
+        + 'which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite +1/+1 counters on a creature', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Goblin Bombardment', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-4321-5147-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Goblin Bombardment', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Goblin Bombardment eats the Cat for free, '
+        + 'which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite lifeloss', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Phyrexian Altar', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-4050-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Phyrexian Altar', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Phyrexian Altar eats the Cat for free, '
+        + 'which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite lifeloss',
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite Clue tokens',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Spawning Pit', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-3899-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Spawning Pit', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Spawning Pit eats the Cat for free, which '
+        + 'is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Clue tokens', 'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Thermopod', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-4321-5231-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Thermopod', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Thermopod eats the Cat for free, which is '
+        + 'all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite red mana', 'Infinite lifeloss', 'Infinite card draw',
+        'Infinite draw triggers', 'Infinite Clue tokens', 'Infinite Treasure tokens',
+        'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Viscera Seer', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-2292-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Viscera Seer', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Viscera Seer eats the Cat for free, which '
+        + 'is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Clue tokens', 'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Woe Strider', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-997-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Woe Strider', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Woe Strider eats the Cat for free, which '
+        + 'is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Clue tokens', 'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Cauldron Familiar', 'Yahenni, Undying Partisan', 'Kheru Goldkeeper'],
+      confidence: 'verified',
+      from: {
+        id: '856-3967-4321-6462',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Yahenni, Undying Partisan', 'Kheru Goldkeeper'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Kheru Goldkeeper makes a Treasure when the Cat leaves the graveyard, and Academy '
+        + 'Manufactor turns that Treasure into a Clue, a Food and a Treasure — the Food '
+        + 'replacing the one spent returning the Cat. Yahenni, Undying Partisan eats the Cat '
+        + 'for free, which is all the loop asks of the outlet.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Clue tokens', 'Infinite Treasure tokens', 'Infinite colored mana',
+      ],
+    },
+    // ---- the Bootleggers' Stash loop, four lands and Toph ---------------------
+    //
+    // Bootleggers' Stash gives every land "{T}: Create a Treasure token", Clock of
+    // Omens untaps an artifact for two untapped artifacts, and an artifact land is
+    // both. One Treasure is one short; Academy Manufactor makes it three.
+    //
+    // Spellbook publishes this with Peregrin Took for eight artifact lands and with
+    // Academy Manufactor for four of them. The rows below are the other four and the
+    // Toph variant, where the Stash is itself the artifact being tapped. The evidence
+    // is as strong as it gets in this file: the same loop with a different artifact
+    // land in it is already published under her name.
+
+    {
+      cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Ancient Den'],
+      confidence: 'verified',
+      from: {
+        id: '596-1651-3340-4231',
+        cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Darksteel Citadel'],
+      },
+      swap: { out: 'Darksteel Citadel', in: 'Ancient Den', inId: 1361 },
+      why: 'Ancient Den is an artifact land like Darksteel Citadel, so Bootleggers\' Stash gives '
+        + 'it “{T}: Create a Treasure token” the same way and Academy Manufactor turns that '
+        + 'Treasure into three tokens — one more than Clock of Omens needs to untap the land '
+        + 'again. Spellbook publishes this with Academy Manufactor for four of the eight '
+        + 'artifact lands it publishes it with Peregrin Took for, and this is one of the other '
+        + 'four.',
+      produces: [
+        'Infinite card draw', 'Infinite Clue tokens', 'Infinite colored mana',
+        'Infinite draw triggers', 'Infinite Food tokens', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite mana artifacts you control can produce',
+        'Infinite Treasure tokens', 'Infinite untap of artifacts you control',
+      ],
+    },
+    {
+      cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Great Furnace'],
+      confidence: 'verified',
+      from: {
+        id: '596-1651-3340-4231',
+        cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Darksteel Citadel'],
+      },
+      swap: { out: 'Darksteel Citadel', in: 'Great Furnace', inId: 3281 },
+      why: 'Great Furnace is an artifact land like Darksteel Citadel, so Bootleggers\' Stash '
+        + 'gives it “{T}: Create a Treasure token” the same way and Academy Manufactor turns '
+        + 'that Treasure into three tokens — one more than Clock of Omens needs to untap the '
+        + 'land again. Spellbook publishes this with Academy Manufactor for four of the eight '
+        + 'artifact lands it publishes it with Peregrin Took for, and this is one of the other '
+        + 'four.',
+      produces: [
+        'Infinite card draw', 'Infinite Clue tokens', 'Infinite colored mana',
+        'Infinite draw triggers', 'Infinite Food tokens', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite mana artifacts you control can produce',
+        'Infinite Treasure tokens', 'Infinite untap of artifacts you control',
+      ],
+    },
+    {
+      cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Seat of the Synod'],
+      confidence: 'verified',
+      from: {
+        id: '596-1651-3340-4231',
+        cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Darksteel Citadel'],
+      },
+      swap: { out: 'Darksteel Citadel', in: 'Seat of the Synod', inId: 2119 },
+      why: 'Seat of the Synod is an artifact land like Darksteel Citadel, so Bootleggers\' Stash '
+        + 'gives it “{T}: Create a Treasure token” the same way and Academy Manufactor turns '
+        + 'that Treasure into three tokens — one more than Clock of Omens needs to untap the '
+        + 'land again. Spellbook publishes this with Academy Manufactor for four of the eight '
+        + 'artifact lands it publishes it with Peregrin Took for, and this is one of the other '
+        + 'four.',
+      produces: [
+        'Infinite card draw', 'Infinite Clue tokens', 'Infinite colored mana',
+        'Infinite draw triggers', 'Infinite Food tokens', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite mana artifacts you control can produce',
+        'Infinite Treasure tokens', 'Infinite untap of artifacts you control',
+      ],
+    },
+    {
+      cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Vault of Whispers'],
+      confidence: 'verified',
+      from: {
+        id: '596-1651-3340-4231',
+        cards: ['Bootleggers\' Stash', 'Academy Manufactor', 'Clock of Omens', 'Darksteel Citadel'],
+      },
+      swap: { out: 'Darksteel Citadel', in: 'Vault of Whispers', inId: 916 },
+      why: 'Vault of Whispers is an artifact land like Darksteel Citadel, so Bootleggers\' Stash '
+        + 'gives it “{T}: Create a Treasure token” the same way and Academy Manufactor turns '
+        + 'that Treasure into three tokens — one more than Clock of Omens needs to untap the '
+        + 'land again. Spellbook publishes this with Academy Manufactor for four of the eight '
+        + 'artifact lands it publishes it with Peregrin Took for, and this is one of the other '
+        + 'four.',
+      produces: [
+        'Infinite card draw', 'Infinite Clue tokens', 'Infinite colored mana',
+        'Infinite draw triggers', 'Infinite Food tokens', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite mana artifacts you control can produce',
+        'Infinite Treasure tokens', 'Infinite untap of artifacts you control',
+      ],
+    },
+    {
+      cards: ['Toph, the First Metalbender', 'Bootleggers\' Stash', 'Clock of Omens', 'Academy Manufactor'],
+      confidence: 'verified',
+      from: {
+        id: '1651-3340-4772-6871',
+        cards: ['Toph, the First Metalbender', 'Bootleggers\' Stash', 'Clock of Omens', 'Doubling Season'],
+      },
+      swap: { out: 'Doubling Season', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Toph makes Bootleggers\' Stash a land, so it taps for a Treasure itself. Doubling '
+        + 'Season turns that into the two untapped artifacts Clock of Omens needs; Academy '
+        + 'Manufactor turns it into three — a Clue, a Food and a Treasure — which is two with '
+        + 'one left over. Spellbook publishes the Manufactor version of this loop already, with '
+        + 'an artifact land in place of Toph.',
+      produces: [
+        'Infinite card draw', 'Infinite Clue tokens', 'Infinite colored mana',
+        'Infinite draw triggers', 'Infinite Food tokens', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite mana artifacts you control can produce',
+        'Infinite Treasure tokens', 'Infinite untap of artifacts you control',
+      ],
+    },
+    // ---- and two singles, the same swap ---------------------------------------
+    {
+      cards: ['Urza, Prince of Kroog', 'Magic Pot', 'Academy Manufactor', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '2043-4321-4659-6671',
+        cards: ['Urza, Prince of Kroog', 'Magic Pot', 'Peregrin Took', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Urza pays {6} for a token copy of Magic Pot, Krark-Clan Ironworks eats it for '
+        + '{C}{C}, and the copy dying makes a Treasure. Peregrin Took gets 8 mana back out of '
+        + '{6} by adding a Food to each of the two creations; Academy Manufactor cannot see the '
+        + 'Soldier copy at all, but it turns the one Treasure into three artifacts, which is '
+        + 'the same 8. Only the route differs.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite Treasure tokens',
+        'Infinite creature copies of artifacts you control', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite card draw', 'Infinite draw triggers',
+        'Infinite Food tokens', 'Infinite Clue tokens',
+      ],
+    },
+    {
+      cards: ['Stridehangar Automaton', 'Warren Soultrader', 'Academy Manufactor'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5670-6291',
+        cards: ['Stridehangar Automaton', 'Warren Soultrader', 'Peregrin Took'],
+      },
+      swap: { out: 'Peregrin Took', in: 'Academy Manufactor', inId: 4231 },
+      why: 'Warren Soultrader pays 1 life and eats a Thopter for a Treasure; Stridehangar '
+        + 'Automaton hands the Thopter back inside that creation, and the Food is what pays the '
+        + 'life back. Academy Manufactor makes exactly the Food Peregrin Took makes — one per '
+        + 'Treasure created — and a Clue on top of it, so it is the same loop with one more '
+        + 'token in it.',
+      produces: [
+        'Infinite ETB', 'Infinite Food tokens', 'Infinite LTB', 'Infinite Treasure tokens',
+        'Infinite card draw', 'Infinite colored mana', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite sacrifice triggers', 'Infinite Clue tokens',
+      ],
+    },
+
+    // ---- Ulvenwald Mysteries, nine outlets behind Eloise ----------------------
+    //
+    // Not a Peregrin Took swap at all, but the same hole one shelf over. Three cards
+    // turn a creature death into a Clue or a Treasure beside Cauldron Familiar and
+    // Academy Manufactor, and Spellbook enumerates the sacrifice outlet slot for each
+    // of them separately: fifteen for Eloise, Nephalia Sleuth, fifteen for Pitiless
+    // Plunderer, six for Ulvenwald Mysteries. The nine missing from the third list are
+    // below, each citing the Eloise combo with the same outlet in it.
+    //
+    // The two cards differ in one word that this loop does not reach — Eloise counts
+    // "another creature you control", Ulvenwald Mysteries counts a "nontoken" one, and
+    // the Cat is both. Ulvenwald Mysteries has no surveil, and turns a sacrificed Clue
+    // into a Human Soldier, which is where the creature tokens come from; drawing a
+    // card for each Clue is what keeps that near-infinite rather than infinite.
+    //
+    // The published Ulvenwald Mysteries rows drop the lifegain and the lifeloss that
+    // the Eloise rows carry. That is Spellbook's inconsistency and not a difference
+    // between the cards — Cauldron Familiar drains for one every time it enters,
+    // whichever card is investigating — so these keep them.
+
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-2921-4231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Bartolomé del Presidio is in the '
+        + 'second list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Infinite +1/+1 counters on a creature',
+        'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '413-856-1808-4231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Blasting Station'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Blasting Station is in the '
+        + 'second list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite damage',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-2511-4231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Bloodflow Connoisseur is in the '
+        + 'second list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite +1/+1 counters on a creature', 'Infinite Clue tokens',
+        'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Phantom Train'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-4231-6797',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Phantom Train'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Phantom Train is in the second '
+        + 'list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Infinite +1/+1 counters on a creature',
+        'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-4231-5686',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Shilgengar, Sire of Famine is in '
+        + 'the second list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite self-discard triggers', 'Infinite draw triggers',
+        'Infinite Treasure tokens', 'Infinite rummaging', 'Infinite Clue tokens',
+        'Infinite Blood tokens', 'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-4231-5231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Thermopod'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Thermopod is in the second list '
+        + 'and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Umbral Collar Zealot'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-4231-6798',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Umbral Collar Zealot is in the '
+        + 'second list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '856-997-1808-4231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Woe Strider'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Woe Strider is in the second '
+        + 'list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Near-infinite creature tokens',
+      ],
+    },
+    {
+      cards: ['Ulvenwald Mysteries', 'Cauldron Familiar', 'Academy Manufactor', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-3967-4231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Eloise, Nephalia Sleuth', in: 'Ulvenwald Mysteries', inId: 5267 },
+      why: 'Eloise investigates whenever another creature you control dies; Ulvenwald Mysteries '
+        + 'investigates whenever a nontoken creature you control does, and Cauldron Familiar is '
+        + 'nontoken. Academy Manufactor turns either Clue into a Clue, a Food and a Treasure, '
+        + 'and the Food returns the Cat. Spellbook publishes the Ulvenwald Mysteries version '
+        + 'for six outlets and the Eloise version for fifteen; Yahenni, Undying Partisan is in '
+        + 'the second list and not the first.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Near-infinite creature tokens',
+      ],
+    },
+
+    // ---- Spawning Pit, the outlet four families leave out ---------------------
+    //
+    // The last one is not an engine but an outlet. Spellbook fills the free-sacrifice
+    // slot of the Cauldron Familiar loop by name, and behind Peregrin Took the list
+    // runs to sixteen cards with Spawning Pit among them. Behind Samwise Gamgee it is
+    // sixteen without it, and behind Academy Manufactor it is fifteen without it, three
+    // times over. Nothing about the card explains the difference: "Sacrifice a creature:
+    // Put a charge counter on Spawning Pit" is free, repeatable, and unfussy about what
+    // it eats, which is the entire job.
+
+    {
+      cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Spawning Pit'],
+      confidence: 'verified',
+      from: {
+        id: '856-2292-5270',
+        cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Spawning Pit', inId: 3899 },
+      why: 'Spawning Pit reads “Sacrifice a creature: Put a charge counter on Spawning Pit” — '
+        + 'free, repeatable, and it will eat the Cat, which is everything Viscera Seer does '
+        + 'here bar the scry. Spellbook enumerates sixteen outlets for this loop behind '
+        + 'Peregrin Took and includes Spawning Pit in every one of them; the Samwise Gamgee '
+        + 'version also lists sixteen, but a different sixteen — Warren Soultrader is on it '
+        + 'and Spawning Pit is not.',
+      produces: [
+        'Infinite death triggers', 'Infinite ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite LTB',
+        'Infinite sacrifice triggers', 'Infinite charge counters on a permanent',
+      ],
+    },
+    {
+      cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Spawning Pit'],
+      confidence: 'verified',
+      from: {
+        id: '856-1808-2292-4231',
+        cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Spawning Pit', inId: 3899 },
+      why: 'Spawning Pit reads “Sacrifice a creature: Put a charge counter on Spawning Pit” — '
+        + 'free, repeatable, and it will eat the Cat, which is everything Viscera Seer does '
+        + 'here bar the scry. Spellbook enumerates sixteen outlets for this loop behind '
+        + 'Peregrin Took and includes Spawning Pit in every one of them; the Eloise, Nephalia '
+        + 'Sleuth and Academy Manufactor version stops at fifteen and leaves it out.',
+      produces: [
+        'Infinite LTB', 'Infinite ETB', 'Infinite colored mana',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite card draw',
+        'Infinite lifeloss', 'Infinite draw triggers', 'Infinite Treasure tokens',
+        'Infinite Clue tokens', 'Infinite surveil',
+        'Infinite charge counters on a permanent',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Pitiless Plunderer', 'Cauldron Familiar', 'Spawning Pit'],
+      confidence: 'verified',
+      from: {
+        id: '856-2292-4231-4871',
+        cards: ['Academy Manufactor', 'Pitiless Plunderer', 'Cauldron Familiar', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Spawning Pit', inId: 3899 },
+      why: 'Spawning Pit reads “Sacrifice a creature: Put a charge counter on Spawning Pit” — '
+        + 'free, repeatable, and it will eat the Cat, which is everything Viscera Seer does '
+        + 'here bar the scry. Spellbook enumerates sixteen outlets for this loop behind '
+        + 'Peregrin Took and includes Spawning Pit in every one of them; the Academy Manufactor '
+        + 'and Pitiless Plunderer version stops at fifteen and leaves it out.',
+      produces: [
+        'Infinite colored mana', 'Infinite death triggers', 'Infinite ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite lifeloss',
+        'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite Treasure tokens',
+        'Infinite charge counters on a permanent',
+      ],
+    },
+    {
+      cards: ['Academy Manufactor', 'Ulvenwald Mysteries', 'Cauldron Familiar', 'Spawning Pit'],
+      confidence: 'verified',
+      from: {
+        id: '856-2292-4231-5267',
+        cards: ['Academy Manufactor', 'Ulvenwald Mysteries', 'Cauldron Familiar', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Spawning Pit', inId: 3899 },
+      why: 'Spawning Pit reads “Sacrifice a creature: Put a charge counter on Spawning Pit” — '
+        + 'free, repeatable, and it will eat the Cat, which is everything Viscera Seer does '
+        + 'here bar the scry. Spellbook enumerates sixteen outlets for this loop behind '
+        + 'Peregrin Took and includes Spawning Pit in every one of them; the Academy Manufactor '
+        + 'and Ulvenwald Mysteries version stops at fifteen and leaves it out.',
+      produces: [
+        'Infinite card draw', 'Infinite Clue tokens', 'Infinite colored mana',
+        'Infinite death triggers', 'Infinite draw triggers', 'Infinite ETB', 'Infinite LTB',
+        'Infinite sacrifice triggers', 'Infinite Treasure tokens',
+        'Near-infinite creature tokens', 'Infinite charge counters on a permanent',
+      ],
+    },
+
     // ---- Experimental Confectioner, the other way round ----------------------
     //
     // The Camellia pass looked for shapes she lacked. These are the four he lacks

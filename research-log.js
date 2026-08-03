@@ -185,6 +185,119 @@ const PASSES = [
       + 'knows both outcomes are normal.',
   },
   {
+    subject: 'Academy Manufactor against Peregrin Took',
+    cards: ['Academy Manufactor', 'Peregrin Took', 'Chalk Outline', 'Kheru Goldkeeper'],
+    cardIds: [4231, 4321, 5632, 6462],
+    // Read from Forge's card scripts, which tools/lookup-card.js now falls back to
+    // when Scryfall is refused by the network policy — and cross-checked against
+    // XMage for the two the whole pass turns on, Peregrin Took and Academy
+    // Manufactor. The peers below are not in `cards` because the pass did not sweep
+    // them; they are here because it reasoned about them, which is the half that
+    // went wrong the last time somebody worked from memory.
+    read: {
+      'Academy Manufactor': 'If you would create a Clue, Food, or Treasure token, instead create one of each. Artifact Creature — Assembly-Worker 1/3 for {3}.',
+      'Peregrin Took': 'If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. Sacrifice three Foods: Draw a card. Legendary Creature — Halfling Citizen 2/3 for {2}{G}.',
+      'Chalk Outline': 'Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. (Create a Clue token.) Enchantment for {3}{G}.',
+      'Kheru Goldkeeper': 'Flying. Whenever one or more cards leave your graveyard DURING YOUR TURN, create a Treasure token. Renew — {2}{B}{G}{U}, Exile this card from your graveyard: Put two +1/+1 counters and a flying counter on target creature. Creature — Dragon 3/3 for {1}{B}{G}{U}.',
+      // The peers the rule-outs turn on.
+      'Samwise Gamgee': 'Whenever another NONTOKEN creature you control enters, create a Food token. Sacrifice three Foods: Return target historic card from your graveyard to your hand. Legendary Creature — Halfling Citizen 2/2 for {G}{W}.',
+      'Nuka-Cola Vending Machine': '{1}, {T}: Create a Food token. Whenever you sacrifice a Food, create a tapped Treasure token. Artifact for {3}.',
+      'Experimental Confectioner': 'When Experimental Confectioner enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with "This creature can’t block." Creature — Human Peasant 2/3 for {2}{B}.',
+      'Lonis, Genetics Expert': 'Evolve. Whenever one or more +1/+1 counters are put on Lonis, investigate that many times. Whenever you sacrifice a Clue, put a +1/+1 counter on another target creature you control. Legendary Creature — Snake Elf Detective 1/2.',
+      'Ant Queen': '{1}{G}: Create a 1/1 green Insect creature token. Creature — Insect 5/5 for {3}{G}{G}.',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
+      'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more ARTIFACT tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead. Artifact Creature — Construct 1/4 for {3}.',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token. Creature — Zombie Goblin Wizard 3/3 for {2}{B}.',
+      'Urza, Prince of Kroog': 'Artifact creatures you control get +2/+2. {6}: Create a token that’s a copy of target artifact you control, except it’s a 1/1 Soldier creature in addition to its other types. Legendary Creature — Human Artificer 2/3.',
+      'Magic Pot': 'When this creature dies, create a Treasure token. {2}, {T}: Exile target card from a graveyard. Artifact Creature — Goblin Construct 1/4 for {3}.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}. Artifact for {4}.',
+      'Bootleggers’ Stash': 'Lands you control have "{T}: Create a Treasure token." Artifact for {5}{G}.',
+      'Clock of Omens': 'Tap two untapped artifacts you control: Untap target artifact. Artifact for {4}.',
+      'Toph, the First Metalbender': 'Nontoken artifacts you control are lands in addition to their other types. (They don’t gain the ability to {T} for mana.) At the beginning of your end step, earthbend 2. Legendary Creature — Human Warrior Ally 3/3 for {1}{R}{G}{W}.',
+      'Doubling Season': 'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.',
+      'Darksteel Citadel': 'Indestructible. {T}: Add {C}. Artifact Land.',
+    },
+    date: '2026-08-03',
+    method: 'every shape Academy Manufactor’s one substitution peer is published in and she is not',
+    proposed: 338,
+    examined: 58,
+    kept: 32,
+    ruledOut: [
+      { reason: 'the loop’s token is a Squirrel, a Zombie, a Spirit, a Thopter, a Blood, a Myr — '
+        + 'anything that is not a Clue, a Food or a Treasure. Peregrin Took reads *any* token and '
+        + 'adds a Food; Academy Manufactor reads three types and is not looking at the rest',
+      count: 296 },
+      { reason: 'the loop needs two Foods a cycle. Peregrin Took *adds* a Food to a creation where '
+        + 'Academy Manufactor only *converts* one — a Samwise Gamgee trigger is two Foods behind '
+        + 'him and one behind her', count: 6 },
+      { reason: 'the outlet is Peregrin Took’s own second ability, "Sacrifice three Foods: Draw a '
+        + 'card", which is not a replacement effect at all and which she has no equivalent of — '
+        + 'the Nuka-Cola Vending Machine, Experimental Confectioner and Lonis lines are all this',
+      count: 4 },
+    ],
+    notes: 'Academy Manufactor has exactly one peer in 103,737 combos and it is Peregrin Took, at '
+      + 'a jaccard of 0.05 — far under the 0.90 bar tools/substitution-scope.js reports at, which '
+      + 'is why no scope run has ever named her. The bar is a ratio and she is in 661 combos; a '
+      + 'peer sharing 54 shapes with her can never clear it. Read the pair count, not the score, '
+      + 'for a card this widely published. `examined` is the 32 kept plus 26 read one at a time; '
+      + 'the other 280 died to a fact about their engine card rather than to a reading.',
+  },
+  {
+    subject: 'The sacrifice outlet slot of the Cauldron Familiar loop',
+    cards: [
+      'Cauldron Familiar', 'Samwise Gamgee', 'Eloise, Nephalia Sleuth', 'Ulvenwald Mysteries',
+      'Pitiless Plunderer', 'Spawning Pit',
+    ],
+    // Cauldron Familiar's first entry in this file, at the top, says UNREAD. It is
+    // read now, and the sentence that matters to every row below is the second one:
+    // the return cost is a *Food*, which is why an engine making a Clue or a Treasure
+    // needs Academy Manufactor between it and the Cat, and why Peregrin Took does not.
+    read: {
+      'Cauldron Familiar': 'When Cauldron Familiar enters, each opponent loses 1 life and you gain 1 life. Sacrifice a FOOD: Return Cauldron Familiar from your graveyard to the battlefield. Creature — Cat 1/1 for {B}.',
+      'Samwise Gamgee': 'Whenever another NONTOKEN creature you control enters, create a Food token. Sacrifice three Foods: Return target historic card from your graveyard to your hand. Legendary Creature — Halfling Citizen 2/2 for {G}{W}.',
+      'Eloise, Nephalia Sleuth': 'Whenever ANOTHER creature you control dies, investigate. Whenever you sacrifice a token, surveil 1. Legendary Creature — Human Rogue 4/4 for {3}{U}{B}.',
+      'Ulvenwald Mysteries': 'Whenever a NONTOKEN creature you control dies, investigate. Whenever you sacrifice a Clue, create a 1/1 white Human Soldier creature token. Enchantment for {2}{G}.',
+      'Pitiless Plunderer': 'Whenever another creature you control dies, create a Treasure token. Creature — Human Pirate 1/4 for {3}{B}.',
+      'Spawning Pit': 'Sacrifice a creature: Put a charge counter on Spawning Pit. {1}, Remove two charge counters from Spawning Pit: Create a 2/2 colorless Spawn artifact creature token. Artifact for {2}.',
+      // The outlet slot itself: every card the diff put in it, because "is this a free
+      // repeatable outlet that will eat the Cat" is a question about each one's text.
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. Creature — Vampire Wizard 1/1 for {B}.',
+      'Carrion Feeder': 'This creature can’t block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. Creature — Human Soldier 2/1 for {W}{B}.',
+      'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on Bloodflow Connoisseur. Creature — Vampire 1/1 for {2}{B}.',
+      'Yahenni, Undying Partisan': 'Haste. Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni. Sacrifice another creature: Yahenni gains indestructible until end of turn. Legendary Creature — Aetherborn Vampire 2/2 for {2}{B}.',
+      'Woe Strider': 'When Woe Strider enters, create a 0/1 white Goat creature token. Sacrifice another creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. Creature — Horror 3/2 for {2}{B}.',
+      'Blasting Station': '{T}, Sacrifice a creature: Blasting Station deals 1 damage to any target. Whenever a creature enters, you may untap Blasting Station. Artifact for {3}.',
+      'Goblin Bombardment': 'Sacrifice a creature: Goblin Bombardment deals 1 damage to any target. Enchantment for {1}{R}.',
+      'Altar of Dementia': 'Sacrifice a creature: Target player mills cards equal to the sacrificed creature’s power. Artifact for {2}.',
+      'Ashnod’s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact for {3}.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color. Artifact for {3}.',
+      'Thermopod': '{S}: Thermopod gains haste until end of turn. Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3 for {4}{R}.',
+      'Phantom Train': 'Trample. Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn. Artifact — Vehicle 4/4 for {3}{B}.',
+      'Umbral Collar Zealot': 'Sacrifice another creature or artifact: Surveil 1. Creature — Human Cleric 3/2 for {1}{B}.',
+      'Shilgengar, Sire of Famine': 'Flying. Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your graveyard to the battlefield with a finality counter on it. Legendary Creature — Elder Demon 6/6.',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token. Creature — Zombie Goblin Wizard 3/3 for {2}{B}.',
+    },
+    cardIds: [856, 5270, 1808, 5267, 4871, 3899],
+    date: '2026-08-03',
+    method: 'the outlet slot Spellbook fills by name, compared across the engines that fill the same shape',
+    proposed: 16,
+    examined: 16,
+    kept: 13,
+    ruledOut: [
+      { reason: 'Warren Soultrader is an outlet that makes its own Treasure, so Cauldron Familiar '
+        + '+ Warren Soultrader + Academy Manufactor is a published *three*-card combo and every '
+        + 'four-card row naming him is a strict superset of it', count: 3 },
+    ],
+    notes: 'Neither Cauldron Familiar nor Samwise Gamgee has a substitution peer at all — no card '
+      + 'shares three combo shapes with either of them — so the method the rest of this file runs '
+      + 'on proposes nothing for them, and the hole had to be found from the other side. Spellbook '
+      + 'enumerates the free-sacrifice slot of the Cat loop engine by engine: sixteen outlets '
+      + 'behind Peregrin Took, sixteen behind Samwise Gamgee but not the same sixteen, fifteen '
+      + 'behind Eloise, Nephalia Sleuth, fifteen behind Pitiless Plunderer and six behind '
+      + 'Ulvenwald Mysteries. Diffing the lists is what the pass is.',
+  },
+  {
     subject: 'Ashnod’s Altar',
     cards: ["Ashnod's Altar"],
     read: {

@@ -16,7 +16,7 @@ Combo data comes from a nightly snapshot of Commander Spellbook published to the
 ## Commands
 
 ```bash
-npm test                  # unit tests, node:test, zero deps (564 tests, ~2s)
+npm test                  # unit tests, node:test, zero deps (590 tests, ~2s)
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change
@@ -28,7 +28,7 @@ node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
-node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
+node tools/lookup-card.js "Card name"          # oracle text: Scryfall, else Forge
 node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
 node tools/deck-gaps.js [deck.txt]             # which gaps THIS deck exposes
@@ -101,12 +101,15 @@ in that order (each reads the previous at load time). It does **not** load
 > That is deliberate: an instruction was already here saying to work from card text, and
 > it was not enough.
 >
-> **Getting the text in this sandbox:** `tools/lookup-card.js` is blocked —
-> `api.scryfall.com` is refused by the network policy, and WebFetch gets 403 on Scryfall
-> too. **WebSearch works** and is the route that works today. If the user pastes the
-> card, use that and record it. Published Spellbook steps (`steps/` on the data branch)
-> are good corroboration for what a loop *does*, but they are not oracle text and do not
-> satisfy this rule.
+> **Getting the text in this sandbox:** `tools/lookup-card.js` works again. Scryfall is
+> still refused by the network policy — `api.scryfall.com` 403s at CONNECT, and so does
+> WebFetch — so the tool asks Scryfall first and falls back to Forge's card scripts on
+> `raw.githubusercontent.com`, which the policy does allow. Everything it answers from
+> Forge is banner-marked as Forge's wording. **Cross-check anything the reasoning turns
+> on against XMage**, whose implementation is on the same host. WebSearch and a card the
+> user pastes are both still fine. Published Spellbook steps (`steps/` on the data
+> branch) are good corroboration for what a loop *does*, but they are not oracle text and
+> do not satisfy this rule.
 
 `research-log.js` is the index of what has been swept. **Before starting a deep dive,
 read it; after finishing one, add to it.** A pass that is not in it did not happen as
@@ -254,6 +257,25 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   100 KB file reports a total size of 133. `Accept-Encoding` is a forbidden header, so
   `fetch()` cannot opt out. Only `.zip` came back as `application/zip` with honest
   ranges. Any design here that wants a slice of a file has to start from that.
+- **`tools/lookup-card.js` falls back to Forge, and says when it did.** An agent sandbox
+  whose proxy allowlists `raw.githubusercontent.com` 403s every Scryfall host at CONNECT,
+  and mtgjson, gatherer and the Spellbook API with them — so the tool asks Scryfall first
+  and Forge second, because Forge ships its card scripts as files in a GitHub repo and
+  each has an `Oracle:` line:
+  `…/Card-Forge/forge/master/forge-gui/res/cardsfolder/<first letter>/<slug>.txt`.
+  The slug: strip accents, lowercase, drop apostrophes, every other run of
+  non-alphanumerics becomes one `_` (so `M.O.D.O.K.` → `m_o_d_o_k`), split cards join
+  **both** faces, and recent sets live in `cardsfolder/upcoming/` instead of the letter
+  directory. Probed at 454 of 454 names from the combo data. **Anything Forge answered is
+  printed under a banner** — it is a second opinion, not Scryfall: no colour identity, no
+  legalities, no printings, and the wording is Forge's. Cross-check anything a reading
+  turns on against XMage, the same idea in PascalCase with the punctuation gone:
+  `…/magefree/mage/master/Mage.Sets/src/mage/cards/b/BartolomeDelPresidio.java`.
+  The old behaviour is the trap worth remembering: it printed *"HTTP 403 — check the
+  spelling"* and stopped, which is a diagnosis it cannot make — a blocked host and a typo
+  are identical from inside the tool. It now only says "check the spelling" when Scryfall
+  was reachable enough to say the name is unknown. `test/lookup-card.test.js` pins that,
+  and the README's *Reading a card when Scryfall is unreachable* has the probe.
 - **The steps tree has no manifest, on purpose — so CI computes one.** The id *is* the
   URL and a 404 means "none recorded", which is what makes it cheap and also what makes
   a wrong tree invisible: a reader is told there are no steps and believes it.
