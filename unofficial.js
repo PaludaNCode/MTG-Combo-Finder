@@ -3379,6 +3379,86 @@
         'Near-infinite creature tokens', 'Infinite charge counters on a permanent',
       ],
     },
+
+    // ---- Experimental Confectioner, the other way round ----------------------
+    //
+    // The Camellia pass looked for shapes she lacked. These are the four he lacks
+    // and she has. Ygra turns every other creature into a Food, so the token the
+    // loop just made is the next thing the outlet eats — and all four outlets take
+    // a Food for free.
+    //
+    // He triggers per Food where she triggers per sacrifice event, so he is the
+    // larger effect and closes anything she closes. The two directions were swept
+    // separately because that asymmetry means neither answers for the other.
+    {
+      cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Wicked Wolf'],
+      confidence: 'verified',
+      from: {
+        id: '5776-5777-6692',
+        cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Wicked Wolf'],
+      },
+      swap: { out: 'Camellia, the Seedmiser', in: 'Experimental Confectioner', inId: 2590 },
+      why: 'Ygra makes every other creature a Food, so the token the loop just made is the next thing the outlet eats. Experimental Confectioner reads "whenever you sacrifice a Food" and answers with a Rat; Camellia reads "one or more Foods" and answers with a Squirrel. Both fire once here because the outlet takes one Food at a time, so the two are interchangeable in this shape — and he is the larger effect where a loop ever spends more than one. Read against Ygra, the outlet and both halves of the swap.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Mushroom Watchdogs'],
+      confidence: 'verified',
+      from: {
+        id: '5776-5777-7627',
+        cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Mushroom Watchdogs'],
+      },
+      swap: { out: 'Camellia, the Seedmiser', in: 'Experimental Confectioner', inId: 2590 },
+      why: 'Ygra makes every other creature a Food, so the token the loop just made is the next thing the outlet eats. Experimental Confectioner reads "whenever you sacrifice a Food" and answers with a Rat; Camellia reads "one or more Foods" and answers with a Squirrel. Both fire once here because the outlet takes one Food at a time, so the two are interchangeable in this shape — and he is the larger effect where a loop ever spends more than one. Read against Ygra, the outlet and both halves of the swap.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Bill the Pony'],
+      confidence: 'verified',
+      from: {
+        id: '1441-5776-5777',
+        cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Bill the Pony'],
+      },
+      swap: { out: 'Camellia, the Seedmiser', in: 'Experimental Confectioner', inId: 2590 },
+      why: 'Ygra makes every other creature a Food, so the token the loop just made is the next thing the outlet eats. Experimental Confectioner reads "whenever you sacrifice a Food" and answers with a Rat; Camellia reads "one or more Foods" and answers with a Squirrel. Both fire once here because the outlet takes one Food at a time, so the two are interchangeable in this shape — and he is the larger effect where a loop ever spends more than one. Read against Ygra, the outlet and both halves of the swap.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Ygra, Eater of All', 'Experimental Confectioner', 'Glimmer Bairn'],
+      confidence: 'verified',
+      from: {
+        id: '5776-5777-6716',
+        cards: ['Ygra, Eater of All', 'Camellia, the Seedmiser', 'Glimmer Bairn'],
+      },
+      swap: { out: 'Camellia, the Seedmiser', in: 'Experimental Confectioner', inId: 2590 },
+      why: 'Ygra makes every other creature a Food, so the token the loop just made is the next thing the outlet eats. Experimental Confectioner reads "whenever you sacrifice a Food" and answers with a Rat; Camellia reads "one or more Foods" and answers with a Squirrel. Both fire once here because the outlet takes one Food at a time, so the two are interchangeable in this shape — and he is the larger effect where a loop ever spends more than one. Read against Ygra, the outlet and both halves of the swap.',
+      produces: [
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite death triggers',
+        'Infinite sacrifice triggers',
+        'Infinitely large creature until end of turn',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

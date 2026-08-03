@@ -16,7 +16,7 @@ Combo data comes from a nightly snapshot of Commander Spellbook published to the
 ## Commands
 
 ```bash
-npm test                  # unit tests, node:test, zero deps (~370 tests, ~1s)
+npm test                  # unit tests, node:test, zero deps (590 tests, ~2s)
 npm run test:coverage     # the same with the coverage floors CI enforces (Node 22.8+)
 npm run lint              # ESLint, fetched for the run — no lint dependency installed
 npm run verify            # layout smoke test — REQUIRED after any UI change
@@ -28,8 +28,10 @@ node tools/fetch-combos.js out.json [steps/]   # add --no-steps to skip the 103,
 node tools/try-deck.js [deck.txt]              # what would the page show for this deck?
 node tools/combos-with.js "Card A" "Card B"    # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
-node tools/lookup-card.js "Card name"          # oracle text, from Scryfall (see below if it 403s)
+node tools/lookup-card.js "Card name"          # oracle text: Scryfall, else Forge
 node tools/substitution-scope.js               # how much of the substitution space is unread
+node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
+node tools/deck-gaps.js [deck.txt]             # which gaps THIS deck exposes
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works
@@ -60,12 +62,54 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `view-model.js` | `DeckView` | what a sentence says and how a number is phrased — no DOM |
 | `app.js` | — | the only file that touches the DOM of `index.html` |
 | `tiers-page.js` | — | the same for `tiers.html` |
+| `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
+
+`research-log.js` is the one file that breaks the shape above: the browser never loads it,
+so it is a plain CommonJS module and is linted with the tools rather than with the shipped
+files. `test/lint-config.test.js` fails if a script matches no block, which is how that gets
+noticed.
 
 `search-worker.js` `importScripts` result-tiers → combos → unofficial → search,
 in that order (each reads the previous at load time). It does **not** load
 `parser.js` (the page parses before posting) or `graph.js` (drawn from the result).
 
 ## Researching a card, and recording that you did
+
+> ### Read the oracle text. Every card. Before reasoning about any of it.
+>
+> **Not "recall it". Not "it's obviously". Fetch it and paste it into the log.**
+>
+> This rule exists because it was broken twice in the session that wrote it, and the
+> second time survived review and got committed:
+>
+> - Chatterfang was reasoned about as `{2}{B}{G}`, a Fox Rogue, with a `-X/-X` outlet.
+>   He is `{2}{G}`, a Squirrel Warrior, with `+X/-X`.
+> - Camellia and Experimental Confectioner were ruled out — **all 37 candidates** — on
+>   "they answer *a nontoken creature died* with different tokens, Food against
+>   Squirrel". Both trigger on *sacrificing a Food*; Confectioner makes a **Rat**. The
+>   real difference is that Camellia batches ("one or more Foods") where Confectioner
+>   counts ("a Food"), which rules out **2** of the 37. Thirty-five were thrown away on
+>   a card text nobody had looked at.
+>
+> A wrong rule-out is invisible. It produces no row, no test failure and no complaint —
+> only a card that quietly looks well-covered. It is the single cheapest mistake to make
+> here and the most expensive to find, and remembering a card is how it happens every
+> time.
+>
+> **`research-log.js` will not accept a pass without the text.** Every card in `cards`
+> needs a verbatim entry in `read`, and `test/research-log.test.js` fails without it.
+> That is deliberate: an instruction was already here saying to work from card text, and
+> it was not enough.
+>
+> **Getting the text in this sandbox:** `tools/lookup-card.js` works again. Scryfall is
+> still refused by the network policy — `api.scryfall.com` 403s at CONNECT, and so does
+> WebFetch — so the tool asks Scryfall first and falls back to Forge's card scripts on
+> `raw.githubusercontent.com`, which the policy does allow. Everything it answers from
+> Forge is banner-marked as Forge's wording. **Cross-check anything the reasoning turns
+> on against XMage**, whose implementation is on the same host. WebSearch and a card the
+> user pastes are both still fine. Published Spellbook steps (`steps/` on the data
+> branch) are good corroboration for what a loop *does*, but they are not oracle text and
+> do not satisfy this rule.
 
 `research-log.js` is the index of what has been swept. **Before starting a deep dive,
 read it; after finishing one, add to it.** A pass that is not in it did not happen as
@@ -76,10 +120,14 @@ statement about 103,737 combos.
 ```bash
 node tools/substitution-scope.js            # how much is unread, and which cards
 node tools/substitution-scope.js 0.8 3      # looser bar, more candidates
+node tools/deck-cards.js deck.txt --unswept # the same question, asked of one deck
 ```
 
-The bottom table is the work queue: cards proposing many unpublished combos that no
-recorded pass has swept. The top is the size of the space.
+The bottom table of the first is the work queue: cards proposing many unpublished
+combos that no recorded pass has swept. The top is the size of the space. `deck-cards.js`
+narrows it to the cards one deck actually holds, ranked by how many published combos name
+them — which is what the substitution method consumes — and flags what the log already
+covers. `/deck-deep-dive` runs the whole pass below against that list.
 
 **The pass itself, in the order that avoids wasted reading:**
 
@@ -107,12 +155,26 @@ rather than reading loosely and claiming `verified`.
 
 ### Asking the question of one deck
 
-There is no tool for this yet — it is the obvious next one. The method is the pass above
-with step 2 restricted to shapes whose cards the deck already holds, which is how the
-lifegain pass found 51 candidates nobody had looked for. Until it exists, the deck-level
-question the page *does* answer is the different one of which existing rows a deck can
-assemble: `matchUnofficial()`, exercised in `test/unofficial.test.js` against the deck
-below. `tools/try-deck.js` does **not** cover the unofficial panel.
+Three different questions, and it is worth not confusing them:
+
+| question | what answers it |
+|---|---|
+| which existing rows can this deck assemble? | `matchUnofficial()`, pinned in `test/unofficial.test.js`. **`try-deck.js` does not cover the unofficial panel.** |
+| which of this deck's cards are worth sweeping? | `tools/deck-cards.js --unswept`, and `/deck-deep-dive` on top of it |
+| which gaps does *this deck* expose? | `tools/deck-gaps.js` |
+
+The third is the pass above with step 2 restricted to shapes whose cards the deck already
+holds — how the lifegain pass found 51 candidates nobody had looked for. It is genuinely
+different from the second: `deck-cards.js` chooses *subjects* from a deck and then sweeps
+each across the whole database, where `deck-gaps.js` bounds the candidate shapes too, so
+every hit is a combo the deck could cast tonight.
+
+**It re-proposes what has already been ruled out.** The first sweep threw out
+`Scurry Oak + Sadistic Glee` — the Squirrel cannot sacrifice itself where Broodscale's
+Spawn can — and `deck-gaps.js` offers it again, because that decision is a sentence in
+`research-log.js` and not a card set. Read the log first. Wiring them together means
+giving every rule-out a machine-readable set of cards, which is a change to the log's
+shape nobody has made.
 
 ### The two fixture decks
 
@@ -242,3 +304,23 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - No style rules in the lint config on purpose. Match the surrounding code.
 - Trunk-based: short-lived `feat/…` / `fix/…` branches off `main`, PR, auto-merge
   when green. Merging to `main` *is* the release.
+- **Outstanding work is a GitHub issue.** `IMPROVEMENTS.md` is the record of a review
+  whose items are all settled — history, not a queue. Anything still to do goes in an
+  issue so it can be closed, assigned and linked from the PR that finishes it.
+
+### Writing an issue here: point, do not restate
+
+An issue that copies the current state becomes a second source of truth, and the
+unchecked copy is the one that rots. "16 cards are unread" is wrong the moment somebody
+reads one, and then the log and the issue disagree — which is the exact shape of the
+failure this repository spent a day fixing, where prose said *nothing remains open* and
+the data said otherwise.
+
+So an issue names **where the live answer lives** and **what finishing looks like**:
+
+> The live list is in `research-log.js` — do not restate it here. Grep for `UNREAD`.
+> Finish condition: `UNREAD_DEBT` in `test/research-log.test.js` reaches 0.
+
+Carry detail in the issue only when it exists nowhere else machine-readable — a design
+constraint, a specific failing case, a decision somebody has to make. Never a count that
+a file already holds and a test already checks.

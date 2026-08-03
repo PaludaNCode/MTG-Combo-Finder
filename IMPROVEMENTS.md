@@ -1,5 +1,10 @@
 # Improvements: where we are
 
+> **This file is history, not a queue.** Every item below is settled. Work still to be
+> done is tracked in [GitHub issues](https://github.com/PaludaNCode/MTG-Combo-Finder/issues)
+> so it can be closed by the PR that finishes it. This is kept because each item records
+> what was measured and what it traded away, and the commits were written against it.
+
 Started as a review of the repository. Every technical item is settled and F7 has
 shipped, so this reads top-down as **status first, then the original proposals** —
 kept because each one records what was measured and what it traded away, and the

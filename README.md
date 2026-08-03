@@ -1412,7 +1412,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 158 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 162 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -1614,6 +1614,12 @@ Static site, zero dependencies, no build step:
   declared once and worked out against live data. Hand-maintained data, no logic —
   the matching lives in `combos.js`. See
   [Unofficial combos](#unofficial-combos-the-pages-own-second-opinion).
+- `research-log.js` — which cards have been swept and what each pass found: the cards it
+  covered, how it generated candidates, how many it proposed, examined and kept, why each
+  rule-out was one, and the verbatim oracle text it read. Not page data — the browser never
+  loads it — so it is a plain CommonJS module rather than the dual-export shape everything
+  above uses. It is the answer to "has anybody checked this card?", which nothing could
+  answer before it existed.
 - `templates.json` — the generated card list behind every template slot ("a Persist
   Creature"), stored as `card -> template ids`. Checked in rather than resolved on
   every refresh; see [Template slots](#template-slots-a-persist-creature).
@@ -2612,7 +2618,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 158 hand-written rows cite a published combo. 133 of them and the one stand-in rule
+All 162 hand-written rows cite a published combo. 137 of them and the one stand-in rule
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -2692,6 +2698,29 @@ row whose cards no recorded pass covers fails the build, so the index cannot qui
 being one. The candidate count in this section is read out of it rather than added up by
 hand, which means a pass that gets logged moves the README and a pass that does not, cannot.
 
+**And a pass will not be accepted without the card text.** `research-log.js` carries a
+`read` field — the oracle text, verbatim, for every card a pass names — and
+`test/research-log.test.js` fails without it. That is not belt-and-braces. The rule
+existed as prose first, saying to work from card text rather than from a similarity
+score, and it was broken twice: once putting `{2}{B}{G}` and a `-X/-X` outlet on
+Chatterfang, who is `{2}{G}` with `+X/-X`; and once ruling out **all 37** Camellia
+candidates on "they answer *a nontoken creature died* with different tokens". Both
+cards trigger on *sacrificing a Food*, and Experimental Confectioner makes a **Rat**.
+The real difference is that Camellia batches where he counts, which rules out **2** of
+the 37 — so thirty-five were thrown away on a text nobody had opened.
+
+That is the failure worth engineering against here, because it is invisible: a wrong
+rule-out produces no row, no failing test and no complaint, only a card that quietly
+looks well covered. Nobody audits a zero.
+
+**Entries that predate the rule say `UNREAD` rather than inventing text**, and a ratchet
+caps how many: the number may go down and may never go up. Its history is in the test's
+own comment, because that is the honest record — **16 → 36 → 16**. It went *up* because
+the first count was wrong, not because anyone borrowed: it only covered cards listed in
+`cards`, so a pass could reason about a dozen *peers* and record none of them. Ashnod's
+Altar named twelve and had one. Correcting the undercount raised the number; fetching the
+texts one query at a time brought it back down.
+
 **Which makes this file a record of the cards somebody asked about, and nothing wider.**
 That is worth a number rather than an apology, so `tools/substitution-scope.js` points
 the same method at every card in the database instead of at one. At the strict bar —
@@ -2699,13 +2728,21 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **257 candidates have been
-read, out of thousands proposed** — and which 257 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **338 candidates have been
+read, out of thousands proposed** — and which 338 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards
 proposing the most that no recorded pass has swept, which is the only form of "how much
 is left" anybody can act on.
+
+**A pass that finds nothing is still a pass**, and three of the eight recorded found
+exactly that. Ashnod's Altar is the largest card in the standing deck by combo count —
+6,063 — and kept none of its 3,316 candidates: its top scored peers are four different
+kinds of card, and only the free sacrifice outlets are substitutable at all. Cauldron
+Familiar, Samwise Gamgee and Academy Manufactor produced **no candidates at any
+threshold**, which is the method being silent rather than the cards being covered. Those
+entries are the ones that stop the next person spending the same afternoon.
 
 Chatterfang is what a *well-covered* card looks like under the same method, and worth
 recording as the counterweight to Rosie: the sweep proposed **1,202** candidates for him
@@ -2957,7 +2994,7 @@ npx serve .   # or python3 -m http.server
 
 ### Answering questions from the data
 
-Five read-only tools, each also a manual workflow, for the questions that keep
+Seven read-only tools, each also a manual workflow, for the questions that keep
 coming up. They exist because guessing at these has been wrong more than once.
 
 ```bash
@@ -2973,13 +3010,27 @@ node tools/combos-with.js "Heroic Feast" "Kitchen Finks"
 # by how many combos need it — which also checks the ids still line up.
 node tools/template-users.js ["Persist Creature"]
 
-# What does this card actually say? Straight from Scryfall.
+# What does this card actually say? Straight from Scryfall — when it can be
+# reached. A restrictive network refuses api.scryfall.com, and a web search is
+# the route that works from there; research-log.js needs the text either way.
 node tools/lookup-card.js "Camellia, the Seedmiser"
 
 # How much of the substitution space has nobody looked at? The method behind
 # unofficial.js, pointed at every card instead of at the one being asked about.
 node tools/substitution-scope.js [jaccard] [minShared]
+
+# Which cards carry a deck's combos, ranked by how many published combos name
+# them, and which of those no recorded pass has swept. --unswept for the queue.
+node tools/deck-cards.js [deck.txt] [--unswept] [--top N]
+
+# Which gaps does THIS deck expose? Same method, with the candidate shapes bounded
+# to cards the deck already holds, so every hit is a combo it could cast tonight.
+# It re-proposes what has been ruled out — read research-log.js first.
+node tools/deck-gaps.js [deck.txt] [--jaccard N]
 ```
+
+`.claude/commands/deck-deep-dive.md` is the whole research pass wired to that last one:
+rank a deck's cards, sweep the ones nobody has, write what survives, log the pass.
 
 `tools/research-sources.js` and `tools/research-coverage.js` are kept for the
 questions whose answers can change: has a second combo database appeared, and do
@@ -2991,6 +3042,17 @@ Spellbook's templates still carry Scryfall queries. They run together from the
 
 Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk-based,
 short-lived branches.
+
+**Outstanding work lives in GitHub issues.** `IMPROVEMENTS.md` below is the record of a
+review whose items are all settled — it says what was measured and what each decision
+traded away, which is worth keeping, but it is history rather than a queue. Anything still
+to do is an issue, so it can be closed by the PR that finishes it.
+
+An issue here **points at the live answer rather than restating it**: the count of unread
+card texts belongs in `research-log.js`, where a test caps it, not in an issue body that
+goes stale the first time somebody reads a card. That is the same failure as prose
+claiming *nothing remains open* over an audit of 44 candidates — a second source of truth
+where only one of them is checked.
 
 1. Branch off `main`: `feat/<thing>` or `fix/<thing>`
 2. Push, open a PR — CI runs (`checks` job: JS syntax check + lint + unit tests with

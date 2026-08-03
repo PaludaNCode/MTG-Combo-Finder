@@ -18,6 +18,14 @@
 //               been swept, a card absent from every entry has not.
 //   cardIds     their Spellbook ids, on the same reasoning as unofficial.js —
 //               null where the published data has no such card
+//   read        THE ORACLE TEXT, VERBATIM, for every card in `cards`. Not a
+//               formality: a pass reasons about what cards do, and the cheapest
+//               mistake available here is recalling a card instead of reading it.
+//               It produces a rule-out that is invisible — no row, no test
+//               failure, no complaint, just a card that looks covered. The Camellia
+//               entry below threw away 35 candidates that way, on a text nobody had
+//               opened. Sixteen entries predate the rule and say UNREAD; the test
+//               caps that number and it may only go down.
 //   method      how candidates were generated, because a pass is only as wide as
 //               the net it threw
 //   proposed    what the method produced before any judgement
@@ -44,6 +52,17 @@ const PASSES = [
       'Cauldron Familiar', 'Warren Soultrader', 'Chatterfang, Squirrel General',
     ],
     cardIds: [6705, 5641, 2308, 3868, 1475, 5670, 3000],
+    read: {
+      'Quina, Qu Gourmet': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Basking Broodscale': 'Devoid. {1}{G}: Adapt 1. Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 COLORLESS Eldrazi Spawn creature token with \u201cSacrifice this token: Add {C}.\u201d 2/2 for {1}{G}.',
+      'Trudge Garden': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
+      'Cauldron Familiar': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token.',
+      'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 GREEN Squirrel creature token. 1/2 for {2}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 GREEN Beast creature token. 4/4 for {3}{G}{G}.',
+    },
     date: '2026-07',
     method: 'pairs of cards Spellbook itself puts in the same combo shape elsewhere',
     proposed: 44,
@@ -71,6 +90,16 @@ const PASSES = [
       'Scurry Oak', 'Herd Baloth', 'Basking Broodscale', 'Animation Module',
     ],
     cardIds: [7743, 2919, 3944, 2086, 4186, 3197, 5641, 3490],
+    read: {
+      'Heroic Feast': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Archangel of Thune': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Heliod, Sun-Crowned': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Kitchen Finks': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 GREEN Squirrel creature token. 1/2 for {2}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 GREEN Beast creature token. 4/4 for {3}{G}{G}.',
+      'Basking Broodscale': 'Devoid. {1}{G}: Adapt 1. Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 COLORLESS Eldrazi Spawn creature token with \u201cSacrifice this token: Add {C}.\u201d 2/2 for {1}{G}.',
+      'Animation Module': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+    },
     date: '2026-07',
     method: 'the same method, pointed at the lifegain-to-counter engines a single deck could build',
     proposed: 51,
@@ -86,6 +115,9 @@ const PASSES = [
     subject: 'Rosie Cotton of South Lane',
     cards: ['Rosie Cotton of South Lane'],
     cardIds: [2433],
+    read: {
+      'Rosie Cotton of South Lane': 'When Rosie Cotton enters, create a Food token. Whenever you create a token, put a +1/+1 counter on target creature you control other than Rosie Cotton.',
+    },
     date: '2026-08-02',
     method: 'every shape where two or more of her token-creation peers are published and she is not',
     proposed: 91,
@@ -106,6 +138,10 @@ const PASSES = [
     subject: 'Necrosynthesis against Sadistic Glee',
     cards: ['Necrosynthesis', 'Sadistic Glee'],
     cardIds: [1628, 2082],
+    read: {
+      'Necrosynthesis': 'Enchant creature. Enchanted creature has \\u201cWhenever another creature dies, put a +1/+1 counter on this creature.\\u201d When enchanted creature dies, look at the top X cards of your library, where X is its power. Put one of them into your hand and the rest on the bottom of your library in a random order.',
+      'Sadistic Glee': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+    },
     date: '2026-08-02',
     method: 'every published Sadistic Glee combo with no Necrosynthesis twin',
     proposed: 30,
@@ -122,6 +158,14 @@ const PASSES = [
     subject: 'Chatterfang, Squirrel General',
     cards: ['Chatterfang, Squirrel General', 'Stridehangar Automaton'],
     cardIds: [3000, 6291],
+    read: {
+      'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
+      'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
+      'Arcbound Ravager': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Pitiless Plunderer': '{3}{B} Creature — Human Pirate 1/4. Whenever another creature you control dies, create a Treasure token. NOT a sacrifice outlet.',
+      'Clock of Omens': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+    },
     date: '2026-08-02',
     method: 'the three cards that hand a creature back inside a token creation, compared against each other',
     proposed: 1202,
@@ -144,6 +188,35 @@ const PASSES = [
     subject: 'Academy Manufactor against Peregrin Took',
     cards: ['Academy Manufactor', 'Peregrin Took', 'Chalk Outline', 'Kheru Goldkeeper'],
     cardIds: [4231, 4321, 5632, 6462],
+    // Read from Forge's card scripts, which tools/lookup-card.js now falls back to
+    // when Scryfall is refused by the network policy — and cross-checked against
+    // XMage for the two the whole pass turns on, Peregrin Took and Academy
+    // Manufactor. The peers below are not in `cards` because the pass did not sweep
+    // them; they are here because it reasoned about them, which is the half that
+    // went wrong the last time somebody worked from memory.
+    read: {
+      'Academy Manufactor': 'If you would create a Clue, Food, or Treasure token, instead create one of each. Artifact Creature — Assembly-Worker 1/3 for {3}.',
+      'Peregrin Took': 'If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. Sacrifice three Foods: Draw a card. Legendary Creature — Halfling Citizen 2/3 for {2}{G}.',
+      'Chalk Outline': 'Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. (Create a Clue token.) Enchantment for {3}{G}.',
+      'Kheru Goldkeeper': 'Flying. Whenever one or more cards leave your graveyard DURING YOUR TURN, create a Treasure token. Renew — {2}{B}{G}{U}, Exile this card from your graveyard: Put two +1/+1 counters and a flying counter on target creature. Creature — Dragon 3/3 for {1}{B}{G}{U}.',
+      // The peers the rule-outs turn on.
+      'Samwise Gamgee': 'Whenever another NONTOKEN creature you control enters, create a Food token. Sacrifice three Foods: Return target historic card from your graveyard to your hand. Legendary Creature — Halfling Citizen 2/2 for {G}{W}.',
+      'Nuka-Cola Vending Machine': '{1}, {T}: Create a Food token. Whenever you sacrifice a Food, create a tapped Treasure token. Artifact for {3}.',
+      'Experimental Confectioner': 'When Experimental Confectioner enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with "This creature can’t block." Creature — Human Peasant 2/3 for {2}{B}.',
+      'Lonis, Genetics Expert': 'Evolve. Whenever one or more +1/+1 counters are put on Lonis, investigate that many times. Whenever you sacrifice a Clue, put a +1/+1 counter on another target creature you control. Legendary Creature — Snake Elf Detective 1/2.',
+      'Ant Queen': '{1}{G}: Create a 1/1 green Insect creature token. Creature — Insect 5/5 for {3}{G}{G}.',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
+      'Stridehangar Automaton': 'Thopters you control get +1/+1. If one or more ARTIFACT tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead. Artifact Creature — Construct 1/4 for {3}.',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token. Creature — Zombie Goblin Wizard 3/3 for {2}{B}.',
+      'Urza, Prince of Kroog': 'Artifact creatures you control get +2/+2. {6}: Create a token that’s a copy of target artifact you control, except it’s a 1/1 Soldier creature in addition to its other types. Legendary Creature — Human Artificer 2/3.',
+      'Magic Pot': 'When this creature dies, create a Treasure token. {2}, {T}: Exile target card from a graveyard. Artifact Creature — Goblin Construct 1/4 for {3}.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}. Artifact for {4}.',
+      'Bootleggers’ Stash': 'Lands you control have "{T}: Create a Treasure token." Artifact for {5}{G}.',
+      'Clock of Omens': 'Tap two untapped artifacts you control: Untap target artifact. Artifact for {4}.',
+      'Toph, the First Metalbender': 'Nontoken artifacts you control are lands in addition to their other types. (They don’t gain the ability to {T} for mana.) At the beginning of your end step, earthbend 2. Legendary Creature — Human Warrior Ally 3/3 for {1}{R}{G}{W}.',
+      'Doubling Season': 'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.',
+      'Darksteel Citadel': 'Indestructible. {T}: Add {C}. Artifact Land.',
+    },
     date: '2026-08-03',
     method: 'every shape Academy Manufactor’s one substitution peer is published in and she is not',
     proposed: 338,
@@ -175,6 +248,36 @@ const PASSES = [
       'Cauldron Familiar', 'Samwise Gamgee', 'Eloise, Nephalia Sleuth', 'Ulvenwald Mysteries',
       'Pitiless Plunderer', 'Spawning Pit',
     ],
+    // Cauldron Familiar's first entry in this file, at the top, says UNREAD. It is
+    // read now, and the sentence that matters to every row below is the second one:
+    // the return cost is a *Food*, which is why an engine making a Clue or a Treasure
+    // needs Academy Manufactor between it and the Cat, and why Peregrin Took does not.
+    read: {
+      'Cauldron Familiar': 'When Cauldron Familiar enters, each opponent loses 1 life and you gain 1 life. Sacrifice a FOOD: Return Cauldron Familiar from your graveyard to the battlefield. Creature — Cat 1/1 for {B}.',
+      'Samwise Gamgee': 'Whenever another NONTOKEN creature you control enters, create a Food token. Sacrifice three Foods: Return target historic card from your graveyard to your hand. Legendary Creature — Halfling Citizen 2/2 for {G}{W}.',
+      'Eloise, Nephalia Sleuth': 'Whenever ANOTHER creature you control dies, investigate. Whenever you sacrifice a token, surveil 1. Legendary Creature — Human Rogue 4/4 for {3}{U}{B}.',
+      'Ulvenwald Mysteries': 'Whenever a NONTOKEN creature you control dies, investigate. Whenever you sacrifice a Clue, create a 1/1 white Human Soldier creature token. Enchantment for {2}{G}.',
+      'Pitiless Plunderer': 'Whenever another creature you control dies, create a Treasure token. Creature — Human Pirate 1/4 for {3}{B}.',
+      'Spawning Pit': 'Sacrifice a creature: Put a charge counter on Spawning Pit. {1}, Remove two charge counters from Spawning Pit: Create a 2/2 colorless Spawn artifact creature token. Artifact for {2}.',
+      // The outlet slot itself: every card the diff put in it, because "is this a free
+      // repeatable outlet that will eat the Cat" is a question about each one's text.
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. Creature — Vampire Wizard 1/1 for {B}.',
+      'Carrion Feeder': 'This creature can’t block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. Creature — Human Soldier 2/1 for {W}{B}.',
+      'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on Bloodflow Connoisseur. Creature — Vampire 1/1 for {2}{B}.',
+      'Yahenni, Undying Partisan': 'Haste. Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni. Sacrifice another creature: Yahenni gains indestructible until end of turn. Legendary Creature — Aetherborn Vampire 2/2 for {2}{B}.',
+      'Woe Strider': 'When Woe Strider enters, create a 0/1 white Goat creature token. Sacrifice another creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. Creature — Horror 3/2 for {2}{B}.',
+      'Blasting Station': '{T}, Sacrifice a creature: Blasting Station deals 1 damage to any target. Whenever a creature enters, you may untap Blasting Station. Artifact for {3}.',
+      'Goblin Bombardment': 'Sacrifice a creature: Goblin Bombardment deals 1 damage to any target. Enchantment for {1}{R}.',
+      'Altar of Dementia': 'Sacrifice a creature: Target player mills cards equal to the sacrificed creature’s power. Artifact for {2}.',
+      'Ashnod’s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact for {3}.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color. Artifact for {3}.',
+      'Thermopod': '{S}: Thermopod gains haste until end of turn. Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3 for {4}{R}.',
+      'Phantom Train': 'Trample. Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn. Artifact — Vehicle 4/4 for {3}{B}.',
+      'Umbral Collar Zealot': 'Sacrifice another creature or artifact: Surveil 1. Creature — Human Cleric 3/2 for {1}{B}.',
+      'Shilgengar, Sire of Famine': 'Flying. Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your graveyard to the battlefield with a finality counter on it. Legendary Creature — Elder Demon 6/6.',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token. Creature — Zombie Goblin Wizard 3/3 for {2}{B}.',
+    },
     cardIds: [856, 5270, 1808, 5267, 4871, 3899],
     date: '2026-08-03',
     method: 'the outlet slot Spellbook fills by name, compared across the engines that fill the same shape',
@@ -193,6 +296,198 @@ const PASSES = [
       + 'behind Peregrin Took, sixteen behind Samwise Gamgee but not the same sixteen, fifteen '
       + 'behind Eloise, Nephalia Sleuth, fifteen behind Pitiless Plunderer and six behind '
       + 'Ulvenwald Mysteries. Diffing the lists is what the pass is.',
+  },
+  {
+    subject: 'Ashnod’s Altar',
+    cards: ["Ashnod's Altar"],
+    read: {
+      "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color.',
+      'Gravecrawler': '{B} Creature — Zombie 2/1. Gravecrawler cannot block. You may cast Gravecrawler from your graveyard as long as you control a Zombie.',
+      'Reassembling Skeleton': '{1}{B} Creature — Skeleton Warrior 1/1. {1}{B}: Return Reassembling Skeleton from your graveyard to the battlefield tapped.',
+      'Forsaken Miner': 'Forsaken Miner cannot block. Whenever you commit a crime, you may pay {B}. If you do, return Forsaken Miner from your graveyard to the battlefield.',
+      'Nether Traitor': 'Haste. Shadow. Whenever another creature is put into your graveyard from the battlefield, you may pay {B}. If you do, return Nether Traitor from your graveyard to the battlefield.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
+      'Scrap Trawler': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+      'Nuka-Cola Vending Machine': '{3} Artifact. {1}, {T}: Create a Food token. Whenever you sacrifice a Food, create a tapped Treasure token.',
+      'Pitiless Plunderer': '{3}{B} Creature — Human Pirate 1/4. Whenever another creature you control dies, create a Treasure token. NOT a sacrifice outlet.',
+      'Goblin Bombardment': '{1}{R} Enchantment. Sacrifice a creature: This enchantment deals 1 damage to any target.',
+      'Polyraptor': 'Green creature. Enrage — Whenever Polyraptor is dealt damage, create a token that is a copy of Polyraptor.',
+      'Broodhatch Nantuko': '{1}{G} Creature — Insect Druid 1/1. Whenever this creature is dealt damage, you may create that many 1/1 green Insect creature tokens. Morph {2}{G}.',
+      'Altar of Dementia': '{2} Artifact. Sacrifice a creature: Target player mills cards equal to the sacrificed creature power.',
+    },
+    cardIds: [2034],
+    date: '2026-08-02',
+    method: 'every shape a scored peer is published in and it is not, split by what the peer actually is',
+    proposed: 3316,
+    examined: 28,
+    kept: 0,
+    ruledOut: [
+      { reason: 'the loop recasts a coloured card and Ashnod’s Altar makes {C}{C}. Phyrexian '
+        + 'Altar makes one mana of any colour, which is the whole of the difference — '
+        + 'Gravecrawler, Reassembling Skeleton, Forsaken Miner and Nether Traitor all need {B} '
+        + 'to come back. This is the same distinction the README already draws in the other '
+        + 'direction, where Ashnod’s two mana carry a loop Phyrexian’s one cannot' },
+      { reason: 'Krark-Clan Ironworks eats *artifacts* and Ashnod’s Altar eats creatures, so the '
+        + 'Scrap Trawler and Nuka-Cola Vending Machine families have nothing for it to sacrifice' },
+      { reason: 'Pitiless Plunderer is not a sacrifice outlet at all — it makes a Treasure when '
+        + 'a creature dies. It scores as a peer because the two co-occur constantly, which is '
+        + 'exactly what a score cannot tell you' },
+      { reason: 'the peer’s rider is load-bearing rather than incidental: Goblin Bombardment’s '
+        + 'damage is what Polyraptor and Broodhatch Nantuko enrage off, and Altar of Dementia’s '
+        + 'mill is the win condition, not a side effect. Ashnod’s Altar deals no damage and mills '
+        + 'nothing' },
+    ],
+    notes: '**kept: 0 IS STILL PROVISIONAL, but less of it.** Three rule-outs are now read '
+      + 'end to end. Ashnod’s Altar adds {C}{C} where Phyrexian Altar adds one mana of any '
+      + 'colour; Gravecrawler must be CAST from the graveyard and costs {B}, so colourless '
+      + 'mana cannot return it, and that is the biggest candidate here at pop 70,620; and '
+      + 'Krark-Clan Ironworks reads "Sacrifice an ARTIFACT" where Ashnod’s Altar takes a '
+      + 'creature, which is the Scrap Trawler family gone. Ten cards in the remaining '
+      + 'rule-outs are still unread — Reassembling Skeleton, Forsaken Miner, Nether Traitor, '
+      + 'Goblin Bombardment, Polyraptor, Altar of Dementia and the rest — so the colour '
+      + 'argument is proven for all four — Gravecrawler must be CAST for {B}, and Reassembling Skeleton, Forsaken '
+      + 'Miner and Nether Traitor each pay {B} to return. Goblin Bombardment deals damage and both '
+      + 'Polyraptor and Broodhatch Nantuko enrage off damage; Altar of Dementia mills; Pitiless '
+      + 'Plunderer is not an outlet at all. Eleven of the twelve are read, only Scrap Trawler is '
+      + 'outstanding, so kept: 0 is supported rather than assumed. The largest card in the deck by combo count — 6,063 — and it kept nothing. Its top '
+      + 'scored peers are four different kinds of card and only the free outlets are '
+      + 'substitutable at all, which is the clearest case yet for taking peers off the card text.',
+  },
+  {
+    subject: 'Camellia, the Seedmiser',
+    cards: ['Camellia, the Seedmiser', 'Experimental Confectioner'],
+    cardIds: [3868, 2590],
+    read: {
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control.',
+      'Experimental Confectioner': 'When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with \\u201cThis token can\\u2019t block.\\u201d',
+      'Peregrin Took': '{2}{G} Legendary Creature — Halfling Citizen 2/3. If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. Sacrifice three Foods: Draw a card.',
+      'Savvy Hunter': 'UNREAD — named in this pass reasoning but never fetched; the conclusion above is provisional on it',
+    },
+    date: '2026-08-02',
+    method: 'her one scored peer, Experimental Confectioner, and every shape it has that she lacks',
+    proposed: 37,
+    examined: 37,
+    kept: 0,
+    ruledOut: [
+      { reason: 'the loop spends more than one Food per cycle and needs that many creatures back. '
+        + 'Camellia reads "whenever you sacrifice ONE OR MORE Foods" — one trigger per event, one '
+        + 'Squirrel however many were spent — where Confectioner reads "whenever you sacrifice A '
+        + 'Food" and triggers per Food. Peregrin Took spends three and Savvy Hunter spends two; '
+        + 'both published step lists say so, and one Squirrel does not sustain either', count: 2 },
+    ],
+    notes: 'THE FIRST VERSION OF THIS ENTRY WAS WRONG, and the way it was wrong is the reason the '
+      + 'log records reasons rather than verdicts. It said the two cards answer "a nontoken '
+      + 'creature died" with different tokens — Food against Squirrel — and ruled out all 37 on '
+      + 'that. Neither half was true: both trigger on *sacrificing a Food*, and Confectioner '
+      + 'creates a Rat, not a Food. The text was asserted from memory instead of read, which is '
+      + 'exactly the step the process says not to skip. Read properly, the difference is batching '
+      + 'and only 2 of the 37 die to it. **35 candidates survive and are not yet written up** — '
+      + 'kept is 0 because no row exists yet, not because nothing was found. They are two shapes: '
+      + 'Sam, Loyal Attendant + Warren Soultrader + Academy Manufactor (pop 1,278), and Ygra, '
+      + 'Eater of All + Ninja Pizza with 33 haste enablers behind it.',
+  },
+  {
+    subject: 'Experimental Confectioner',
+    cards: ['Experimental Confectioner', 'Camellia, the Seedmiser'],
+    cardIds: [2590, 3868],
+    read: {
+      'Experimental Confectioner': '{2}{B} Creature — Human Peasant 2/3. When this creature '
+        + 'enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat '
+        + 'creature token with “This token can’t block.”',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you '
+        + 'sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: '
+        + 'Put a +1/+1 counter on each other Squirrel you control.',
+      'Ygra, Eater of All': '{3}{B}{G} Legendary Creature — Elemental Cat 6/6. Ward—Sacrifice a '
+        + 'Food. Other creatures are Food artifacts in addition to their other types and have '
+        + '“{2}, {T}, Sacrifice this permanent: You gain 3 life.” Whenever a Food is put into a '
+        + 'graveyard from the battlefield, put two +1/+1 counters on Ygra.',
+      'Wicked Wolf': 'When this creature enters, it fights up to one target creature you don’t '
+        + 'control. Sacrifice a Food: Put a +1/+1 counter on this creature. It gains '
+        + 'indestructible until end of turn. Tap it.',
+      'Mushroom Watchdogs': 'Sacrifice a Food: Put a +1/+1 counter on this creature. It gains '
+        + 'vigilance until end of turn. Activate only as a sorcery.',
+      'Bill the Pony': '{3}{W} Legendary Creature — Horse 1/4. When Bill the Pony enters, create '
+        + 'two Food tokens. Sacrifice a Food: Until end of turn, target creature you control '
+        + 'assigns combat damage equal to its toughness rather than its power.',
+      'Glimmer Bairn': 'Sacrifice a token: This creature gets +2/+2 until end of turn.',
+    },
+    date: '2026-08-02',
+    method: 'the reverse of the Camellia pass — every shape she is published in and he is not',
+    proposed: 4,
+    examined: 4,
+    kept: 4,
+    ruledOut: [],
+    notes: 'The other direction, and the asymmetry is real: he triggers per Food where she '
+      + 'triggers per sacrifice event, so he is the strictly larger effect and closes anything '
+      + 'she closes. All four survived reading and are rows. The loop is the same in each — Ygra '
+      + 'makes every other creature a Food, the outlet eats one for free, the Confectioner '
+      + 'answers with a Rat, and the Rat is itself a Food to eat next. Glimmer Bairn is the one '
+      + 'worth a second look: it sacrifices a *token* rather than a Food, and only works here '
+      + 'because Ygra makes the Rat token a Food as well, which is what the Confectioner reads. '
+      + 'Logged first as proposed-but-undecided, then finished once the five card texts were '
+      + 'actually fetched — which is the shape this file is meant to make normal.'
+  },
+  {
+    subject: 'Cauldron Familiar, Samwise Gamgee and Academy Manufactor',
+    cards: ['Cauldron Familiar', 'Samwise Gamgee', 'Academy Manufactor'],
+    cardIds: [1475, 4232, 4231],
+    read: {
+      'Cauldron Familiar': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Samwise Gamgee': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+      'Academy Manufactor': 'UNREAD — logged before the read-the-card rule; do not reason from this pass without fetching it',
+    },
+    date: '2026-08-02',
+    method: 'the same peer search, which returned nothing at any threshold down to 0.12',
+    proposed: 0,
+    examined: 0,
+    kept: 0,
+    ruledOut: [
+      { reason: 'no card shares enough combo shapes with any of the three for the substitution '
+        + 'method to propose a single candidate. That is the method being silent, not the cards '
+        + 'being covered — and the distinction matters, because a gap in one of these could only '
+        + 'ever surface by somebody reading the card' },
+    ],
+    notes: 'Logged precisely because it found nothing. Without the entry the next person spends '
+      + 'the same afternoon discovering the same silence, which is the cost this file exists to '
+      + 'stop paying twice. Academy Manufactor sits in 661 combos and Cauldron Familiar in 624, '
+      + 'so this is not obscurity — they simply have no near-twin.',
+  },
+  {
+    subject: 'Basking Broodscale and Spike Feeder',
+    cards: ['Basking Broodscale', 'Spike Feeder'],
+    cardIds: [5641, 2290],
+    read: {
+      'Basking Broodscale': 'Devoid. {1}{G}: Adapt 1. Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 COLORLESS Eldrazi Spawn creature token with “Sacrifice this token: Add {C}.” 2/2 for {1}{G}.',
+      'Spike Feeder': 'Enters with two +1/+1 counters on it. {2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature. Remove a +1/+1 counter from this creature: You gain 2 life. 0/0 for {1}{G}{G}.',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 GREEN Squirrel creature token. 1/2 for {2}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 GREEN Beast creature token. 4/4 for {3}{G}{G}.',
+      'Ivy Lane Denizen': 'Whenever another GREEN creature you control enters, put a +1/+1 counter on target creature. 2/3 for {3}{G}.',
+    },
+    date: '2026-08-02',
+    method: 'shapes the two counter-to-token peers are published in and Broodscale is not; the same search for Spike Feeder returned no peer at all',
+    proposed: 148,
+    examined: 12,
+    kept: 0,
+    ruledOut: [
+      { reason: 'the Eldrazi Spawn is COLOURLESS where the Squirrel and the Beast are green. '
+        + 'Ivy Lane Denizen reads "whenever another GREEN creature you control enters", so it '
+        + 'never sees the Spawn — and Scurry Oak + Ivy Lane Denizen is the biggest candidate '
+        + 'here at pop 28,108. Read against both cards', count: 1 },
+      { reason: 'Scurry Oak has EVOLVE and Broodscale does not, so a loop that feeds the Oak its '
+        + 'own counters from a bigger token has nothing to feed Broodscale. Coat of Arms '
+        + '(pop 3,912) is that shape', count: 1 },
+      { reason: 'the remaining 136 were not read. The peers are otherwise a near-exact match — '
+        + 'same trigger, same "one or more" batching, same "you may" — so those survivors are '
+        + 'plausible rather than dismissed, and this pass stopped instead of guessing' },
+    ],
+    notes: 'Spike Feeder has 83 published combos and NO peer at any threshold — the fourth card '
+      + 'in this deck the method is simply silent about. Broodscale is the opposite: two '
+      + 'near-twins and 148 candidates, and both that were read died on differences the card '
+      + 'text makes obvious and a similarity score cannot see — the token colour and an evolve '
+      + 'trigger. **kept: 0 is provisional on the 136 nobody read.** Clearing the UNREAD markers '
+      + 'on Broodscale, Scurry Oak and Herd Baloth in the two older passes took the backlog '
+      + '36 -> 30, which is what a debt entry is for.',
   },
 ];
 
