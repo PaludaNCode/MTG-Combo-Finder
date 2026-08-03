@@ -303,10 +303,44 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   a `node_modules` here would be the first one.
 - No style rules in the lint config on purpose. Match the surrounding code.
 - Trunk-based: short-lived `feat/…` / `fix/…` branches off `main`, PR, auto-merge
-  when green. Merging to `main` *is* the release.
+  when green. Merging to `main` *is* the release. **Short-lived is the load-bearing
+  word** — see below for what a branch that outlives a day costs.
 - **Outstanding work is a GitHub issue.** `IMPROVEMENTS.md` is the record of a review
   whose items are all settled — history, not a queue. Anything still to do goes in an
   issue so it can be closed, assigned and linked from the PR that finishes it.
+
+### Merging back into `main`
+
+**Base on `origin/main`, and never trust a local `main`.** A fresh sandbox's clone can
+carry a `main` ref that is not the `main` anybody else means — one of them pointed at the
+project's original unsquashed history (`#1`–`#35`, back to *Initial commit*), sharing no
+recent ancestor with the remote at all, so `git checkout main` landed on a tree 148
+commits stale and `git pull` refused as divergent. Nothing was wrong with the repository.
+So: `git fetch origin main` and compare against `origin/main`, always. If a local `main`
+is already wrong, `git reset --hard origin/main` fixes it — archive the old tip in a
+branch first if it might not be junk.
+
+**This repository generates exactly two kinds of merge conflict, by construction.**
+Neither is a judgement call, and both look worse than they are:
+
+1. **Append-only data tails** — `COMBOS` in `unofficial.js`, `PASSES` in
+   `research-log.js`. Two branches both add entries at the end, so both edit the line
+   before the same closing bracket. **The resolution is always "keep both".** The trap is
+   that the markers land *mid-object*: each side's last entry is left unclosed, and the
+   shared text after the conflict closes exactly one of them. Take side A's lines, close
+   A's final entry by hand, then let the existing tail close B's. `node -e
+   "require('./unofficial.js')"` is the one-second check that the syntax survived.
+2. **Counted prose in the README** — both sides bump the same numbers, so both conflict.
+   **The resolution is never "pick a side": recompute.** `npm run check:readme` prints
+   every real measurement, so resolve to whatever it says and run it again.
+
+**A long-lived branch pays for both of these twice**, and pays a third cost that no
+conflict marker shows: a rule added to `main` while the branch was out. One branch came
+back to find `test/research-log.test.js` had started requiring every pass to record the
+oracle text it read — which is a good rule the branch had to satisfy retroactively, and
+which caught two cards that had only been read through published Spellbook steps. Merging
+the same day makes all three cheap; the fix is not better conflict handling, it is a
+shorter branch.
 
 ### Writing an issue here: point, do not restate
 
