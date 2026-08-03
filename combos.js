@@ -220,9 +220,31 @@
   // the benefit back. On the drawn name they sort by their shared cards first and by the
   // card that changes only after, so a family lands together and the column reads down.
   //
+  // **Biggest block first, and only then alphabetically.** Alphabetical alone keeps a
+  // family together but says nothing about which families are worth reading first, so a
+  // list opens on whichever block happens to start with an A: Carrion Feeder's opened on
+  // a Cauldron Familiar row that is the only one of its kind, above three Kitchen Finks
+  // rows that are one decision between three cards. A block of three is three versions of
+  // one thing and a single row is one thing, and the reader is choosing between the
+  // versions — so the choices come first, largest down to smallest, and the rows that
+  // stand alone follow.
+  //
+  // A row with no family counts as a family of one, because that is what it is: nothing
+  // beside it to compare against. So the singletons land after every block, in
+  // alphabetical order among themselves.
+  //
+  // Combo size still outranks both, unchanged. Nothing is lost to it either, because a
+  // family's rows are all the same size by construction — they share every card but one —
+  // so no block is ever split across the 2-card / 3-card boundary.
+  //
   // `leadFor` answers "what does this row lead with" — a card, or a function of the row
   // for the lists whose lead is per row, and null where nothing leads. It has to be the
   // same answer the render side gives, or the list is sorted on strings nobody sees.
+  //
+  // **This orders rows and never cards.** The drawn name is read, not rewritten: the
+  // cards inside a row are placed by orderComboNames() and this only decides which row
+  // sits where. test/combos.test.js pins that, by holding every row's drawn card order
+  // against the same list sorted differently.
   function byDrawnName(variants, leadFor) {
     const list = (variants || []).slice();
     const trails = interchangeableIn(list);
@@ -230,7 +252,11 @@
       lead: typeof leadFor === 'function' ? leadFor(v) : leadFor,
       trail: trails.get(v),
     }).join(' + ')]));
+    // How many rows this row is one of. `trail` holds one card per row in the block that
+    // claimed it, so its length is that block's size.
+    const family = (v) => (trails.get(v) || []).length || 1;
     return list.sort((a, b) => comboSize(a) - comboSize(b)
+      || family(b) - family(a)
       || drawn.get(a).localeCompare(drawn.get(b)));
   }
 

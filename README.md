@@ -321,11 +321,41 @@ before                                              after
 ```
 
 `byDrawnName()` compares what the row will actually say, so rows sort by their shared
-cards first and by the card that changes only after. Size still leads — a 4-card row never
-sorts up among the 3-card rows it shares cards with — and the lead it sorts under has to
-be the one the render side draws, or the list is ordered on strings nobody sees. It orders
-all three of these lists, ours and Spellbook's rows together, so a row of ours sits beside
-the family it belongs to rather than wherever a second sort would put it.
+cards first and by the card that changes only after. The lead it sorts under has to be the
+one the render side draws, or the list is ordered on strings nobody sees. It orders all
+three of these lists, ours and Spellbook's rows together, so a row of ours sits beside the
+family it belongs to rather than wherever a second sort would put it.
+
+**Then the blocks are ordered by how many rows they hold, largest first, and only then
+alphabetically.** Alphabetical alone keeps a family together but says nothing about which
+family is worth reading first, so a list opened on whichever block happened to start with
+an A: Carrion Feeder's opened on a lone Cauldron Familiar row, above three Kitchen Finks
+rows that are one decision between three cards. A block of three is three versions of one
+thing and the reader is choosing between them, so the choices lead — biggest down to
+smallest — and the rows that stand alone follow. A row with no family counts as a family of
+one, which is what it is.
+
+```
+alphabetical only                               by block size, then alphabetical
+1. … Cauldron Familiar + Samwise Gamgee         1. … Kitchen Finks + Archangel of Thune
+2. … Herd Baloth + Necrosynthesis               2. … Kitchen Finks + Heliod, Sun-Crowned
+3. … Herd Baloth + Sadistic Glee                3. … Kitchen Finks + Heroic Feast
+4. … Kitchen Finks + Archangel of Thune         4. … Pitiless Plunderer + Animation Module
+5. … Kitchen Finks + Heliod, Sun-Crowned        5. … Pitiless Plunderer + Quina, Qu Gourmet
+6. … Kitchen Finks + Heroic Feast               6. … Pitiless Plunderer + Stridehangar…
+7. … Pitiless Plunderer + Animation Module      7. … Herd Baloth + Necrosynthesis
+```
+
+Combo size still outranks both, so a 4-card row never sorts up among the 3-card rows it
+shares cards with — and nothing is lost to that, because a family's rows are all the same
+size by construction: they share every card but one.
+
+**All of this orders rows and never cards.** Where a card sits inside a row is
+`orderComboNames()`'s decision and the comparator only reads its answer. Two tests hold
+that: one checks every row's drawn cards are identical before and after the rows are
+sorted, and one checks the answer cannot depend on the order the rows arrived in. Measured
+over the standing Chatterfang deck it is 195 drawn lists and 1,983 rows with no row's cards
+moving.
 
 **Combos in your deck** is deliberately left out: it is ranked by size and play count, and
 `groupVariants()` hands its rows back in the order they arrived precisely so grouping
