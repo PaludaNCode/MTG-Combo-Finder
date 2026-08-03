@@ -42,6 +42,23 @@
     return query === -1 ? '' : src.slice(query);
   })();
 
+  // The shell, offline. Registered from here rather than from the HTML for the same
+  // reason the search worker is: it needs the stamp, and this file's own URL is where
+  // the stamp is. `worker-src 'self'` in both pages' CSP already permits it.
+  //
+  // Deliberately last and deliberately ignorable: everything on this page works
+  // without it, a browser that refuses one is not a browser that should see an error,
+  // and an insecure origin refuses by design. See sw.js for the strategy — the short
+  // version is that the HTML is never served stale.
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      navigator.serviceWorker.register('sw.js' + ASSET_VERSION).catch(() => {});
+    } catch (err) {
+      /* nothing on this page depends on it */
+    }
+  }
+
   function renderIdentity(container, identity) {
     container.textContent = '';
     // An empty set is colourless — a real identity, worth showing as {C}. Null
@@ -686,4 +703,6 @@
   });
 
   DeckIO.restoreDeck();
+  // After the page is wired, because nothing here waits for it.
+  registerServiceWorker();
 })();

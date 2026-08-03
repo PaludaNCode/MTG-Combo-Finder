@@ -63,6 +63,12 @@ const BROWSER = {
   // Worker scope.
   self: 'readonly',
   importScripts: 'readonly',
+  // Service worker scope, which sw.js is the only file in. `registration` is also
+  // what that file tests for to know it is running as one rather than being
+  // required under Node.
+  registration: 'readonly',
+  clients: 'readonly',
+  skipWaiting: 'readonly',
   // The dual-export tail every one of these files ends with.
   module: 'writable',
   require: 'readonly',
@@ -146,7 +152,7 @@ export default [
     // the note on the Node block below for what a file missing from both lists
     // gets, which is nothing.
     files: [
-      'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js',
+      'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js', 'sw.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
       'combo-steps.js', 'steps-source.js', 'view-model.js',
       'page-dom.js', 'render-map.js', 'deck-io.js',

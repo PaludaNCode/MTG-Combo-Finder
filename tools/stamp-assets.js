@@ -71,14 +71,60 @@ function rewriteAssets(html, fn) {
 
 const stamp = (html, version) => rewriteAssets(html, (url) => `${url}?v=${version}`);
 
+// ---- the service worker's shell list ---------------------------------------
+//
+// sw.js precaches the shell, and the list has to be the stamped URLs or the worker
+// would warm the cache with the very URLs the page no longer asks for. It is written
+// here, from the same localAssets() walk that stamps the pages, because the
+// alternative is a second list maintained by hand — which is the exact failure this
+// script exists to end: a file added to a page and not to the list.
+//
+// The pages themselves go in too. They are not stamped (they carry the stamps), and
+// they are what a reader needs offline.
+const SHELL_START = '// __SHELL_START__';
+const SHELL_END = '// __SHELL_END__';
+
+function shellList(pages, assets, version) {
+  const urls = ['./'].concat(pages, assets.map((url) => `${url}?v=${version}`));
+  const lines = urls.map((url) => `    '${url}',`).join('\n');
+  // Both markers are written back, so a second run finds them where it looks.
+  return `${SHELL_START}\n  const SHELL = [\n${lines}\n  ];\n  ${SHELL_END}`;
+}
+
+// Returns the rewritten worker, or null if the markers are not where they should be —
+// which the caller turns into a failed deploy rather than a silent no-op. A worker
+// precaching last week's URLs is worse than one precaching nothing.
+function writeShell(source, pages, assets, version) {
+  const start = source.indexOf(SHELL_START);
+  const end = source.indexOf(SHELL_END);
+  if (start === -1 || end === -1 || end < start) return null;
+  const before = source.slice(0, start);
+  const after = source.slice(end + SHELL_END.length);
+  // The end marker keeps its own line, so a second run finds it where it looks.
+  return before + shellList(pages, assets, version) + after;
+}
+
+// The build the worker names its cache after. A byte-identical sw.js is not an
+// update as far as the browser is concerned, so this is also what makes a deploy
+// with no asset changes still swap the worker.
+function writeBuild(source, version) {
+  return source.replace(/^(\s*const BUILD = ')[^']*(';)/m, `$1${version}$2`);
+}
+
 function main(argv) {
   const [version, ...pages] = argv;
   if (!version || !pages.length) {
-    console.error('usage: node tools/stamp-assets.js <version> <page>...');
+    console.error('usage: node tools/stamp-assets.js <version> <page>... [--worker sw.js]');
     return 1;
   }
+  // The worker is not a page and is not stamped in place — it is rewritten, with the
+  // list of everything the pages turned out to reference.
+  const workerAt = pages.indexOf('--worker');
+  const worker = workerAt === -1 ? null : pages[workerAt + 1];
+  if (workerAt !== -1) pages.splice(workerAt, 2);
 
   let failed = false;
+  const everyAsset = [];
   for (const page of pages) {
     const before = fs.readFileSync(page, 'utf8');
     const assets = localAssets(before);
@@ -101,10 +147,31 @@ function main(argv) {
       continue;
     }
     console.log(`${page}: stamped ${assets.length} — ${assets.join(', ')}`);
+    for (const url of assets) if (!everyAsset.includes(url)) everyAsset.push(url);
+  }
+
+  if (worker && !failed) {
+    const source = fs.readFileSync(worker, 'utf8');
+    const rewritten = writeShell(writeBuild(source, version), pages, everyAsset, version);
+    if (!rewritten) {
+      console.error(`${worker}: the ${SHELL_START} / ${SHELL_END} markers are missing — `
+        + 'it would precache the unstamped URLs the page no longer asks for');
+      return 1;
+    }
+    fs.writeFileSync(worker, rewritten);
+    // Re-read, like the pages above: the assertion is about the file that ships.
+    const after = fs.readFileSync(worker, 'utf8');
+    if (!after.includes(`?v=${version}`) || !after.includes(`const BUILD = '${version}'`)) {
+      console.error(`${worker}: rewritten but does not carry ${version}`);
+      return 1;
+    }
+    console.log(`${worker}: shell of ${everyAsset.length + pages.length + 1} URL(s) at build ${version}`);
   }
   return failed ? 1 : 0;
 }
 
 if (require.main === module) process.exit(main(process.argv.slice(2)));
 
-module.exports = { isLocalAsset, localAssets, rewriteAssets, stamp, main };
+module.exports = {
+  isLocalAsset, localAssets, rewriteAssets, stamp, main, writeShell, writeBuild, shellList,
+};

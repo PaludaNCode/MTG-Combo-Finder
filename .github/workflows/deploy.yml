@@ -39,8 +39,15 @@ jobs:
       # search-worker.js needs no entry here and never did: it is loaded from
       # app.js rather than from the HTML, and stamps its own imports out of its
       # query string. See ASSET_VERSION in app.js.
+      #
+      # `--worker sw.js` writes the service worker's precache list from the same walk,
+      # so the shell it warms is the stamped URLs the pages actually ask for, and there
+      # is no second list to keep in step. It also stamps the worker's own BUILD, which
+      # is what makes a deploy with no asset change still a new worker as far as the
+      # browser is concerned. The step fails if the markers it rewrites are missing —
+      # a worker precaching last week's URLs would be worse than one precaching none.
       - name: Cache-bust asset URLs with the commit SHA
-        run: node tools/stamp-assets.js "${GITHUB_SHA}" index.html tiers.html
+        run: node tools/stamp-assets.js "${GITHUB_SHA}" index.html tiers.html --worker sw.js
 
       - name: Stamp the build id so the pages say what they are running
         run: |

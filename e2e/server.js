@@ -48,9 +48,30 @@ const DATASETS = {
 // which is how "no steps recorded" is published.
 const STEPS = stepsFiles();
 
+// Standing in for a deploy, for exactly one test.
+//
+// A service worker's whole hazard is shipping an update nobody receives, and the only
+// way to prove the shell is not stale is to change what the server sends and load the
+// page again. Playwright's request interception cannot do it — it does not apply to
+// requests a service worker makes, and the navigation goes through the worker — so the
+// change has to happen out here.
+//
+// Deliberately a rewrite of the served bytes rather than a write to disk: this suite
+// runs against the real repository, unbuilt, and must not edit it. `/__deploy?h1=…`
+// sets it, and it is off until a test asks. Nothing else in the suite is affected,
+// because nothing else sets it.
+let deployedH1 = null;
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
+
+  if (pathname === '/__deploy') {
+    deployedH1 = url.searchParams.get('h1');
+    res.writeHead(200, { 'content-type': MIME['.txt'], 'cache-control': 'no-store' });
+    res.end('h1 is now ' + (deployedH1 || '(as committed)'));
+    return;
+  }
 
   if (pathname.startsWith('/steps/')) {
     const body = STEPS[pathname];
@@ -85,11 +106,15 @@ const server = http.createServer((req, res) => {
       res.writeHead(404, { 'content-type': MIME['.txt'] }).end('no such file: ' + pathname);
       return;
     }
+    // The one substitution besides the dataset, and only when a test has asked for it.
+    const out = deployedH1 && /\.html$/.test(file)
+      ? Buffer.from(String(body).replace(/<h1>[^<]*<\/h1>/, '<h1>' + deployedH1 + '</h1>'))
+      : body;
     res.writeHead(200, {
       'content-type': MIME[path.extname(file)] || 'application/octet-stream',
       'cache-control': 'no-store',
     });
-    res.end(body);
+    res.end(out);
   });
 });
 

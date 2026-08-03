@@ -79,7 +79,8 @@ Node and a named global in a browser, so the logic is unit-testable without a DO
 | `render-suggestions.js` | `RenderSuggestions` | the suggestions, pieces, slots and unofficial panels |
 | `render-map.js` | `RenderMap` | the combo map's drawing half — `graph.js` is its arithmetic |
 | `deck-io.js` | `DeckIO` | keeping the decklist, the share link, the dropped file |
-| `app.js` | — | wiring, the search, the bracket panel — what is left after the split |
+| `app.js` | — | wiring, the search, the bracket and legality lines — what is left after the split |
+| `sw.js` | `ServiceWorkerShell` | the service worker: the shell offline. Network-first HTML, cache-first for stamped URLs only |
 | `tiers-page.js` | — | the DOM of `tiers.html` |
 | `research-log.js` | — | **not page data.** Which cards have been swept, what each pass found, and the oracle text it read |
 
@@ -259,6 +260,10 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   serves whatever the CDN cached, so the bug is invisible outside production.
   `unofficial.js`, `graph.js`, and for a long time `theme.js`, all shipped that way.
   The worker is not in the HTML and stamps its own imports from its query string.
+  The same run writes `sw.js`'s precache list (`--worker sw.js`) from the same walk, so
+  the service worker's shell cannot drift from what the pages ask for. **`sw.js` is
+  cache-first only for URLs carrying a stamp** — an unstamped one is not immutable, and
+  local work, `npm run verify` and `npm run test:ui` all serve this page unstamped.
   `tools/verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`,
   so the test and the deploy cannot disagree — they did, for a while.
 - **Colour is a token, and `opacity` is not a way to make one quieter.** Opacity is

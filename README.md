@@ -41,6 +41,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   two-card combo is a far easier thing to assemble in a game than a four-card one, and a
   count hides the difference entirely — see
   [What the count is made of](#what-the-count-is-made-of).
+- **It works with the network off** — a second visit renders and searches from what is
+  already on the device: the shell in a service worker's cache, the snapshot in the one
+  `search.js` keeps. See
+  [The shell offline](#the-shell-offline-and-why-the-html-is-the-one-thing-not-cached-first).
 - **Cards it did not recognise are named** — a section above the results, listing the
   cards you pasted that this snapshot has no card by that name for. `1 Sol Rimg` is a
   perfectly good card line, so it lands in the deck, matches nothing, and used to be
@@ -1939,6 +1943,69 @@ would couple those assertions to synthetic numbers while saying nothing more abo
 page. The rebuild path is covered where it belongs: `test/decode.test.js` drives
 `rebuildId()` directly, and the encoding was checked against all 103,737 published rows
 before it shipped.
+
+### The shell offline, and why the HTML is the one thing not cached first
+
+The data survived going offline and the page did not, which was the wrong way round. A
+reader who has searched once holds the entire snapshot on the device — `search.js` keeps
+it in Cache Storage — and then plane mode failed on `index.html`, so none of it was
+reachable. For a tool you would plausibly use at a table with bad wifi, that is backwards.
+
+**Why this repository is unusually well placed to run a service worker.** The classic
+failure is shipping an update nobody receives, and the machinery against that was already
+here: `tools/stamp-assets.js` rewrites every local `src=`/`href=` to carry `?v=<commit
+sha>` at deploy time, so every asset URL is immutable and every deploy mints a fresh set.
+A cache-first worker over immutable URLs cannot serve a half-updated mix. The CSP needed
+no change either — `worker-src 'self'` was already in both heads.
+
+**The asymmetry, which is not a simplification waiting to be made.** `index.html` is
+deliberately *not* stamped: it is the document that carries the new stamps, so it has to
+stay cacheable-but-fresh. So the worker is **network-first for the document and
+cache-first for everything else**. A cache-first HTML would pin a reader to one deploy
+for as long as the cache lived — the exact bug the stamping exists to prevent,
+reintroduced one layer up.
+
+**And the rule extends past the HTML: cache-first is only for URLs that carry a stamp.**
+A bare `app.js` is not immutable. It is what this page is served as locally, under `npm
+run verify`, and under `npm run test:ui`, so trusting one from the cache would mean
+editing a file and being served yesterday's copy for as long as the cache lived. Stamped
+is immutable and cached hard; unstamped is asked for and only falls back to the cache
+when the network cannot answer. Both are *stored* either way, which is what makes an
+unstamped local page work offline too.
+
+**The precache list is not maintained by hand.** `tools/stamp-assets.js` writes it into
+`sw.js` at deploy time from the same `localAssets()` walk that stamps the pages, and
+fails the deploy if the markers it rewrites have gone — a worker precaching last week's
+URLs would be worse than one precaching none, and would look identical from outside. So
+adding a `<script>` to a page is still just adding a `<script>` to a page.
+
+**The exception, named out loud.** Five files no `src=` references, because `app.js`
+constructs the search worker and both it and the no-`Worker` fallback load their scripts
+themselves: `search-worker.js`, `result-tiers.js`, `combos.js`, `unofficial.js`,
+`search.js`. The walk cannot see them, so they are the one list in the worker written by
+hand — and `test/service-worker.test.js` reads the names back out of `app.js` and
+`search-worker.js` and fails if it stops covering them. Precached rather than accepted as
+online-only, because a reader whose `Worker` failed being handed a page that cannot
+search is the one part of going offline that would look like a bug rather than a limit.
+
+**The payload is not the worker's business.** `search.js` already owns that URL, with its
+own versioned cache name, its own revalidation and its own deadline discipline. Two
+caching layers over one URL is the kind of thing that looks fine until they disagree
+about which copy is current, so the worker skips it — by name as well as by origin, since
+both test harnesses serve the fixture from their own origin and this must not start
+depending on that.
+
+**What is tested, and where.** The worker's whole decision is which strategy a request
+gets, and it is a pure function — so `test/service-worker.test.js` asserts it directly:
+the document is never cache-first, a stamped asset always is, an unstamped one never is,
+and the payload is skipped. That is the property that makes a fresh deploy visible at
+all, and it should not need a deploy to check. The rest is `e2e/offline.spec.js`, the only
+harness that can run a real worker: a second visit with the network off renders and
+searches, a changed page is picked up on the next load with no hard refresh, and a browser
+that refuses to give us a worker still gets a working page. Proving the update path meant
+changing what the server sends mid-test, since Playwright's interception does not apply to
+requests a service worker makes — `/__deploy` in `e2e/server.js` is that, and it is the
+one mutable thing in the suite.
 
 ### Downloading the database once, not once a visit
 
