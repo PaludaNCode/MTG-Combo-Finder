@@ -538,7 +538,23 @@ function measure(win, doc) {
       head.style.whiteSpace = was.ws;
       head.style.width = was.w;
     }
-    return { rows: rows.length, stacked, sharing, split, wants, column, example, splitExample };
+    // How much room the text in a row actually has, and how much of the column is spent
+    // on air either side of it. The column width alone does not answer that: a panel and a
+    // card each take a padding out of it before a card name gets any.
+    let text = 0;
+    let air = 0;
+    const firstHead = rows.find((h) => h.getBoundingClientRect().width);
+    if (firstHead) {
+      text = Math.round(firstHead.getBoundingClientRect().width);
+      const body = firstHead.closest('.panel-body');
+      if (body) {
+        air = Math.round(body.getBoundingClientRect().width - text);
+      }
+    }
+    return {
+      rows: rows.length, stacked, sharing, split, wants, column, example, splitExample,
+      text, air,
+    };
   })();
 
   // The link line's separators, read as what a reader sees. A dot is only ever a
@@ -555,6 +571,59 @@ function measure(win, doc) {
       // Separators the reader can actually see.
       seps: seps.filter((s) => getComputedStyle(s).display !== 'none').length,
       stacked: offers.length > 1 && new Set(tops).size === offers.length,
+    };
+  })();
+
+  // What the gutter actually needs, so its width is a measurement rather than a memory.
+  // Every rendered thing in it, widest first — and then the worst real case built on
+  // purpose, because the fixture need not contain it: a card holding up 1,889 combos of
+  // ours and none of Spellbook's, which is the row the 4.2rem was set for.
+  const gutterNeeds = (() => {
+    const parts = [...doc.querySelectorAll('.row-numbers > *')]
+      .filter((e) => e.getBoundingClientRect().width > 0);
+    let widest = 0;
+    let what = '';
+    for (const part of parts) {
+      const w = Math.ceil(part.getBoundingClientRect().width);
+      if (w > widest) {
+        widest = w;
+        what = part.className.split(' ')[0] + ' "' + part.textContent.trim().slice(0, 14) + '"';
+      }
+    }
+    // Built rather than cloned from a rendered row: this deck has no unofficial combos, so
+    // it draws no split at all, and a clone of nothing measures 0px and reports as "fits".
+    // The shape mirrors numberGutter() in render-rows.js — if that changes, this measures
+    // the wrong thing, which is why the note prints the number instead of only asserting it.
+    const host = doc.querySelector('.row-numbers');
+    let worst = 0;
+    if (host) {
+      const span = (cls, text) => {
+        const e = doc.createElement('span');
+        if (cls) e.className = cls;
+        if (text) e.appendChild(doc.createTextNode(text));
+        return e;
+      };
+      const half = (cls, count, word) => {
+        const e = span(cls, count);
+        e.appendChild(span('word', ' ' + word));
+        return e;
+      };
+      const probe = span('row-split');
+      probe.appendChild(half('official', '0', 'official'));
+      probe.appendChild(span('sign', '+'));
+      probe.appendChild(span('dot', ' · '));
+      probe.appendChild(half('ours', '1889', 'unofficial'));
+      host.appendChild(probe);
+      worst = Math.ceil(probe.getBoundingClientRect().width);
+      probe.remove();
+    }
+    const cs = host ? win.getComputedStyle(host) : null;
+    return {
+      widest,
+      what,
+      worst,
+      pad: cs ? Math.ceil(parseFloat(cs.paddingRight)) : 0,
+      column: host ? Math.round(host.getBoundingClientRect().width) : 0,
     };
   })();
 
@@ -909,6 +978,7 @@ function measure(win, doc) {
     unknownCards,
     legality,
     comboCompare,
+    gutterNeeds,
     headingShape,
     linkLine,
     order,
@@ -1331,9 +1401,18 @@ function runOne(vp) {
         // Scope to the same combo card throughout: the pieces panel re-renders
         // these, so a document-wide query picks up other cards' unopened folds.
         const combo0 = doc.querySelector('.combo');
+        const results0 = combo0.querySelector('.results');
+        // The height the fold is buying, measured on the same element either side of the
+        // press. This is the whole point of folding grey, so it is worth a number rather
+        // than an assumption that hiding four chips must have saved something.
+        const foldedHeight = results0 ? Math.round(results0.getBoundingClientRect().height) : 0;
         const moreBtn = combo0.querySelector('.results .result.more');
         if (moreBtn) moreBtn.click();
         await new Promise((r) => setTimeout(r, 60));
+        const resultsHeight = {
+          folded: foldedHeight,
+          open: results0 ? Math.round(results0.getBoundingClientRect().height) : 0,
+        };
         const expandedChips = [...combo0.querySelectorAll('.results .result')].map((c) => ({
           text: c.textContent,
           win: c.classList.contains('tier-win'),
@@ -1424,7 +1503,7 @@ function runOne(vp) {
         };
 
         resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
-          { afterCollapse, expandedChips, afterAdd, storedDeck, afterClear }));
+          { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -2246,6 +2325,23 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const mute = g.altRows.filter((r) => !r.titled);
     if (mute.length) problems.push(`${mute.length} clipped name(s) carry no title, e.g. ${mute[0].name}`);
 
+    // The gutter's width is a measurement, so this is where it stays one: the widest thing
+    // actually in it, and the worst case the page will ever have to draw, both against the
+    // column they have to fit in. A gutter that has quietly stopped fitting shows up as a
+    // wrapped label or a number over the divider, which is exactly the class of thing a
+    // screenshot catches and nothing else does.
+    const gut = v.gutterNeeds;
+    if (!gut || !gut.column) {
+      problems.push('no gutter to measure');
+    } else {
+      if (gut.widest + gut.pad > gut.column) {
+        problems.push(`the gutter holds ${gut.widest}px + ${gut.pad}px of clearance in ${gut.column}px (${gut.what})`);
+      }
+      if (gut.worst && gut.worst + gut.pad > gut.column) {
+        problems.push(`a 0+1889 row needs ${gut.worst}px + ${gut.pad}px in a ${gut.column}px gutter`);
+      }
+    }
+
     // ---- one card per line, and no dot separating things that are not side by side ----
     //
     // Both are geometry, and both are invisible to textContent: a heading whose cards
@@ -2716,8 +2812,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (v.chips.length && v.chips[0].win !== true) problems.push('a game-winning result was not listed first');
     if (v.chips.some((c) => c.decisive && !c.title)) problems.push('a yellow result carries no explanation on hover');
     if (!v.chips.some((c) => c.more)) problems.push('the fixture no longer folds anything, so the fold is untested');
-    // Grey must be on screen without expanding: it is quieter, not hidden.
-    if (!v.chips.some((c) => c.grey)) problems.push('grey is not visible until the fold is opened');
+    // Grey folds, and this is where that is enforced rather than hoped for: it is the
+    // plumbing a loop runs on, the same handful of entries under combo after combo, and
+    // four of them on a phone row is most of its height. The assertion here used to be
+    // the opposite one — "grey is quieter, not hidden" — so it is worth being explicit
+    // that the reversal was measured rather than drifted into.
+    if (v.chips.some((c) => c.grey)) {
+      problems.push('a grey result is on screen before the fold is opened');
+    }
     const ex = v.expandedChips;
     if (ex.some((c) => c.more)) problems.push('the "+N more" fold did not open');
     if (!ex.some((c) => c.win)) problems.push('the green tier rendered nothing');
@@ -2729,6 +2831,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (colours.size < 3) problems.push(`only ${colours.size} distinct chip colours: ${[...colours].join(' / ')}`);
     // Eight results plus the "+N more" control.
     if (v.chips.length > 9) problems.push(`${v.chips.length} result chips shown; the tail should fold behind "+N more"`);
+    // What the fold is worth, in the only unit that matters here: the height it saves on
+    // the row. Printed rather than asserted against a number — the fixture is small, and a
+    // real deck's rows carry more grey than it does — but a fold that saves nothing is a
+    // control that costs a press for no reason, and that is worth failing.
+    if (v.resultsHeight && v.resultsHeight.folded >= v.resultsHeight.open) {
+      problems.push(`folding the results saved no height (${v.resultsHeight.folded}px folded, ${v.resultsHeight.open}px open)`);
+    }
     if (v.chips.length && !v.chips[v.chips.length - 1].more) problems.push('the folded results control is missing');
     if (v.afterCollapse.expanded !== 'false' || v.afterCollapse.bodyVisible) problems.push('clicking the header did not collapse the section');
     if (!v.afterCollapse.stored) problems.push('collapse state was not persisted');
@@ -2760,7 +2869,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       ? `top piece ${v.topPiece.card} ${v.topPiece.total} ${JSON.stringify(v.topPiece.pills)}`
       : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
-    const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
+    const chipNote = `${v.chips.length} folded (${v.resultsHeight.folded}px) / ${v.expandedChips.length} open (${v.resultsHeight.open}px), ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
@@ -2768,10 +2877,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       // The shape the headings took and the two numbers that chose it, so a changed
       // threshold is visible in a passing run rather than only in a failure.
+      const gutterNote = v.gutterNeeds
+        ? `gutter ${v.gutterNeeds.column}px holds ${v.gutterNeeds.widest}px (${v.gutterNeeds.what})`
+          + `, worst case 0+1889 is ${v.gutterNeeds.worst}px, pad ${v.gutterNeeds.pad}px`
+        : 'no gutter measured';
       const cardsNote = v.headingShape && v.headingShape.rows
         ? `headings ${v.headingShape.sharing ? 'inline' : 'one card per line'} in `
           + `${v.headingShape.column}px (needs ${v.headingShape.wants}px inline), `
-          + `${v.linkLine ? v.linkLine.seps : 0} link separator(s)`
+          + `${v.linkLine ? v.linkLine.seps : 0} link separator(s), text ${v.headingShape.text}px `
+          + `with ${v.headingShape.air}px of air`
         : 'no headings measured';
       const compareNote = v.grouped.compare.length
         ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
@@ -2810,7 +2924,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

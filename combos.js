@@ -1095,33 +1095,43 @@
 
   const TIER_RANK = { win: 0, decisive: 1, other: 2 };
 
-  // Splits results into what to show and what to fold away. Grey is quieter
-  // than the rest, not hidden — so a tier that is present never disappears
-  // entirely behind "+N more", even when a combo produces a dozen results.
+  // Splits results into what to show and what to fold away.
+  //
+  // **Grey folds.** It is the plumbing a loop runs on — infinite ETB, infinite death
+  // triggers, infinite LTB — and it is the same handful of entries under combo after
+  // combo, four and five deep on rows whose actual payoff is one green chip. On a phone
+  // that is most of the row's height spent on the least of what it says.
+  //
+  // This reverses the earlier rule, which kept one of every present tier on screen so
+  // that "grey is quieter, not hidden". The reasoning was sound and the measurement is
+  // what changed it: quieter cost four lines a row, and the fold is one press away with
+  // the count on it, so nothing is hidden in the sense that mattered — a reader who wants
+  // the plumbing is told it is there and how much of it.
+  //
+  // The limit still applies to what is left, because a combo with nine decisive results
+  // is a wall of yellow whatever the tiers say.
+  //
+  // A combo whose results are *all* grey is the case worth being careful about: folding
+  // them by that rule would leave a row saying nothing at all about what it does, which
+  // is worse than a tall row. So the fold is only ever applied to grey that sits under
+  // something louder — with nothing louder, grey is what the combo does and it is shown.
   function splitResults(results, limit) {
     if (!Array.isArray(results)) return { shown: [], hidden: [] };
-    if (results.length <= limit) return { shown: results.slice(), hidden: [] };
-
-    const shown = results.slice(0, limit);
-    const hidden = results.slice(limit);
-
-    for (const tier of ['win', 'decisive', 'other']) {
-      const swapIn = hidden.findIndex((r) => r.tier === tier);
-      if (swapIn === -1 || shown.some((r) => r.tier === tier)) continue;
-
-      // Give up a slot from whichever tier is already best represented.
-      const counts = shown.reduce((acc, r) => Object.assign(acc, { [r.tier]: (acc[r.tier] || 0) + 1 }), {});
-      const fullest = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
-      const dropAt = shown.map((r) => r.tier).lastIndexOf(fullest);
-      if (dropAt === -1) continue;
-
-      hidden.push(shown[dropAt]);
-      shown.splice(dropAt, 1);
-      shown.push(hidden.splice(swapIn, 1)[0]);
-    }
 
     const byTier = (a, b) => (TIER_RANK[a.tier] - TIER_RANK[b.tier]) || a.name.localeCompare(b.name);
-    return { shown: shown.sort(byTier), hidden: hidden.sort(byTier) };
+    const ranked = results.slice().sort(byTier);
+    const louder = ranked.filter((r) => r.tier !== 'other');
+    const grey = ranked.filter((r) => r.tier === 'other');
+
+    // What the row is really about: the louder tiers, or grey itself when that is all
+    // this combo produces.
+    const speaks = louder.length ? louder : grey;
+    const folds = louder.length ? grey : [];
+
+    return {
+      shown: speaks.slice(0, limit),
+      hidden: speaks.slice(limit).concat(folds).sort(byTier),
+    };
   }
 
   // Commander Spellbook lists results as feature names. They arrive unordered,

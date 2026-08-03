@@ -338,31 +338,43 @@ test('splitResults: nothing folds when it all fits', () => {
   assert.deepStrictEqual(hidden, []);
 });
 
-test('splitResults: grey survives the fold instead of vanishing', () => {
-  // Five yellows would otherwise fill every slot and push the plumbing out of
-  // sight entirely — grey is meant to be quieter, not invisible.
+test('splitResults: grey folds, however much room is left', () => {
+  // The change this reverses kept one of every tier on screen. Grey is the plumbing a
+  // loop runs on and it is the same handful of entries under combo after combo, so it
+  // folds now even when the limit would have fitted it.
+  const all = [
+    r('Win the game', 'win'),
+    r('Infinite mana', 'decisive'),
+    r('Infinite ETB', 'other'), r('Infinite LTB', 'other'), r('Infinite death triggers', 'other'),
+  ];
+  const { shown, hidden } = splitResults(all, 8);
+  assert.deepStrictEqual(shown.map((x) => x.name), ['Win the game', 'Infinite mana']);
+  assert.deepStrictEqual(hidden.map((x) => x.tier), ['other', 'other', 'other']);
+  assert.strictEqual(shown.length + hidden.length, all.length, 'nothing is lost');
+});
+
+// The case that stops the rule turning a row silent: with nothing louder to show, grey
+// is what the combo does, so folding it would leave the row saying nothing at all.
+test('splitResults: a combo that only produces plumbing still shows it', () => {
+  const all = [r('Infinite ETB', 'other'), r('Infinite LTB', 'other')];
+  const { shown, hidden } = splitResults(all, 8);
+  assert.deepStrictEqual(shown.map((x) => x.name), ['Infinite ETB', 'Infinite LTB']);
+  assert.deepStrictEqual(hidden, []);
+});
+
+// The limit still bites on what is left: nine decisive results are a wall of yellow
+// whatever the tiers say.
+test('splitResults: the limit still applies to the louder tiers', () => {
   const all = [
     r('Win the game', 'win'),
     r('Infinite mana', 'decisive'), r('Infinite damage', 'decisive'),
     r('Infinite tokens', 'decisive'), r('Infinite draw', 'decisive'),
-    r('Infinite ETB', 'other'), r('Infinite LTB', 'other'),
+    r('Infinite ETB', 'other'),
   ];
-  const { shown, hidden } = splitResults(all, 4);
-  assert.strictEqual(shown.length, 4);
-  assert.ok(shown.some((x) => x.tier === 'win'), 'the win stays');
-  assert.ok(shown.some((x) => x.tier === 'decisive'), 'yellow stays');
-  assert.ok(shown.some((x) => x.tier === 'other'), 'grey stays');
-  assert.strictEqual(shown.length + hidden.length, all.length, 'nothing is lost');
-});
-
-test('splitResults: what is shown stays in tier order', () => {
-  const all = [
-    r('Win the game', 'win'),
-    r('Infinite mana', 'decisive'), r('Infinite damage', 'decisive'),
-    r('Infinite ETB', 'other'), r('Infinite LTB', 'other'), r('Infinite death triggers', 'other'),
-  ];
-  const { shown } = splitResults(all, 4);
-  assert.deepStrictEqual(shown.map((x) => x.tier), ['win', 'decisive', 'decisive', 'other']);
+  const { shown, hidden } = splitResults(all, 3);
+  assert.strictEqual(shown.length, 3);
+  assert.ok(shown.every((x) => x.tier !== 'other'), 'grey does not take a slot from yellow');
+  assert.strictEqual(hidden.length, 3, 'the yellow tail folds with the grey');
 });
 
 test('splitResults: handles junk input', () => {

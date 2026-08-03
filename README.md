@@ -106,8 +106,8 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   looking at, and how it got there. That matters more now a copy is kept between visits;
   see [Downloading the database once, not once a visit](#downloading-the-database-once-not-once-a-visit).
 - **What a combo gives you**, as chips rather than a comma-run: game-ending
-  results sort first and are highlighted, duplicates collapse, and anything past
-  the fourth folds behind "+N more".
+  results sort first and are highlighted, duplicates collapse, and the grey
+  plumbing folds behind "+N more" — 53px a row on a phone.
 
 ### Cleaning up combo results
 
@@ -186,10 +186,30 @@ infinite lifegain loses to poison, a pile of Treasure is only mana.
 
 Grey is deliberately the four biggest outcomes in the database — ETB (66k
 combos), LTB (57k), death triggers (45k), sacrifice triggers (43k). They explain
-*how* a loop works, which is not the same as why you'd run it. Grey is shown, not
-hidden: up to eight results are listed before the rest fold behind "+N more", and
-`splitResults()` guarantees a tier that exists never disappears entirely into the
-fold.
+*how* a loop works, which is not the same as why you'd run it.
+
+**So grey folds.** Every grey result on a row goes behind "+N more" with the count on the
+control, and what is left is the louder tiers — up to the same eight, because nine decisive
+results are a wall of yellow whatever the tiers say.
+
+This reverses the rule that was here, and the reversal is worth recording rather than
+quietly restyling: `splitResults()` used to guarantee that a tier which exists never
+disappears entirely, on the grounds that grey is *quieter, not hidden*. The reasoning was
+sound; what changed it is the measurement. Those four biggest outcomes turn up together
+under combo after combo, so a row whose real payoff is one green chip was spending four
+lines on the plumbing — measured by `npm run verify` at **76px folded against 129px open**
+on a 390px phone, 53px a row, on rows a deck has eighty of. The fold is one press away and
+says how much it holds, so nothing is hidden in the sense that mattered.
+
+One case is exempt, and it is the one that would make the rule turn a row silent: a combo
+whose results are *all* grey. Folding those would leave a row saying nothing about what it
+does, so grey is only ever folded when something louder is on screen — with nothing louder,
+grey is what the combo does and it is shown. `test/match.test.js` pins that, and
+`npm run verify` fails if a grey chip is on screen before the fold is opened, which is the
+same assertion inverted: it used to fail if grey was *not*.
+
+The tiers page is deliberately untouched. It is the inventory of which result sits in which
+tier — the grey list is the page's subject, not noise on a row about something else.
 
 ### The combos you have: easiest first, named alphabetically
 
@@ -3103,9 +3123,31 @@ them up; one number and no split hid half the answer.
 time. A badge that follows the name lands wherever the name ends, so eighty totals
 sat at eighty different offsets and there was nothing to read down — `Scurry Oak` put
 its badge at 40% of the width and `Warren Soultrader` at 75%. The gutter is one fixed
-4.2rem, so every total in a panel shares both edges; the layout test measures the
+3.8rem, so every total in a panel shares both edges; the layout test measures the
 distinct right edges per panel and fails on more than one, which is the only way that
-claim can be checked — it is invisible in a screenshot of a single row. The column
+claim can be checked — it is invisible in a screenshot of a single row.
+
+It was 4.2rem, and the width is now checked rather than remembered. What the gutter has to
+hold is the worst real split — a card unlocking 1,889 combos of ours and none of
+Spellbook's, so `0+1889` — and `npm run verify` builds that case rather than hoping the
+fixture contains it: **51px** of content, against 50px for the word COMBOS beneath it. With
+.45rem of clearance that is 59px, which 3.8rem holds with 2px spare, and the divider moved
+from 99px to 93px — 6px of a 334px phone column given back to the card names. 6px is all
+there is: shrinking COMBOS was tried first and bought nothing, since 46px of label still
+sits under 51px of split, and the split cannot wrap instead because `0+1889` has no space
+in it to break at. The test fails if either stops fitting.
+
+**And the air around the text was trimmed with it.** Two paddings stack before a card name
+gets anything — the panel's and the card's — and `npm run verify` prints the pair as one
+number: at 390px that was **47px of air around 309px of text**, an eighth of the column
+spent on margin twice over. At `.55rem` / `.5rem` / `.6rem` it is 35px of air and **321px of
+text**, 12px more for a name. Only at this end of the range: a 1440px column has 935px of
+text and the same 64px of air, where the air is doing what padding is for.
+
+That measurement also caught the change breaking itself: an editing slip closed the
+gutter's comment early, which left prose as CSS, dropped the whole `.combo.suggestion`
+rule, and put the divider at 23px instead of 93px. Nothing lints CSS here — `npm run
+verify` is what noticed. The column
 also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
 was a second, weaker copy of the same ordering.
 
