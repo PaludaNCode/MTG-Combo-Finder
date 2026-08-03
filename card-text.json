@@ -1,7 +1,34 @@
 {
  "generated": "2026-08-03",
- "count": 5,
+ "count": 13,
  "cards": {
+  "Arwen Undómiel": {
+   "fetched": "2026-08-03",
+   "name": "Arwen Undómiel",
+   "mana": "{G}{U}",
+   "identity": "GU",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Elf Noble",
+     "oracle": "Whenever you scry, put a +1/+1 counter on target creature.\n{4}{G}{U}: Scry 2.",
+     "pt": "2/2"
+    }
+   ]
+  },
+  "Ashnod's Altar": {
+   "fetched": "2026-08-03",
+   "name": "Ashnod's Altar",
+   "mana": "{3}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "Sacrifice a creature: Add {C}{C}."
+    }
+   ]
+  },
   "Bartolomé del Presidio": {
    "fetched": "2026-08-03",
    "name": "Bartolomé del Presidio",
@@ -30,6 +57,60 @@
     }
    ]
   },
+  "Dargo, the Shipwrecker": {
+   "fetched": "2026-08-03",
+   "name": "Dargo, the Shipwrecker",
+   "mana": "{6}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Giant Pirate",
+     "oracle": "As an additional cost to cast this spell, you may sacrifice any number of artifacts and/or creatures. This spell costs {2} less to cast for each permanent sacrificed this way and {2} less to cast for each other artifact or creature you've sacrificed this turn.\nTrample\nPartner (You can have two commanders if both have partner.)",
+     "pt": "7/5"
+    }
+   ]
+  },
+  "Earthcraft": {
+   "fetched": "2026-08-03",
+   "name": "Earthcraft",
+   "mana": "{1}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Tap an untapped creature you control: Untap target basic land."
+    }
+   ]
+  },
+  "Nim Deathmantle": {
+   "fetched": "2026-08-03",
+   "name": "Nim Deathmantle",
+   "mana": "{2}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact — Equipment",
+     "oracle": "Equipped creature gets +2/+2, has intimidate, and is a black Zombie. (A creature with intimidate can't be blocked except by artifact creatures and/or creatures that share a color with it.)\nWhenever a nontoken creature is put into your graveyard from the battlefield, you may pay {4}. If you do, return that card to the battlefield and attach this Equipment to it.\nEquip {4}"
+    }
+   ]
+  },
+  "Phantom Train": {
+   "fetched": "2026-08-03",
+   "name": "Phantom Train",
+   "mana": "{3}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact — Vehicle",
+     "oracle": "Trample\nSacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn.",
+     "pt": "4/4"
+    }
+   ]
+  },
   "Samut, Tyrant Smasher": {
    "fetched": "2026-08-03",
    "name": "Samut, Tyrant Smasher",
@@ -44,6 +125,20 @@
     }
    ]
   },
+  "Scurry Oak": {
+   "fetched": "2026-08-03",
+   "name": "Scurry Oak",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Treefolk",
+     "oracle": "Evolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)\nWhenever one or more +1/+1 counters are put on this creature, you may create a 1/1 green Squirrel creature token.",
+     "pt": "1/2"
+    }
+   ]
+  },
   "Smellerbee, Rebel Fighter": {
    "fetched": "2026-08-03",
    "name": "Smellerbee, Rebel Fighter",
@@ -55,6 +150,20 @@
      "types": "Legendary Creature — Human Rebel Ally",
      "oracle": "First strike\nOther creatures you control have haste.\nWhenever Smellerbee attacks, you may discard your hand. If you do, draw cards equal to the number of attacking creatures.",
      "pt": "3/3"
+    }
+   ]
+  },
+  "Woe Strider": {
+   "fetched": "2026-08-03",
+   "name": "Woe Strider",
+   "mana": "{2}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Horror",
+     "oracle": "When this creature enters, create a 0/1 white Goat creature token.\nSacrifice another creature: Scry 1.\nEscape—{3}{B}{B}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)\nThis creature escapes with two +1/+1 counters on it.",
+     "pt": "3/2"
     }
    ]
   },
