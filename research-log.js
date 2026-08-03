@@ -788,6 +788,8 @@ const PASSES = [
       + 'shapes of Cryptolith Rite and Elven Chorus touched: they grant the mana ability to '
       + 'every creature where the Roots grant it to tokens only, which is a real difference and '
       + 'a large space, and it is the biggest thing left open about this card.',
+  },
+  {
     subject: 'Bartolomé del Presidio',
     cards: ['Bartolomé del Presidio'],
     cardIds: [2921],
