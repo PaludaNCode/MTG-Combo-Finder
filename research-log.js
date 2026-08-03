@@ -679,6 +679,60 @@ const PASSES = [
       + 'says "Legendary Creature — Vampire Knight" — corrected above, and nothing had turned on '
       + 'it, but a type line from recollection is exactly what the cache exists to stop.',
   },
+  {
+    subject: 'Experimental Confectioner, a second time — and the method is out of proposals',
+    cards: ['Experimental Confectioner'],
+    cardIds: [2590],
+    date: '2026-08-03',
+    method: 'Peer discovery from the data rather than from the 0.9 threshold, then the one peer '
+      + 'it found swept exhaustively against today\'s snapshot. Asked because the earlier pass '
+      + 'on this card (2026-08-02) only ever looked at Camellia, and nobody had checked whether '
+      + 'he had other peers or whether newer combos had appeared since.',
+    read: {
+      'Experimental Confectioner': '{2}{B} Creature — Human Peasant 2/3. When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with “This token can’t block.”',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each Squirrel you control. Legendary Creature — Squirrel Druid 3/3 for {2}{B}{G}.',
+    },
+    proposed: 82,
+    examined: 82,
+    kept: 0,
+    ruledOut: [
+      { reason: 'NOTHING WAS LEFT TO PROPOSE, and the accounting closes exactly: of the 82 shapes '
+        + 'Camellia is published in that he is not, 25 are shapes he already has under a different '
+        + 'card list, 53 are strict supersets of a combo he already has (Spellbook does not publish '
+        + 'those), and 4 are already rows in unofficial.js from the 2026-08-02 pass. '
+        + '25 + 53 + 4 + 0 = 82, no remainder. This is a COMPLETE zero rather than a provisional '
+        + 'one, and the distinction matters here more than anywhere: the Basking Broodscale entry '
+        + 'warns that a kept: 0 reads as diligence, and it was right — but that zero sat on 136 '
+        + 'shapes nobody had read, where this one has nothing left to read. Subsumption is doing '
+        + 'most of the work, which is the shape of a well-covered card',
+        count: 82 },
+      { reason: 'HE HAS NO PEER AT THE THRESHOLD THE TOOL USES. Ranking every card by how many of '
+        + 'his 62 shapes it shares turned up exactly one above 3 shared — Camellia, at jaccard '
+        + '0.21 against a default bar of 0.9. So substitution-scope.js would never have proposed '
+        + 'him at all, and the only reason he has rows is that somebody swept him by hand from the '
+        + 'Camellia end. He is the second card recorded here that the method is simply silent '
+        + 'about, after Spike Feeder (83 published combos, no peer at any threshold). Worth '
+        + 'knowing that the work queue is not the same thing as the work' },
+      { reason: 'the gap this pass CANNOT close, named so nobody reads the zero above as '
+        + '"nothing remains". His function is "turn a sacrificed Food into a creature token", and '
+        + 'the method can only find a peer Spellbook has already published beside the same cards. '
+        + 'A card that does the same job and that Spellbook has never used in a combo is invisible '
+        + 'to all of this — the README says so under "What this cannot find". Answering it needs a '
+        + 'Scryfall query rather than the combo data: oracle:"sacrifice a Food" together with '
+        + 'oracle:"create", which a runner can ask and this sandbox cannot' },
+    ],
+    notes: 'A pass that added nothing, recorded because a card nobody has swept and a card swept '
+      + 'to exhaustion look identical from outside this file — which is the whole reason it exists. '
+      + 'The 2026-08-02 entry proposed 4, examined 4 and kept 4, and reading that alone would '
+      + 'suggest a rich card with more to give; re-running it against a newer snapshot and against '
+      + 'ALL his peers rather than the one somebody happened to pick says the opposite, and says it '
+      + 'with arithmetic that closes. The other half of this pair is settled too: the Camellia pass '
+      + 'took his shapes in the reverse direction, examined all 37 and ruled out 2 on the one real '
+      + 'difference between them — she reads "whenever you sacrifice ONE OR MORE Foods" for one '
+      + 'trigger per event, he reads "whenever you sacrifice A Food" for one per Food, so he is '
+      + 'strictly better in a loop that spends several and she is not worse anywhere. Both '
+      + 'directions of the only peer he has are now closed.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
