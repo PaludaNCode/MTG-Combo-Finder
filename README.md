@@ -1438,8 +1438,8 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 236 hand-written rows` | `unofficial.js` `COMBOS` |
-| `and the one stand-in rule` | `unofficial.js` `STAND_INS` |
+| `All 392 hand-written rows` | `unofficial.js` `COMBOS` |
+| `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
 | `Cards in the file \| 21,769 \| **12,472**` | `templates.json` |
@@ -1457,9 +1457,11 @@ somebody else's data taken on a particular morning. Pinning those would mean a r
 build every time Spellbook published a combo, so they stay prose, and stay the kind
 of number to re-measure rather than trust.
 
-The stand-in rule is the interesting anchor: it is spelled as a word, not a digit.
-The day there are two, the sentence that has to change is "and the one stand-in
-rule", and a check looking for a digit would never have noticed.
+The stand-in rules are the interesting anchor: the count is spelled as a word, not a
+digit. The day there were two, the sentence that had to change was "and the one stand-in
+rule" — a check looking for a digit would never have noticed, and this one did, on the
+day Bogwater Lumaret and Elas il-Kor made it three. The plural is inside the match now,
+so "the three stand-in rule" cannot creep back in either.
 
 ### The decisions live where a test can reach them
 
@@ -2733,7 +2735,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 236 hand-written rows cite a published combo. 210 of them and the one stand-in rule
+All 392 hand-written rows cite a published combo. 367 of them and the three stand-in rules
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -2793,9 +2795,18 @@ much worse decision to make while looking at a slow page.
 **At 50 KB gzipped, `COMBOS` moves to the `data` branch as JSON**, fetched by the worker
 and nothing else. The mechanics are already paid for: `connect-src` names that host,
 Cache Storage is already how the combo database gets there, and the nightly job already
-writes two artefacts beside each other. Roughly double today's rows, so this is not
-close — which is exactly why the number belongs here now rather than in the commit that
-has to act on it.
+writes two artefacts beside each other. The number belongs here rather than in the commit
+that has to act on it, which is the whole point of fixing it in advance.
+
+**It used to say "roughly double today's rows, so this is not close", and that stopped
+being true in a single pass.** The four-card sweep that added Bogwater Lumaret, Ghave,
+Elas il-Kor and Insidious Roots put on 156 rows at once and spent most of the remaining
+headroom; the threshold went from comfortably far to the same order of magnitude as the
+file. No replacement figure is written here, for the reason given above — `gzip -9 -c
+unofficial.js | wc -c` is the live answer and this paragraph would only rot again. What
+is worth recording is the shape of the risk: a single research pass can move this by half
+the remaining budget, so "not close" is not a state this file stays in, and the next pass
+of that size should settle the move before it starts rather than after.
 
 **And what it would cost, in the same breath**, because a threshold with only the
 benefit written down is a decision nobody can argue with later:
@@ -2905,8 +2916,8 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **560 candidates have been
-read, out of thousands proposed** — and which 560 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **855 candidates have been
+read, out of thousands proposed** — and which 855 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards

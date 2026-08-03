@@ -596,6 +596,200 @@ const PASSES = [
       + 'is simply silent about.',
   },
   {
+    subject: 'Bogwater Lumaret and Elas il-Kor, Sadistic Pilgrim',
+    cards: ['Bogwater Lumaret', 'Elas il-Kor, Sadistic Pilgrim'],
+    cardIds: [7399, 2811],
+    read: {
+      'Bogwater Lumaret': 'Creature — Spirit Frog 2/2 for {B}{G}. Whenever this creature or another creature you control enters, you gain 1 life.',
+      'Elas il-Kor, Sadistic Pilgrim': 'Legendary Creature — Phyrexian Kor Cleric 2/2 for {W}{B}. Deathtouch. Whenever another creature you control enters, you gain 1 life. Whenever another creature you control dies, each opponent loses 1 life.',
+      // The nine cards Spellbook puts in this slot. Which of them carries a shape is
+      // the whole of the pass, so all nine are here rather than only the two subjects.
+      'Kor Celebrant': 'Creature — Kor Cleric 1/4 for {2}{W}. Whenever this creature or another creature you control enters, you gain 1 life.',
+      'Impassioned Orator': 'Creature — Human Cleric 2/2 for {1}{W}. Whenever another creature you control enters, you gain 1 life.',
+      'Hinterland Sanctifier': 'Creature — Rabbit Cleric 1/2 for {W}. Whenever another creature you control enters, you gain 1 life.',
+      'Social Climber': 'Creature — Human Druid 3/2 for {2}{G}. Alliance — Whenever another creature you control enters, you gain 1 life.',
+      'Soul Warden': 'Creature — Human Cleric 1/1 for {W}. Whenever ANOTHER CREATURE enters, you gain 1 life.',
+      'Soul’s Attendant': 'Creature — Human Cleric 1/1 for {W}. Whenever ANOTHER CREATURE enters, you may gain 1 life.',
+      'Essence Warden': 'Creature — Elf Shaman 1/1 for {G}. Whenever ANOTHER CREATURE enters, you gain 1 life.',
+      'Ajani’s Welcome': 'ENCHANTMENT for {W}. Whenever a creature you control enters, you gain 1 life.',
+      'Prosperous Innkeeper': 'Creature — Halfling Citizen 1/1 for {1}{G}. WHEN THIS CREATURE ENTERS, CREATE A TREASURE TOKEN. Whenever another creature you control enters, you gain 1 life.',
+      'Distinguished Conjurer': 'Creature — Human Wizard 1/2 for {1}{W}. Whenever another creature you control enters, you gain 1 life. {4}{W}, {T}: EXILE ANOTHER TARGET CREATURE YOU CONTROL, THEN RETURN IT to the battlefield under its owner’s control.',
+      'Suture Priest': 'Creature — Phyrexian Cleric 1/1 for {1}{W}. Whenever another creature you control enters, you may gain 1 life. WHENEVER A CREATURE AN OPPONENT CONTROLS ENTERS, you may have that player lose 1 life.',
+      'Haliya, Guided by Light': 'Legendary Creature — Human Soldier 3/3 for {2}{W}. Whenever Haliya or another creature OR ARTIFACT you control enters, you gain 1 life. At the beginning of your end step, draw a card if you’ve gained 3 or more life this turn. Warp {W}.',
+      // The engines behind the shapes only the wide peers carry — read because a
+      // wide peer sees an opponent's creature and neither subject does, so "whose
+      // creature enters?" is a question about each of these and not about the peer.
+      'Darien, King of Kjeldor': 'Legendary Creature — Human Soldier 3/3 for {4}{W}{W}. Whenever you’re dealt damage, you may create that many 1/1 white Soldier creature tokens.',
+      'Hapatra, Vizier of Poisons': 'Legendary Creature — Human Cleric 2/2 for {B}{G}. Whenever Hapatra deals combat damage to a player, you may put a -1/-1 counter on target creature. Whenever you put one or more -1/-1 counters on a creature, create a 1/1 green Snake creature token with deathtouch.',
+      'Carnival of Souls': 'Enchantment for {1}{B}. Whenever a creature enters, you lose 1 life and add {B}.',
+      'Nim Deathmantle': 'Artifact — Equipment for {2}. Equipped creature gets +2/+2, has intimidate, and is a black Zombie. Whenever a NONTOKEN creature is put into your graveyard from the battlefield, you may pay {4}. If you do, return that card to the battlefield and attach this Equipment to it. Equip {4}.',
+      'Deadeye Navigator': 'Creature — Spirit 5/5 for {4}{U}{U}. Soulbond. As long as Deadeye Navigator is paired with another creature, each of those creatures has “{1}{U}: Exile this creature, then return it to the battlefield under your control.”',
+      'Famished Paladin': 'Creature — Vampire Knight 3/3 for {1}{W}. This creature doesn’t untap during your untap step. Whenever you gain life, untap this creature.',
+      'Scurry Oak': 'Evolve. Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 green Squirrel creature token. Creature — Treefolk 1/2 for {2}{G}.',
+      'Heliod, Sun-Crowned': 'Indestructible. As long as your devotion to white is less than five, Heliod isn’t a creature. Whenever you gain life, put a +1/+1 counter on target creature or enchantment you control. {1}{W}: Another target creature gains lifelink until end of turn.',
+    },
+    date: '2026-08-03',
+    method: 'the nine cards Spellbook fills the “creature enters, gain 1 life” slot with, diffed against each other and read one at a time',
+    proposed: 268,
+    examined: 175,
+    // Rows, which is what `kept` counts — the other 99 shapes this pass settled are a
+    // STAND_INS rule instead, and a rule is not a row. See the notes.
+    kept: 76,
+    ruledOut: [
+      { reason: 'Prosperous Innkeeper’s ETB Treasure is the loop, not its lifegain trigger. '
+        + 'Deadeye Navigator and Emiel the Blessed blink it to re-trigger “when this creature '
+        + 'enters, create a Treasure token”, and Nim Deathmantle reanimates it for the same '
+        + 'reason — which is also why Nim Deathmantle reads NONTOKEN. Neither subject has an '
+        + 'ETB at all', count: 64 },
+      { reason: 'Suture Priest’s second half — “whenever a creature AN OPPONENT CONTROLS '
+        + 'enters, you may have that player lose 1 life”. Questing Phelddagrif, Phelddagrif and '
+        + 'Hive Mind + Storm Herd all hand an opponent creatures, and neither subject sees an '
+        + 'opponent’s board on any line of text', count: 18 },
+      { reason: 'Distinguished Conjurer’s second ability, “{4}{W}, {T}: Exile another target '
+        + 'creature you control, then return it”. Intruder Alarm untaps him to run it again; '
+        + 'neither subject has an activated ability', count: 4 },
+      { reason: 'Haliya, Guided by Light triggers on “another creature OR ARTIFACT you control” '
+        + 'and both of her shapes turn on Sensei’s Divining Top, which is an artifact', count: 4 },
+    ],
+    notes: 'The clearest stand-in case since Hammerhead: Bogwater Lumaret has ONE ability and it '
+      + 'is Kor Celebrant’s, word for word, on a card that is otherwise a 2/2 for {B}{G} instead '
+      + 'of a 1/4 for {2}{W} — 60 published combos against Kor Celebrant’s 115 because he is '
+      + 'Spellbook card 7399 and nobody has caught up. So 99 of the 175 settled here are a '
+      + 'STAND_INS rule rather than rows (61 for Bogwater, 38 for Elas) — which is why `kept` '
+      + 'reads 76 and not 175: it counts rows, and a rule is not a row. The four sources are '
+      + 'the peers whose whole text '
+      + 'is the trigger and which read only creatures YOU control. **The other 76 are rows on '
+      + 'purpose, and the reason is the same one the Camellia entry gives.** Soul Warden, '
+      + 'Soul’s Attendant and Essence Warden read “whenever ANOTHER creature enters”, an '
+      + 'opponent’s included; a rule would claim their every future combo, and the loops that '
+      + 'do hand an opponent a creature are exactly the ones Spellbook publishes with Suture '
+      + 'Priest instead. Ajani’s Welcome is one line and it is the same line, but it is an '
+      + 'enchantment where both subjects are creatures. Those 38 shapes each were read against '
+      + 'the published steps: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, '
+      + 'Ghave’s Saproling, Fiend Hunter and Karmic Guide — every creature that enters is '
+      + 'yours. `examined` counts the kept; the 90 rule-outs died to four card readings, not '
+      + 'to 90 judgements, and twelve published step lists decided the rest by family.',
+  },
+  {
+    subject: 'Ghave, Guru of Spores',
+    cards: ['Ghave, Guru of Spores'],
+    cardIds: [5189],
+    read: {
+      'Ghave, Guru of Spores': 'Legendary Creature — Fungus Shaman 0/0 for {2}{W}{B}{G}. Ghave enters with five +1/+1 counters on it. {1}, Remove a +1/+1 counter from A CREATURE YOU CONTROL: Create a 1/1 green Saproling creature token. {1}, Sacrifice a creature: Put a +1/+1 counter on target creature.',
+      'Ulasht, the Hate Seed': 'Legendary Creature — Hellion Hydra 0/0 for {2}{R}{G}. Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. {1}, Remove a +1/+1 counter from ULASHT: Choose one — • Ulasht deals 1 damage to target creature. • Create a 1/1 green Saproling creature token.',
+      'Pentavus': 'ARTIFACT Creature — Construct 0/0 for {7}. This creature enters with five +1/+1 counters on it. {1}, Remove a +1/+1 counter from THIS CREATURE: Create a 1/1 colorless Pentavite ARTIFACT creature token with flying. {1}, Sacrifice A PENTAVITE: Put a +1/+1 counter on this creature.',
+      'Thopter Squadron': 'ARTIFACT Creature — Thopter 0/0 for {5}. Flying. This creature enters with three +1/+1 counters on it. {1}, Remove a +1/+1 counter from THIS CREATURE: Create a 1/1 colorless Thopter ARTIFACT creature token with flying. ACTIVATE ONLY AS A SORCERY. {1}, Sacrifice another Thopter: Put a +1/+1 counter on this creature. Activate only as a sorcery.',
+      'Triskelavus': 'ARTIFACT Creature — Construct 1/1 for {7}. Flying. This creature enters with three +1/+1 counters on it. {1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Triskelavite ARTIFACT creature token with flying. IT HAS “SACRIFICE THIS TOKEN: THIS TOKEN DEALS 1 DAMAGE TO ANY TARGET.”',
+      // The engines. One fact about each decides its whole family, which is why
+      // `examined` is nowhere near `proposed`.
+      'Dross Scorpion': 'ARTIFACT Creature — Scorpion 3/1 for {4}. Whenever this creature or another ARTIFACT CREATURE dies, you may untap TARGET ARTIFACT.',
+      'Krark-Clan Ironworks': 'Artifact for {4}. Sacrifice an ARTIFACT: Add {C}{C}.',
+      'Urza, Lord High Artificer': 'Legendary Creature — Human Artificer 1/4 for {2}{U}{U}. When Urza enters, create a 0/0 colorless Construct artifact creature token with “This token gets +1/+1 for each artifact you control.” Tap an untapped ARTIFACT you control: Add {U}. {5}: Shuffle your library, then exile the top card…',
+      'True Conviction': 'Enchantment for {3}{W}{W}{W}. Creatures you control have double strike and LIFELINK.',
+      'Kaya, Geist Hunter': 'Legendary Planeswalker — Kaya 3 for {1}{W}{B}. −2: Until end of turn, if one or more tokens would be created under your control, TWICE that many of those tokens are created instead.',
+      'Earthcraft': 'Enchantment for {1}{G}. TAP AN UNTAPPED CREATURE YOU CONTROL: Untap target basic land.',
+      'Agatha’s Soul Cauldron': 'Legendary Artifact for {2}. You may spend mana as though it were mana of any color to activate abilities of creatures you control. Creatures you control with +1/+1 counters on them have all activated abilities of all creature cards exiled with Agatha’s Soul Cauldron. {T}: Exile target card from a graveyard…',
+      'Ramos, Dragon Engine': 'Legendary Artifact Creature — Dragon 4/4 for {6}. Flying. Whenever you cast a spell, put a +1/+1 counter on Ramos for each of that spell’s colors. Remove five +1/+1 counters from Ramos: Add {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}. Activate only once each turn.',
+      'Cathars’ Crusade': 'Enchantment for {4}{W}. Whenever a creature you control enters, put a +1/+1 counter on each creature you control.',
+      'Ivy Lane Denizen': 'Creature — Elf Warrior 2/3 for {3}{G}. Whenever another GREEN creature you control enters, put a +1/+1 counter on target creature.',
+      'Quickbeam, Upstart Ent': 'Legendary Creature — Treefolk 5/6 for {4}{G}{G}. Whenever Quickbeam or another TREEFOLK you control enters, up to two target creatures each get +2/+2 and gain trample until end of turn.',
+    },
+    date: '2026-08-03',
+    method: 'the four cards that turn a +1/+1 counter into a token and a token back into a counter, compared line by line',
+    proposed: 196,
+    examined: 52,
+    kept: 31,
+    ruledOut: [
+      { reason: 'Pentavus, Thopter Squadron and Triskelavus are ARTIFACTS making ARTIFACT '
+        + 'tokens, and that is what most of their combos are about. Dross Scorpion untaps a '
+        + 'target artifact when an artifact creature dies, Krark-Clan Ironworks sacrifices an '
+        + 'artifact for {C}{C}, Urza taps an untapped artifact for {U}, and Clock of Omens, '
+        + 'Extruder, Yotian Dissident, Stridehangar Automaton and the Atog family all read the '
+        + 'same word. Ghave is a Fungus Shaman making a green Saproling; there is nothing in '
+        + 'any of those loops for him to be' },
+      { reason: 'the token’s own ability is the loop. Triskelavus makes a Triskelavite with '
+        + '“Sacrifice this token: This token deals 1 damage to any target”, True Conviction '
+        + 'gives it lifelink, and the life is what buys the next +1/+1 counter off Heliod or '
+        + 'Spider-Man. A Saproling is a 1/1 with no text at all', count: 36 },
+      { reason: 'Ulasht’s other mode, “deals 1 damage to target creature”, which Ghave has no '
+        + 'equivalent of. No candidate here turned out to use it, so this rules out nothing — '
+        + 'recorded because it is the one direction the swap does not run' },
+    ],
+    notes: 'A well-covered card that was still worth the sweep: 196 proposed, 31 kept, and 165 '
+      + 'dead on two facts. **Ulasht is the true peer and it is not close** — “{1}, Remove a '
+      + '+1/+1 counter from ULASHT” against Ghave’s “from A CREATURE YOU CONTROL”, same cost, '
+      + 'same 1/1 green Saproling — so 21 of the 25 Ulasht shapes are rows and the other four '
+      + 'are supersets of combos Ghave already has. The three Ramos lines are the ones to read '
+      + 'twice: they blink the engine to refill its counters, and Ulasht enters with a counter '
+      + 'per other red or green creature where Ghave enters with a flat five, so those work for '
+      + 'Ghave on an empty board and for Ulasht only on a full one. **Not swept:** the four '
+      + 'Quickbeam, Upstart Ent shapes, where a type-changer (Conspiracy, Xenograft, Maskwood '
+      + 'Nexus, Arcane Adaptation) naming Treefolk makes the token trigger him. The swap looks '
+      + 'sound — a Saproling under Conspiracy is as much a Treefolk as a Thopter is — but the '
+      + 'loop also spends Devoted Druid’s untaps against Thopter Squadron’s sorcery-speed '
+      + 'restriction, which Ghave does not have, so the mana arithmetic is a different sum and '
+      + 'nobody has done it.',
+  },
+  {
+    subject: 'Insidious Roots',
+    cards: ['Insidious Roots'],
+    cardIds: [5477],
+    read: {
+      'Insidious Roots': 'Enchantment for {B}{G}. Creature tokens you control have “{T}: Add one mana of any color.” Whenever one or more CREATURE CARDS leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control.',
+      // The graveyard half: three cards with its trigger word for word, and four with
+      // a wider one. The token is the only thing that differs.
+      'Skeleton Crew': 'Creature — Skeleton Pirate 3/3 for {3}{B}. Each other creature you control that’s a Skeleton or Pirate gets +1/+1. Whenever one or more CREATURE CARDS leave your graveyard, create a 2/2 black Skeleton Pirate creature token. (This ability triggers only from the battlefield.) {5}{B}: Return this card from your graveyard to the battlefield tapped.',
+      'Desecrated Tomb': 'Artifact for {3}. Whenever one or more CREATURE CARDS leave your graveyard, create a 1/1 black Bat creature token with flying.',
+      'Chalk Outline': 'Enchantment for {3}{G}. Whenever one or more CREATURE CARDS leave your graveyard, create a 2/2 white and blue Detective creature token, THEN INVESTIGATE. (Create a Clue token. It’s an artifact with “{2}, Sacrifice this token: Draw a card.”)',
+      'Tormod, the Desecrator': 'Legendary Creature — Zombie Wizard 4/2 for {3}{B}. Whenever one or more CARDS leave your graveyard, create a tapped 2/2 black Zombie creature token. Partner.',
+      // The mana half. Springleaf Parade's second line is the Roots' first, verbatim.
+      'Springleaf Parade': 'Enchantment for {X}{G}{G}. When this enchantment enters, create X 1/1 colorless Shapeshifter creature tokens with changeling. CREATURE TOKENS YOU CONTROL HAVE “{T}: ADD ONE MANA OF ANY COLOR.”',
+      'Jaheira, Friend of the Forest': 'Legendary Creature — Human Elf Druid 2/3 for {2}{G}. TOKENS you control have “{T}: Add {G}.” Choose a Background.',
+      // The engines each family turns on.
+      'Ovalchase Daredevil': 'Creature — Human Pilot 4/2 for {4}{R}. Whenever an ARTIFACT you control enters, you may return this card from your graveyard to your hand.',
+      'Shilgengar, Sire of Famine': 'Legendary Creature — Elder Demon 6/6. Flying. Sacrifice another creature: Create a Blood token. If you sacrificed an ANGEL this way, create a number of Blood tokens equal to its toughness instead. {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your graveyard to the battlefield with a finality counter on it.',
+      'Coercive Recruiter': 'Creature — Orc Pirate 4/3 for {4}{R}. Whenever this creature or another PIRATE you control enters, gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and becomes a Pirate in addition to its other types.',
+      'Sage of the Falls': 'Creature — Merfolk Wizard 2/5 for {3}{U}. Whenever this creature or another NON-HUMAN creature you control enters, you may draw a card. If you do, discard a card.',
+      'Whisper, Blood Liturgist': 'Legendary Creature — Human Cleric 2/2 for {3}{B}. {T}, Sacrifice TWO creatures: Return target creature card from your graveyard to the battlefield.',
+      'Abby, Merciless Soldier': 'Legendary Creature — Human Survivor 4/4 for {1}{R}{G}. When you cast this spell, create a number of 1/1 black Fungus Zombie creature tokens named Cordyceps Infected equal to the amount of mana spent to cast it. Abby enters under the control of an opponent of your choice. Partner—Survivors.',
+      'Ashnod’s Altar': 'Artifact for {3}. Sacrifice a creature: Add {C}{C}.',
+      'Phyrexian Altar': 'Artifact for {3}. Sacrifice a creature: Add one mana of any color.',
+    },
+    date: '2026-08-03',
+    method: 'each of its two abilities against the cards published with that ability alone',
+    proposed: 172,
+    examined: 68,
+    kept: 49,
+    ruledOut: [
+      { reason: 'Chalk Outline INVESTIGATES and the Roots do not. The Clue is an artifact, and '
+        + 'the artifact is what returns Ovalchase Daredevil — “whenever an ARTIFACT you control '
+        + 'enters” — so the loop runs on the half of Chalk Outline the Roots have no equivalent '
+        + 'of. The Plant is a creature token and nothing else. The six Moss-Pit Skeleton shapes '
+        + 'are the same fact one step along: the Clue is what triggers Rook Turret', count: 18 },
+      { reason: 'Coercive Recruiter reads “whenever this creature or another PIRATE you control '
+        + 'enters”, and Skeleton Crew answers with a Skeleton PIRATE where the Roots answer '
+        + 'with a Plant', count: 1 },
+    ],
+    notes: 'Two cards in one enchantment, so it has two peer families and they share nothing. '
+      + 'The graveyard half has three verbatim twins — Skeleton Crew, Desecrated Tomb and Chalk '
+      + 'Outline all read “whenever one or more CREATURE CARDS leave your graveyard” — which '
+      + 'makes the token the only question, and the answer differs per loop: it has to be a '
+      + 'creature Shilgengar can eat (14 rows), a creature an altar can eat or a NON-HUMAN '
+      + 'creature entering for Sage of the Falls (11 rows), a Pirate (ruled out), or an artifact '
+      + 'the Clue provides (18 ruled out). The mana half is cleaner than anything else in this '
+      + 'file: Springleaf Parade’s second line IS the Roots’ first line, and its 24 shapes are '
+      + 'one loop behind 24 haste enablers, so one reading of Abby, Merciless Soldier settles '
+      + 'all of them. Jaheira, Friend of the Forest is not a source for it — she grants {G} '
+      + 'only and Abby needs {R}{G}. **NOT SWEPT, and this is the open half of the card:** the '
+      + '103 shapes carried by the peers that read “whenever one or more CARDS leave your '
+      + 'graveyard” — Tormod, the Desecrator, both Quintorius, Garrison Excavator, Teval — '
+      + 'where the Roots need the card leaving to be a CREATURE card. That is a per-shape '
+      + 'question, not one fact about an engine, and nobody has asked it. Nor are the 1,689 '
+      + 'shapes of Cryptolith Rite and Elven Chorus touched: they grant the mana ability to '
+      + 'every creature where the Roots grant it to tokens only, which is a real difference and '
+      + 'a large space, and it is the biggest thing left open about this card.',
+  },
+  {
     subject: 'Bartolomé del Presidio',
     cards: ['Bartolomé del Presidio'],
     cardIds: [2921],
