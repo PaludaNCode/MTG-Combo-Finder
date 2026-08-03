@@ -10,40 +10,43 @@
   const Dom = global.PageDom || (typeof require === 'function' ? require('./page-dom.js') : null);
   const { el, link, panel } = Dom;
 
-  function suggestionCard(group, rank, deckNames) {
+  // A card worth adding. Two columns: its numbers in the gutter, and beside them
+  // the card, where to read about it, and what its combos cost to assemble — one
+  // per line, in that order.
+  //
+  // The name gets a line to itself rather than sharing one with the links, which
+  // is what lets it be a card name and not a measurement problem: on a shared line
+  // the links fit beside names of up to about twelve characters at 390px and were
+  // pushed to the next line by everything longer, so their position went ragged
+  // down the list. Measured over eleven real names at four widths.
+  function suggestionCard(group, deckNames) {
     const card = el('article', 'combo suggestion');
     const [first, ...rest] = group.cards;
 
-    const header = el('h3');
-    header.appendChild(el('span', 'rank', rank + '. '));
-    header.appendChild(el('span', 'card-name', first));
-    // Just the number. The word was carrying nothing that the panel heading and
-    // the size pills beside it do not already say, and it was repeated on every
-    // row — but the meaning still has to reach a screen reader, so it moves into
-    // the label rather than disappearing.
-    // The total, because a card that would unlock three published combos and five
-    // of ours is an eight-combo decision. What kind of eight it is goes on the
-    // line below.
-    const ours = (group.unofficial || []).length;
-    const total = group.unlocks.length + ours;
-    const badge = el('span', 'badge', '+' + total);
-    const spoken = 'unlocks ' + total + ' combo' + (total === 1 ? '' : 's');
-    badge.title = spoken;
-    badge.setAttribute('aria-label', spoken);
-    header.appendChild(badge);
-    const sizes = RenderRows.sizeRow(group.unlocks.concat(group.unofficial || []));
-    if (sizes) header.appendChild(sizes);
-    card.appendChild(header);
-
     // A card can reach this list on our rows alone — Hammerhead unlocks nothing
-    // Spellbook has published and 1,889 combos we believe in.
-    const split = RenderRows.splitLine(group.unlocks.length, ours, true);
-    if (split) card.appendChild(split);
+    // Spellbook has published and 1,889 combos we believe in. The gutter carries
+    // the total because that is the size of the decision; what kind of decision
+    // it is, is the split underneath.
+    const ours = (group.unofficial || []).length;
+    card.appendChild(RenderRows.numberGutter(group.unlocks.length, ours, true));
 
+    const main = el('div', 'row-main');
+    const header = el('h3', 'row-name');
+    header.appendChild(el('span', 'card-name', first));
+    main.appendChild(header);
+
+    // The links and the button on one line: everything you can do with this card
+    // without leaving the row. They share it down to about 390px and the button
+    // takes its own line below that, which costs height and nothing else.
     const links = el('p', 'card-links');
     links.appendChild(RenderRows.cardLinks(first));
     links.appendChild(RenderRows.addButton(first));
-    card.appendChild(links);
+    main.appendChild(links);
+
+    const sizes = RenderRows.sizeRow(group.unlocks.concat(group.unofficial || []));
+    if (sizes) main.appendChild(sizes);
+
+    card.appendChild(main);
 
     if (rest.length) {
       const alt = el('div', 'alternatives');
@@ -102,35 +105,37 @@
     return card;
   }
 
-  // One of your cards, with the combos it holds together.
-  function pieceCard(piece, rank) {
+  // One of your cards, with the combos it holds together. Same two columns as a
+  // suggestion above, and for the same reason: both panels are ranked by the number
+  // in the gutter, so both are read down that column.
+  function pieceCard(piece) {
     const card = el('article', 'combo suggestion');
 
-    const head = el('div', 'sug-head');
-    head.appendChild(el('span', 'rank', rank + '. '));
-    head.appendChild(el('span', 'card-name', piece.card));
     // What cutting the card actually costs, which is both halves: a card holding
-    // up two of Spellbook's combos and four of ours costs six. Whose six it is
-    // goes on the line below.
-    const total = piece.count + piece.unofficial;
-    head.appendChild(el('span', 'badge', 'in ' + total + ' combo' + (total === 1 ? '' : 's')));
+    // up two of Spellbook's combos and four of ours costs six. Whose six it is,
+    // is the split under the total.
+    card.appendChild(RenderRows.numberGutter(piece.count, piece.unofficial));
+
+    const main = el('div', 'row-main');
+    const head = el('h3', 'row-name');
+    head.appendChild(el('span', 'card-name', piece.card));
+    main.appendChild(head);
+
+    const links = el('p', 'card-links');
+    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(piece.card), 'EDHREC'));
+    links.appendChild(document.createTextNode(' · '));
+    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + piece.card + '"'), 'Scryfall'));
+    main.appendChild(links);
+
     // The same breakdown a suggestion carries, for the same reason: "in 9 combos" is
     // one number covering nine different propositions, and a card holding up three
     // two-card lines is a very different card to cut than one holding up nine
     // four-card ones. This panel exists to answer "what does cutting this cost me",
     // which the count alone answers only in the crudest terms.
     const sizes = RenderRows.sizeRow(piece.combos);
-    if (sizes) head.appendChild(sizes);
-    card.appendChild(head);
+    if (sizes) main.appendChild(sizes);
 
-    const split = RenderRows.splitLine(piece.count, piece.unofficial);
-    if (split) card.appendChild(split);
-
-    const links = el('p', 'card-links');
-    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(piece.card), 'EDHREC'));
-    links.appendChild(document.createTextNode(' · '));
-    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + piece.card + '"'), 'Scryfall'));
-    card.appendChild(links);
+    card.appendChild(main);
 
     const details = el('details');
     details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
@@ -264,7 +269,7 @@
     const body = panel(container, 'pieces', 'Cards carrying your combos', pieces.length);
     // The per-card count says this already; a sentence restating it for the
     // top card is just noise above the list.
-    pieces.forEach((p, i) => body.appendChild(pieceCard(p, i + 1)));
+    pieces.forEach((p) => body.appendChild(pieceCard(p)));
   }
 
   function renderSuggestions(container, onColour, offColour, deckNames, identity) {
@@ -305,7 +310,7 @@
       pane.setAttribute('role', 'tabpanel');
       pane.setAttribute('aria-labelledby', button.id);
       if (tab.items.length) {
-        tab.items.forEach((s, i) => pane.appendChild(suggestionCard(s, i + 1, deckNames)));
+        tab.items.forEach((s) => pane.appendChild(suggestionCard(s, deckNames)));
       } else {
         pane.appendChild(el('p', 'empty', tab.empty));
       }

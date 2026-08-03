@@ -171,13 +171,17 @@
   // a two-card line.
   //
   // The smallest is marked, because that is the one being looked for. The parts
-  // sum to the badge beside them, so there is no second total to reconcile.
-  // Rendered inline, on the same line as the card and its count, so the whole
-  // recommendation is one line: "Herd Baloth +10  1 × 2-card  9 × 3-card". A
-  // second line per row costs 80 lines down a list this long, and the pills are
-  // short enough not to need one.
+  // sum to the total in the gutter, so there is no second total to reconcile.
   //
-  // Unlabelled on purpose. "1 × 2-card" beside a count, under a heading reading
+  // These used to be squeezed onto the card's own line to save a line per row, and
+  // they now close the row on a line of their own, which the split's move into the
+  // gutter paid for. Measured at 390px on the fixture decks, and it is not free:
+  // a row carrying a split is 127px where it was 156px, a row without one 115px
+  // where it was 120px — but a row whose pills wrap inside the narrower column is
+  // 141px against 120px. On the name's line they wrapped anyway wherever there
+  // were three of them.
+  //
+  // Unlabelled on purpose. "1 × 2-card" under a card name, in a panel headed
   // "Suggested additions", does not need a caption telling the reader it is about
   // combo sizes — and a caption repeated on every row is 80 of them.
   function sizeRow(variants) {
@@ -240,38 +244,55 @@
     return a;
   }
 
-  // Where a count is part Spellbook's and part ours: one number on the row, and
-  // the split on a quiet second line beneath it.
+  // The row's numbers, as a column of their own down the left of every row: the
+  // total, the word it counts, and the two halves it is made of.
   //
-  // The badge carries the total because the panels are ranked columns and the
-  // question each answers — what does cutting this cost, what would adding this
-  // give me — is answered by the total before anything else is read. Two badges
-  // made the reader add them up; one badge and no split hid half the answer.
+  // A column rather than a badge after the card name, because these panels are
+  // ranked lists and the question each answers — what does cutting this cost,
+  // what would adding this give me — is answered by the total before anything
+  // else on the row is read. A badge that follows the name lands wherever the name
+  // ends, so eighty totals sat at eighty different offsets and there was nothing
+  // to scan down. Here the gutter is one fixed width and every total shares both
+  // its edges. It also absorbed the rank: the panel is sorted by this number, so
+  // "1." beside the name was a second, weaker copy of the same ordering.
   //
-  // The line appears only on the rows that have a split, so the majority of rows
-  // are exactly what they were. The unofficial half is in the accent — the colour
-  // the page already spends on its own links and buttons, and the one colour that
-  // means "the site talking" rather than "a property of the combo". Green, khaki
-  // and grey are the result tiers, and a fourth hue in that family would read as
-  // a fourth tier.
+  // The unofficial half is in the accent — the colour the page already spends on
+  // its own links and buttons, and the one colour that means "the site talking"
+  // rather than "a property of the combo". Green, khaki and grey are the result
+  // tiers, and a fourth hue in that family would read as a fourth tier.
   //
-  // Written out in words rather than parked in a tooltip: "5 unofficial" is the
-  // whole claim, and a claim a reader has to hover to find is one the page is
-  // hiding.
-  function splitLine(official, ours, plus) {
-    const parts = DeckView.splitParts(official, ours, plus);
-    if (!parts) return null;
-    const line = el('p', 'split-line');
-    if (parts.official) {
-      line.appendChild(document.createTextNode(parts.official));
-      line.appendChild(el('span', 'dot', ' · '));
+  // The words the halves used to carry are in `spoken`, which is the split's
+  // accessible name and its tooltip: role="img" is what makes AT read that label
+  // instead of announcing "17+7", the same trick the mana pips use to be heard as
+  // "green". See rowNumbers() in view-model.js for why the words moved rather
+  // than went.
+  function numberGutter(official, ours, plus) {
+    const n = DeckView.rowNumbers(official, ours, plus);
+    const wrap = el('div', 'row-numbers');
+
+    const total = el('span', 'row-total' + (n.scale ? ' is-' + n.scale : ''));
+    // The sign is a sign, not a numeral, and is set smaller in CSS for exactly
+    // that reason: at the digits' size "+24" on its own needed 63px of a 54px
+    // column, which is what used to push the four-digit rows out of it.
+    if (n.sign) total.appendChild(el('span', 'sign', n.sign));
+    total.appendChild(document.createTextNode(n.count));
+    total.title = n.spoken;
+    wrap.appendChild(total);
+    // The word is beneath the number rather than inside it, so the number is the
+    // only thing at that size and the column reads as numbers.
+    wrap.appendChild(el('span', 'row-total-label', n.label));
+
+    if (n.split) {
+      const split = el('span', 'row-split');
+      split.appendChild(el('span', 'official', n.split.official));
+      split.appendChild(el('span', 'sign', '+'));
+      split.appendChild(el('span', 'ours', n.split.ours));
+      split.setAttribute('role', 'img');
+      split.setAttribute('aria-label', n.split.spoken);
+      split.title = n.split.spoken;
+      wrap.appendChild(split);
     }
-    line.appendChild(el('span', 'ours', parts.ours));
-    if (parts.none) {
-      line.appendChild(el('span', 'dot', ' · '));
-      line.appendChild(document.createTextNode(parts.none));
-    }
-    return line;
+    return wrap;
   }
 
 
@@ -284,7 +305,7 @@
     return name;
   }
 
-  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, addCardToDeck, addButton, sizeRow, alternativeItem, cardsOnScryfall, splitLine, takeAddedNote };
+  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, addCardToDeck, addButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, takeAddedNote };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

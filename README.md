@@ -58,7 +58,8 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   [Why Moxfield URLs can't be loaded](#why-moxfield-urls-cant-be-loaded).
 - **Cards carrying your combos** — every card that takes part in a combo you can
   already assemble, ranked by how many, each with the same size breakdown a
-  suggestion carries (*in 5 combos · 3 × 2-card · 1 × 3-card · 1 × 4-card*). A list
+  suggestion carries (*5 combos, 3 of Spellbook's and 2 of ours · 3 × 2-card ·
+  1 × 3-card · 1 × 4-card*). A list
   of combos hides this: cutting a card that turns up in four of them costs four
   combos, which is exactly what you want to know before trimming a deck — and
   whether those four are two-carders or four-carders changes the answer.
@@ -329,25 +330,34 @@ in reverse. That panel exists to answer "what would cutting this cost me", and *
 is one number covering nine different propositions:
 
 ```
-1. Basalt Monolith   in 5 combos   3 × 2-card   1 × 3-card   1 × 4-card
+   5    │ Basalt Monolith
+COMBOS  │ EDHREC · Scryfall
+  3+2   │ 3 × 2-card   1 × 3-card   1 × 4-card
 ```
 
 A card holding up three two-card lines is a very different card to cut than one holding up
 nine four-card ones, and the count alone cannot tell them apart. The layout test asserts the
-pills are on the card's own line, are smallest-first, and **sum to the badge beside them** —
-a breakdown that disagrees with its own total is worse than none.
+pills are in the card's own column, are smallest-first, and **sum to the total in the
+gutter** — a breakdown that disagrees with its own total is worse than none.
 
 Four details, each of them a decision:
 
-- **Inline, not a second line.** A line per row is eighty lines down a list this long, and
-  the pills are short enough not to need one. They wrap under the card name on a phone.
-- **Unlabelled.** "1 × 2-card" next to a count, under a heading reading *Suggested
-  additions*, does not need a caption explaining that it is about combo sizes — and a
-  caption would repeat on all eighty rows.
-- **The badge is the number alone.** `+3`, not `+3 combos`: the word was said again by
-  every row and by the pills beside it. It is not simply dropped, though — the badge carries
-  `aria-label="unlocks 3 combos"`, so what a sighted reader infers from context is still
-  spoken.
+- **The last line of the row, not squeezed onto the card's.** They used to share the name's
+  line to save a line per row, which mattered when the row had four lines to spend. Moving
+  the split into the gutter (below) paid for one, so the name, the links and the pills got
+  one each. **Measured at 390px, this is a trade and not a free win:** a row that carries a
+  split is 127px where it was 156px, and a row without one 115px where it was 120px — but the
+  pills now live in a 248px column instead of the row's full 324px, so a row whose three
+  pills wrap is 141px against 120px. Across a whole panel it goes both ways: the deck with
+  unofficial rows loses 72px, the tuning deck gains 46px. On the name's line the pills
+  wrapped anyway wherever there were three of them.
+- **Unlabelled.** "1 × 2-card" under a card name, in a panel headed *Suggested additions*,
+  does not need a caption explaining that it is about combo sizes — and a caption would
+  repeat on all eighty rows.
+- **The total is the number alone.** `+3`, not `+3 combos`: the word is under it in the
+  gutter, and saying it twice per row is eighty repetitions. It is not simply dropped, though
+  — the total carries `title="unlocks 3 combos"`, and the layout test fails if any total on
+  the page cannot say what it counts.
 - **Only a two-card pill is filled.** Two is the floor — no combo needs fewer — so it is the
   one worth marking, and the filled pills become the scan target for "what is easy here".
   Filling whichever pill happened to be smallest on its row would light up a card whose
@@ -373,7 +383,7 @@ Three decisions:
 - **Per card, not per panel.** An aggregate summary over the whole list needs a
   denominator, and there are two defensible ones — 19 of 80 recommendations and 21 of 198
   combos are both true and answer different questions. A per-row breakdown has neither
-  problem: its parts sum to the badge sitting beside them, which the layout test asserts.
+  problem: its parts sum to the total in the row's gutter, which the layout test asserts.
 - **Slate, not the tier colours.** Green, yellow and grey already mean *what a combo
   achieves*. A size pill in green would read as "this wins the game" rather than "this needs
   two cards", so size gets a colour of its own (`--size`).
@@ -2664,27 +2674,48 @@ ours could not be suggested at all, which is the worst version of the problem: n
 number that is too low, but a card the page cannot mention. Hammerhead unlocks 1,889
 combos and Spellbook has published none of them.
 
-So both panels count both — **one total on the row, and whose it is underneath**:
+So both panels count both — **the total, and whose it is underneath**, in a gutter
+down the left of every row:
 
 ```
-Scurry Oak                in 15 combos
-                          10 official · 5 unofficial
+   15   │ Scurry Oak                    ← 10 of Spellbook's, 5 of ours
+COMBOS  │ EDHREC · Scryfall
+ 10+5   │ 2 × 2-card   13 × 3-card
 
-Basking Broodscale        in 9 combos           ← no split, no second line
+   9    │ Basking Broodscale            ← no split: nothing of ours on this row
+COMBOS  │ EDHREC · Scryfall
+        │ 9 × 3-card
 
-Hammerhead, Maggia Boss   in 4 combos
-                          4 unofficial · none published
+   4    │ Hammerhead, Maggia Boss       ← the whole case is ours
+COMBOS  │ EDHREC · Scryfall
+  0+4   │ 4 × 3-card
 
-Kitchen Finks             +8                    ← as a suggestion
-                          +3 official · +5 unofficial
+  +8    │ Kitchen Finks                 ← as a suggestion: what it would add
+COMBOS  │ EDHREC · Scryfall · + Add to deck
+  3+5   │ 1 × 2-card   7 × 3-card
 ```
 
-The badge carries the **total** because these are ranked columns and the question
+The gutter carries the **total** because these are ranked columns and the question
 each answers — what does cutting this cost, what would adding this give me — is
-answered by the total before anything else is read. Two badges made the reader add
-them up; one badge and no split hid half the answer. The second line appears only on
-the rows that have a split, so on the worked deck seventeen of twenty-two rows are
-exactly what they were.
+answered by the total before anything else is read. Two numbers made the reader add
+them up; one number and no split hid half the answer.
+
+**A column and not a badge after the card name**, which is what this was for a long
+time. A badge that follows the name lands wherever the name ends, so eighty totals
+sat at eighty different offsets and there was nothing to read down — `Scurry Oak` put
+its badge at 40% of the width and `Warren Soultrader` at 75%. The gutter is one fixed
+4.2rem, so every total in a panel shares both edges; the layout test measures the
+distinct right edges per panel and fails on more than one, which is the only way that
+claim can be checked — it is invisible in a screenshot of a single row. The column
+also absorbed the rank: the panel is *sorted* by this number, so `1.` beside the name
+was a second, weaker copy of the same ordering.
+
+The width is measured rather than chosen. Four-digit totals are real — Hammerhead
+again — so the gutter has to hold `0+1889`, and at 3.4rem that clipped. Widening it
+for every row would take 20px off the card name on the rows that do not need it, so
+the rare long totals step down a type size instead and right alignment keeps the edge
+still. The `+` is set at .62em of the digits, because a sign is not a numeral: at full
+size `+24` alone needed 63px of a 54px column.
 
 Ranking is by the two together, because impact is impact and a card you cannot see
 is worse than a card ranked slightly wrong; ties break toward the published count,
@@ -2693,9 +2724,19 @@ so two cards of equal reach are not ordered by how much of that reach is our cla
 The unofficial half takes the accent — the colour the page already spends on its own
 links and buttons, and the one that means "the site talking" rather than "a property
 of the combo". Green, khaki and grey are *win*, *decisive* and *other*, and a fourth
-hue in that family would read as a fourth result tier. The word "unofficial" is
-written out on the row rather than parked in a tooltip: it is the whole claim, and a
-claim a reader has to hover to find is one the page is hiding.
+hue in that family would read as a fourth result tier.
+
+**The words "official" and "unofficial" are no longer on the row**, and that reverses
+what this section used to say — that the claim must not depend on a tooltip. The
+reasoning it replaces is worth keeping, because the objection is right: `10+5` in two
+colours is unreadable to anyone who cannot see the colours. So the sentence did not go
+into a tooltip, it went into the split's **accessible name** — `role="img"` with
+`aria-label="10 published by Commander Spellbook, 5 unofficial"`, the same device the
+mana pips use to be heard as "green" rather than "G". A screen reader gets the claim in
+words, a pointer gets it on hover, and the column stays a column. The layout test
+asserts all three: the role, the sentence, and that the two halves do not compute to
+the same colour. Cutting the words *without* that would be the version of this change
+that hides half the answer.
 
 ### Matching the unofficial rows costs one pass, however many rules there are
 

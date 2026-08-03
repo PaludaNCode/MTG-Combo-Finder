@@ -101,20 +101,49 @@
     }));
   }
 
-  // ---- whose combos a number is made of --------------------------------------
+  // ---- the numbers a row carries, and whose combos they are -------------------
 
-  // "+4 official · +1 unofficial", or "+1 unofficial · none published". Returns
-  // null when there is nothing of ours on the row, which is most rows: the split
-  // is only worth printing when the count has two halves.
-  function splitParts(official, ours, plus) {
-    if (!ours) return null;
-    const n = (count) => (plus ? '+' : '') + count;
+  // A result row's numbers sit in a column of their own rather than in the
+  // sentence: the total, the word, and under it the two halves it is made of —
+  // "24 / combos / 17+7". One function for all three because they are one claim,
+  // and a total that disagreed with its own halves is the worst thing this panel
+  // could print.
+  //
+  // The halves are numerals where they used to be "17 official · 7 unofficial",
+  // and that is a deliberate reversal of what this file used to say. The words
+  // were here so the distinction did not rest on colour, which is a real concern
+  // and the reason `spoken` exists: it is the split's accessible name and its
+  // tooltip, so the sentence still reaches a screen reader and a pointer while
+  // the column stays a column. Cutting the words *without* that would be the
+  // version of this change that hides half the answer.
+  //
+  // `plus` is the suggestion panel's "+24" — there the total is what the card
+  // would add. The split never takes the sign: "+20+4" reads as arithmetic, and
+  // the + between the halves is the only one that means anything.
+  function rowNumbers(official, ours, plus) {
+    const total = official + ours;
     return {
-      official: official ? n(official) + ' official' : '',
-      ours: n(ours) + ' unofficial',
-      // A card whose whole case is ours says so, rather than leaving the reader to
-      // infer it from a missing half.
-      none: official ? '' : 'none published',
+      sign: plus ? '+' : '',
+      count: String(total),
+      // What the column has to hold. Four-digit totals are real — one card
+      // unlocks 1,889 combos of ours — and widening the gutter for every row to
+      // fit them would take 20px off the card name on the rows that don't need
+      // it. Stepping the rare ones down a size keeps one fixed column instead,
+      // and right alignment means the edge does not move when the size does.
+      scale: total >= 1000 ? 'wide' : total >= 100 ? 'mid' : null,
+      label: total === 1 ? 'combo' : 'combos',
+      spoken: (plus ? 'unlocks ' : 'in ') + total + ' combo' + (total === 1 ? '' : 's'),
+      // Only worth printing when the count has two halves, which most rows do
+      // not. A card whose whole case is ours still says so, in the spoken half:
+      // "none published" is the interesting part of that row, not a gap.
+      split: ours ? {
+        official: String(official),
+        ours: String(ours),
+        spoken: (official
+          ? official + ' published by Commander Spellbook'
+          : 'none published by Commander Spellbook')
+          + ', ' + ours + ' unofficial',
+      } : null,
     };
   }
 
@@ -254,7 +283,7 @@
   const api = {
     pickedSentence,
     sizePills,
-    splitParts,
+    rowNumbers,
     bracketProse,
     timingSentence,
     fileLoaded,
