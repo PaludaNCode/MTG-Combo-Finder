@@ -36,10 +36,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   colour identity, and cards banned in Commander. Two lines, because they are two
   different accusations, and nothing at all when there is neither — see
   [Whether the list is allowed](#whether-the-list-is-allowed-is-a-different-question-from-how-strong-it-is).
-- **What each recommendation's count is made of** — `Thassa's Oracle +3` reads
-  *1 × 2-card · 1 × 3-card · 1 × 4-card*, on the card's own line, smallest first. A
-  two-card combo is a far easier thing to assemble in a game than a four-card one, and a
-  count hides the difference entirely — see
+- **What each recommendation's count is made of** — a `+3` in the row's number gutter
+  reads *1 × 2-card · 1 × 3-card · 1 × 4-card* underneath, smallest first. A two-card
+  combo is a far easier thing to assemble in a game than a four-card one, and a count
+  hides the difference entirely — see
   [What the count is made of](#what-the-count-is-made-of).
 - **It works with the network off** — a second visit renders and searches from what is
   already on the device: the shell in a service worker's cache, the snapshot in the one
@@ -328,16 +328,27 @@ large: a two-card combo needs two cards on the table, a four-card one needs four
 found, cast and kept alive. "+6" reads identically whether it is six two-carders or five
 four-carders and a two.
 
-So every recommendation carries its own breakdown, on the card's own line:
+So every recommendation carries its own breakdown, on the last line of its own column:
 
 ```
-1. Thassa's Oracle  +3   1 × 2-card   1 × 3-card   1 × 4-card
-5. Mana Crypt       +1   3-card
+  +3    │ Thassa's Oracle
+COMBOS  │ EDHREC · Scryfall · + Add to deck
+  2+1   │ 1 × 2-card   1 × 3-card   1 × 4-card
+
+  +1    │ Mana Crypt
+COMBOS  │ EDHREC · Scryfall · + Add to deck
+        │ 3-card
 ```
+
+That is the narrow reading, which is the one every width used to get. Two of those three
+lines change shape where the row's column is wide enough to afford it — the split spells
+itself out, and the links move up beside the name — and both are keyed on the column
+rather than the window. See
+[The card's links share its name's line where the row is wide](#the-cards-links-share-its-names-line-where-the-row-is-wide-and-that-threshold-is-not-the-splits).
 
 **And so does every card in *Cards carrying your combos***, where the same argument applies
-in reverse. That panel exists to answer "what would cutting this cost me", and *in 9 combos*
-is one number covering nine different propositions:
+in reverse. That panel exists to answer "what would cutting this cost me", and a bare
+*9* in the gutter is one number covering nine different propositions:
 
 ```
    5    │ Basalt Monolith
