@@ -31,6 +31,7 @@ node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"          # oracle text, from Scryfall
 node tools/substitution-scope.js               # how much of the substitution space is unread
 node tools/deck-cards.js [deck.txt] --unswept  # which of a deck's cards carry its combos
+node tools/deck-gaps.js [deck.txt]             # which gaps THIS deck exposes
 node tools/probe-cors.js [site]                # can a browser read a deck from this site?
 
 npx serve .               # run it locally; any static file server works
@@ -157,14 +158,20 @@ Three different questions, and it is worth not confusing them:
 |---|---|
 | which existing rows can this deck assemble? | `matchUnofficial()`, pinned in `test/unofficial.test.js`. **`try-deck.js` does not cover the unofficial panel.** |
 | which of this deck's cards are worth sweeping? | `tools/deck-cards.js --unswept`, and `/deck-deep-dive` on top of it |
-| which gaps does *this deck* expose? | **nothing yet** |
+| which gaps does *this deck* expose? | `tools/deck-gaps.js` |
 
-The third is still unbuilt. It is the pass above with step 2 restricted to shapes whose
-cards the deck already holds — how the lifegain pass found 51 candidates nobody had
-looked for — and it is a genuinely different query from the second: `deck-cards.js`
-chooses *subjects* from a deck and then sweeps each one across the whole database, where
-a deck-scoped sweep would bound the candidate shapes as well. Until it exists,
-`/deck-deep-dive` is the close approximation.
+The third is the pass above with step 2 restricted to shapes whose cards the deck already
+holds — how the lifegain pass found 51 candidates nobody had looked for. It is genuinely
+different from the second: `deck-cards.js` chooses *subjects* from a deck and then sweeps
+each across the whole database, where `deck-gaps.js` bounds the candidate shapes too, so
+every hit is a combo the deck could cast tonight.
+
+**It re-proposes what has already been ruled out.** The first sweep threw out
+`Scurry Oak + Sadistic Glee` — the Squirrel cannot sacrifice itself where Broodscale's
+Spawn can — and `deck-gaps.js` offers it again, because that decision is a sentence in
+`research-log.js` and not a card set. Read the log first. Wiring them together means
+giving every rule-out a machine-readable set of cards, which is a change to the log's
+shape nobody has made.
 
 ### The two fixture decks
 
