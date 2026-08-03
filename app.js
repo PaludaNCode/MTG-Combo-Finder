@@ -957,10 +957,23 @@
   // what" — without moving a single card: the layout is the same picture, and
   // only which lines are drawn changes. Which is the point of laying it out from
   // both relations at once.
+  // The first three ask which *relation* to draw. The fourth asks what the combo
+  // behind a line is worth, which is a different question on the same picture — and on
+  // a deck whose map runs to a hundred lines it is the one that makes it readable.
+  //
+  // Interchangeable lines are not in the game-ending view, deliberately: a swap line
+  // says "these two do the same job", there is no combo behind it and so no tier to
+  // filter it by. The title says so rather than leaving it to be noticed.
   const MAP_VIEWS = [
     { id: 'all', label: 'Both', spoken: 'Show every line' },
     { id: 'combo', label: 'Works together', spoken: 'Show only pairs a combo needs' },
     { id: 'swap', label: 'Interchangeable', spoken: 'Show only cards that stand in for each other' },
+    {
+      id: 'win',
+      label: 'Game-ending',
+      spoken: 'Show only pairs whose combo wins the game — interchangeable lines are not shown, '
+        + 'since they are not combos and have no result',
+    },
   ];
 
   function mapFilter(svg) {
@@ -969,7 +982,7 @@
     row.setAttribute('aria-label', 'Which lines to show');
     const buttons = [];
     const select = (view) => {
-      svg.classList.remove('show-all', 'show-combo', 'show-swap');
+      svg.classList.remove('show-all', 'show-combo', 'show-swap', 'show-win');
       svg.classList.add('show-' + view);
       buttons.forEach((b) => {
         const on = b.dataset.view === view;
@@ -1117,7 +1130,10 @@
       // fifty, and there is room for all of them.
       let count = null;
       if (linkData.countX != null) {
-        count = svgEl('text', 'count' + (swap ? ' swap' : '')
+        // The tier goes on the number as well as on the line, so a filter by tier
+        // takes the pair together. Without it the game-ending view hid every count,
+        // including the ones belonging to the lines it was showing.
+        count = svgEl('text', 'count' + (swap ? ' swap' : ' tier-' + linkData.tier)
           + (linkData.countShown ? '' : ' is-crowded'));
         count.setAttribute('x', linkData.countX);
         count.setAttribute('y', linkData.countY + 3.5);

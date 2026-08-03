@@ -427,11 +427,18 @@ function measure(win, doc) {
     const chips = [...doc.querySelectorAll('#graph .map-filter .chip')];
     const chip = (view) => chips.find((c) => c.dataset.view === view);
     const filtered = {};
-    for (const view of ['swap', 'combo']) {
+    const winEdges = [...svg.querySelectorAll('.edge.tier-win')];
+    const counts = [...svg.querySelectorAll('.count')];
+    for (const view of ['swap', 'combo', 'win']) {
       if (chip(view)) chip(view).click();
       filtered[view] = {
         combos: combos.filter((e) => win.getComputedStyle(e).display !== 'none').length,
         swaps: swapEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        // What the game-ending view is for, and the thing that made it worth a test:
+        // the numbers on the lines carry the tier too, and without that the view hid
+        // every count including the ones belonging to the lines it was showing.
+        wins: winEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        countsShown: counts.filter((e) => win.getComputedStyle(e).display !== 'none').length,
         pressed: chip(view) ? chip(view).getAttribute('aria-pressed') : null,
         moved: [...svg.querySelectorAll('.node .dot')]
           .some((c, i) => c.cx.baseVal.value !== before[i][0] || c.cy.baseVal.value !== before[i][1]),
@@ -1927,6 +1934,17 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (m.filtered.combo.swaps || !m.filtered.combo.combos) {
         problems.push(`"works together" left ${m.filtered.combo.swaps} interchangeable lines on screen`);
       }
+      // Only the game-enders, and no interchangeable lines — which is a decision, not
+      // a side effect: a swap line has no combo behind it and so no tier to filter by.
+      const w = m.filtered.win;
+      if (!w.wins) problems.push('"game-ending" left no game-ending lines on screen at all');
+      if (w.combos !== w.wins) {
+        problems.push(`"game-ending" left ${w.combos} combo lines on screen but only ${w.wins} of them end the game`);
+      }
+      if (w.swaps) problems.push(`"game-ending" left ${w.swaps} interchangeable lines on screen`);
+      // A view that hides every number is a view with no counts, which is what the
+      // first version of this did — the tier class was on the line and not the text.
+      if (!w.countsShown) problems.push('"game-ending" hid every count on the map');
       if (m.filtered.swap.pressed !== 'true') problems.push('the filter does not report which view is on');
       if (m.filtered.swap.moved || m.filtered.combo.moved) {
         problems.push('filtering the lines moved the cards');

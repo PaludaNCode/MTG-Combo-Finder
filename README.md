@@ -67,8 +67,9 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   them; **dashed** means they do the same job — swap one for the other and you
   still have a combo — so your four sacrifice outlets end up in one cluster
   instead of four corners. Both are drawn heavier the more they overlap and
-  carry the count as a number, and three chips let you read either relation on
-  its own. **Press two or three cards** and the map shows what they have in
+  carry the count as a number, and four chips let you read either relation on
+  its own — or **Game-ending**, which is the only line that matters on a map with
+  a hundred of them. **Press two or three cards** and the map shows what they have in
   common, with a line under it saying what cutting them would actually cost —
   which is not the sum of their combo counts, because a combo whose slot another
   of your cards can fill survives losing this one. Redrawn from scratch by every
@@ -930,6 +931,31 @@ still settled nearer the payoff than its own alternatives.
 On the tuning deck the result is six legible groups: the sacrifice outlets, the
 lifegain triggers, the counter payoffs, the lifegain payoffs, and two smaller
 pairs — none of which existed as a shape on the map before.
+
+### Filtering by what the line is worth, not just by what it is
+
+Three of the four chips ask **which relation** to draw: both, works-together, or
+interchangeable. The fourth asks a different question about the same picture — what the
+combo behind the line is *worth* — and on a deck whose map runs to over a hundred lines
+it is the one that makes it readable. *Show me only the lines that end the game.*
+
+The data was already there. `graph.js` puts the best tier of any combo behind an edge on
+the edge itself, so the filter is a class on the `<svg>` and a CSS rule, exactly like the
+relation views: the cards do not move, the layout is still worked out from both relations
+at once, and switching is the same picture with lines taken away.
+
+**Interchangeable lines are not in that view, and that is a decision rather than a side
+effect.** A swap line says "these two do the same job" — there is no combo behind it, so
+there is no result and no tier it could be filtered by. Leaving them in would answer a
+question about game-enders with a screenful of lines that are not combos at all. The
+chip's title says so, because a filter that silently drops a category is worse than one
+that does not filter.
+
+The part that needed a test was smaller and easier to get wrong: **the tier has to be on
+the number as well as on the line.** It was on the line only, so the first version of
+this view hid every count on the map, including the counts belonging to the lines it was
+showing — a filter that removes the information it was opened to read. The layout test
+asserts the count survives, and confirms it by failing when the class is taken off again.
 
 ### The number on a line
 
