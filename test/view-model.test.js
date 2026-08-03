@@ -128,27 +128,62 @@ test('nothing to show is an empty list, not a row with no pills', () => {
   assert.deepStrictEqual(View.sizePills(null), []);
 });
 
-// ---- splitParts -------------------------------------------------------------
+// ---- rowNumbers -------------------------------------------------------------
 
-test('no unofficial combos means no split line at all', () => {
-  assert.strictEqual(View.splitParts(4, 0), null);
-  assert.strictEqual(View.splitParts(0, 0), null);
+test('the total is both halves, and the halves are printed under it', () => {
+  const n = View.rowNumbers(17, 7);
+  assert.strictEqual(n.count, '24');
+  assert.strictEqual(n.label, 'combos');
+  assert.deepStrictEqual([n.split.official, n.split.ours], ['17', '7']);
 });
 
-test('both halves are named', () => {
-  assert.deepStrictEqual(View.splitParts(4, 1), { official: '4 official', ours: '1 unofficial', none: '' });
+test('no unofficial combos means no split at all', () => {
+  assert.strictEqual(View.rowNumbers(4, 0).split, null);
+  assert.strictEqual(View.rowNumbers(0, 0).split, null);
+  // The total is still the total, and still says what it counts.
+  assert.strictEqual(View.rowNumbers(4, 0).count, '4');
 });
 
-// A card whose whole case is ours says so, rather than leaving the reader to infer
-// it from a missing half.
-test('a row with nothing published says "none published"', () => {
-  assert.deepStrictEqual(View.splitParts(0, 2), { official: '', ours: '2 unofficial', none: 'none published' });
+// The whole reason the words could leave the row. If this ever returns numerals,
+// the split is a pair of colours and nothing else — which is the failure the words
+// were there to prevent.
+test('the split says in words what the numerals mean', () => {
+  assert.strictEqual(View.rowNumbers(17, 7).split.spoken,
+    '17 published by Commander Spellbook, 7 unofficial');
 });
 
-test('the suggestion panel counts with a plus, the pieces panel without', () => {
-  assert.strictEqual(View.splitParts(4, 1, true).ours, '+1 unofficial');
-  assert.strictEqual(View.splitParts(4, 1, true).official, '+4 official');
-  assert.strictEqual(View.splitParts(4, 1).ours, '1 unofficial');
+// A card whose whole case is ours says so. "none published" is the interesting
+// half of that row, so it must not read as a missing number.
+test('a row with nothing published says so rather than showing a gap', () => {
+  const n = View.rowNumbers(0, 2);
+  assert.strictEqual(n.split.official, '0');
+  assert.match(n.split.spoken, /^none published by Commander Spellbook, 2 unofficial$/);
+});
+
+test('the suggestion panel signs the total, and never the split', () => {
+  const suggestion = View.rowNumbers(20, 4, true);
+  assert.strictEqual(suggestion.sign, '+');
+  assert.strictEqual(suggestion.count, '24');
+  // "+20+4" reads as arithmetic; the + between the halves is the only real one.
+  assert.deepStrictEqual([suggestion.split.official, suggestion.split.ours], ['20', '4']);
+  assert.strictEqual(View.rowNumbers(20, 4).sign, '');
+});
+
+test('what the total means reaches a screen reader either way round', () => {
+  assert.strictEqual(View.rowNumbers(17, 7).spoken, 'in 24 combos');
+  assert.strictEqual(View.rowNumbers(20, 4, true).spoken, 'unlocks 24 combos');
+  assert.strictEqual(View.rowNumbers(1, 0).spoken, 'in 1 combo');
+  assert.strictEqual(View.rowNumbers(1, 0).label, 'combo');
+});
+
+// Four-digit totals are real: one card unlocks 1,889 combos of ours. The column is
+// one fixed width, so the rare long numbers step down a size instead of widening
+// it for every row.
+test('long totals ask for a smaller size rather than a wider column', () => {
+  assert.strictEqual(View.rowNumbers(17, 7).scale, null);
+  assert.strictEqual(View.rowNumbers(99, 0).scale, null);
+  assert.strictEqual(View.rowNumbers(100, 8).scale, 'mid');
+  assert.strictEqual(View.rowNumbers(0, 1889, true).scale, 'wide');
 });
 
 // ---- bracketProse -----------------------------------------------------------

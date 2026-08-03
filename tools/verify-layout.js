@@ -130,24 +130,50 @@ function measure(win, doc) {
   const piecesPanel = [...doc.querySelectorAll('.panel')].find((x) => /carrying/i.test(x.querySelector('.panel-title').textContent));
   const topPiece = piecesPanel ? {
     card: piecesPanel.querySelector('.card-name').textContent,
-    badge: piecesPanel.querySelector('.badge').textContent,
+    total: piecesPanel.querySelector('.row-total').textContent,
+    spoken: piecesPanel.querySelector('.row-total').title || '',
     // The size breakdown on the row, same as a suggestion carries. "in 9 combos" is
     // one number over nine different propositions, and this panel's whole question is
     // what cutting the card would cost.
     pills: [...piecesPanel.querySelectorAll('.combo.suggestion .sizes .size')].length
       ? [...piecesPanel.querySelector('.combo.suggestion').querySelectorAll('.sizes .size')].map((p) => p.textContent)
       : [],
-    inHead: Boolean(piecesPanel.querySelector('.combo.suggestion .sug-head .sizes')),
+    // The pills close the card's column, below the name and the links, rather than
+    // sharing the name's line as they used to.
+    inMain: Boolean(piecesPanel.querySelector('.combo.suggestion > .row-main > .sizes')),
   } : null;
-  // Every "+4 combos" / "in 4 combos" pill sits directly after a card name in
-  // the same line, so the space before it has to survive every breakpoint — it
-  // was being dropped at narrow widths, exactly where the two are tightest.
-  const badges = [...doc.querySelectorAll('.badge')].map((b) => ({
-    text: b.textContent,
-    spoken: b.getAttribute('aria-label') || '',
-    gap: parseFloat(win.getComputedStyle(b).marginLeft) || 0,
-    wraps: win.getComputedStyle(b).whiteSpace,
-  }));
+  // The point of the gutter, and the one thing about it a screenshot cannot show:
+  // every total in a panel lines up. Read as the set of distinct right edges per
+  // panel — one edge means a column, several means the old ragged badge back in a
+  // new guise. Also the totals' own geometry: a total that can break across two
+  // lines mid-number, or one whose word has drifted onto its line, is not a number
+  // in a column any more.
+  const numberColumns = [...doc.querySelectorAll('.panel')]
+    .map((p) => {
+      // Rendered rows only. The off-colour suggestions tab is hidden until it is
+      // picked, and a row with no geometry cannot be out of line with anything —
+      // counting it would report every panel as misaligned by exactly one row.
+      const totals = [...p.querySelectorAll('.row-total')]
+        .filter((t) => t.getBoundingClientRect().width > 0);
+      if (!totals.length) return null;
+      return {
+        panel: p.querySelector('.panel-title').textContent,
+        rows: totals.length,
+        // Rounded to the pixel: sub-pixel text metrics are not a misalignment.
+        edges: [...new Set(totals.map((t) => Math.round(t.getBoundingClientRect().right)))],
+        wraps: [...new Set(totals.map((t) => win.getComputedStyle(t).whiteSpace))],
+        // Every row's numbers carry the sentence, or cutting the words hid it.
+        spoken: totals.filter((t) => /\\d+ combos?/.test(t.title || '')).length,
+        splits: [...p.querySelectorAll('.row-split')].map((s) => ({
+          text: s.textContent,
+          spoken: s.getAttribute('aria-label') || '',
+          role: s.getAttribute('role') || '',
+          ours: s.querySelector('.ours') ? win.getComputedStyle(s.querySelector('.ours')).color : null,
+          official: s.querySelector('.official') ? win.getComputedStyle(s.querySelector('.official')).color : null,
+        })),
+      };
+    })
+    .filter(Boolean);
   const tabs = [...doc.querySelectorAll('.tabs .tab')].map((t) => ({
     label: t.querySelector('.tab-label').textContent,
     count: t.querySelector('.tab-count').textContent,
@@ -157,12 +183,11 @@ function measure(win, doc) {
     height: t.offsetHeight,
   }));
   // The per-card breakdown of what each suggestion's count is made of. The pills
-  // on a row must add up to that row's own badge — that is the whole reason it
+  // on a row must add up to that row's own total — that is the whole reason it
   // is reported per card rather than per panel.
   const sizes = [...doc.querySelectorAll('.tab-pane:not([hidden]) .combo.suggestion')].map((row) => ({
-    badge: (row.querySelector('.badge') || {}).textContent || '',
-    label: (row.querySelector('.sizes-label') || {}).textContent || '',
-    inHeader: Boolean(row.querySelector('h3 .sizes')),
+    total: (row.querySelector('.row-total') || {}).textContent || '',
+    inMain: Boolean(row.querySelector(':scope > .row-main > .sizes')),
     pills: [...row.querySelectorAll('.sizes .size')].map((p) => p.textContent),
     easiest: [...row.querySelectorAll('.sizes .size.is-easiest')].map((p) => p.textContent),
     colour: row.querySelector('.sizes .size') ? win.getComputedStyle(row.querySelector('.sizes .size')).color : null,
@@ -321,7 +346,7 @@ function measure(win, doc) {
   });
   const leads = {
     suggestions: nested('.tab-pane:not([hidden]) .combo.suggestion', 'h3 > .card-name'),
-    pieces: nested('#pieces .combo.suggestion', '.sug-head > .card-name'),
+    pieces: nested('#pieces .combo.suggestion', '.row-name > .card-name'),
   };
 
   // The bracket check. Two of Wizards' criteria are readable off a card list and
@@ -566,7 +591,7 @@ function measure(win, doc) {
     leads,
     bracket,
     dataAge,
-    badges,
+    numberColumns,
     sizes,
     included,
     map,
@@ -804,11 +829,17 @@ async function runUnofficial(vp) {
       // panel is there on our authority — which is precisely the case the panel
       // used to answer by leaving the card out.
       pieces: {
-        rows: doc.querySelectorAll('#pieces .sug-head').length,
-        ours: doc.querySelectorAll('#pieces .split-line .ours').length,
-        badges: doc.querySelectorAll('#pieces .sug-head .badge').length,
-        text: (doc.querySelector('#pieces .badge') || {}).textContent || null,
-        split: (doc.querySelector('#pieces .split-line') || {}).textContent || null,
+        rows: doc.querySelectorAll('#pieces .row-name').length,
+        ours: doc.querySelectorAll('#pieces .row-split .ours').length,
+        totals: doc.querySelectorAll('#pieces .row-numbers .row-total').length,
+        text: (doc.querySelector('#pieces .row-total') || {}).textContent || null,
+        split: (doc.querySelector('#pieces .row-split') || {}).textContent || null,
+        // The words the numerals replaced. This deck has nothing published, so
+        // "none published" is the whole point of its rows — and it is now said
+        // here rather than on screen, which is exactly why it is asserted.
+        spoken: (doc.querySelector('#pieces .row-split') || {}).getAttribute
+          ? doc.querySelector('#pieces .row-split').getAttribute('aria-label') || ''
+          : '',
       },
       unofficial: {
         // How many swaps the note spells out, which has to be how many the row
@@ -850,7 +881,7 @@ async function runSuggested(vp) {
     await settled(doc, '#suggestions .combo');
 
     const pane = doc.querySelector('#suggestions .tab-pane:not([hidden])');
-    const ours = pane ? pane.querySelectorAll('.split-line .ours') : [];
+    const ours = pane ? pane.querySelectorAll('.row-split .ours') : [];
     const row = ours.length ? ours[0].closest('.combo') : null;
     return {
       ok: true,
@@ -860,16 +891,20 @@ async function runSuggested(vp) {
         rows: pane ? pane.querySelectorAll('.combo').length : 0,
         ours: ours.length,
         text: ours.length ? ours[0].textContent : null,
-        split: row ? row.querySelector('.split-line').textContent : null,
-        // One badge on the row, carrying the total.
-        badges: row ? row.querySelectorAll('.badge').length : 0,
-        total: row ? row.querySelector('.badge').textContent : null,
+        split: row ? row.querySelector('.row-split').textContent : null,
+        // The claim the numerals stand for. On screen this row is "0+1"; that it
+        // means "none published" is carried by the accessible name, so that is
+        // where it gets checked.
+        spoken: row ? row.querySelector('.row-split').getAttribute('aria-label') || '' : '',
+        // One total on the row, carrying both halves.
+        totals: row ? row.querySelectorAll('.row-total').length : 0,
+        total: row ? row.querySelector('.row-total').textContent : null,
         // ...and the combos behind them are listed under a heading that says so.
         heading: row && row.querySelector('.ours-head') ? row.querySelector('.ours-head').textContent : null,
         // The unofficial half has to be visibly its own claim: a colour of its
-        // own against the muted text around it, rather than the same grey.
+        // own against the published half beside it, rather than the same grey.
         colour: ours.length ? win.getComputedStyle(ours[0]).color : null,
-        muted: row ? win.getComputedStyle(row.querySelector('.split-line')).color : null,
+        muted: row ? win.getComputedStyle(row.querySelector('.row-split .official')).color : null,
         overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
@@ -1281,11 +1316,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const wrong = [];
       if (!g.rows) wrong.push('nothing was suggested at all');
       if (!g.ours) wrong.push('no unofficial count on any suggestion');
-      if (g.text !== '+1 unofficial') wrong.push(`the unofficial half reads "${g.text}"`);
-      // One badge, carrying the total; the split says what the total is made of.
-      if (g.badges !== 1) wrong.push(`${g.badges} badges on the row, expected 1`);
+      if (g.text !== '1') wrong.push(`the unofficial half reads "${g.text}"`);
+      // One total, carrying both halves; the split says what it is made of.
+      if (g.totals !== 1) wrong.push(`${g.totals} totals on the row, expected 1`);
       if (g.total !== '+1') wrong.push(`the total reads "${g.total}"`);
-      if (!/none published/.test(g.split || '')) wrong.push(`the split reads "${g.split}"`);
+      if (g.split !== '0+1') wrong.push(`the split reads "${g.split}"`);
+      // The numerals are half the claim and colour is the other half, so the
+      // sentence has to survive somewhere a screen reader can reach it. A row whose
+      // whole case is ours saying nothing about that is the bug this run exists for.
+      if (!/none published/.test(g.spoken || '')) wrong.push(`the split is unspoken: "${g.spoken}"`);
       if (!/Spellbook has not published/.test(g.heading || '')) {
         wrong.push(`the combos are not marked as ours: "${g.heading}"`);
       }
@@ -1345,13 +1384,16 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const pc = v.pieces || {};
       if (pc.rows !== 3) wrong.push(`${pc.rows} cards in "carrying your combos", expected 3`);
       if (pc.ours !== 3) wrong.push(`${pc.ours} of them break the count down, expected 3`);
-      // One badge per row carrying the total, never two for the reader to add up.
-      if (pc.badges !== 3) wrong.push(`${pc.badges} badges across 3 rows`);
-      if (pc.text !== 'in 1 combo') wrong.push(`the total reads "${pc.text}"`);
-      // Nothing published for this deck, so the line says so in words rather than
-      // leaving the reader to infer it from a missing half.
-      if (!/1 unofficial/.test(pc.split || '')) wrong.push(`the split reads "${pc.split}"`);
-      if (!/none published/.test(pc.split || '')) wrong.push(`the split hides that nothing is published: "${pc.split}"`);
+      // One total per row, never two for the reader to add up.
+      if (pc.totals !== 3) wrong.push(`${pc.totals} totals across 3 rows`);
+      if (pc.text !== '1') wrong.push(`the total reads "${pc.text}"`);
+      // Nothing published for this deck, so the split is "0+1" — and what the 0
+      // means is said in words in the accessible name, since the words are no
+      // longer on screen to say it.
+      if (pc.split !== '0+1') wrong.push(`the split reads "${pc.split}"`);
+      if (!/none published/.test(pc.spoken || '')) {
+        wrong.push(`the split hides that nothing is published: "${pc.spoken}"`);
+      }
       if (wrong.length) {
         failed = true;
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
@@ -1462,40 +1504,64 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
-    } else if (!/in \d+ combos/.test(v.topPiece.badge)) {
-      problems.push(`combo-pieces badge reads "${v.topPiece.badge}"`);
+    } else if (!/^\d+$/.test(v.topPiece.total)) {
+      problems.push(`the combo-pieces total reads "${v.topPiece.total}"`);
+    } else if (!/in \d+ combos?/.test(v.topPiece.spoken)) {
+      // The word left the row when the number moved into the gutter — under the
+      // number rather than beside it — so what it counts has to be readable
+      // somewhere that is not a colour and not a position.
+      problems.push(`the total does not say what it counts: "${v.topPiece.spoken}"`);
     } else {
-      // The breakdown has to be here too, on the row's own line, and it has to add up
-      // to the badge beside it — a breakdown that disagrees with its own total is
-      // worse than no breakdown.
+      // The breakdown has to be here too, closing the card's column, and it has to
+      // add up to the total in the gutter — a breakdown that disagrees with its own
+      // total is worse than no breakdown.
       if (!v.topPiece.pills.length) problems.push('a card carrying combos shows no size breakdown');
-      if (!v.topPiece.inHead) problems.push("the pieces breakdown is not on the card's own line");
+      if (!v.topPiece.inMain) problems.push("the pieces breakdown is not in the card's own column");
       const claimed = v.topPiece.pills.reduce((sum, t) => {
         const m = t.match(/^(?:(\d+) × )?(\d+)-card$/);
         return sum + (m ? Number(m[1] || 1) : 0);
       }, 0);
-      const badged = Number((v.topPiece.badge.match(/in (\d+)/) || [0, 0])[1]);
-      if (claimed !== badged) {
-        problems.push(`the pieces breakdown [${v.topPiece.pills.join(', ')}] sums to ${claimed}, not the ${badged} its badge claims`);
+      const counted = Number(v.topPiece.total);
+      if (claimed !== counted) {
+        problems.push(`the pieces breakdown [${v.topPiece.pills.join(', ')}] sums to ${claimed}, not the ${counted} its total claims`);
       }
       const nums = v.topPiece.pills.map((t) => Number((t.match(/(\d+)-card/) || [0, 0])[1]));
       if (nums.some((n, i) => i && n < nums[i - 1])) {
         problems.push(`the pieces breakdown is not smallest-first: [${v.topPiece.pills.join(', ')}]`);
       }
     }
-    if (!v.badges.length) {
-      problems.push('no "+N combos" badges rendered at all, so their spacing is untested');
+
+    // The numbers are a column, and this is the only check that can say so: a badge
+    // after a card name lands wherever the name ends, and that is invisible in a
+    // screenshot of one row. One right edge per panel means a column; two means the
+    // gutter has started sizing itself to its content again.
+    if (!v.numberColumns.length) {
+      problems.push('no row totals rendered at all, so the number column is untested');
     } else {
-      const flush = v.badges.filter((b) => b.gap < 4);
-      if (flush.length) problems.push(`${flush.length} badge(s) sit flush against the card name, e.g. "${flush[0].text}" (${flush[0].gap}px)`);
-      const breakable = v.badges.filter((b) => b.wraps !== 'nowrap');
-      if (breakable.length) problems.push(`a badge can break across lines: "${breakable[0].text}"`);
-      // "+10" alone is terse by request; the word it lost has to reach a screen
-      // reader instead of simply going away.
-      const terse = v.badges.filter((b) => /^\+\d+$/.test(b.text));
-      const unspoken = terse.filter((b) => !/\d+ combos?/.test(b.spoken));
-      if (terse.length && unspoken.length) {
-        problems.push(`a bare count badge ("${unspoken[0].text}") has no spoken label`);
+      for (const col of v.numberColumns) {
+        if (col.edges.length !== 1) {
+          problems.push(`the totals in "${col.panel}" sit at ${col.edges.length} different right edges `
+            + `across ${col.rows} rows [${col.edges.join(', ')}]`);
+        }
+        if (col.wraps.some((w) => w !== 'nowrap')) {
+          problems.push(`a total in "${col.panel}" can break across lines`);
+        }
+        if (col.spoken !== col.rows) {
+          problems.push(`${col.rows - col.spoken} total(s) in "${col.panel}" do not say what they count`);
+        }
+        for (const split of col.splits) {
+          // "17+7" is numerals and two colours. Neither is available to a screen
+          // reader, so the sentence has to be, and role="img" is what makes the
+          // label be read in place of the digits.
+          if (!/^\d+\+\d+$/.test(split.text)) problems.push(`a split reads "${split.text}"`);
+          if (split.role !== 'img') problems.push(`a split is not labelled for a screen reader: role="${split.role}"`);
+          if (!/unofficial/.test(split.spoken)) problems.push(`a split has no spoken claim: "${split.spoken}"`);
+          // Whose half is whose rests on the colour now, so the two halves must not
+          // compute to the same one.
+          if (split.ours === split.official) {
+            problems.push(`both halves of a split are ${split.ours}, so which is ours is unreadable`);
+          }
+        }
       }
     }
 
@@ -1507,21 +1573,21 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     } else {
       for (const row of v.sizes) {
         if (!row.pills.length) {
-          problems.push(`a suggestion (${row.badge}) shows no combo sizes`);
+          problems.push(`a suggestion (${row.total}) shows no combo sizes`);
           continue;
         }
-        const claimed = Number((row.badge.match(/\d+/) || [0])[0]);
+        const claimed = Number((row.total.match(/\d+/) || [0])[0]);
         const counted = row.pills.reduce((n, text) => {
           const m = text.match(/^(\d+) × (\d+)-card$/);
           return n + (m ? Number(m[1]) : 1); // the single-combo row reads "N-card combo"
         }, 0);
         if (claimed !== counted) {
-          problems.push(`"${row.badge}" but its sizes total ${counted} [${row.pills.join(', ')}]`);
+          problems.push(`"${row.total}" but its sizes total ${counted} [${row.pills.join(', ')}]`);
         }
         // Only a two-card pill is marked — that is the floor, and a row with
         // nothing that easy should light nothing up.
         const hasTwo = row.pills.some((t) => /(^|\s)2-card$/.test(t));
-        if (hasTwo && !row.easiest.length) problems.push(`a two-card combo is not marked on "${row.badge}"`);
+        if (hasTwo && !row.easiest.length) problems.push(`a two-card combo is not marked on "${row.total}"`);
         if (!hasTwo && row.easiest.length) problems.push(`"${row.easiest[0]}" is marked as easiest but is not a two-card combo`);
       }
       // The combos inside a suggestion are ordered the same way the pills above them
@@ -1530,10 +1596,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // its largest, so sorting on popularity alone fails this.
       for (const row of v.sizes) {
         const u = row.unlockSizes;
-        if (!u.length) problems.push(`a suggestion (${row.badge}) listed no combos`);
+        if (!u.length) problems.push(`a suggestion (${row.total}) listed no combos`);
         for (let i = 1; i < u.length; i++) {
           if (u[i] < u[i - 1]) {
-            problems.push(`"Combos this unlocks" on ${row.badge} runs [${u.join(', ')}] — not smallest first`);
+            problems.push(`"Combos this unlocks" on ${row.total} runs [${u.join(', ')}] — not smallest first`);
             break;
           }
         }
@@ -1543,7 +1609,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           return sum + (m ? Number(m[1] || 1) : 0);
         }, 0);
         if (claimed && claimed !== u.length) {
-          problems.push(`${row.badge} claims ${claimed} combos in its pills but lists ${u.length}`);
+          problems.push(`${row.total} claims ${claimed} combos in its pills but lists ${u.length}`);
         }
       }
 
@@ -1558,10 +1624,12 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         if (mixed.easiest.length && mixed.easiest[0] !== mixed.pills[0]) {
           problems.push('the marked size is not the smallest one');
         }
-        // The label was dropped deliberately — it repeated on every row and said
-        // nothing the pills and the panel heading did not.
-        if (mixed.label) problems.push(`the size breakdown carries a label again: "${mixed.label}"`);
-        if (!mixed.inHeader) problems.push('the size pills are not on the same line as the card');
+        // The pills close the card's own column, under the name and the links. They
+        // used to share the name's line to save the row a line; the split moving into
+        // the gutter paid for one, and on any row with three pills they wrapped
+        // anyway. What still matters is that they are in the card's column and not
+        // in the number gutter, where they would break the one thing it is for.
+        if (!mixed.inMain) problems.push('the size pills are not in the card\'s own column');
       }
     }
 
@@ -2067,7 +2135,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       ? `two columns (${v.formWidth}px + ${v.outWidth}px, ${v.unusedWidth}px unused)`
       : `stacked (${v.outWidth}px)`;
     const pieceNote = v.topPiece
-      ? `top piece ${v.topPiece.card} ${v.topPiece.badge} ${JSON.stringify(v.topPiece.pills)}`
+      ? `top piece ${v.topPiece.card} ${v.topPiece.total} ${JSON.stringify(v.topPiece.pills)}`
       : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
     const chipNote = `${v.chips.length} folded / ${v.expandedChips.length} open, ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;

@@ -439,40 +439,83 @@ button:disabled { opacity: .6; cursor: wait; }
 .card-name.missing { color: var(--accent); font-style: italic; }
 .plus { color: var(--accent); font-weight: 700; }
 
-.suggestion .rank { color: var(--muted); }
-/* "+4 combos", "in 4 combos". The gap before it is not decoration: the badge
-   follows a card name in the same line of text, and without it the two run
-   together as "Rings of Brighthearth+4 combos". It used to be dropped at narrow
-   widths, which is where the pill and the name are closest to colliding.
-   nowrap keeps the pill from breaking across two lines mid-phrase. */
-.badge {
-  margin-left: .6rem;
-  padding: .1rem .5rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--brass-ink);
-  font-size: .8rem;
-  font-weight: 700;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-/* Whose combos the number above is made of. Sits under the row's total, and only
- * on the rows that have a split — the badge answers "how many", this answers "on
- * whose authority", and most rows have only one answer to give.
+/* ---- a suggestion or a piece: numbers in a gutter, the card beside them ----
  *
- * The unofficial half takes the accent, which is the colour the page already
- * spends on its own links and buttons: green, khaki and grey are the three result
- * tiers, and a fourth hue in that family would read as a fourth tier. Quiet
- * enough not to compete with the badge, since the total is what the column is
- * ranked by and what a reader scans down. */
-.split-line {
-  margin: .15rem 0 0;
-  color: var(--muted);
-  font-size: .82rem;
+ * Two columns at every width, phone and desktop alike. The gutter is a fixed
+ * 4.2rem so that every total in a panel shares both its edges — a column whose
+ * width follows its content is not a column, and the whole point of this shape is
+ * that a ranked list can be read down its numbers. 4.2rem is measured, not
+ * chosen: it is what the widest real case needs, which is a card unlocking 1,889
+ * combos of ours and none of Spellbook's, so the gutter has to hold "0+1889".
+ *
+ * What used to be here was a brass badge after the card name. It landed wherever
+ * the name ended, so eighty totals sat at eighty offsets. */
+.combo.suggestion {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  column-gap: .7rem;
+  align-items: start;
+}
+/* The alternatives and the "Combos this unlocks" disclosure are sub-blocks of the
+   row rather than part of the name column, so they take the full width. The
+   alt-label's one-line fit is measured against that width. */
+.combo.suggestion > .alternatives,
+.combo.suggestion > details { grid-column: 1 / -1; }
+
+.row-numbers {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-right: .55rem;
+  border-right: 1px solid var(--line);
+}
+.row-total {
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.05;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.split-line .ours { color: var(--accent); }
-.split-line .dot { opacity: .55; }
+/* Three and four digit totals step down a size rather than widening the column
+   for every row. Right alignment is what lets the size change without the edge
+   moving — see rowNumbers() in view-model.js for which totals get which. */
+.row-total.is-mid { font-size: 1.25rem; }
+.row-total.is-wide { font-size: 1.05rem; }
+/* The word under the number, not beside it, so the number is the only thing at
+   that size and the column reads as numbers. */
+.row-total-label {
+  color: var(--muted);
+  font-size: .64rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+/* Whose combos the total is made of, on the rows that have two answers — most
+ * have one. Muted is Spellbook's and the accent is ours: the colour the page
+ * already spends on its own links and buttons, where green, khaki and grey are
+ * the three result tiers and a fourth hue in that family would read as a fourth
+ * tier.
+ *
+ * The words these numerals replaced are the split's accessible name and its
+ * title, which is what makes cutting them safe rather than a colour-only claim.
+ * cursor: help says there is something to hover for. */
+.row-split {
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+.row-split .official { color: var(--muted); }
+.row-split .ours { color: var(--accent); }
+/* A sign is not a numeral. At the digits' size "+24" alone needed 63px of a 54px
+   column, which is what pushed the long rows out of it. */
+.sign { color: var(--muted); font-size: .62em; padding: 0 .05em; }
+
+/* One thing per line down the card's column: the name, then everywhere you can
+   go with it, then what its combos cost to assemble. */
+.row-main { min-width: 0; }
+.combo.suggestion .row-name { margin: 0; font-size: 1rem; }
 /* Ours below the published ones inside "Combos this unlocks", under a heading
  * that says whose they are before the first one is read. */
 .ours-head {
@@ -482,6 +525,21 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
+
+/* On a suggestion or a piece row this line is everything you can do with the card
+   — the two links and, where there is one, the add button. They share the line at
+   390px and the button takes one of its own below that: measured, so what happens
+   at 320px is height and not a clipped button. */
+.row-main > .card-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .2rem .5rem;
+  margin: .05rem 0 0;
+}
+/* The margin the button carried when it sat at the end of a run of links; the gap
+   above places it now. */
+.row-main > .card-links .add-card { margin-left: 0; }
 
 /* Taking a suggestion: appends the card to the decklist and searches again.
    Outlined rather than filled — it sits at the end of a row of links, and the
@@ -506,18 +564,20 @@ button:disabled { opacity: .6; cursor: wait; }
 .add-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .alt-list .add-card { margin-left: .2rem; }
 
-/* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card". Inline, on the
-   card's own line — a second line would cost one per row down a list of eighty.
+/* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card". The last line of
+   the row, where it used to be squeezed onto the card's own line to save the row a
+   line. Moving the split into the gutter paid for it — see the measured heights in
+   sizeRow() in render-rows.js, including the case where this costs height rather
+   than saving it.
    Slate on purpose. Green, yellow and grey are already spent on what a combo
    achieves, so a size pill in any of them would read as a verdict on the payoff
    rather than a count of pieces. */
 .sizes {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: .3rem;
-  margin-left: .45rem;
-  vertical-align: middle;
+  margin-top: .3rem;
 }
 .size {
   padding: .02rem .45rem;
@@ -1322,7 +1382,10 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
   .combo { padding: .7rem .75rem; }
   .why { margin-left: 0; }
   ul.why { padding-left: .9rem; }
-  .sug-head { row-gap: .2rem; }
+  /* The gutter keeps its width here — it is what the numbers line up in, and the
+     4.2rem was measured at this end of the range in the first place. What gives
+     way is the gap between it and the card. */
+  .combo.suggestion { column-gap: .55rem; }
   h1 { font-size: 1.45rem; }
   #find-combos { padding: .8rem; } /* easier to hit with a thumb */
 }
