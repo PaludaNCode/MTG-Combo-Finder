@@ -376,9 +376,12 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **Push protection is on**, so a push carrying anything that looks like a credential is
   rejected outright rather than reported later. If a push fails on a file you were only
   quoting a token *shape* into — a fixture, a comment, a test — that is what happened.
-- **Outstanding work is a GitHub issue.** `IMPROVEMENTS.md` is the record of a review
-  whose items are all settled — history, not a queue. Anything still to do goes in an
-  issue so it can be closed, assigned and linked from the PR that finishes it.
+- **Outstanding work is a GitHub issue, and nothing else.** There is no backlog file here,
+  on purpose: two review documents used to carry one, and both were deleted once their
+  items had shipped — a document that reads as a queue and is not one costs more than it
+  says. Anything still to do goes in an issue so it can be closed, assigned and linked from
+  the PR that finishes it, and the reasoning behind anything that *did* ship lives in the
+  README section that owns it.
 
 ### Merging back into `main`
 
