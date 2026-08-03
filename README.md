@@ -3000,6 +3000,61 @@ count and the bracket check. The bracket in particular is a claim about what a d
 is *allowed to be*, and it should rest on published data rather than on a swap we
 made ourselves.
 
+### A combo heading is a list of cards, so it breaks between them
+
+A heading used to be inline text — `A + B + C` — and inline text breaks wherever it runs
+out of room, which on a phone is mid-name. The reported case, on the live page:
+
+```
+before (334px column)              after
+Hammerhead, Maggia Boss +          Hammerhead, Maggia Boss
+Kitchen Finks + Archangel of       + Kitchen Finks
+Thune                              + Archangel of Thune
+```
+
+Three lines either way — this costs no height on the case that prompted it — but every
+line is now exactly one card, and the interchangeable card that the ordering sends last
+lands somewhere a reader can find.
+
+Each card is a flex item in **both** shapes, and that is the part doing the work: a heading
+too wide for its column breaks *between* cards and never inside a name. Below **560px of
+the row's own column** every card takes its own line; above it, a heading uses the room it
+has. So the threshold is a preference rather than a correctness line, which is why it is
+the same 560px the row's other narrow/wide decision already turns on rather than a third
+measured number. `npm run verify` prints what each heading needs inline beside what its
+column gives — *headings one card per line in 334px (needs 621px inline)* — so a threshold
+that starts costing something shows up in a passing run.
+
+Two things that were not obvious:
+
+- **Cards must not shrink.** Flex items shrink by default, so three tablet headings still
+  split a name in a column wide enough for the whole heading: nothing was too wide to
+  place, the items were being squeezed until their text wrapped. `flex: 0 0 auto` moves a
+  card to the next line instead, and `max-width: 100%` keeps the one unavoidable case — a
+  single name wider than the column — from overflowing sideways.
+- **The `+` belongs to the card it introduces**, drawn as a `::before` on the name in both
+  shapes. As its own span it was a flex item free to end a line alone, which is the
+  neighbouring bug in this same section. `display: none` rather than an emptied span, so it
+  leaves the accessibility tree instead of being announced twice — `::before` content is
+  exposed, so a screen reader still reads "+ Kitchen Finks".
+
+And the neighbouring bug: **the link line's separators only exist between two offers on one
+line.** `.combo-link` was made a flex row precisely so a wrap could not strand a `→` or a
+`·` mid-phrase, but the separator was a flex item of its own, so a wrap moved the chip to
+the next line and left the dot behind — the live page showed *View the published combo this
+came from → ·* with `See all 3 cards` below it. Below the same 560px the offers each take a
+line and the dots go, because a separator between two things that are not side by side is
+decoration that reads as a bullet. The dots are `<span class="sep">` now rather than text
+nodes, since a bare text run in a flex container is an anonymous flex item — unaddressable,
+and free to be last on a line.
+
+`npm run verify` asserts both shapes from geometry rather than from `textContent`, which
+cannot see either failure: a card's own client rects say whether it wrapped, the tops of
+the cards say whether they share a line, and computed `display` says whether a separator is
+drawn. It also skips headings inside a closed disclosure — every rect there is zero, so
+every card shares a top of 0 and a perfectly laid-out page reports as broken. That is the
+same filter the row totals already needed.
+
 ### Where the second number goes, and why it is a second number
 
 Two panels used to be on that list and are not any more, because leaving our rows

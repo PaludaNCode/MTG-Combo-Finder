@@ -514,6 +514,77 @@ button:disabled { opacity: .6; cursor: wait; }
 .card-name.missing { color: var(--accent); font-style: italic; }
 .plus { color: var(--accent); font-weight: 700; }
 
+/* ---- one card per line, where the column cannot hold them side by side -------
+ *
+ * A combo heading is "A + B + C" as inline text, and inline text breaks wherever it
+ * runs out of room — which on a phone is mid-name. The reported case was a three-card
+ * row reading "Hammerhead, Maggia Boss +" / "Kitchen Finks + Archangel of" / "Thune":
+ * three lines, none of which is a card, and a name split across two of them.
+ *
+ * So below the threshold each card gets its own line. It costs no height on the case
+ * that prompted it — that heading was already three lines — and it buys every line
+ * being exactly one card, which is also what makes the interchangeable card that this
+ * ordering sends last land somewhere a reader can find it.
+ *
+ * The "+" moves rather than disappearing: it belongs to the card it introduces, so the
+ * standalone span goes and the mark is drawn on the front of the following name. A
+ * separator on its own line is the failure this is fixing, not a shape to keep.
+ *
+ * Stacked is the default and the inline shape is the override, because the container
+ * query can only add. */
+.combo h3 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.combo h3 > .plus { display: none; }
+/* A card does not shrink to make room for the card beside it — it moves to the next line.
+   Flex items shrink by default, and that is how three tablet headings still split a name
+   across two lines in a column wide enough for the whole heading: nothing was too wide to
+   place, the items were simply squeezed until their text wrapped. `max-width: 100%` is the
+   one case that still has to break inside a name, which is a single name wider than the
+   whole column, and it has to be allowed or the row overflows sideways instead. */
+.combo h3 > .card-name,
+.combo h3 > .slot {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.combo h3 > .plus + .card-name::before,
+.combo h3 > .plus + .slot::before {
+  content: '+ ';
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* As many cards per line as the column holds, where it holds more than one.
+ *
+ * Still a wrapping flex row and never inline text, and that is the part doing the work: a
+ * card is one flex item, so a heading too wide for its column breaks *between* cards and
+ * never inside a name. Which makes the threshold a preference rather than a correctness
+ * line — below it every card gets its own line because that is what a phone wants, above
+ * it a heading uses the room it has, and neither shape can split "Archangel of Thune"
+ * across two lines the way inline text did.
+ *
+ * 560px is the column width the row's other narrow/wide decision already turns on (see
+ * the split, above). Reused rather than measured afresh because this shape is a
+ * preference: `npm run verify` prints what each heading needs inline beside what its
+ * column gives — the fixture's longest wants 621px — so a threshold that starts costing
+ * something shows up in a passing run rather than only in a screenshot.
+ *
+ * The "+" is drawn on the card rather than sitting between two of them, in both shapes. A
+ * separate span would be a flex item of its own, free to end a line alone, which is the
+ * failure being fixed one line up. Hidden with `display: none` rather than emptied, so it
+ * leaves the accessibility tree instead of being announced twice: `::before` content is
+ * exposed to a screen reader, so the card still reads as "+ Kitchen Finks". */
+@container rows (min-width: 560px) {
+  .combo h3 {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: .3rem;
+  }
+}
+
 /* ---- a suggestion or a piece: numbers in a gutter, the card beside them ----
  *
  * Two columns at every width, phone and desktop alike. The gutter is a fixed
@@ -683,6 +754,14 @@ button:disabled { opacity: .6; cursor: wait; }
  * makes that a real row rather than a hypothetical one. `white-space: normal`
  * here is the safety valve — a row with a four-digit half on *both* sides would
  * wrap to two lines instead of running out of its column and over the card name. */
+/* All four panels that draw a combo row, not only the two with a gutter: the row shapes
+   below are keyed on how much room a row actually has, and a combo heading in "Combos in
+   your deck" has the same problem at the same width as one under a suggestion. The two
+   were added first because the gutter measurements needed them; a query naming `rows`
+   simply matched nothing in the other two, which reads as a rule that works everywhere
+   and silently does not. */
+#included .panel-body,
+#unofficial .panel-body,
 #pieces .panel-body,
 #suggestions .panel-body { container: rows / inline-size; }
 
@@ -1394,14 +1473,38 @@ summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 /* Laid out rather than left to inline wrapping. The line is a row of separate
    offers — read the steps here, read the combo there, see the cards — and at a
    phone width inline text breaks them mid-phrase, stranding a "→" or a "·" on a
-   line of its own. As flex items they wrap between offers instead of inside one. */
+   line of its own. As flex items they wrap between offers instead of inside one.
+
+   That fixed the break *inside* an offer and not the separator between two, because
+   the separator was a flex item of its own: a wrap put the chip on the next line and
+   left the dot behind, so the line ended "View the published combo this came from → ·".
+   Below the threshold each offer now takes its own line and the dots go — a separator
+   between two things that are not side by side is decoration that reads as a bullet.
+   Column here, row in the container query above, for the same reason the heading
+   stacks by default: the query can only add. */
 .combo-link {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
   gap: .1rem .35rem;
   margin: .5rem 0 0;
   font-size: .85rem;
+}
+.combo-link > .sep { display: none; }
+
+/* The same threshold as the heading above: where the column can hold the offers side by
+   side they go back on one line, and then the dots are separating things that really are
+   side by side. This block sits *after* the rules it overrides on purpose — same
+   specificity, so source order decides, and written above them it lost every time while
+   looking exactly like a rule that worked. */
+@container rows (min-width: 560px) {
+  .combo-link {
+    flex-direction: row;
+    flex-wrap: wrap;
+    /* Only meaningful in a row: it lines the link's text up with the chip beside it. */
+    align-items: baseline;
+  }
+  .combo-link > .sep { display: inline; }
 }
 
 /* "How it works", beside the link it is an alternative to. Styled as a link

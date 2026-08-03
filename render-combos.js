@@ -120,6 +120,14 @@
     return { control, panel };
   }
 
+  // The dot between two offers on the link line, as an element rather than a text node,
+  // so the stylesheet can drop it where the offers stack. A bare text run in a flex
+  // container becomes an anonymous flex item — unaddressable, and free to be the last
+  // thing on a wrapped line, which is how a reader ended up looking at a line ending in
+  // "→ ·" with the chip it separated on the line below. Where each offer has its own
+  // line the dot separates nothing, so there it goes away entirely.
+  const separator = () => el('span', 'sep', ' · ');
+
   // `opts.steps` puts the "How it works" disclosure on the row. Off by default,
   // and deliberately not on every row that draws a combo: the steps are how you
   // execute a line you have, so they belong on the two panels that answer "what
@@ -184,7 +192,7 @@
       const steps = opts && opts.steps ? stepsDisclosure(linkId, derived) : null;
       if (steps) {
         p.appendChild(steps.control);
-        p.appendChild(document.createTextNode(' · '));
+        p.appendChild(separator());
       }
       p.appendChild(link(
         RenderRows.SPELLBOOK_COMBO_URL + encodeURIComponent(linkId) + '/',
@@ -203,7 +211,7 @@
         `Open all ${cards.length} cards in this combo on Scryfall`
       );
       if (compare) {
-        p.appendChild(document.createTextNode(' · '));
+        p.appendChild(separator());
         p.appendChild(compare);
       }
       card.appendChild(p);

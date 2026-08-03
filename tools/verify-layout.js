@@ -31,6 +31,12 @@ const MIME = {
   '.json': 'application/json', '.svg': 'image/svg+xml',
 };
 
+// The `rows` container width at which a combo heading stops stacking one card per line and
+// goes back to "A + B + C" inline. Held here as well as in style.css on purpose: a
+// threshold only in the stylesheet is a number no test can disagree with, and this file's
+// job is to check the rule rather than restate the breakpoint. If one moves, this fails.
+const HEADING_INLINE_AT = 560;
+
 const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844, deck: 'marked' },
   { name: 'tablet', width: 768, height: 1024, deck: 'marked' },
@@ -460,6 +466,98 @@ function measure(win, doc) {
     };
   });
 
+  // How a combo heading is laid out, measured rather than assumed: does each card get a
+  // line of its own, and does any card end up split across two lines?
+  //
+  // The reported case was a phone heading reading "Hammerhead, Maggia Boss +" / "Kitchen
+  // Finks + Archangel of" / "Thune" — three lines, none of them a card. A screenshot shows
+  // that and textContent does not, so the geometry is the only honest test: a card's own
+  // client rects say whether it wrapped, and the tops of the cards say whether they share
+  // lines. "wants" is the width the inline shape would need to sit on one line, which is
+  // the number the threshold is set against — and no backticks in here, because this whole
+  // function is inside a template literal.
+  const headingShape = (() => {
+    const rows = [...doc.querySelectorAll('.panel-body .combo > h3')];
+    let stacked = 0;
+    let sharing = 0;
+    let split = 0;
+    let wants = 0;
+    let column = 0;
+    let example = '';
+    let splitExample = '';
+    for (const head of rows) {
+      // Rendered headings only. A combo inside a closed disclosure has no geometry at all
+      // — every rect is zero — so every card in it shares a top of 0 and it would report
+      // as "two cards on one line" on a page laying it out perfectly. The same filter the
+      // row totals need, for the same reason.
+      const box = head.getBoundingClientRect();
+      if (!box.width || !box.height) continue;
+      const body = head.closest('.panel-body');
+      if (body) {
+        const cs = win.getComputedStyle(body);
+        column = Math.max(column, Math.round(
+          body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+        ));
+      }
+      const cards = [...head.querySelectorAll(':scope > .card-name, :scope > .slot')];
+      if (cards.length < 2) continue;
+      const tops = cards.map((c) => Math.round(c.getBoundingClientRect().top));
+      if (new Set(tops).size === cards.length) {
+        stacked += 1;
+      } else {
+        sharing += 1;
+        // Named, because "1 heading is wrong" is not something anybody can go and look at.
+        if (!example) {
+          const panel = head.closest('.panel');
+          const title = panel && panel.querySelector('.panel-title');
+          example = head.textContent.trim().slice(0, 60)
+            + ' [in ' + (title ? title.textContent : 'no panel') + ']';
+        }
+      }
+      // More than one rect means the browser broke this name across lines.
+      if (cards.some((c) => c.getClientRects().length > 1)) {
+        split += 1;
+        if (!splitExample) {
+          const bad = cards.find((c) => c.getClientRects().length > 1);
+          splitExample = bad.textContent.trim().slice(0, 40)
+            + ' in "' + head.textContent.trim().slice(0, 60) + '"'
+            + ' [' + Math.round(bad.getBoundingClientRect().width) + 'px of ' + column
+            + 'px, h3 draws as ' + win.getComputedStyle(head).display + ']';
+        }
+      }
+      // What this heading would need to sit on one line, whatever it is doing now. Read
+      // off max-content and not scrollWidth: a block-level heading fills its column, so
+      // scrollWidth reported the column back and every viewport looked like it had ~32px
+      // to spare — a measurement that agrees with whatever it is measuring.
+      const was = { display: head.style.display, ws: head.style.whiteSpace, w: head.style.width };
+      head.style.display = 'block';
+      head.style.whiteSpace = 'nowrap';
+      head.style.width = 'max-content';
+      wants = Math.max(wants, Math.ceil(head.getBoundingClientRect().width));
+      head.style.display = was.display;
+      head.style.whiteSpace = was.ws;
+      head.style.width = was.w;
+    }
+    return { rows: rows.length, stacked, sharing, split, wants, column, example, splitExample };
+  })();
+
+  // The link line's separators, read as what a reader sees. A dot is only ever a
+  // separator *between* two offers on one line: where the offers stack it is a bullet
+  // in front of a chip, which is how "…came from → ·" with the chip below got shipped.
+  const linkLine = (() => {
+    const line = doc.querySelector('.panel-body .combo > .combo-link');
+    if (!line) return null;
+    const offers = [...line.children].filter((c) => !c.classList.contains('sep'));
+    const seps = [...line.querySelectorAll(':scope > .sep')];
+    const tops = offers.map((c) => Math.round(c.getBoundingClientRect().top));
+    return {
+      offers: offers.length,
+      // Separators the reader can actually see.
+      seps: seps.filter((s) => getComputedStyle(s).display !== 'none').length,
+      stacked: offers.length > 1 && new Set(tops).size === offers.length,
+    };
+  })();
+
   const slots = {
     labels: [...doc.querySelectorAll('#included .slot')].map((e) => e.textContent),
     credited: [...doc.querySelectorAll('#included .fills')].map((e) => e.textContent),
@@ -811,6 +909,8 @@ function measure(win, doc) {
     unknownCards,
     legality,
     comboCompare,
+    headingShape,
+    linkLine,
     order,
     leads,
     bracket,
@@ -2146,6 +2246,41 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const mute = g.altRows.filter((r) => !r.titled);
     if (mute.length) problems.push(`${mute.length} clipped name(s) carry no title, e.g. ${mute[0].name}`);
 
+    // ---- one card per line, and no dot separating things that are not side by side ----
+    //
+    // Both are geometry, and both are invisible to textContent: a heading whose cards
+    // wrap mid-name reads identically as a string, and a stranded separator is a dot in
+    // the DOM either way. The threshold is `rows` container width, so which shape is
+    // expected follows from the column this viewport gives, not from the viewport.
+    const heads = v.headingShape;
+    const inlineHeads = Boolean(heads) && heads.column >= HEADING_INLINE_AT;
+    if (!heads || !heads.rows) {
+      problems.push('no combo headings to check the card layout of');
+    } else if (inlineHeads) {
+      if (heads.stacked && !heads.sharing) {
+        problems.push('every heading is stacked in a column with room to sit inline');
+      }
+    } else {
+      if (heads.sharing) {
+        problems.push(`${heads.sharing} heading(s) still put two cards on one line in a `
+          + `${heads.column}px column, e.g. "${heads.example}"`);
+      }
+    }
+    // At every width, not only the narrow one: a card is a flex item in both shapes, so a
+    // name splitting across two lines means the shape has been lost rather than that the
+    // column is tight. This is the whole guarantee the stacking was asked for.
+    if (heads && heads.split) {
+      problems.push(`${heads.split} heading(s) broke a card name across two lines: ${heads.splitExample}`);
+    }
+    if (v.linkLine) {
+      if (!inlineHeads && v.linkLine.seps) {
+        problems.push(`${v.linkLine.seps} separator(s) still drawn where the offers stack`);
+      }
+      if (inlineHeads && v.linkLine.offers > 1 && !v.linkLine.seps) {
+        problems.push('the offers sit on one line with nothing separating them');
+      }
+    }
+
     // Every combo row offers one link that opens all its cards at once — the point
     // being a quick look at what a combo asks for before committing to it. One link
     // and not one per name: a four-card row would carry four, and reading the cards is
@@ -2631,6 +2766,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       console.error(`FAIL ${v.name} @${v.width}px — ${problems.join('; ')}`);
     } else {
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
+      // The shape the headings took and the two numbers that chose it, so a changed
+      // threshold is visible in a passing run rather than only in a failure.
+      const cardsNote = v.headingShape && v.headingShape.rows
+        ? `headings ${v.headingShape.sharing ? 'inline' : 'one card per line'} in `
+          + `${v.headingShape.column}px (needs ${v.headingShape.wants}px inline), `
+          + `${v.linkLine ? v.linkLine.seps : 0} link separator(s)`
+        : 'no headings measured';
       const compareNote = v.grouped.compare.length
         ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
         : '';
@@ -2668,7 +2810,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${linkNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 
