@@ -34,11 +34,15 @@ function fakeCaches(options) {
       calls.match += 1;
       if (opts.matchHangs) return new Promise(() => {});
       if (opts.matchThrows) return Promise.reject(new Error('no'));
+      // Synchronously, which is a different code path from the line above and the
+      // one the `try` around this call exists for. See the block at the bottom.
+      if (opts.matchThrowsSync) throw new Error('match exploded');
       const held = store.get(url);
       return Promise.resolve(held ? held.clone() : undefined);
     },
     put(url, res) {
       calls.put += 1;
+      if (opts.putThrowsSync) throw new Error('put exploded');
       store.set(url, res);
       return Promise.resolve();
     },
@@ -48,6 +52,7 @@ function fakeCaches(options) {
       calls.open += 1;
       if (opts.openHangs) return new Promise(() => {});
       if (opts.openThrows) return Promise.reject(new Error('nope'));
+      if (opts.openThrowsSync) throw new Error('open exploded');
       return Promise.resolve(cache);
     },
   };
@@ -62,6 +67,7 @@ function fakeCaches(options) {
     };
     api.delete = (name) => {
       deleted.push(name);
+      if (opts.deleteThrowsSync) throw new Error('delete exploded');
       return Promise.resolve(true);
     };
   }
@@ -448,4 +454,101 @@ test('the timings are on the diagnostics too, where a failure report reads them'
   assert.strictEqual(typeof diag.msParse, 'number');
   assert.strictEqual(typeof diag.msMatch, 'number');
   assert.strictEqual(typeof diag.msTotal, 'number');
+});
+
+// ---- a cache that throws, rather than one that rejects -----------------------
+//
+// Every call into Cache Storage in `search.js` is wrapped in a `try` *and* has its
+// promise caught, and until now the tests only ever exercised the second half. That
+// is not a distinction the code invented for symmetry: `caches.open()`,
+// `cache.match()`, `cache.put()` and `caches.delete()` can each throw synchronously
+// — an insecure origin and a disabled storage API both fail before returning a
+// promise at all — and a synchronous throw walks straight past a `.catch()`.
+//
+// So a rejection and a throw are two paths, the suite had one of each pair, and the
+// missing one is the half that ends in an uncaught exception rather than a slower
+// search. What every test below asserts is the same thing: the search still answers.
+
+test('open() throwing outright is a cache that is simply not there', async () => {
+  setup({ caches: fakeCaches({ openThrowsSync: true }) });
+  stubFetch([new Response(payload('net'))]);
+  const out = await ComboSearch.run(URL_A, DECK);
+  assert.equal(out.meta.source, 'network');
+  assert.equal(idOf(out), 'net');
+});
+
+test('match() throwing outright falls through to the download', async () => {
+  const fake = setup({ caches: fakeCaches({
+    matchThrowsSync: true,
+    entries: [[URL_A, held(payload('cached'))]],
+  }) });
+  stubFetch([new Response(payload('net'))]);
+  const out = await ComboSearch.run(URL_A, DECK);
+  // The copy was there and could not be read, so the honest source is the network.
+  assert.equal(out.meta.source, 'network');
+  assert.equal(idOf(out), 'net');
+  assert.equal(fake.calls.match, 1);
+});
+
+test('put() throwing outright still returns the downloaded database', async () => {
+  setup({ caches: fakeCaches({ putThrowsSync: true }) });
+  stubFetch([new Response(payload('net'))]);
+  const out = await ComboSearch.run(URL_A, DECK);
+  assert.equal(idOf(out), 'net', 'a cache that will not take a copy is not a failed search');
+});
+
+test('delete() throwing during the tidy-up costs nothing', async () => {
+  const fake = setup({ caches: fakeCaches({
+    deleteThrowsSync: true,
+    names: [ComboSearch.CACHE_NAME, 'mtg-combo-finder-data-v1'],
+  }) });
+  stubFetch([new Response(payload('net'))]);
+  const out = await ComboSearch.run(URL_A, DECK);
+  assert.equal(idOf(out), 'net');
+  // It tried, which is the point — housekeeping is attempted and its failure ignored.
+  await new Promise((r) => setTimeout(r, 10));
+  assert.deepStrictEqual(fake.deleted, ['mtg-combo-finder-data-v1']);
+});
+
+// ---- the background check failing -------------------------------------------
+//
+// revalidate() runs behind a served copy and is deliberately not awaited, so
+// anything it throws lands nowhere near the caller. Offline is the ordinary case:
+// the reader has a copy, the check cannot run, and the copy is still good.
+
+test('a failed background check leaves the served copy alone', async () => {
+  const fake = setup({ caches: fakeCaches({ entries: [[URL_A, held(payload('cached'))]] }) });
+  globalThis.fetch = () => Promise.reject(new TypeError('Failed to fetch'));
+  const out = await ComboSearch.run(URL_A, DECK);
+  assert.equal(out.meta.source, 'cache');
+  assert.equal(idOf(out), 'cached');
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(fake.calls.put, 0, 'nothing was replaced, because nothing newer arrived');
+});
+
+// ---- and what a reader is told when the download is the thing that failed ----
+//
+// The diagnostics object exists so a failure can be reported in full rather than
+// reduced to "it didn't work", and the two causes below are the two that actually
+// happen. They are different advice, which is why the code branches on the URL: a
+// reader of the live page has a network problem, and somebody running this locally
+// has not built the data file yet. Getting that backwards sends one of them on a
+// long detour.
+
+test('a network failure reports the cause a reader can act on', async () => {
+  setup({});
+  globalThis.fetch = () => Promise.reject(new TypeError('Failed to fetch'));
+  await assert.rejects(() => ComboSearch.run(URL_A, DECK), /Failed to fetch/);
+  const diag = ComboSearch.diagnostics();
+  assert.equal(diag.source, 'network');
+  assert.match(diag.error, /^TypeError: Failed to fetch$/);
+  assert.match(diag.likelyCause, /Check your connection/);
+  assert.match(diag.likelyCause, /data branch has been published/);
+});
+
+test('the same failure against a local path says to build the file instead', async () => {
+  setup({});
+  globalThis.fetch = () => Promise.reject(new Error('ENOENT'));
+  await assert.rejects(() => ComboSearch.run('combos.json', DECK));
+  assert.match(ComboSearch.diagnostics().likelyCause, /node tools\/fetch-combos\.js/);
 });
