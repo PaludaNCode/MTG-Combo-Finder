@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const CardText = require('../tools/card-text.js');
-const { parseArgs } = require('../tools/cache-card-text.js');
+const { parseArgs, fromScryfall } = require('../tools/cache-card-text.js');
 
 // The oracle-text cache. What it keeps, what it refuses to keep, and how old it admits to
 // being.
@@ -179,4 +179,76 @@ test('a name with a comma in it stays one card', () => {
   // The reason every card-list input here is semicolon-separated. Splitting on commas
   // turns one legendary creature into two cards that do not exist.
   assert.deepStrictEqual(parseArgs(['Camellia, the Seedmiser']).names, ['Camellia, the Seedmiser']);
+});
+
+// ---- the writer's rate limit -----------------------------------------------
+//
+// Being inside Scryfall's documented pace is not enough from a GitHub runner: the quota
+// belongs to the shared IP, so a 42-card run was refused at card 22, eight seconds in.
+// Retrying is the only fix available to this side, which makes "did it retry?" a real
+// question about the tool rather than about Scryfall.
+
+// A fetch that fails with `status` the given number of times, then answers. Nothing here
+// touches the network or the clock; `wait` is captured so the test can assert on the
+// delays instead of serving them.
+function stubFetch(failures, status = 429, headers = {}) {
+  let calls = 0;
+  return {
+    calls: () => calls,
+    fetch: async () => {
+      calls += 1;
+      if (calls <= failures) {
+        return { ok: false, status, headers: { get: (h) => headers[h.toLowerCase()] || null } };
+      }
+      return { ok: true, status: 200, json: async () => ({ name: 'Sol Ring' }) };
+    },
+  };
+}
+
+test('a 429 is waited out rather than thrown', async () => {
+  const stub = stubFetch(2);
+  const slept = [];
+  const answer = await fromScryfall('Sol Ring', {
+    fetch: stub.fetch, wait: async (ms) => { slept.push(ms); }, backoff: [10, 20, 30],
+  });
+  assert.deepStrictEqual(answer, { card: { name: 'Sol Ring' } });
+  assert.strictEqual(stub.calls(), 3);
+  assert.deepStrictEqual(slept, [10, 20]);
+});
+
+test('Retry-After beats the backoff schedule', async () => {
+  // Scryfall naming its own number is better than guessing at one.
+  const stub = stubFetch(1, 429, { 'retry-after': '7' });
+  const slept = [];
+  await fromScryfall('Sol Ring', {
+    fetch: stub.fetch, wait: async (ms) => { slept.push(ms); }, backoff: [10],
+  });
+  assert.deepStrictEqual(slept, [7000]);
+});
+
+test('a 429 that never clears still throws, after the whole schedule', async () => {
+  // The half that matters: retrying forever would turn a rate limit into a hung job,
+  // which is the failure this repository keeps writing down — no answer, reported as
+  // patience.
+  const stub = stubFetch(Infinity);
+  const slept = [];
+  await assert.rejects(() => fromScryfall('Sol Ring', {
+    fetch: stub.fetch, wait: async (ms) => { slept.push(ms); }, backoff: [10, 20],
+  }), /Scryfall HTTP 429 for Sol Ring/);
+  assert.strictEqual(stub.calls(), 3);
+  assert.deepStrictEqual(slept, [10, 20]);
+});
+
+test('a 404 is a missing card, not a retry', async () => {
+  const stub = stubFetch(Infinity, 404);
+  assert.deepStrictEqual(await fromScryfall('Nonesuch', { fetch: stub.fetch, backoff: [10] }),
+    { missing: true });
+  assert.strictEqual(stub.calls(), 1);
+});
+
+test('a 500 is fatal immediately — only a rate limit is worth waiting out', async () => {
+  const stub = stubFetch(Infinity, 500);
+  await assert.rejects(() => fromScryfall('Sol Ring', { fetch: stub.fetch, backoff: [10] }),
+    /Scryfall HTTP 500 for Sol Ring/);
+  assert.strictEqual(stub.calls(), 1);
 });
