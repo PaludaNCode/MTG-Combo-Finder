@@ -282,3 +282,23 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - No style rules in the lint config on purpose. Match the surrounding code.
 - Trunk-based: short-lived `feat/…` / `fix/…` branches off `main`, PR, auto-merge
   when green. Merging to `main` *is* the release.
+- **Outstanding work is a GitHub issue.** `IMPROVEMENTS.md` is the record of a review
+  whose items are all settled — history, not a queue. Anything still to do goes in an
+  issue so it can be closed, assigned and linked from the PR that finishes it.
+
+### Writing an issue here: point, do not restate
+
+An issue that copies the current state becomes a second source of truth, and the
+unchecked copy is the one that rots. "16 cards are unread" is wrong the moment somebody
+reads one, and then the log and the issue disagree — which is the exact shape of the
+failure this repository spent a day fixing, where prose said *nothing remains open* and
+the data said otherwise.
+
+So an issue names **where the live answer lives** and **what finishing looks like**:
+
+> The live list is in `research-log.js` — do not restate it here. Grep for `UNREAD`.
+> Finish condition: `UNREAD_DEBT` in `test/research-log.test.js` reaches 0.
+
+Carry detail in the issue only when it exists nowhere else machine-readable — a design
+constraint, a specific failing case, a decision somebody has to make. Never a count that
+a file already holds and a test already checks.

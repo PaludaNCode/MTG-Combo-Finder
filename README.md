@@ -2911,6 +2911,17 @@ Spellbook's templates still carry Scryfall queries. They run together from the
 Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk-based,
 short-lived branches.
 
+**Outstanding work lives in GitHub issues.** `IMPROVEMENTS.md` below is the record of a
+review whose items are all settled — it says what was measured and what each decision
+traded away, which is worth keeping, but it is history rather than a queue. Anything still
+to do is an issue, so it can be closed by the PR that finishes it.
+
+An issue here **points at the live answer rather than restating it**: the count of unread
+card texts belongs in `research-log.js`, where a test caps it, not in an issue body that
+goes stale the first time somebody reads a card. That is the same failure as prose
+claiming *nothing remains open* over an audit of 44 candidates — a second source of truth
+where only one of them is checked.
+
 1. Branch off `main`: `feat/<thing>` or `fix/<thing>`
 2. Push, open a PR — CI runs (`checks` job: JS syntax check + lint + unit tests with
    coverage floors + layout smoke test + the Playwright browser tests, which install
