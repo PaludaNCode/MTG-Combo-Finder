@@ -279,13 +279,18 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   list empties. Adding a row is a decision; removing one should not have to be. Don't
   hand-edit that issue's body — it is regenerated, and `npm run verify:unofficial` is
   the live answer.
-- **`unofficial.js` is the biggest script the page loads, and it only grows.** Rows go
-  in by hand and leave only by graduation, so watch the gzipped size rather than the row
-  count: `gzip -9 -c unofficial.js | wc -c`. The threshold is written down —
-  **at 50 KB gzipped `COMBOS` moves to the `data` branch as JSON** — along with what
-  that costs, which is mostly the exact-row assertion in `test/unofficial.test.js`. See
-  the README's *What the file costs, and the size at which it stops being source*. Do
-  not move it early and do not let it drift past without noticing.
+- **`unofficial.js` is the biggest script here, and it only grows.** Not "the biggest the
+  page loads" — the page does not load it at all. It is `importScripts`'d by
+  `search-worker.js` and by nothing else, so it is never parsed on the main thread, and
+  what it delays is the first search rather than first paint. That is the fact the
+  threshold rests on. Rows go in by hand and leave only by graduation, so watch the
+  gzipped size rather than the row count: `gzip -9 -c unofficial.js | wc -c`. The
+  threshold is written down — **at 200 KB gzipped `COMBOS` moves to the `data` branch as
+  JSON** (raised from 50 KB on purpose; the README says on what) — along with what that
+  costs, which is mostly the exact-row assertion in `test/unofficial.test.js`. See the
+  README's *What the file costs, and the size at which it stops being source*. Do not move
+  it early and do not let it drift past without noticing: one four-card sweep has put on
+  14 KB gzipped, so the headroom is a dozen passes and not a hundred.
 - **Row and result counts in the README are real measurements.** If you add rows to
   `unofficial.js` or entries to `result-tiers.js`, the numbers in the prose move too —
   `npm run check:readme` says which, and CI runs it. It also fails if a sentence it

@@ -2792,21 +2792,30 @@ standing deck unlocks — a check that cannot exist if the rows arrive over the 
 What is worth fixing in advance is the number at which that trade flips, because it is a
 much worse decision to make while looking at a slow page.
 
-**At 50 KB gzipped, `COMBOS` moves to the `data` branch as JSON**, fetched by the worker
+**At 200 KB gzipped, `COMBOS` moves to the `data` branch as JSON**, fetched by the worker
 and nothing else. The mechanics are already paid for: `connect-src` names that host,
 Cache Storage is already how the combo database gets there, and the nightly job already
 writes two artefacts beside each other. The number belongs here rather than in the commit
 that has to act on it, which is the whole point of fixing it in advance.
 
-**It used to say "roughly double today's rows, so this is not close", and that stopped
-being true in a single pass.** The four-card sweep that added Bogwater Lumaret, Ghave,
-Elas il-Kor and Insidious Roots put on 156 rows at once and spent most of the remaining
-headroom; the threshold went from comfortably far to the same order of magnitude as the
-file. No replacement figure is written here, for the reason given above — `gzip -9 -c
-unofficial.js | wc -c` is the live answer and this paragraph would only rot again. What
-is worth recording is the shape of the risk: a single research pass can move this by half
-the remaining budget, so "not close" is not a state this file stays in, and the next pass
-of that size should settle the move before it starts rather than after.
+**It said 50 KB first, and the number moved on purpose.** The threshold has to be arguable
+later, so what it was raised on: `unofficial.js` is loaded by `search-worker.js` and by
+nothing else — it is not in `index.html`, so it is never parsed on the main thread and
+cannot delay first paint or a keystroke. What it delays is the first search on a cold load,
+in a worker that is already waiting on a 1.28 MB combo database. Measured beside the rest
+of the page, the main thread carries 106 KB gzipped of script and the worker 80 KB, of
+which this file is 43 KB. At the ceiling it would be roughly 2.4 MB of source to parse off
+the main thread — the honest cost, and the one to re-measure before raising it again rather
+than assuming the next jump is as cheap.
+
+**What that ceiling is not is a licence to stop watching.** It used to say "roughly double
+today's rows, so this is not close", and that stopped being true in a single pass: the
+four-card sweep that added Bogwater Lumaret, Ghave, Elas il-Kor and Insidious Roots put on
+156 rows and about 14 KB gzipped at once. So the shape of the risk is unchanged even with
+four times the headroom — a dozen passes of that size, not a hundred — and a pass that size
+should still settle the move before it starts rather than after. No figure for today is
+written here, for the reason given above: `gzip -9 -c unofficial.js | wc -c` is the live
+answer and this paragraph would only rot again.
 
 **And what it would cost, in the same breath**, because a threshold with only the
 benefit written down is a decision nobody can argue with later:
