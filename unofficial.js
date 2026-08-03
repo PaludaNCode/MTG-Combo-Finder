@@ -5209,6 +5209,33 @@
         'Infinite Clue tokens',
       ],
     },
+  {
+    // Bartolomé is Phantom Train's closest true peer, and for once that is a reading
+    // rather than a score: both say "sacrifice another artifact or creature", free and
+    // repeatable, and both put the counter on themselves where the loop does not care.
+    // Nothing in this line needs the outlet to be a Vehicle, an artifact, or tapped.
+    cards: ['Dargo, the Shipwrecker', 'Earthcraft', 'Bartolomé del Presidio'],
+    confidence: 'verified',
+    from: {
+      id: '2757-3327-6797',
+      cards: ['Phantom Train', 'Dargo, the Shipwrecker', 'Earthcraft'],
+    },
+    swap: { out: 'Phantom Train', in: 'Bartolomé del Presidio', inId: 2921 },
+    why: 'Earthcraft taps Dargo to untap a basic Mountain, which pays the {R} that recasts '
+      + 'him from the command zone; Bartolomé eats him for free, and a commander sacrificed '
+      + 'this way goes back to the command zone. The arithmetic is what makes it repeat: '
+      + 'commander tax adds {2} per cast, and Dargo reads {2} less for each other artifact '
+      + 'or creature sacrificed this turn, so every lap adds one cast and one sacrifice and '
+      + 'the cost holds where it started. Bartolomé substitutes because the loop only ever '
+      + 'asks the outlet to eat another creature for free — Earthcraft taps Dargo, not the '
+      + 'outlet, so the Vehicle half of Phantom Train is never used.',
+    produces: [
+      'Infinite LTB',
+      'Infinite ETB',
+      'Infinite sacrifice triggers',
+      'Infinite +1/+1 counters on a creature',
+    ],
+  },
   ];
 
   // ---- cards that are another card under a different name --------------------
