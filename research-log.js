@@ -1106,6 +1106,329 @@ const PASSES = [
       + 'not "is there anything here" — the note at the top of this file says the answer is yes '
       + 'or nothing-recorded, and a two-card rule-out is silent about every third card.',
   },
+  {
+    subject: 'Light of Promise, against Archangel of Thune and Heroic Feast',
+    cards: [
+      'Light of Promise',
+      'Archangel of Thune',
+      'Heroic Feast',
+      'Scurry Oak',
+      'Herd Baloth',
+      'Basking Broodscale',
+      'Aunt May',
+      'Virulent Emissary',
+      'Guide of Souls',
+      'Elas il-Kor, Sadistic Pilgrim',
+      'Bogwater Lumaret',
+      'Lunarch Veteran // Luminous Phantom',
+      'Kitchen Finks',
+      'All Will Be One',
+      'Essence Warden',
+      'Soul Warden',
+    ],
+    cardIds: [338, 2919, 7743, 4186, 3197, 5641, 6823, 7173, 5870, 2811, 7399, 1939, 2086, 2390, 2741, 360],
+    date: '2026-08-04',
+    method:
+      'A reader holding Archangel of Thune and Heroic Feast said Light of Promise should be in '
+      + 'more combos than it is, and named those two as the peers to migrate from. THE PREMISE IS '
+      + 'FALSE AT THE DATABASE LEVEL AND THAT GOES FIRST: Spellbook publishes Light of Promise in '
+      + "357 combos against Archangel's 347 and Heroic Feast's 167, so the Aura is the best "
+      + 'covered of the three. What is true is that the lists are not the same list — 65 shapes '
+      + 'name Archangel and not the Aura, 20 name Heroic Feast and not the Aura. This pass took '
+      + 'the 45 of those 85 that are three-card shapes and left the 40 four-card ones.',
+    read: {
+      'Light of Promise':
+        'Enchant creature\n'
+        + 'Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature."',
+      'Archangel of Thune':
+        'Flying\n'
+        + 'Lifelink (Damage dealt by this creature also causes you to gain that much life.)\n'
+        + 'Whenever you gain life, put a +1/+1 counter on each creature you control.',
+      'Heroic Feast':
+        'When this enchantment enters, create a Food token. (It\'s an artifact with "{2}, {T}, '
+        + 'Sacrifice this token: You gain 3 life.")\n'
+        + 'Whenever you gain life, choose up to that many target creatures you control. Put a '
+        + '+1/+1 counter on each of them.',
+      'Scurry Oak':
+        'Evolve (Whenever a creature you control enters, if that creature has greater power or '
+        + 'toughness than this creature, put a +1/+1 counter on this creature.)\n'
+        + 'Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 '
+        + 'green Squirrel creature token.',
+      'Herd Baloth':
+        'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 '
+        + 'green Beast creature token.',
+      'Basking Broodscale':
+        'Devoid (This card has no color.)\n'
+        + '{1}{G}: Adapt 1. (If this creature has no +1/+1 counters on it, put a +1/+1 counter on it.)\n'
+        + 'Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 '
+        + 'colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}."',
+      'Aunt May':
+        'Whenever another creature you control enters, you gain 1 life. If it\'s a Spider, put '
+        + 'a +1/+1 counter on it.',
+      'Virulent Emissary':
+        'Deathtouch\n'
+        + 'Whenever another creature you control enters, you gain 1 life.',
+      // Re-read against Scryfall after the fact, pasted in by the reader who asked for the
+      // pass. Word for word what Forge gave, which is why the three rows resting on it went
+      // from `derived` to `verified` without their argument changing.
+      'Guide of Souls':
+        'Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter).\n'
+        + 'Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a '
+        + 'flying counter on target attacking creature. It becomes an Angel in addition to its '
+        + 'other types.',
+      'Elas il-Kor, Sadistic Pilgrim':
+        'Deathtouch\n'
+        + 'Whenever another creature you control enters, you gain 1 life.\n'
+        + 'Whenever another creature you control dies, each opponent loses 1 life.',
+      'Bogwater Lumaret':
+        'Whenever this creature or another creature you control enters, you gain 1 life.',
+      'Lunarch Veteran // Luminous Phantom':
+        'Whenever another creature you control enters, you gain 1 life.\n'
+        + 'Disturb {1}{W} (You may cast this card from your graveyard transformed for its disturb cost.)\n'
+        + '// Luminous Phantom: Flying\n'
+        + 'Whenever another creature you control leaves the battlefield, you gain 1 life.\n'
+        + 'If Luminous Phantom would be put into a graveyard from anywhere, exile it instead.',
+      'Kitchen Finks':
+        'When Kitchen Finks enters, you gain 2 life.\n'
+        + 'Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the '
+        + "battlefield under its owner's control with a -1/-1 counter on it.)",
+      'All Will Be One':
+        'Whenever you put one or more counters on a permanent or player, All Will Be One deals '
+        + 'that much damage to target opponent, creature an opponent controls, or planeswalker '
+        + 'an opponent controls.',
+      'Essence Warden': 'Whenever another creature enters, you gain 1 life.',
+      'Soul Warden': 'Whenever another creature enters, you gain 1 life.',
+    },
+    proposed: 85,
+    examined: 45,
+    kept: 14,
+    ruledOut: [
+      {
+        reason:
+          'THE AURA DIES WITH THE CREATURE, AND PERSIST IS A CREATURE DYING. Fifteen of the '
+          + 'forty-five are Kitchen Finks plus a free sacrifice outlet, and the counter in that '
+          + 'loop has to land on the Finks that just came back: persist returns it with a -1/-1 '
+          + 'counter, and the +1/+1 from the lifegain trigger is what annihilates that counter so '
+          + 'it can persist again. Archangel of Thune and Heroic Feast do that from outside the '
+          + 'creature. Light of Promise is an Aura ON the Finks, so when the Finks dies the Aura '
+          + 'goes to the graveyard with it and the second lap has no engine. One lap is not a '
+          + 'combo. This is the general rule for the card rather than a fact about Kitchen Finks '
+          + '— the Aura works exactly as long as its creature stays on the battlefield, which is '
+          + 'why every one of the fourteen rows kept is a loop where nothing leaves it.',
+        count: 15,
+        sets: [
+        ['Light of Promise', 'Kitchen Finks', 'Umbral Collar Zealot'],
+        ['Light of Promise', 'Kitchen Finks', 'Phantom Train'],
+        ['Light of Promise', 'Kitchen Finks', 'Thermopod'],
+        ['Light of Promise', 'Kitchen Finks', 'Yahenni, Undying Partisan'],
+        ['Light of Promise', 'Kitchen Finks', 'Woe Strider'],
+        ['Light of Promise', 'Kitchen Finks', 'Shilgengar, Sire of Famine'],
+        ['Light of Promise', 'Kitchen Finks', 'Phyrexian Altar'],
+        ['Light of Promise', 'Kitchen Finks', 'Viscera Seer'],
+        ['Light of Promise', 'Kitchen Finks', 'Carrion Feeder'],
+        ['Light of Promise', 'Kitchen Finks', 'Bloodflow Connoisseur'],
+        ['Light of Promise', 'Kitchen Finks', 'Goblin Bombardment'],
+        ['Light of Promise', 'Kitchen Finks', 'Blasting Station'],
+        ['Light of Promise', 'Kitchen Finks', 'Bartolomé del Presidio'],
+        ['Light of Promise', 'Kitchen Finks', "Ashnod's Altar"],
+        ['Light of Promise', 'Kitchen Finks', 'Altar of Dementia'],
+        ],
+      },
+    ],
+    notes:
+      'WHAT WAS KEPT: fourteen rows, all one shape. A receiver that reads "whenever one or more '
+      + '+1/+1 counters are put on this creature" and answers with a token (Scurry Oak, Herd '
+      + 'Baloth, Basking Broodscale), a gainer that reads "whenever another creature you control '
+      + 'enters, you gain 1 life" (Aunt May, Virulent Emissary, Guide of Souls, Elas il-Kor, '
+      + 'Bogwater Lumaret), and the Aura on the receiver. One life, one counter, one creature, '
+      + 'which is where all three peers read alike: Archangel spreads one counter over every '
+      + 'creature, Heroic Feast one counter over that many creatures, the Aura that many counters '
+      + 'over one. The fifteenth pair in the family, Basking Broodscale + Lunarch Veteran, WAS '
+      + 'ALREADY A ROW here — the method landing on a row somebody else had already written is '
+      + 'the closest thing to a control this file has.\n\n'
+      + 'LEFT OPEN, NOT RULED OUT: nine three-card shapes and the forty four-card ones. Eight of '
+      + 'the nine are All Will Be One plus enchantment animation or recursion — Starfield of Nyx, '
+      + 'Opalescence, Saheeli, Radiant Creator, Captain Rex Nebula, Bello, Bard of the Brambles, '
+      + "Relive the Past, Dance of the Manse, Abuelo's Awakening — and the ninth is Pestilence "
+      + "Demon + K'rrik, Son of Yawgmoth. All Will Be One's own text is recorded above and its "
+      + 'damage goes to an opponent rather than to you, so where the lifegain restarts is exactly '
+      + 'the thing that needs reading; the other halves were not read. A shape whose loop nobody '
+      + 'has traced is not a rule-out, and `sets` deliberately does not claim it.\n\n'
+      + 'PROVENANCE, BECAUSE IT DECIDES THE CONFIDENCE ON EIGHT ROWS. Aunt May, Virulent '
+      + 'Emissary, Guide of Souls, Heroic Feast, Kitchen Finks, Lunarch Veteran and All Will Be '
+      + "One came from Forge's card scripts: every Scryfall host is refused at CONNECT from this "
+      + 'sandbox. The Cache card text workflow was dispatched for them and had not landed when '
+      + 'these rows were written, so the eight rows whose gainer is one of the Forge-read three '
+      + 'are `derived` rather than `verified`. Everything the argument turns on for the other six '
+      + 'rows — Light of Promise, Archangel of Thune, Scurry Oak, Herd Baloth, Basking '
+      + "Broodscale, Elas il-Kor, Bogwater Lumaret — is Scryfall's wording out of card-text.json.",
+  },
+  {
+    subject: 'Virulent Emissary and Aunt May, against Essence Warden and Soul Warden',
+    cards: [
+      'Virulent Emissary',
+      'Aunt May',
+      'Essence Warden',
+      'Soul Warden',
+      'Scurry Oak',
+      'Spider-Man, Peter Parker',
+      'Herd Baloth',
+      'Sunbond',
+      'Cleric Class',
+      'Lurking Roper',
+      'Splinter Twin',
+      'Trudge Garden',
+      'Mana Echoes',
+      'Elemental Mastery',
+      'Presence of Gond',
+      'Yawgmoth, Thran Physician',
+      'Famished Paladin',
+      'Darien, King of Kjeldor',
+      'Goblin Bombardment',
+      'Pandemonium',
+      'Warstorm Surge',
+      'Terror of the Peaks',
+      'Ratchet, Field Medic // Ratchet, Rescue Racer',
+      'Sculpting Steel',
+      'Blasting Station',
+      'Basking Broodscale',
+      'Warren Soultrader',
+      'Enduring Renewal',
+      'Stimulus Package',
+      'Valentin, Dean of the Vein // Lisette, Dean of the Root',
+      'The Locust God',
+    ],
+    cardIds: [7173, 6823, 2741, 360, 4186, 6824, 3197, 4017, 104, 859, 4702, 2308, 2440, 262, 1424, 4279, 3957, 1981, 5147, 2584, 2773, 1110, 5118, 661, 413, 5641, 5670, 678, 397, 3097, 1339],
+    read: {
+      'Virulent Emissary':
+        'Deathtouch\nWhenever another creature you control enters, you gain 1 life.',
+      'Aunt May':
+        'Whenever another creature you control enters, you gain 1 life. If it\'s a Spider, put a +1/+1 counter on it.',
+      'Essence Warden':
+        'Whenever another creature enters, you gain 1 life.',
+      'Soul Warden':
+        'Whenever another creature enters, you gain 1 life.',
+      'Scurry Oak':
+        'Evolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)\nWhenever one or more +1/+1 counters are put on this creature, you may create a 1/1 green Squirrel creature token.',
+      'Spider-Man, Peter Parker':
+        'Flying (This creature can\'t be blocked except by creatures with flying or reach.)\nWhenever you gain life, put a +1/+1 counter on target creature you control. It gains indestructible until end of turn. (Damage and effects that say "destroy" don\'t destroy it.)',
+      'Herd Baloth':
+        'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 green Beast creature token.',
+      'Sunbond':
+        'Enchant creature\nEnchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature."',
+      'Cleric Class':
+        '(Gain the next level as a sorcery to add its ability.)\nIf you would gain life, you gain that much life plus 1 instead.\n{3}{W}: Level 2\nWhenever you gain life, put a +1/+1 counter on target creature you control.\n{4}{W}: Level 3\nWhen this Class becomes level 3, return target creature card from your graveyard to the battlefield. You gain life equal to that creature\'s toughness.',
+      'Lurking Roper':
+        'This creature doesn\'t untap during your untap step.\nWhenever you gain life, untap this creature.',
+      'Splinter Twin':
+        'Enchant creature\nEnchanted creature has "{T}: Create a token that\'s a copy of this creature, except it has haste. Exile that token at the beginning of the next end step."',
+      'Trudge Garden':
+        'Whenever you gain life, you may pay {2}. If you do, create a 4/4 green Fungus Beast creature token with trample.',
+      'Mana Echoes':
+        'Whenever a creature enters, you may add an amount of {C} equal to the number of creatures you control that share a creature type with it.',
+      'Elemental Mastery':
+        'Enchant creature\nEnchanted creature has "{T}: Create X 1/1 red Elemental creature tokens with haste, where X is this creature\'s power. Exile them at the beginning of the next end step."',
+      'Presence of Gond':
+        'Enchant creature\nEnchanted creature has "{T}: Create a 1/1 green Elf Warrior creature token."',
+      'Yawgmoth, Thran Physician':
+        'Protection from Humans\nPay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.\n{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)',
+      'Famished Paladin':
+        'This creature doesn\'t untap during your untap step.\nWhenever you gain life, untap this creature.',
+      'Darien, King of Kjeldor':
+        'Whenever you\'re dealt damage, you may create that many 1/1 white Soldier creature tokens.',
+      'Goblin Bombardment':
+        'Sacrifice a creature: This enchantment deals 1 damage to any target.',
+      'Pandemonium':
+        'Whenever a creature enters, that creature\'s controller may have it deal damage equal to its power to any target of their choice.',
+      'Warstorm Surge':
+        'Whenever a creature you control enters, it deals damage equal to its power to any target.',
+      'Terror of the Peaks':
+        'Flying\nSpells your opponents cast that target this creature cost an additional 3 life to cast.\nWhenever another creature you control enters, this creature deals damage equal to that creature\'s power to any target.',
+      'Ratchet, Field Medic // Ratchet, Rescue Racer':
+        'More Than Meets the Eye {1}{W} (You may cast this card converted for {1}{W}.)\nLifelink\nWhenever you gain life, you may convert Ratchet. When you do, return target artifact card with mana value less than or equal to the amount of life you gained this turn from your graveyard to the battlefield tapped.\n// Ratchet, Rescue Racer: Living metal (During your turn, this Vehicle is also a creature.)\nLifelink\nWhenever one or more nontoken artifacts you control are put into a graveyard from the battlefield, convert Ratchet. This ability triggers only once each turn.',
+      'Sculpting Steel':
+        'You may have this artifact enter as a copy of any artifact on the battlefield.',
+      'Blasting Station':
+        '{T}, Sacrifice a creature: This artifact deals 1 damage to any target.\nWhenever a creature enters, you may untap this artifact.',
+      'Basking Broodscale':
+        'Devoid (This card has no color.)\n{1}{G}: Adapt 1. (If this creature has no +1/+1 counters on it, put a +1/+1 counter on it.)\nWhenever one or more +1/+1 counters are put on this creature, you may create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}."',
+      'Warren Soultrader':
+        'Pay 1 life, Sacrifice another creature: Create a Treasure token. (It\'s an artifact with "{T}, Sacrifice this token: Add one mana of any color.")',
+      'Enduring Renewal':
+        'Play with your hand revealed.\nIf you would draw a card, reveal the top card of your library instead. If it\'s a creature card, put it into your graveyard. Otherwise, draw a card.\nWhenever a creature is put into your graveyard from the battlefield, return it to your hand.',
+      'Stimulus Package':
+        'When this enchantment enters, create two Treasure tokens. (They\'re artifacts with "{T}, Sacrifice this token: Add one mana of any color.")\nSacrifice a Treasure: Create a 1/1 green and white Citizen creature token.',
+      'Valentin, Dean of the Vein // Lisette, Dean of the Root':
+        'Menace, lifelink\nIf a nontoken creature an opponent controls would die, exile it instead. When you do, you may pay {2}. If you do, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life."\n// Whenever you gain life, you may pay {1}. If you do, put a +1/+1 counter on each creature you control and those creatures gain trample until end of turn.',
+      'The Locust God':
+        'Flying\nWhenever you draw a card, create a 1/1 blue and red Insect creature token with flying and haste.\n{2}{U}{R}: Draw a card, then discard a card.\nWhen The Locust God dies, return it to its owner\'s hand at the beginning of the next end step.',
+    },
+    date: '2026-08-04',
+    method:
+      'A reader said these two are in far fewer combos than Essence Warden, and they are: 54 '
+      + "and 82 against Essence Warden's 121 and Soul Warden's 149. Unlike the Light of Promise "
+      + 'claim in the pass above, THIS ONE IS TRUE, and the whole of the difference is one '
+      + 'clause: the Wardens read "whenever another creature enters", these two read "whenever '
+      + 'another creature YOU CONTROL enters". The Wardens therefore also see an opponent\'s '
+      + 'creature enter, and a combo loop does not care, because every creature these loops put '
+      + 'onto the battlefield is one of yours. So the sweep was the whole cross product of both '
+      + 'subjects against both Wardens: 62 three-card shapes after dropping what is already '
+      + 'published, and one question per shape — is there a creature in this loop I do not '
+      + 'control? The answer was no every time the loop could be traced at all.',
+    proposed: 268,
+    examined: 62,
+    kept: 39,
+    ruledOut: [
+      {
+        reason:
+          'NOT A RULE-OUT, A LOOP NOBODY TRACED, recorded so the next pass does not rediscover '
+          + 'them as fresh candidates. Three published Warden combos whose loop does not follow '
+          + "from the three cards' text alone: Enduring Renewal + Warren Soultrader needs "
+          + 'something free to recast and the third card is not it; Ratchet + Sculpting Steel '
+          + 'needs the copy back in the graveyard and nothing here puts it there; Scurry Oak + '
+          + 'Yawgmoth, Thran Physician has Yawgmoth putting -1/-1 counters where Scurry Oak wants '
+          + '+1/+1, and where the +1/+1 comes from is on none of the three cards. Five rows '
+          + 'across the two subjects. These sets say UNTRACED rather than ruled out, which is the '
+          + 'honest state: somebody who reads the published steps may well write all five.',
+        count: 5,
+        sets: [
+          ['Virulent Emissary', 'Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel'],
+          ['Aunt May', 'Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel'],
+          ['Virulent Emissary', 'Scurry Oak', 'Yawgmoth, Thran Physician'],
+          ['Aunt May', 'Scurry Oak', 'Yawgmoth, Thran Physician'],
+          ['Aunt May', 'Enduring Renewal', 'Warren Soultrader'],
+        ],
+      },
+    ],
+    notes:
+      'WHAT WAS KEPT: 39 rows over 23 card pairs, and they are not one family but six, which is '
+      + 'what a swap this clean looks like. Darien, King of Kjeldor turning damage into your own '
+      + 'Soldiers behind five different pingers (Blasting Station, Goblin Bombardment, '
+      + 'Pandemonium, Terror of the Peaks, Warstorm Surge). Famished Paladin and Lurking Roper, '
+      + 'both reading "whenever you gain life, untap this creature", behind three Auras that give '
+      + 'a tap ability making tokens (Elemental Mastery, Presence of Gond, Splinter Twin). The '
+      + 'counter-to-token receivers (Scurry Oak, Herd Baloth, Basking Broodscale) behind Cleric '
+      + 'Class, Sunbond, Spider-Man and Valentin // Lisette. Then Warren Soultrader plus Stimulus '
+      + 'Package, Trudge Garden plus Mana Echoes, and The Locust God plus Yawgmoth. In every one '
+      + 'the entering creature is a token or a recast card of yours.\n\n'
+      + 'EIGHTEEN OF THE 62 WERE ALREADY ROWS HERE, three of them written an hour earlier in the '
+      + 'Light of Promise pass and reached this time from the other subject. The same row arrived '
+      + 'at from two directions is the closest thing to a control this file has.\n\n'
+      + 'PROVENANCE: all 31 cards were read and every row is `verified`. 20 partners came out of '
+      + "card-text.json, which is Scryfall's wording; the two subjects and seven more (Pandemonium, "
+      + 'Warstorm Surge, Terror of the Peaks, Ratchet, Sculpting Steel, Enduring Renewal, Stimulus '
+      + 'Package) were pasted from Scryfall by the reader who asked, because every Scryfall host is '
+      + 'refused at CONNECT from this sandbox and the Cache card text workflow dispatched for them '
+      + 'never landed a branch. Reading Aunt May and Virulent Emissary against Scryfall also '
+      + 'confirmed the Forge wording used an hour earlier, which is why five Light of Promise rows '
+      + 'went from `derived` to `verified` in the same commit. The three that did not are the Guide '
+      + 'of Souls ones: that card is still Forge-only, and one paste would clear it.\n\n'
+      + 'STILL OPEN, AND BIGGER THAN WHAT WAS DONE: the four-card shapes (55 partner cards, 15 '
+      + 'unread) and the five-card ones (19 partners, 14 unread). The categorical finding above, '
+      + "that a combo loop never needs the Wardens' wider trigger, is what makes those cheap once "
+      + 'the text is in hand, since the only per-shape question left is whether a creature in the '
+      + 'loop belongs to somebody else.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.

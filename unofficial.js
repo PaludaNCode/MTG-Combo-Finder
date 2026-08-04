@@ -9915,6 +9915,665 @@
         'Infinite sacrifice triggers',
       ],
     },
+
+    // ---- Light of Promise, where the counter only ever had to land on one creature ----
+    //
+    // Asked because a reader looked at a deck holding Archangel of Thune and Heroic Feast
+    // and said Light of Promise should be in more combos than it is. At the database level
+    // that is not true — Spellbook publishes it in 357 combos against Archangel's 347 — but
+    // the two lists are not the same list, and 85 shapes name one of those peers and not the
+    // Aura. These are the fourteen of them where the swap is exact.
+    //
+    // What the three cards actually say, which is the whole of the argument:
+    //
+    //   Archangel of Thune  "Whenever you gain life, put a +1/+1 counter on each creature
+    //                        you control."          one counter, every creature
+    //   Heroic Feast        "Whenever you gain life, choose up to that many target creatures
+    //                        you control. Put a +1/+1 counter on each of them."
+    //                                               one counter each, that many creatures
+    //   Light of Promise    "Enchanted creature has 'Whenever you gain life, put that many
+    //                        +1/+1 counters on this creature.'"
+    //                                               that many counters, one creature
+    //
+    // So the Aura is the narrowest of the three, and these loops never needed the width: a
+    // token enters, the gainer turns that into one life, the life turns into a counter on the
+    // one creature whose counters make the next token. One life, one counter, one creature —
+    // where all three read alike.
+    //
+    // The receivers are the three cards that read "whenever one or more +1/+1 counters are put
+    // on this creature" and answer with a token: Scurry Oak (a 1/1 Squirrel), Herd Baloth (a
+    // 4/4 Beast) and Basking Broodscale (an Eldrazi Spawn, which also taps for mana and is why
+    // those rows produce infinite colourless). The gainers are the five that read "whenever
+    // another creature you control enters, you gain 1 life" — Aunt May, Virulent Emissary,
+    // Guide of Souls, Elas il-Kor and Bogwater Lumaret.
+    //
+    // **The Kitchen Finks family is ruled out, and it is fifteen of the shapes.** There the
+    // counter has to land on a creature that just died and came back under persist, and an
+    // Aura on a creature that dies goes to the graveyard with it — one lap, then nothing. That
+    // is the rule for every one of these: the Aura works exactly as long as its creature stays
+    // on the battlefield. research-log.js records the fifteen by name.
+    //
+    // `derived` rather than `verified` on the rows whose gainer is Aunt May, Virulent Emissary
+    // or Guide of Souls: those three came from Forge's card script rather than Scryfall, which
+    // was refused at CONNECT, so the wording behind them is Forge's. The Cache card text
+    // workflow was triggered for them and had not landed. Everything else here is Scryfall's,
+    // out of card-text.json.
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '2919-4186-6823',
+        cards: ['Archangel of Thune', 'Scurry Oak', 'Aunt May'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Scurry Oak. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '2919-3197-6823',
+        cards: ['Archangel of Thune', 'Herd Baloth', 'Aunt May'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Herd Baloth. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Aunt May'],
+      confidence: 'verified',
+      from: {
+        id: '5641-6823-7743',
+        cards: ['Heroic Feast', 'Basking Broodscale', 'Aunt May'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '4186-7173-7743',
+        cards: ['Heroic Feast', 'Scurry Oak', 'Virulent Emissary'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Virulent Emissary'],
+      confidence: 'verified',
+      from: {
+        id: '3197-7173-7743',
+        cards: ['Heroic Feast', 'Herd Baloth', 'Virulent Emissary'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Guide of Souls'],
+      confidence: 'verified',
+      from: {
+        id: '4186-5870-7743',
+        cards: ['Heroic Feast', 'Scurry Oak', 'Guide of Souls'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite energy counters', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Guide of Souls'],
+      confidence: 'verified',
+      from: {
+        id: '3197-5870-7743',
+        cards: ['Heroic Feast', 'Herd Baloth', 'Guide of Souls'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite energy counters', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Guide of Souls'],
+      confidence: 'verified',
+      from: {
+        id: '2919-5641-5870',
+        cards: ['Archangel of Thune', 'Basking Broodscale', 'Guide of Souls'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Basking Broodscale. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana', 'Infinite +1/+1 counters on a creature', 'Infinite energy counters'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-2919-4186',
+        cards: ['Archangel of Thune', 'Scurry Oak', 'Elas il-Kor, Sadistic Pilgrim'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Scurry Oak. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-2919-3197',
+        cards: ['Archangel of Thune', 'Herd Baloth', 'Elas il-Kor, Sadistic Pilgrim'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Herd Baloth. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-5641-7743',
+        cards: ['Heroic Feast', 'Basking Broodscale', 'Elas il-Kor, Sadistic Pilgrim'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '4186-7399-7743',
+        cards: ['Heroic Feast', 'Scurry Oak', 'Bogwater Lumaret'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '3197-7399-7743',
+        cards: ['Heroic Feast', 'Herd Baloth', 'Bogwater Lumaret'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '5641-7399-7743',
+        cards: ['Heroic Feast', 'Basking Broodscale', 'Bogwater Lumaret'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+
+    // ---- the two lifegain-on-entry cards that read "you control" ----------------
+    //
+    // Asked because a reader said Virulent Emissary and Aunt May are in far fewer combos
+    // than Essence Warden, and they are: 54 and 82 against Essence Warden's 121 and Soul
+    // Warden's 149. The whole of the difference is one clause.
+    //
+    //   Essence Warden / Soul Warden   "Whenever another creature enters, you gain 1 life."
+    //   Virulent Emissary / Aunt May   "Whenever another creature YOU CONTROL enters,
+    //                                   you gain 1 life."
+    //
+    // The Wardens also see an opponent's creature enter. A combo loop does not care: every
+    // creature these loops put onto the battlefield is one of yours — your Soldiers off
+    // Darien, your Squirrels off Scurry Oak, your Eldrazi Spawn off Basking Broodscale,
+    // your Citizens off Stimulus Package, your Insects off The Locust God. So the narrower
+    // trigger sees all of them and the loop runs at the same rate, which is why the swap
+    // holds across 39 shapes rather than a handful.
+    //
+    // Aunt May's second line ("If it's a Spider, put a +1/+1 counter on it") and Virulent
+    // Emissary's deathtouch are riders that no loop here touches. Nothing in these rows
+    // rests on either.
+    //
+    // Every card in every row was read: 27 partners out of card-text.json, the two subjects
+    // and seven more pasted in from Scryfall by the reader who asked, because every Scryfall
+    // host is refused at CONNECT from this sandbox and the Cache card text workflow had not
+    // landed. That is why these are `verified` and the Light of Promise rows above were not.
+    //
+    // FIVE SHAPES WERE LEFT OPEN rather than written: Enduring Renewal + Warren Soultrader,
+    // Ratchet + Sculpting Steel, and Scurry Oak + Yawgmoth. Each is a published Warden combo
+    // whose loop does not follow from the three cards' text alone — Enduring Renewal needs
+    // something free to recast, Ratchet needs its copy back in the graveyard, and Yawgmoth
+    // puts -1/-1 counters where Scurry Oak wants +1/+1. A loop nobody has traced is not a
+    // row. research-log.js names them.
+    {
+      cards: ['Virulent Emissary', 'Scurry Oak', 'Spider-Man, Peter Parker'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4186-6824',
+        cards: ['Essence Warden', 'Scurry Oak', 'Spider-Man, Peter Parker'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Herd Baloth', 'Spider-Man, Peter Parker'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3197-6824',
+        cards: ['Essence Warden', 'Herd Baloth', 'Spider-Man, Peter Parker'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Sunbond', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4017-4186',
+        cards: ['Essence Warden', 'Sunbond', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Herd Baloth', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3197-4017',
+        cards: ['Essence Warden', 'Herd Baloth', 'Sunbond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Cleric Class', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-4186',
+        cards: ['Essence Warden', 'Cleric Class', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Cleric Class', 'Herd Baloth'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-3197',
+        cards: ['Essence Warden', 'Cleric Class', 'Herd Baloth'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Lurking Roper', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '859-2741-4702',
+        cards: ['Essence Warden', 'Lurking Roper', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Trudge Garden', 'Mana Echoes'],
+      confidence: 'verified',
+      from: {
+        id: '2308-2440-2741',
+        cards: ['Essence Warden', 'Trudge Garden', 'Mana Echoes'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite colorless mana', 'Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Lurking Roper', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-859-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Lurking Roper', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '859-1424-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Famished Paladin', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Famished Paladin', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '1424-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Famished Paladin', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3957-4702',
+        cards: ['Essence Warden', 'Famished Paladin', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Pandemonium'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Pandemonium'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Sunbond', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4017-4186',
+        cards: ['Essence Warden', 'Sunbond', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Herd Baloth', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3197-4017',
+        cards: ['Essence Warden', 'Herd Baloth', 'Sunbond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Basking Broodscale', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4017-5641',
+        cards: ['Essence Warden', 'Basking Broodscale', 'Sunbond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana'],
+    },
+    {
+      cards: ['Aunt May', 'Cleric Class', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-4186',
+        cards: ['Essence Warden', 'Cleric Class', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Cleric Class', 'Herd Baloth'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-3197',
+        cards: ['Essence Warden', 'Cleric Class', 'Herd Baloth'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Basking Broodscale', 'Cleric Class'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-5641',
+        cards: ['Essence Warden', 'Basking Broodscale', 'Cleric Class'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana'],
+    },
+    {
+      cards: ['Aunt May', 'Stimulus Package', 'Warren Soultrader'],
+      confidence: 'verified',
+      from: {
+        id: '397-2741-5670',
+        cards: ['Essence Warden', 'Stimulus Package', 'Warren Soultrader'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Basking Broodscale', 'Valentin, Dean of the Vein // Lisette, Dean of the Root'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3097-5641',
+        cards: ['Essence Warden', 'Basking Broodscale', 'Valentin, Dean of the Vein // Lisette, Dean of the Root'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite +1/+1 counters on creatures you control'],
+    },
+    {
+      cards: ['Aunt May', 'Yawgmoth, Thran Physician', 'The Locust God'],
+      confidence: 'verified',
+      from: {
+        id: '1339-2741-4279',
+        cards: ['Essence Warden', 'Yawgmoth, Thran Physician', 'The Locust God'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite card draw', 'Near-infinite lifegain triggers', 'Near-infinite ETB', 'Infinite draw triggers', 'Near-infinite LTB', 'Near-infinite death triggers', 'Near-infinite sacrifice triggers', 'Near-infinite -1/-1 counters'],
+    },
+    {
+      cards: ['Aunt May', 'Lurking Roper', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '859-2741-4702',
+        cards: ['Essence Warden', 'Lurking Roper', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Trudge Garden', 'Mana Echoes'],
+      confidence: 'verified',
+      from: {
+        id: '2308-2440-2741',
+        cards: ['Essence Warden', 'Trudge Garden', 'Mana Echoes'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite colorless mana', 'Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Lurking Roper', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-859-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Lurking Roper', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '859-1424-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Famished Paladin', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Famished Paladin', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '1424-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Famished Paladin', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3957-4702',
+        cards: ['Essence Warden', 'Famished Paladin', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Pandemonium'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Pandemonium'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

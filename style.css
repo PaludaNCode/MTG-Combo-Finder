@@ -513,26 +513,29 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .empty { color: var(--muted); }
 
-/* A panel's opening sentence — the line under "Combos in your deck" that reconciles its
-   two numbers, and the one under "Unofficial combos" that says whose rows those are.
-   Both panels draw one, so both use this: they sit one above the other on the page, and
-   the unofficial note used to be `.empty` (a colour and nothing else), which put the two
-   at different measures and different sizes with nothing gained by the difference.
-
-   The first of them exists because the badge counts combos and the rows are cards, so a
-   three-figure badge sits above a two-figure list of rows and the sentence is what stops
-   that reading as a miscount. --muted rather than --faint: --faint is only safe on --bg
-   and this sits on a panel, and a sentence the badge cannot be understood without is not
-   decoration. See DeckView.deckCombosNote().
-
-   62ch is the measure both get. A panel body is 967px at a 1440px window and this text is
-   .92rem, so an unconstrained line runs to about 130 characters — twice a comfortable one,
-   and the reason the unofficial note read as a wall rather than as a caption. */
+/* ---- a panel's opening sentence ----
+ *
+ * Three panels draw one: "How your combos connect" says what a line on the map means,
+ * "Combos in your deck" reconciles its badge with its rows, and "Unofficial combos" says
+ * whose rows those are. All three use this class, so the page has one kind of caption
+ * rather than three that drifted apart in the order they were written.
+ *
+ * It declares almost nothing, and that is the point — the shape is the panel's. This
+ * carried `max-width: 62ch` and `font-size: .92rem` for a while, on the argument that an
+ * unconstrained line in a 967px panel runs to about 130 characters. True, and beside the
+ * map's caption three panels up it made the two it applied to read as smaller, narrower
+ * text for no reason a reader could see, which is the worse of the two problems. The map's
+ * caption is the oldest and longest of them and sets the shape: full width, body size.
+ *
+ * --muted rather than --faint: --faint is only safe on --bg and these sit on a panel, and a
+ * sentence a badge cannot be understood without is not decoration. See
+ * DeckView.deckCombosNote() for the one under "Combos in your deck".
+ *
+ * `npm run verify` measures the three against each other at every viewport — captionDrift()
+ * — so a rule that reaches one of them and not the others reddens a run rather than only
+ * looking wrong. */
 .panel-note {
-  margin: 0 0 .9rem;
-  max-width: 62ch;
   color: var(--muted);
-  font-size: .92rem;
   line-height: 1.5;
 }
 

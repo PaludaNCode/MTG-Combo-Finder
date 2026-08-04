@@ -26,9 +26,19 @@ const { execFile } = require('node:child_process');
 const { rewriteAssets } = require('./stamp-assets.js');
 
 const ROOT = path.join(__dirname, '..');
+// charset=utf-8 on every one of them, and it is load-bearing rather than tidy. Without it
+// the browser sniffs the encoding per file, and CI's Chrome decoded the em dash in
+// render-map.js's hover text as mojibake while the Chromium here guessed UTF-8 and passed
+// — so `verify` failed on one viewport with "a card on the map has no hover text" and no
+// local run could reproduce it. GitHub Pages serves these with a charset, so the page was
+// never wrong in production; only this server was, which is the worst shape a harness bug
+// can take. Any new text type added here needs the same suffix.
 const MIME = {
-  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.json': 'application/json', '.svg': 'image/svg+xml',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml; charset=utf-8',
 };
 
 // The `rows` container width at which a combo heading stops stacking one card per line and
@@ -176,6 +186,41 @@ const results = [];
 // present in two readings with CSS showing one — the split, which spells itself out
 // where the row's column has room — so asserting on textContent would pass on a page
 // that had lost the rule and was showing both at once.
+// Every panel that opens with a caption, measured as a box. Three panels draw one and they
+// have to be one kind of thing: same left edge, same measure, same size and colour, and the
+// same distance from the heading above and the rows below. The margins are half of that and
+// were the half nobody was measuring -- a caption with a top margin sits away from its
+// heading and pushes the panel's contents down.
+//
+// One function called from two runs rather than the same reads written twice: the pair of
+// copies this replaces already differed by their indentation alone, which is one edit away
+// from differing by what they measure.
+//
+// No backticks in here, comments included: this is inside the HARNESS template literal and
+// one would end it.
+function captionBoxes(win, doc) {
+  return ['graph', 'pieces', 'unofficial'].map(function (id) {
+    const p = doc.querySelector('#' + id + ' .panel-note');
+    if (!p) return null;
+    const r = p.getBoundingClientRect();
+    const cs = win.getComputedStyle(p);
+    const next = p.nextElementSibling;
+    return {
+      panel: id,
+      left: Math.round(r.left),
+      width: Math.round(r.width),
+      size: cs.fontSize,
+      colour: cs.color,
+      marginTop: cs.marginTop,
+      marginBottom: cs.marginBottom,
+      // What the caption stands on, so the space below it is measured rather than inferred
+      // from a margin something else may be collapsing.
+      gapBelow: next ? Math.round(next.getBoundingClientRect().top - r.bottom) : null,
+      lines: Math.round(r.height / parseFloat(cs.lineHeight)),
+    };
+  }).filter(Boolean);
+}
+
 function visibleTextIn(win, node) {
   return [...node.childNodes].map((n) => {
     if (n.nodeType === 3) return n.textContent;
@@ -1010,6 +1055,7 @@ function measure(win, doc) {
     title: includedPanel ? includedPanel.querySelector('.panel-title').textContent : null,
     rows: doc.querySelectorAll('#pieces .panel-body > .combo.suggestion').length,
     note: (doc.querySelector('#pieces .panel-note') || {}).textContent || '',
+    notes: captionBoxes(win, doc),
     // Every distinct published combo the panel reaches, counted off the hrefs rather
     // than off the rows: a combo appears once under each of its cards, so the rows
     // outnumber the combos and only the set of ids can be compared with the badge. Our
@@ -1622,21 +1668,7 @@ async function runUnofficial(vp) {
         //
         // No backticks in here, deliberately: this whole function is inside the HARNESS
         // template literal, and one in a comment ends it.
-        notes: (() => {
-          const box = (sel) => {
-            const p = doc.querySelector(sel);
-            if (!p) return null;
-            const r = p.getBoundingClientRect();
-            const cs = win.getComputedStyle(p);
-            return {
-              left: Math.round(r.left),
-              width: Math.round(r.width),
-              size: cs.fontSize,
-              colour: cs.color,
-            };
-          };
-          return { pieces: box('#pieces .panel-note'), unofficial: box('#unofficial .panel-note') };
-        })(),
+        notes: captionBoxes(win, doc),
         overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
@@ -2101,11 +2133,23 @@ function serve(dir, extra, onVerdict) {
       url = url.slice('/stamped'.length);
     }
     if (req.method === 'POST' && url === '/_verdict') {
-      let body = '';
-      req.on('data', (chunk) => { body += chunk; });
+      // Buffered and decoded ONCE, which is the whole of this fix. `body += chunk`
+      // stringifies every chunk on its own, so a character whose UTF-8 bytes straddle a
+      // chunk boundary arrives as replacement characters — and the verdict is a JSON POST
+      // carrying every string this tool measured. It cost three commits: `verify` failed at
+      // 390px and only there, on the same card every time, with "Basalt Monolith ?? in 7
+      // combos", and no local run could reproduce it because the sandbox chunks the body
+      // differently than CI does. The em dash in render-map.js's hover text simply happened
+      // to land on the boundary in the phone verdict.
+      //
+      // Worth being plain about the size of it: nothing was wrong with the page, and this
+      // could have corrupted any measured string in any check — silently, since U+FFFD
+      // inside a JSON string parses perfectly well.
+      const chunks = [];
+      req.on('data', (chunk) => { chunks.push(chunk); });
       req.on('end', () => {
         res.end('ok');
-        onVerdict(body);
+        onVerdict(Buffer.concat(chunks).toString('utf8'));
       });
       return undefined;
     }
@@ -2294,7 +2338,49 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       continue;
     }
 
-    // The unofficial run is about a claim, not a layout: that the page keeps our
+    // Every panel that opens with a caption has to draw the same kind of caption: same left
+// edge, same measure, same size. Three panels do — the map, "Combos in your deck" and the
+// unofficial rows — and they arrived at different times, so the drift this catches is the
+// realistic one: a rule aimed at one of them that the others never got. The map's caption
+// is the oldest and longest and is therefore the shape the others answer to.
+//
+// A pixel of tolerance on the width rather than equality: these resolve against each
+// panel's own metrics and need only agree to the eye.
+function captionDrift(notes) {
+  const seen = notes || [];
+  if (seen.length < 2) return [];
+  const first = seen[0];
+  const wrong = [];
+  for (const n of seen.slice(1)) {
+    if (n.left !== first.left) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions start at different x `
+        + `(${n.left}px vs ${first.left}px)`);
+    }
+    if (Math.abs(n.width - first.width) > 1) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions are different widths `
+        + `(${n.width}px vs ${first.width}px)`);
+    }
+    if (n.size !== first.size) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions are set at different sizes `
+        + `(${n.size} vs ${first.size})`);
+    }
+    if (n.colour !== first.colour) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions are different colours `
+        + `(${n.colour} vs ${first.colour})`);
+    }
+    // Placement, which is the half that was going unmeasured while the comments claimed
+    // it: same distance from the heading above, same distance from the rows below.
+    for (const edge of ['marginTop', 'marginBottom']) {
+      if (n[edge] !== first[edge]) {
+        wrong.push(`the ${n.panel} and ${first.panel} captions have different ${edge} `
+          + `(${n[edge]} vs ${first[edge]})`);
+      }
+    }
+  }
+  return wrong;
+}
+
+// The unofficial run is about a claim, not a layout: that the page keeps our
     // own combos visibly apart from Commander Spellbook's and shows the working
     // for each. Every assertion here is something that, if it broke, would leave
     // a reader believing Spellbook had published something it had not.
@@ -2309,24 +2395,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!u.unofficialIsBelow) wrong.push('the unofficial panel is not below the published one');
       if (u.officialRows) wrong.push(`${u.officialRows} combos leaked into the published panel`);
       if (!u.officialEmpty) wrong.push('the published panel does not say it found nothing');
-      // The two panels' opening sentences, side by side down the page. Same left edge and
-      // same measure, or one of them reads as a different kind of thing than the other.
-      const n = u.notes || {};
-      if (!n.pieces) wrong.push('"Combos in your deck" has no opening sentence');
-      else if (!n.unofficial) wrong.push('the unofficial panel has no opening sentence');
-      else {
-        if (n.pieces.left !== n.unofficial.left) {
-          wrong.push(`the two panel notes start at different x (${n.pieces.left}px vs ${n.unofficial.left}px)`);
-        }
-        // A pixel of tolerance, not equality: 62ch resolves against each panel's own
-        // font metrics and the two need only agree to the eye.
-        if (Math.abs(n.pieces.width - n.unofficial.width) > 1) {
-          wrong.push(`the two panel notes are different widths (${n.pieces.width}px vs ${n.unofficial.width}px)`);
-        }
-        if (n.pieces.size !== n.unofficial.size) {
-          wrong.push(`the two panel notes are set at different sizes (${n.pieces.size} vs ${n.unofficial.size})`);
-        }
+      // Both panels open with a caption here — the map does not draw for this deck, which
+      // has nothing published — and the two have to be the same kind of thing.
+      const notes = u.notes || [];
+      const want = ['pieces', 'unofficial'];
+      for (const id of want) {
+        if (!notes.some((n) => n.panel === id)) wrong.push(`the ${id} panel has no opening caption`);
       }
+      wrong.push(...captionDrift(notes));
       // ...and it has to show its working, or it is just an assertion on screen.
       if (!['verified', 'derived'].includes(u.badge)) wrong.push(`no confidence badge: "${u.badge}"`);
       if (!(u.badgeClass || '').includes(u.badge)) wrong.push('the badge is not styled by its confidence');
@@ -2376,7 +2452,9 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       } else {
         console.log(`ok   ${v.name} — ${u.rows} row [${u.badge}] ${u.cards.join(' + ')}, `
           + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty, `
-          + `both notes at x=${n.pieces.left}px × ${n.pieces.width}px ${n.pieces.size}`);
+          + `${notes.length} captions at x=${notes[0].left}px × ${notes[0].width}px ${notes[0].size}, `
+          + `margins ${notes[0].marginTop}/${notes[0].marginBottom}, `
+          + `${notes.map((n) => n.panel + ' ' + n.lines + ' line(s), ' + n.gapBelow + 'px above its rows').join('; ')}`);
       }
       continue;
     }
@@ -3040,6 +3118,17 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!inc.note.includes(`carried by ${inc.rows} of your card`)) {
       problems.push(`the panel draws ${inc.rows} cards and its note does not say so: "${inc.note}"`);
     }
+    // All three captions on one page, measured against each other. The map draws here, so
+    // this is the run where the full set is available — see captionDrift().
+    const captions = inc.notes || [];
+    // The two this deck always draws. The unofficial panel is absent for decks with no
+    // rows of ours, so it is not required here — but if it is on the page, captionDrift()
+    // has already measured it with the others.
+    for (const id of ['graph', 'pieces']) {
+      if (!captions.some((n) => n.panel === id)) problems.push(`the ${id} panel has no opening caption`);
+    }
+    problems.push(...captionDrift(captions));
+
     // Ranked by what cutting a card costs, which is the reason these rows are in this
     // order and the only thing on the page that says so is the order itself.
     for (let i = 1; i < inc.ranking.length; i += 1) {
@@ -3431,7 +3520,21 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // Busier cards are drawn bigger, which is the only thing the sizes say.
       if (new Set(m.dots.map((d) => d.r)).size < 2) problems.push('every card on the map is the same size');
       if (m.labels.some((t) => !t)) problems.push('a card on the map is unlabelled');
-      if (m.titled.some((t) => !/ — in \d+ combos?$/.test(t))) problems.push('a card on the map has no hover text');
+      // Named, not just counted. This said only "a card on the map has no hover text",
+      // which reddened a CI run at 390px that six local runs could not reproduce — and
+      // left nothing to go on, because the one thing worth knowing is which card and what
+      // its title actually said. A check that cannot be diagnosed from its own message
+      // costs a run per guess.
+      const untitled = m.titled.filter((t) => !/ — in \d+ combos?$/.test(t));
+      if (untitled.length) {
+        problems.push(`${untitled.length} of ${m.titled.length} cards on the map have no `
+          + `hover text: ${JSON.stringify(untitled.slice(0, 3))}`);
+      }
+      // And that there is one per card. A title missing entirely is invisible to the test
+      // above, which only reads the titles that exist.
+      if (m.titled.length !== m.dots.length) {
+        problems.push(`the map drew ${m.dots.length} cards and ${m.titled.length} hover texts`);
+      }
       // And it scales with the column rather than overflowing it — the panel is
       // 760px wide by design and the phone viewport is 390.
       if (m.width > v.outWidth + 1) problems.push(`the map is ${m.width}px wide in a ${v.outWidth}px column`);

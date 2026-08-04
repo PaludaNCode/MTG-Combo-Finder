@@ -203,11 +203,9 @@
       return;
     }
     const body = panel(container, 'unofficial', 'Unofficial combos', rows.length);
-    // The same class the note under "Combos in your deck" uses, because this is the same
-    // kind of thing: a sentence explaining the panel it heads. It was `.empty` — which
-    // sets a colour and nothing else — so the two intros sat in adjacent panels at
-    // different measures and different sizes, this one running the panel's whole width
-    // while the other wrapped at 62ch. `.empty` is for a panel with nothing in it, and
+    // The caption class all three panels use — the map's, this one's and the one under
+    // "Combos in your deck". It was `.empty`, which sets a colour and nothing else and so
+    // styled this correctly by accident; `.empty` is for a panel with nothing in it, and
     // this panel has rows.
     body.appendChild(el('p', 'panel-note',
       'Not published by Commander Spellbook. Each of these was found by swapping a card for '

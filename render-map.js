@@ -211,7 +211,11 @@
     // would otherwise be empty screen around the picture.
     const size = { width: graph.width, height: graph.height };
 
-    body.appendChild(el('p', 'empty',
+    // `panel-note` and not `empty`, like the two panels below: this is the caption that
+    // says what a line means, and the panel it heads is full of map. `.empty` is for a
+    // panel with nothing in it, and it styled this one only by accident of both wanting
+    // muted text. All three captions are one class now, so they cannot drift apart.
+    body.appendChild(el('p', 'panel-note',
       'Two cards are joined when a combo needs both of them — a solid line, in the colour of the best '
       + 'result those combos produce — or when they do the same job: a dashed line, meaning one can be '
       + 'swapped for the other and you still have a combo. Both carry the count, so cards that overlap '
