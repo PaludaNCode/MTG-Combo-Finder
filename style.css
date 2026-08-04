@@ -545,12 +545,19 @@ button:disabled { opacity: .6; cursor: wait; }
    one case that still has to break inside a name, which is a single name wider than the
    whole column, and it has to be allowed or the row overflows sideways instead. */
 .combo h3 > .card-name,
-.combo h3 > .slot {
+.combo h3 > .slot,
+.combo h3 > .either {
   flex: 0 0 auto;
   max-width: 100%;
 }
+/* Every kind of thing a heading can name, not just the cards. ".either" is the "any of N"
+   pill and it is the one that got missed when the separator moved from its own span onto
+   the front of the following item: it is neither a card nor a slot, so it matched nothing
+   here and its "+" simply stopped being drawn. The heading read "Kitchen Finks any of 5".
+   Invisible to every text-based check, because the mark is generated content. */
 .combo h3 > .plus + .card-name::before,
-.combo h3 > .plus + .slot::before {
+.combo h3 > .plus + .slot::before,
+.combo h3 > .plus + .either::before {
   content: '+ ';
   color: var(--accent);
   font-weight: 700;
