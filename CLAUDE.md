@@ -1,9 +1,15 @@
 # CLAUDE.md
 
-Operating notes for Claude Code here. **The README is the reference** — ~4,600 lines, kept
-current, holding the *why*, the measurements and the history behind every rule below. This file is
+Operating notes for Claude Code here. **The README is the reference** — ~1,500 lines, kept
+current, holding the *why* and the measurement behind every rule below. This file is
 the index: what to run, where things live, what fails silently. `README § X` means read that
-section before changing what it names.
+section before changing what it names, and its `## Contents` table is the map.
+
+**It was cut from ~4,900 lines to an upper-level reference on 4 Aug 2026**, so it now states the
+rule and the figure it rests on rather than the full argument. Where a section names a command
+(`npm run verify`, `gzip -9 -c unofficial.js | wc -c`, `node tools/substitution-scope.js`), **that
+command is the live answer** — the prose around it is the reasoning, not the number. The removed
+history is in the git log if a decision needs re-litigating.
 
 `→` introduces the check that catches the mistake. Every number is a measurement.
 
