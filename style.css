@@ -598,9 +598,14 @@ button:disabled { opacity: .6; cursor: wait; }
  * "0+1889" — and `npm run verify` now builds that case and prints what it needs against
  * what the column gives: **51px** of content, against 50px for the word COMBOS beneath it.
  * With .45rem of clearance that is 59px, so 3.8rem (61px rendered) holds it with 2px spare,
- * and the divider moves from 99px to 93px measured — 6px of a 334px phone column handed
- * back to the card names. 6px is what there is: the split is the floor, and going further
- * means changing what the gutter holds rather than how much room it is given.
+ * and that gave the card names 6px of a 334px phone column back. (Absolute divider
+ * positions are deliberately not recorded here: the paddings either side of this column
+ * have moved since, so a number measured mid-change goes stale while reading as a fact.
+ * `npm run verify` prints where the divider actually is, per viewport, on every run.)
+ *
+ * The 2px in the calc() below is a second, later trim on top of that, and it is paid for out
+ * of the clearance rather than out of the contents — the split is the floor, so going any
+ * further means changing what the gutter holds.
  *
  * Two things it is worth having measured rather than assumed. The number really is the
  * floor, not the label: shrinking COMBOS was tried first and bought nothing, because 46px
@@ -619,7 +624,10 @@ button:disabled { opacity: .6; cursor: wait; }
      disagree — they were, below 480px, and the line was split down the row. */
   --col-gap: .7rem;
   display: grid;
-  grid-template-columns: 3.8rem minmax(0, 1fr);
+  /* Written as the measurement minus the trim, because that is what it is: 3.8rem is what
+     the gutter's contents need, and the 2px is room asked for by the card names beside it.
+     Spending it costs the clearance below, which is the only slack there was. */
+  grid-template-columns: calc(3.8rem - 2px) minmax(0, 1fr);
   column-gap: var(--col-gap);
   align-items: start;
   /* 2px tighter than the .combo default. These two panels are read as ranked
@@ -699,8 +707,11 @@ button:disabled { opacity: .6; cursor: wait; }
   flex-direction: column;
   align-items: flex-end;
   /* Clearance from the line, which is now drawn on the far side of the column gap
-     by .row-main rather than on this element. */
-  padding-right: .45rem;
+     by .row-main rather than on this element. Down from .45rem to pay for the 2px the
+     column gave up: the worst case needs 51px, and 58.8px of column less .35rem of
+     clearance leaves 53.2px, so it still fits with 2px spare. The layout run checks that
+     sum on every viewport rather than trusting this comment. */
+  padding-right: .35rem;
 }
 .row-total {
   color: var(--accent);
@@ -746,8 +757,36 @@ button:disabled { opacity: .6; cursor: wait; }
 .row-split .word,
 .row-split .dot { display: none; }
 /* A sign is not a numeral. At the digits' size "+24" alone needed 63px of a 54px
-   column, which is what pushed the long rows out of it. */
-.sign { color: var(--muted); font-size: .62em; padding: 0 .05em; }
+   column, which is what pushed the long rows out of it.
+ *
+ * And a smaller inline box shares the digits' *baseline*, not their centre — digits have no
+ * descender, so at .62em the "+" sat about a third of their height low and read as a
+ * subscript rather than as an operator. Raising it is the fix, not resizing it.
+ *
+ * .3em is measured, and `npm run verify` measures it the same way on every run: it reads
+ * the ink boxes of "20" and "+" off canvas at their two sizes — a box's height is font
+ * ascent plus descent and says nothing about where the glyph sits inside it, which is the
+ * whole question — and reports the shift that puts the two ink centres on one line. That is
+ * 4.5px at the total's 14.88px sign, which is .302em of the sign's own size.
+ *
+ * One value covers both places the sign is drawn, and not by luck: it is always .62em of
+ * whatever it sits in, so the shift that centres it is the same fraction of itself whether
+ * that parent is a 1.5rem total or a .78rem split. Both are checked, and the second had to
+ * be *built* to be checked at all — this deck has no unofficial combos, so it draws no
+ * split, and the case the fix was reported for was the one nothing rendered. Measured there:
+ * 2.31px raised against a 2px ideal, where the sign is 7.74px. (The ideal is .258em of
+ * itself at that size rather than .302em, because ink metrics do not scale perfectly through
+ * hinting at 7px — which is why the assertion is a pixel of tolerance and not an equality.)
+ * The run fails if either drifts more than a pixel from its own ideal.
+ *
+ * The split's "+" only exists in the narrow reading: where the column has room, the split
+ * spells itself out in words and separates them with a "·". Closes #131. */
+.sign {
+  color: var(--muted);
+  font-size: .62em;
+  padding: 0 .05em;
+  vertical-align: .3em;
+}
 
 /* ---- the same row where it has room to spell the split out ----
  *
@@ -1793,7 +1832,9 @@ ol.rows .why { display: block; margin-top: .2rem; font-size: .78rem; color: var(
    * Only at this end of the range. A 1440px column has 935px of text and the same 64px
    * of air, where the air is doing what padding is for. */
   .panel-head { padding: .8rem .55rem; gap: .5rem; }
-  .panel-body { padding: 0 .5rem .8rem; }
+  /* A pixel off the right only: the card is the thing being read, and the air on that side
+     was doing less than the air on the left, which separates the numbers from the edge. */
+  .panel-body { padding: 0 calc(.5rem - 1px) .8rem .5rem; }
   .panel-title { font-size: 1rem; }
   .combo { padding: .7rem .6rem; }
   .why { margin-left: 0; }

@@ -574,6 +574,95 @@ function measure(win, doc) {
     };
   })();
 
+  // Where the "+" between the split's halves sits, against where it should sit.
+  //
+  // The sign is set at .62em — deliberately, since at the digits' size "+24" alone needed
+  // 63px of a 54px column — and a smaller inline box shares the digits' *baseline*, not
+  // their centre. Digits have no descender, so the sign ended up about a third of their
+  // height low and read as a subscript.
+  //
+  // Measured off real ink metrics rather than box geometry: a box's height is font ascent
+  // plus descent and says nothing about where the glyph's ink sits inside it, which is the
+  // whole question. Canvas gives actualBoundingBox* for the two strings at their two sizes,
+  // so "the centre of the digits" and "the centre of the plus" are numbers, and the shift
+  // that makes them equal is arithmetic instead of taste.
+  const signAlign = (() => {
+    const ctx = doc.createElement('canvas').getContext('2d');
+    const ink = (node, text) => {
+      const cs = win.getComputedStyle(node);
+      ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      const m = ctx.measureText(text);
+      return {
+        size: parseFloat(cs.fontSize),
+        // Positive is above the baseline. The centre of the ink, not of the box.
+        centre: (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2,
+        descent: m.fontBoundingBoxDescent,
+        bottom: node.getBoundingClientRect().bottom,
+      };
+    };
+
+    // One sign, against where it should sit. The digits are measured as an inline span
+    // beside it, inheriting the same font, so the two measurements are the same shape: an
+    // inline box's height is its font's ascent plus descent, which makes its bottom a fixed
+    // distance under the shared baseline. A Range over the text node would report the line
+    // box and answer a different question.
+    const measure = (sign, where) => {
+      const host = sign && sign.parentNode;
+      if (!sign || !host || !sign.getBoundingClientRect().width) return null;
+      const probe = doc.createElement('span');
+      probe.appendChild(doc.createTextNode('20'));
+      host.insertBefore(probe, sign);
+      const d = ink(probe, '20');
+      const p = ink(sign, '+');
+      probe.remove();
+      // A box's bottom is its baseline plus that font's descent, so the difference of the
+      // two baselines is how far the sign has actually been raised off the digits'.
+      const raised = (d.bottom - d.descent) - (p.bottom - p.descent);
+      return {
+        where,
+        ideal: Math.round((d.centre - p.centre) * 100) / 100,
+        raised: Math.round(raised * 100) / 100,
+        signSize: p.size,
+        idealEm: Math.round(((d.centre - p.centre) / p.size) * 1000) / 1000,
+      };
+    };
+
+    const out = [];
+    // The sign in front of a suggestion's total, which this deck draws.
+    const total = doc.querySelector('.row-total > .sign');
+    const inTotal = measure(total, 'total');
+    if (inTotal) out.push(inTotal);
+
+    // And the one between a split's halves — the case the fix was reported for, and the one
+    // no fixture here renders, because this deck has no unofficial combos. Built the same
+    // way the gutter's worst case is, since a rule that is right at one size and unchecked
+    // at the other is half a rule.
+    const host = doc.querySelector('.row-numbers');
+    if (host) {
+      const span = (cls, text) => {
+        const e = doc.createElement('span');
+        if (cls) e.className = cls;
+        if (text) e.appendChild(doc.createTextNode(text));
+        return e;
+      };
+      const half = (cls, count, word) => {
+        const e = span(cls, count);
+        e.appendChild(span('word', ' ' + word));
+        return e;
+      };
+      const built = span('row-split');
+      built.appendChild(half('official', '31', 'official'));
+      built.appendChild(span('sign', '+'));
+      built.appendChild(span('dot', ' · '));
+      built.appendChild(half('ours', '9', 'unofficial'));
+      host.appendChild(built);
+      const inSplit = measure(built.querySelector(':scope > .sign'), 'split');
+      if (inSplit) out.push(inSplit);
+      built.remove();
+    }
+    return out;
+  })();
+
   // What the gutter actually needs, so its width is a measurement rather than a memory.
   // Every rendered thing in it, widest first — and then the worst real case built on
   // purpose, because the fixture need not contain it: a card holding up 1,889 combos of
@@ -726,9 +815,15 @@ function measure(win, doc) {
       return {
         size: names.length + h.querySelectorAll(':scope > .slot').length
           + (h.querySelector(':scope > .either') ? 1 : 0),
-        // Compared on the names sorted, not as drawn: the focal card is pulled to the
-        // front on screen, and it is the same card on every row here.
-        sig: names.slice().sort().join(' + '),
+        // As drawn, which is what the list is sorted on. It used to be the names *sorted*,
+        // on the grounds that the focal card is pulled to the front and is the same on every
+        // row — true, and it stopped being the whole story when the card that changes started
+        // going last: rows now sort by what they share before what differs, so comparing
+        // alphabetical signatures asserted a rule the page had stopped following. It passed
+        // only because no nested list in this deck holds two rows a card apart.
+        drawn: names.join(' + '),
+        // Everything but the last card: the part a family holds in common.
+        prefix: names.slice(0, -1).join(' + '),
       };
     });
     return { focal, combos, order };
@@ -979,6 +1074,7 @@ function measure(win, doc) {
     legality,
     comboCompare,
     gutterNeeds,
+    signAlign,
     headingShape,
     linkLine,
     order,
@@ -2330,6 +2426,24 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // column they have to fit in. A gutter that has quietly stopped fitting shows up as a
     // wrapped label or a number over the divider, which is exactly the class of thing a
     // screenshot catches and nothing else does.
+    // The sign between two numbers sits on their centre, not on their baseline. Asserted
+    // against the ink measurement rather than against the value in the stylesheet, so this
+    // stays true if either font size moves.
+    // Both sizes the sign is drawn at, since one value in the stylesheet has to be right for
+    // both: the "+" in front of a total, and the one between a split's halves. The second
+    // only exists in the narrow reading — where the column has room, the split spells itself
+    // out in words and shows a "·" instead — so expecting two everywhere failed the wide
+    // viewports on a page doing exactly the right thing.
+    const wantSigns = (v.headingShape && v.headingShape.column < HEADING_INLINE_AT) ? 2 : 1;
+    if (v.signAlign.length < wantSigns) {
+      problems.push(`${v.signAlign.length} sign(s) measured where ${wantSigns} are drawn`);
+    }
+    for (const sg of v.signAlign) {
+      if (Math.abs(sg.raised - sg.ideal) > 1) {
+        problems.push(`the "+" in a ${sg.where} is raised ${sg.raised}px where ${sg.ideal}px centres it`);
+      }
+    }
+
     const gut = v.gutterNeeds;
     if (!gut || !gut.column) {
       problems.push('no gutter to measure');
@@ -2650,32 +2764,62 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           if (DeckCombos_nameKey(names[0]) !== DeckCombos_nameKey(row.focal)) {
             problems.push(`${where}: "${names.join(' + ')}" does not start with ${row.focal}`);
           }
+          // Three bands: the card the list is under, the cards this row shares with its
+          // neighbours, then the card that makes it this row. Checked as the shape rather
+          // than against the families, which the DOM does not carry — there has to be some
+          // split of the tail into two sorted runs. Plain alphabetical satisfies it with an
+          // empty second run, which is right: that is what a row with no family draws.
+          //
+          // This replaces "everything after the focal is alphabetical", which was the rule
+          // before the card that changes started going last, and which passed here only
+          // because no nested list in this deck holds two rows a card apart.
           const rest = names.slice(1);
-          const sorted = rest.slice().sort((a, b) => a.localeCompare(b));
-          if (rest.join('|') !== sorted.join('|')) {
-            problems.push(`${where}: the cards after ${row.focal} are not alphabetical in "${names.join(' + ')}"`);
+          const sortedRun = (xs) => xs.every((x, i) => i === 0 || xs[i - 1].localeCompare(x) <= 0);
+          const banded = rest.some((_, k) => sortedRun(rest.slice(0, k + 1)) && sortedRun(rest.slice(k + 1)));
+          if (rest.length && !banded) {
+            problems.push(`${where}: "${names.join(' + ')}" is not the lead, then what it shares, then what changes`);
           }
         }
       }
       if (!checked) problems.push(`no ${where} combo lists the cards of, so the lead order is untested`);
 
-      // And the rows themselves: smallest first, then alphabetically by their cards.
-      // Play count used to order these, which scatters every repeated partner down the
-      // list — the reported symptom was one row sitting third of eleven because it had
-      // more plays than the two above it, in a list where no play count is on screen.
+      // And the rows themselves: smallest first, then the blocks of versions, biggest first,
+      // then alphabetically. Play count used to order these, which scatters every repeated
+      // partner down the list — the reported symptom was one row sitting third of eleven
+      // because it had more plays than the two above it, in a list where no play count is on
+      // screen.
+      //
+      // Two claims, and neither is "alphabetical by the sorted names", which is what this
+      // checked until the rows started sorting on what they draw. Size still leads; and a
+      // family lands together, which is the property the whole ordering exists for and the
+      // one a reader actually sees. Contiguity is checked instead of the sequence itself
+      // because the DOM does not carry the family sizes the order also turns on.
+      //
+      // Say plainly what this is worth today: **the contiguity half cannot fail on this
+      // fixture**, because no nested list in this deck holds two rows a card apart. Mutation
+      // tested, which is the only way to know: reversing the row order inside a size tier
+      // leaves this run green and fails test/combos.test.js, where the same property is
+      // pinned on a built list. The band check above does bite here — the same mutation
+      // applied to the card order fails nine viewport cases. This stays because it costs
+      // nothing and starts biting the day a fixture holds a family, and it is written down so
+      // that nobody reads a green run as proof of the half it cannot see.
       for (const row of rows) {
         const order = row.order || [];
         for (let i = 1; i < order.length; i++) {
-          const prev = order[i - 1];
-          const cur = order[i];
-          if (cur.size < prev.size) {
-            problems.push(`${where}: under ${row.focal}, a ${cur.size}-card combo follows a ${prev.size}-card one`);
+          if (order[i].size < order[i - 1].size) {
+            problems.push(`${where}: under ${row.focal}, a ${order[i].size}-card combo follows a ${order[i - 1].size}-card one`);
             break;
           }
-          if (cur.size === prev.size && cur.sig.localeCompare(prev.sig) < 0) {
-            problems.push(`${where}: under ${row.focal}, "${cur.sig}" is listed after "${prev.sig}"`);
+        }
+        const seen = new Map();
+        for (let i = 0; i < order.length; i++) {
+          const key = order[i].size + '@' + order[i].prefix;
+          if (!seen.has(key)) { seen.set(key, i); continue; }
+          if (seen.get(key) !== i - 1) {
+            problems.push(`${where}: under ${row.focal}, rows sharing "${order[i].prefix}" are split apart`);
             break;
           }
+          seen.set(key, i);
         }
       }
     }
@@ -2877,6 +3021,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       // The shape the headings took and the two numbers that chose it, so a changed
       // threshold is visible in a passing run rather than only in a failure.
+      const signNote = v.signAlign.length
+        ? 'signs ' + v.signAlign.map((sg) => `${sg.where} raised ${sg.raised}px of ${sg.ideal}px`
+          + ` (${sg.idealEm}em of ${sg.signSize}px)`).join(', ')
+        : 'no sign measured';
       const gutterNote = v.gutterNeeds
         ? `gutter ${v.gutterNeeds.column}px holds ${v.gutterNeeds.widest}px (${v.gutterNeeds.what})`
           + `, worst case 0+1889 is ${v.gutterNeeds.worst}px, pad ${v.gutterNeeds.pad}px`
@@ -2924,7 +3072,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 
