@@ -1068,31 +1068,29 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* "+ any of 3" in a combo header: a slot, not a card, so it must not read as
    one — hence the outline rather than the plain card styling beside it. */
-.either {
+/* The outline goes on the inner element, never on the flex item. The item carries the "+"
+   that joins it to the card before it, and a mark drawn on the item lands inside its own
+   outline — which is how the heading came to read "Trudge Garden ( + any of 4 )". */
+.either,
+.slot { font-size: .82rem; white-space: nowrap; }
+.either > .pill,
+.slot > .pill {
+  display: inline-block;
   padding: .05rem .45rem;
   border-radius: 999px;
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--muted);
-  font-size: .82rem;
-  font-weight: 600;
-  white-space: nowrap;
 }
+.either > .pill { font-weight: 600; }
+.slot > .pill { font-style: italic; }
 .choices { margin: .15rem 0 .1rem; font-size: .9rem; color: var(--muted); }
 .choices .card-name { color: var(--text); }
 
 /* ---- template slots ---- */
 
 /* "a Persist Creature" in a combo header. Same reasoning as .either: it names a
-   property, not a card, and must not be mistaken for one. */
-.slot {
-  padding: .05rem .45rem;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  color: var(--muted);
-  font-size: .82rem;
-  font-style: italic;
-  white-space: nowrap;
-}
+   property, not a card, and must not be mistaken for one — and the same two-element
+   shape, so its separator sits outside its outline too. Styled with .either above. */
 /* Which card of yours the slot was credited to. A combo that shows up because
    of a slot has to say why, or it looks invented. */
 .fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }

@@ -3429,11 +3429,32 @@ Two things that were not obvious:
   place, the items were being squeezed until their text wrapped. `flex: 0 0 auto` moves a
   card to the next line instead, and `max-width: 100%` keeps the one unavoidable case — a
   single name wider than the column — from overflowing sideways.
-- **The `+` belongs to the card it introduces**, drawn as a `::before` on the name in both
+- **The `+` belongs to the item it introduces**, drawn as a `::before` on that item in both
   shapes. As its own span it was a flex item free to end a line alone, which is the
   neighbouring bug in this same section. `display: none` rather than an emptied span, so it
   leaves the accessibility tree instead of being announced twice — `::before` content is
   exposed, so a screen reader still reads "+ Kitchen Finks".
+
+  Two heading items are not cards — the `any of N` fold and a template slot — and both are
+  drawn as an outlined pill. **The outline goes on an inner element, never on the flex item
+  itself.** They were one element, so the mark landed inside the outline it was supposed to
+  sit beside:
+
+  ```
+  wrong                                        right
+  Ashnod's Altar + Trudge Garden ( + any of 4 )   …Trudge Garden + ( any of 4 )
+  ```
+
+  The separator joins the pill to its neighbour; it does not belong to it. The outer element
+  keeps the class, so `.either` and `.slot` still mean what they meant to everything that
+  reads them by name — including the layout run, which still finds the mark on
+  `.either::before`.
+
+  **Geometry alone cannot check this**, which is worth knowing before simplifying the
+  assertion: with the outline back on the flex item its own padding still pushes the inner
+  element rightwards, so "the pill starts after the item starts" stays true while the bug is
+  present. What the run asserts is structural — the element carrying the outline is not the
+  element carrying the mark — read off `boxShadow` on both. Both mutations fail it.
 
 And the neighbouring bug: **the link line's separators only exist between two offers on one
 line.** `.combo-link` was made a flex row precisely so a wrap could not strand a `→` or a

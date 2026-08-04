@@ -128,6 +128,22 @@
   // line the dot separates nothing, so there it goes away entirely.
   const separator = () => el('span', 'sep', ' · ');
 
+  // A heading item that is not a card: the "any of N" fold and a template slot. Two
+  // elements, and the nesting is the point — the outer one is the flex item and carries the
+  // "+" that joins it to the item before it, the inner one carries the outline. They were a
+  // single element, so the outline enclosed the separator and the heading read
+  // "Ashnod's Altar + Trudge Garden ( + any of 4 )" with the mark inside the pill. The
+  // separator joins the pill to its neighbour; it does not belong to it.
+  //
+  // The outer element keeps the class, so everything that asks for `.either` or `.slot` —
+  // the layout run reads both, by name, including the ::before the mark still lives on —
+  // goes on meaning what it meant.
+  function pill(kind, text) {
+    const outer = el('span', kind);
+    outer.appendChild(el('span', 'pill', text));
+    return outer;
+  }
+
   // `opts.steps` puts the "How it works" disclosure on the row. Off by default,
   // and deliberately not on every row that draws a combo: the steps are how you
   // execute a line you have, so they belong on the two panels that answer "what
@@ -152,7 +168,7 @@
     // why, or it reads as the page making things up.
     (variant.fills || []).forEach((fill) => {
       header.appendChild(el('span', 'plus', ' + '));
-      const slot = el('span', 'slot', fill.slot);
+      const slot = pill('slot', fill.slot);
       slot.title = 'A slot, not a specific card — filled here by ' + fill.card;
       header.appendChild(slot);
     });
@@ -286,7 +302,7 @@
       header.appendChild(el('span', 'card-name', name));
     });
     header.appendChild(el('span', 'plus', ' + '));
-    header.appendChild(el('span', 'either', 'any of ' + group.choices.length));
+    header.appendChild(pill('either', 'any of ' + group.choices.length));
     card.appendChild(header);
 
     const choices = el('p', 'choices');

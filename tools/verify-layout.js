@@ -400,6 +400,37 @@ function measure(win, doc) {
     // item it introduces, so textContent cannot see it and neither can visibleTextIn().
     // It was missing for a while and every text-based assertion here was happy — the
     // heading read "Altar of Dementia + Kitchen Finks any of 5" on the live page.
+    // The separator has to sit *outside* the pill's outline. It used to be drawn on the
+    // element carrying the outline, so it landed within it and the heading read
+    // "Trudge Garden ( + any of 4 )". The mark is generated content and the outline is a
+    // box-shadow, so neither is visible to textContent and no screenshot diff would flag
+    // it either — the only way to see it is to compare the two boxes.
+    //
+    // The outer element is the flex item and carries the mark; the inner .pill carries the
+    // outline. If the mark is outside, the pill starts to the right of the item. If it were
+    // back inside, the two would share a left edge. Rows inside a closed disclosure have no
+    // geometry at all — every box is 0 — so they are dropped rather than read as equal.
+    pillInset: [...doc.querySelectorAll('#included .combo > h3 > .either, #included .combo > h3 > .slot')]
+      .map((outer) => {
+        const inner = outer.querySelector(':scope > .pill');
+        if (!inner) return { kind: outer.className, inset: null };
+        const o = outer.getBoundingClientRect();
+        const i = inner.getBoundingClientRect();
+        if (!o.width || !i.width) return null;
+        // Geometry alone is not enough, and this is the trap: with the outline back on the
+        // outer element its own padding still pushes the inner one rightwards, so the inset
+        // stays positive while the mark sits squarely inside the outline again. What has to
+        // hold is structural — the element carrying the outline is not the element carrying
+        // the mark — so the shadow is read on both.
+        const shadow = (n) => win.getComputedStyle(n).boxShadow;
+        return {
+          kind: outer.className,
+          inset: Math.round((i.left - o.left) * 10) / 10,
+          outerRinged: shadow(outer) !== 'none',
+          innerRinged: shadow(inner) !== 'none',
+        };
+      })
+      .filter(Boolean),
     eitherSeps: [...doc.querySelectorAll('#included .combo > h3 > .either')].map((e) => {
       const before = win.getComputedStyle(e, '::before').content;
       return (before === 'none' || before === 'normal') ? '' : before.replace(/^["']|["']$/g, '');
@@ -2602,6 +2633,19 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     g.eitherSeps.forEach((sep, i) => {
       if (!/\+/.test(sep)) {
         problems.push(`the "any of N" pill has no separator in front of it (row ${i + 1}, saw "${sep}")`);
+      }
+    });
+    // …and in front of it means outside its outline, not inside.
+    if (!g.pillInset.length) problems.push('no heading pill on screen, so its separator is unchecked');
+    g.pillInset.forEach((p) => {
+      if (p.inset === null) {
+        problems.push(`a .${p.kind} heading pill has no inner .pill to carry its outline`);
+      } else if (p.inset <= 0) {
+        problems.push(`the .${p.kind} outline encloses its own "+" (pill starts ${p.inset}px into the item)`);
+      } else if (p.outerRinged) {
+        problems.push(`the .${p.kind} flex item is outlined, so the outline contains its own "+"`);
+      } else if (!p.innerRinged) {
+        problems.push(`the .${p.kind} pill has lost its outline`);
       }
     });
     if (g.eitherRows.some((t) => !/any of \d+/.test(t))) problems.push(`a collapsed row reads "${g.eitherRows[0]}"`);
