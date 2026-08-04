@@ -1,6 +1,6 @@
 {
- "generated": "2026-08-03",
- "count": 198,
+ "generated": "2026-08-04",
+ "count": 220,
  "cards": {
   "Abby, Merciless Soldier": {
    "fetched": "2026-08-03",
@@ -66,6 +66,19 @@
     {
      "types": "Legendary Artifact",
      "oracle": "Creatures you control have flying, first strike, vigilance, trample, haste, and protection from black and from red."
+    }
+   ]
+  },
+  "Altar of Dementia": {
+   "fetched": "2026-08-04",
+   "name": "Altar of Dementia",
+   "mana": "{2}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power."
     }
    ]
   },
@@ -219,6 +232,20 @@
     }
    ]
   },
+  "Bill the Pony": {
+   "fetched": "2026-08-04",
+   "name": "Bill the Pony",
+   "mana": "{3}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Horse",
+     "oracle": "When Bill the Pony enters, create two Food tokens. (They're artifacts with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nSacrifice a Food: Until end of turn, target creature you control assigns combat damage equal to its toughness rather than its power.",
+     "pt": "1/4"
+    }
+   ]
+  },
   "Birgi, God of Storytelling // Harnfel, Horn of Bounty": {
    "fetched": "2026-08-03",
    "name": "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
@@ -247,6 +274,19 @@
     {
      "types": "Artifact — Equipment",
      "oracle": "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead.\nEquip {1}"
+    }
+   ]
+  },
+  "Blasting Station": {
+   "fetched": "2026-08-04",
+   "name": "Blasting Station",
+   "mana": "{3}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "{T}, Sacrifice a creature: This artifact deals 1 damage to any target.\nWhenever a creature enters, you may untap this artifact."
     }
    ]
   },
@@ -320,6 +360,20 @@
     }
    ]
   },
+  "Camellia, the Seedmiser": {
+   "fetched": "2026-08-04",
+   "name": "Camellia, the Seedmiser",
+   "mana": "{1}{B}{G}",
+   "identity": "BG",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Squirrel Warlock",
+     "oracle": "Menace\nOther Squirrels you control have menace.\nWhenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token.\n{2}, Forage: Put a +1/+1 counter on each other Squirrel you control. (To forage, exile three cards from your graveyard or sacrifice a Food.)",
+     "pt": "3/3"
+    }
+   ]
+  },
   "Carnival of Souls": {
    "fetched": "2026-08-03",
    "name": "Carnival of Souls",
@@ -333,6 +387,20 @@
     }
    ]
   },
+  "Carrion Feeder": {
+   "fetched": "2026-08-04",
+   "name": "Carrion Feeder",
+   "mana": "{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Zombie",
+     "oracle": "This creature can't block.\nSacrifice a creature: Put a +1/+1 counter on this creature.",
+     "pt": "1/1"
+    }
+   ]
+  },
   "Cathars' Crusade": {
    "fetched": "2026-08-03",
    "name": "Cathars' Crusade",
@@ -343,6 +411,20 @@
     {
      "types": "Enchantment",
      "oracle": "Whenever a creature you control enters, put a +1/+1 counter on each creature you control."
+    }
+   ]
+  },
+  "Cauldron Familiar": {
+   "fetched": "2026-08-04",
+   "name": "Cauldron Familiar",
+   "mana": "{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Cat",
+     "oracle": "When this creature enters, each opponent loses 1 life and you gain 1 life.\nSacrifice a Food: Return this card from your graveyard to the battlefield.",
+     "pt": "1/1"
     }
    ]
   },
@@ -781,6 +863,20 @@
     }
    ]
   },
+  "Evereth, Viceroy of Plunder": {
+   "fetched": "2026-08-04",
+   "name": "Evereth, Viceroy of Plunder",
+   "mana": "{2}{B}",
+   "identity": "BR",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Vampire Soldier",
+     "oracle": "Flying\nSacrifice another creature or artifact: Put a +1/+1 counter on Evereth. If the sacrificed permanent was a Treasure, Evereth gains lifelink until end of turn. Activate only as a sorcery.\nWhen Evereth dies, you may pay {1}{B/R}. When you do, Evereth deals damage equal to its power to each opponent.",
+     "pt": "2/2"
+    }
+   ]
+  },
   "Exalted Sunborn": {
    "fetched": "2026-08-03",
    "name": "Exalted Sunborn",
@@ -792,6 +888,20 @@
      "types": "Creature — Angel Wizard",
      "oracle": "Flying, lifelink\nIf one or more tokens would be created under your control, twice that many of those tokens are created instead.\nWarp {1}{W} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)",
      "pt": "4/5"
+    }
+   ]
+  },
+  "Extruder": {
+   "fetched": "2026-08-04",
+   "name": "Extruder",
+   "mana": "{4}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Juggernaut",
+     "oracle": "Echo {4} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nSacrifice an artifact: Put a +1/+1 counter on target creature.",
+     "pt": "4/3"
     }
    ]
   },
@@ -904,6 +1014,33 @@
     }
    ]
   },
+  "Glimmer Bairn": {
+   "fetched": "2026-08-04",
+   "name": "Glimmer Bairn",
+   "mana": "{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Ouphe",
+     "oracle": "Sacrifice a token: This creature gets +2/+2 until end of turn.",
+     "pt": "1/2"
+    }
+   ]
+  },
+  "Goblin Bombardment": {
+   "fetched": "2026-08-04",
+   "name": "Goblin Bombardment",
+   "mana": "{1}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Sacrifice a creature: This enchantment deals 1 damage to any target."
+    }
+   ]
+  },
   "Golbez, Crystal Collector": {
    "fetched": "2026-08-03",
    "name": "Golbez, Crystal Collector",
@@ -929,6 +1066,19 @@
      "types": "Creature — Human Warrior",
      "oracle": "When this creature dies, put target creature card from your graveyard on top of your library.\nDredge 4 (If you would draw a card, you may mill four cards instead. If you do, return this card from your graveyard to your hand.)",
      "pt": "1/1"
+    }
+   ]
+  },
+  "Grinding Station": {
+   "fetched": "2026-08-04",
+   "name": "Grinding Station",
+   "mana": "{2}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "{T}, Sacrifice an artifact: Target player mills three cards.\nWhenever an artifact enters, you may untap this artifact."
     }
    ]
   },
@@ -1254,6 +1404,20 @@
     }
    ]
   },
+  "Krark-Clan Shaman": {
+   "fetched": "2026-08-04",
+   "name": "Krark-Clan Shaman",
+   "mana": "{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Goblin Shaman",
+     "oracle": "Sacrifice an artifact: This creature deals 1 damage to each creature without flying.",
+     "pt": "1/1"
+    }
+   ]
+  },
   "Kratos, God of War": {
    "fetched": "2026-08-03",
    "name": "Kratos, God of War",
@@ -1504,6 +1668,20 @@
     }
    ]
   },
+  "Mushroom Watchdogs": {
+   "fetched": "2026-08-04",
+   "name": "Mushroom Watchdogs",
+   "mana": "{1}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Dog",
+     "oracle": "Sacrifice a Food: Put a +1/+1 counter on this creature. It gains vigilance until end of turn. Activate only as a sorcery.",
+     "pt": "2/2"
+    }
+   ]
+  },
   "Myojin of Blooming Dawn": {
    "fetched": "2026-08-03",
    "name": "Myojin of Blooming Dawn",
@@ -1556,6 +1734,19 @@
     {
      "types": "Artifact — Equipment",
      "oracle": "Equipped creature gets +2/+2, has intimidate, and is a black Zombie. (A creature with intimidate can't be blocked except by artifact creatures and/or creatures that share a color with it.)\nWhenever a nontoken creature is put into your graveyard from the battlefield, you may pay {4}. If you do, return that card to the battlefield and attach this Equipment to it.\nEquip {4}"
+    }
+   ]
+  },
+  "Ninja Pizza": {
+   "fetched": "2026-08-04",
+   "name": "Ninja Pizza",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Foods you control have \"{T}, Sacrifice this artifact: Add one mana of any color.\"\nAt the beginning of your second main phase, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")"
     }
    ]
   },
@@ -1620,6 +1811,20 @@
     }
    ]
   },
+  "Oxidda Daredevil": {
+   "fetched": "2026-08-04",
+   "name": "Oxidda Daredevil",
+   "mana": "{1}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Goblin Artificer",
+     "oracle": "Sacrifice an artifact: This creature gains haste until end of turn.",
+     "pt": "2/1"
+    }
+   ]
+  },
   "Peace of Mind": {
    "fetched": "2026-08-03",
    "name": "Peace of Mind",
@@ -1644,6 +1849,20 @@
      "types": "Artifact Creature — Construct",
      "oracle": "This creature enters with five +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Pentavite artifact creature token with flying.\n{1}, Sacrifice a Pentavite: Put a +1/+1 counter on this creature.",
      "pt": "0/0"
+    }
+   ]
+  },
+  "Peregrin Took": {
+   "fetched": "2026-08-04",
+   "name": "Peregrin Took",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Halfling Citizen",
+     "oracle": "If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nSacrifice three Foods: Draw a card.",
+     "pt": "2/3"
     }
    ]
   },
@@ -1906,6 +2125,20 @@
      "types": "Creature — Elemental",
      "oracle": "Whenever you cast a red spell, if this creature has fewer than three +1/+1 counters on it, put a +1/+1 counter on this creature.\nRemove three +1/+1 counters from this creature: Add {R}{R}{R}.",
      "pt": "1/1"
+    }
+   ]
+  },
+  "Rusted Slasher": {
+   "fetched": "2026-08-04",
+   "name": "Rusted Slasher",
+   "mana": "{4}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Phyrexian Horror",
+     "oracle": "Sacrifice an artifact: Regenerate this creature.",
+     "pt": "4/1"
     }
    ]
   },
@@ -2339,6 +2572,20 @@
     }
    ]
   },
+  "Thermal Navigator": {
+   "fetched": "2026-08-04",
+   "name": "Thermal Navigator",
+   "mana": "{3}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Construct",
+     "oracle": "Sacrifice an artifact: This creature gains flying until end of turn.",
+     "pt": "2/2"
+    }
+   ]
+  },
   "Thermopod": {
    "fetched": "2026-08-03",
    "name": "Thermopod",
@@ -2517,6 +2764,20 @@
     }
    ]
   },
+  "Umbral Collar Zealot": {
+   "fetched": "2026-08-04",
+   "name": "Umbral Collar Zealot",
+   "mana": "{1}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Cleric",
+     "oracle": "Sacrifice another creature or artifact: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+     "pt": "3/2"
+    }
+   ]
+  },
   "Urabrask the Hidden": {
    "fetched": "2026-08-03",
    "name": "Urabrask the Hidden",
@@ -2578,6 +2839,20 @@
     }
    ]
   },
+  "Viscera Seer": {
+   "fetched": "2026-08-04",
+   "name": "Viscera Seer",
+   "mana": "{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Vampire Wizard",
+     "oracle": "Sacrifice a creature: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+     "pt": "1/1"
+    }
+   ]
+  },
   "Warren Soultrader": {
    "fetched": "2026-08-03",
    "name": "Warren Soultrader",
@@ -2630,6 +2905,20 @@
      "types": "Creature — Cat",
      "oracle": "Flash\nWhen this creature enters, return a creature you control to its owner's hand.",
      "pt": "2/2"
+    }
+   ]
+  },
+  "Wicked Wolf": {
+   "fetched": "2026-08-04",
+   "name": "Wicked Wolf",
+   "mana": "{2}{G}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Wolf",
+     "oracle": "When this creature enters, it fights up to one target creature you don't control.\nSacrifice a Food: Put a +1/+1 counter on this creature. It gains indestructible until end of turn. Tap it.",
+     "pt": "3/3"
     }
    ]
   },
@@ -2714,6 +3003,20 @@
      "types": "Legendary Creature — Human Cleric",
      "oracle": "Protection from Humans\nPay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.\n{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
      "pt": "2/4"
+    }
+   ]
+  },
+  "Ygra, Eater of All": {
+   "fetched": "2026-08-04",
+   "name": "Ygra, Eater of All",
+   "mana": "{3}{B}{G}",
+   "identity": "BG",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Elemental Cat",
+     "oracle": "Ward—Sacrifice a Food.\nOther creatures are Food artifacts in addition to their other types and have \"{2}, {T}, Sacrifice this permanent: You gain 3 life.\"\nWhenever a Food is put into a graveyard from the battlefield, put two +1/+1 counters on Ygra.",
+     "pt": "6/6"
     }
    ]
   },

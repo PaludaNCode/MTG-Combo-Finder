@@ -884,7 +884,14 @@ const PASSES = [
       + 'he had other peers or whether newer combos had appeared since.',
     read: {
       'Experimental Confectioner': '{2}{B} Creature — Human Peasant 2/3. When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with “This token can’t block.”',
-      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each Squirrel you control. Legendary Creature — Squirrel Druid 3/3 for {2}{B}{G}.',
+      // Corrected 2026-08-04 against card-text.json, which now has her. This said
+      // 'Squirrel Druid 3/3 for {2}{B}{G}' and 'each Squirrel you control': she is a
+      // Squirrel WARLOCK for {1}{B}{G} and forages for 'each OTHER Squirrel'. Nothing
+      // this pass concluded turned on any of the three — the trigger line was right —
+      // but a cost and a type line from recollection sitting in the map whose whole job
+      // is verbatim text is the Chatterfang mistake happening again, in the entry
+      // directly above the pass that names it.
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control. (To forage, exile three cards from your graveyard or sacrifice a Food.) Legendary Creature — Squirrel Warlock 3/3 for {1}{B}{G}.',
     },
     proposed: 82,
     examined: 82,
@@ -926,6 +933,178 @@ const PASSES = [
       + 'trigger per event, he reads "whenever you sacrifice A Food" for one per Food, so he is '
       + 'strictly better in a loop that spends several and she is not worse anywhere. Both '
       + 'directions of the only peer he has are now closed.',
+  },
+  {
+    subject: 'the outlet slot behind Camellia, the Seedmiser + Peregrin Took',
+    cards: [
+      'Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot', 'Bill the Pony',
+      'Mushroom Watchdogs', 'Evereth, Viceroy of Plunder', 'Rusted Slasher', 'Thermal Navigator',
+      'Oxidda Daredevil', 'Krark-Clan Shaman', 'Cauldron Familiar',
+    ],
+    cardIds: [5777, 4321, 6798, 1441, 7627, 6495, 1026, 3721, 7369, 6781, 856],
+    date: '2026-08-04',
+    method: 'The slot enumerated two ways and the two answers reconciled. First from the other '
+      + 'side, the way the Cauldron Familiar pass had to be run: diff the outlets Spellbook lists '
+      + 'behind Peregrin Took against the ones it lists behind Ygra, Eater of All, which fills the '
+      + 'same slot. Then from the card text, which is the half a peer score cannot do — every '
+      + 'Forge card script for all 7,365 names in the snapshot, filtered to activated abilities '
+      + 'whose entire cost is one sacrifice, then to the ones that will take a Food.',
+    read: {
+      // The three the shape is, read from card-text.json (Scryfall) and cross-checked
+      // against XMage for all three, because the whole pass turns on Peregrin Took's
+      // replacement applying to Camellia's token and on what the Zealot's cost will eat.
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control. (To forage, exile three cards from your graveyard or sacrifice a Food.) Legendary Creature — Squirrel Warlock 3/3 for {1}{B}{G}.',
+      'Peregrin Took': 'If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. (It’s an artifact with “{2}, {T}, Sacrifice this token: You gain 3 life.”) Sacrifice three Foods: Draw a card. Legendary Creature — Halfling Citizen 2/3 for {2}{G}.',
+      'Umbral Collar Zealot': 'Sacrifice another creature or artifact: Surveil 1. Creature — Human Cleric 3/2 for {1}{B}.',
+      // The six kept. Each one is the same three words doing the work — a free,
+      // repeatable sacrifice the Food is a legal choice for — and a rider that cannot
+      // gate it. The riders are recorded anyway because "cannot gate it" is a claim
+      // about the rider.
+      'Bill the Pony': 'When Bill the Pony enters, create two Food tokens. Sacrifice a Food: Until end of turn, target creature you control assigns combat damage equal to its toughness rather than its power. Legendary Creature — Horse 1/4 for {3}{W}.',
+      'Mushroom Watchdogs': 'Sacrifice a Food: Put a +1/+1 counter on this creature. It gains vigilance until end of turn. ACTIVATE ONLY AS A SORCERY. Creature — Dog 2/2 for {1}{G}.',
+      'Evereth, Viceroy of Plunder': 'Flying. Sacrifice another creature or artifact: Put a +1/+1 counter on Evereth. If the sacrificed permanent was a Treasure, Evereth gains lifelink until end of turn. ACTIVATE ONLY AS A SORCERY. When Evereth dies, you may pay {1}{B/R}. When you do, Evereth deals damage equal to its power to each opponent. Legendary Creature — Vampire Soldier 2/2 for {2}{B}.',
+      'Rusted Slasher': 'Sacrifice an artifact: Regenerate this creature. Artifact Creature — Phyrexian Horror 4/1 for {4}.',
+      'Thermal Navigator': 'Sacrifice an artifact: This creature gains flying until end of turn. Artifact Creature — Construct 2/2 for {3}.',
+      'Oxidda Daredevil': 'Sacrifice an artifact: This creature gains haste until end of turn. Creature — Goblin Artificer 2/1 for {1}{R}.',
+      // The two the text sweep proposed and the text sweep killed. Both look like clean
+      // free artifact-eaters in the cost column and are not, for reasons that are only
+      // in the effect column — which is why the filter proposes and does not decide.
+      'Krark-Clan Shaman': 'Sacrifice an artifact: THIS CREATURE deals 1 damage to EACH CREATURE WITHOUT FLYING. Creature — Goblin Shaman 1/1 for {R}.',
+      'Cauldron Familiar': 'When this creature enters, each opponent loses 1 life and you gain 1 life. Sacrifice a Food: RETURN THIS CARD FROM YOUR GRAVEYARD to the battlefield. Creature — Cat 1/1 for {B}.',
+      // The eleven the diff proposed and the reading killed. Every one of them says
+      // "Sacrifice a creature", which is the whole rule-out: Peregrin Took's Food is an
+      // artifact and none of these will take it. They are behind Ygra because Ygra makes
+      // the Squirrel itself a Food.
+      'Viscera Seer': 'Sacrifice A CREATURE: Scry 1. Creature — Vampire Wizard 1/1 for {B}.',
+      'Carrion Feeder': 'This creature can’t block. Sacrifice A CREATURE: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
+      'Woe Strider': 'When Woe Strider enters, create a 0/1 white Goat creature token. Sacrifice ANOTHER CREATURE: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. Creature — Horror 3/2 for {2}{B}.',
+      'Yahenni, Undying Partisan': 'Haste. Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni. Sacrifice ANOTHER CREATURE: Yahenni gains indestructible until end of turn. Legendary Creature — Aetherborn Vampire 2/2 for {2}{B}.',
+      'Bloodflow Connoisseur': 'Sacrifice A CREATURE: Put a +1/+1 counter on Bloodflow Connoisseur. Creature — Vampire 1/1 for {2}{B}.',
+      'Goblin Bombardment': 'Sacrifice A CREATURE: This enchantment deals 1 damage to any target. Enchantment for {1}{R}.',
+      'Altar of Dementia': 'Sacrifice A CREATURE: Target player mills cards equal to the sacrificed creature’s power. Artifact for {2}.',
+      'Blasting Station': '{T}, Sacrifice A CREATURE: This artifact deals 1 damage to any target. Whenever a creature enters, you may untap this artifact. Artifact for {3}.',
+      'Shilgengar, Sire of Famine': 'Flying. Sacrifice ANOTHER CREATURE: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your graveyard to the battlefield with a finality counter on it. Legendary Creature — Elder Demon 6/6.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add ONE MANA of any color. Artifact for {3}.',
+      'Thermopod': '{S}: This creature gains haste until end of turn. Sacrifice a creature: Add {R} — ONE MANA. Snow Creature — Slug 4/3 for {4}{R}.',
+      // The three published outlets that work by a mechanism other than eating the Food
+      // for free, read because the accounting only closes if each is explained. They are
+      // why 14 + 3 = the 17 Spellbook lists.
+      'Ashnod’s Altar': 'Sacrifice a creature: Add {C}{C} — TWO MANA. Artifact for {3}.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}. Artifact for {4}.',
+      'Grinding Station': '{T}, Sacrifice an artifact: Target player mills three cards. Whenever an ARTIFACT enters, you may untap this artifact. Artifact for {2}.',
+      'Ninja Pizza': 'FOODS YOU CONTROL HAVE “{T}, Sacrifice this artifact: Add one mana of any color.” At the beginning of your second main phase, create a Food token. Enchantment for {2}{G}.',
+      'Ygra, Eater of All': 'Ward—Sacrifice a Food. OTHER CREATURES ARE FOOD ARTIFACTS in addition to their other types and have “{2}, {T}, Sacrifice this permanent: You gain 3 life.” Whenever a Food is put into a graveyard from the battlefield, put two +1/+1 counters on Ygra. Legendary Creature — Elemental Cat 6/6 for {3}{B}{G}.',
+      // The two Food-eaters Spellbook does list behind Took, read to confirm the slot is
+      // what it looks like rather than something narrower.
+      'Wicked Wolf': 'When this creature enters, it fights up to one target creature you don’t control. Sacrifice a Food: Put a +1/+1 counter on this creature. It gains indestructible until end of turn. Tap it. Creature — Wolf 3/3 for {2}{G}{G}.',
+      'Glimmer Bairn': 'Sacrifice a TOKEN: This creature gets +2/+2 until end of turn. Creature — Ouphe 1/2 for {G}.',
+      // The near miss the text filter turned up and the type line settled: the only free
+      // "sacrifice a token" in the data other than Glimmer Bairn, and it names the token.
+      'Jungle Patrol': '{3}: Create a 0/3 colorless Wall artifact creature token with defender named Wood. Sacrifice A TOKEN NAMED WOOD: Add {R}. Enchantment for {2}{G}.',
+      'Extruder': 'Echo {4}. Sacrifice an artifact: Put a +1/+1 counter on target creature. Artifact Creature — Juggernaut 4/3 for {4}.',
+    },
+    proposed: 19,
+    examined: 19,
+    kept: 6,
+    ruledOut: [
+      { reason: 'THE OUTLET HAS TO EAT AN ARTIFACT, AND THESE EAT A CREATURE. This is the answer '
+        + 'to "every sacrifice outlet should substitute", and it is no: Peregrin Took returns a '
+        + 'FOOD, which is an artifact, and Camellia only triggers on sacrificing a Food. An outlet '
+        + 'reading "sacrifice a creature" can eat the Squirrel the loop just made, which triggers '
+        + 'nothing and ends the loop one card down. All eleven are published behind Ygra, Eater of '
+        + 'All and none behind Peregrin Took, and that is not an oversight in Spellbook’s '
+        + 'list — Ygra makes every other creature a Food artifact, so behind HIM the Squirrel is a '
+        + 'legal cost and behind Took it is not. The two lists differing exactly here is the '
+        + 'evidence', count: 11,
+        sets: [
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Viscera Seer'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Carrion Feeder'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Woe Strider'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Yahenni, Undying Partisan'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Bloodflow Connoisseur'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Goblin Bombardment'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Altar of Dementia'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Blasting Station'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Shilgengar, Sire of Famine'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Phyrexian Altar'],
+          ['Camellia, the Seedmiser', 'Peregrin Took', 'Thermopod'],
+        ] },
+      { reason: 'AND THE MANA ROUTE ROUND IT FAILS ON ONE MANA, which is worth its own line '
+        + 'because Ashnod’s Altar IS published here and looks identical from a distance. A '
+        + 'creature-eating outlet can still reach the loop by paying for Camellia’s own '
+        + '"{2}, Forage", since forage may be paid by sacrificing a Food — so the cycle is: two '
+        + 'mana plus a Food in, one Squirrel and one Food out. Ashnod’s Altar turns one '
+        + 'creature into {C}{C} and the Squirrel pays for the next lap exactly; Phyrexian Altar '
+        + 'and Thermopod give ONE mana per creature, so each lap wants two Squirrels and makes '
+        + 'one, and the loop runs down. Those two are inside the eleven above, counted once. '
+        + 'This is the arithmetic that explains why the Altar is on Spellbook’s list' },
+      { reason: 'CAULDRON FAMILIAR IS NOT A REPEATABLE OUTLET, it is a one-shot per trip to the '
+        + 'graveyard. "Sacrifice a Food: Return this card from your graveyard to the battlefield" '
+        + 'is activated from the graveyard, and once it resolves the Cat is on the battlefield '
+        + 'and the ability is out of reach. One Food eaten, one Squirrel made, then nothing — '
+        + 'getting a second lap needs a sacrifice outlet, which is a fourth card and a shape '
+        + 'the Umbral Collar Zealot pass of 2026-08-03 already swept', count: 1,
+        sets: [['Camellia, the Seedmiser', 'Peregrin Took', 'Cauldron Familiar']] },
+      { reason: 'KRARK-CLAN SHAMAN KILLS ITSELF ON THE FIRST LAP. The cost is a clean free '
+        + '"sacrifice an artifact" and the effect is what rules it out: 1 damage to each creature '
+        + 'without flying, and the Shaman is a 1/1 Goblin with no flying. It dies to its own '
+        + 'ability, taking the 1/1 Squirrels with it. The only rule-out here that lives entirely '
+        + 'in the effect column rather than the cost column, which is why a cost filter proposes '
+        + 'and a reading decides', count: 1,
+        sets: [['Camellia, the Seedmiser', 'Peregrin Took', 'Krark-Clan Shaman']] },
+      { reason: 'JUNGLE PATROL was the near miss and the type line settled it. It is the only '
+        + 'free "sacrifice a token" in the data besides Glimmer Bairn, which is published here — '
+        + 'but it reads "sacrifice a token NAMED WOOD", and a Food token is not one. Not counted '
+        + 'among the 19: the enumeration proposed it and the same filter that proposed it threw '
+        + 'it out, before anything was read' },
+    ],
+    notes: 'ASKED BECAUSE SOMEBODY PROPOSED THE COMBO AND IT WAS ALREADY PUBLISHED — Camellia + '
+      + 'Peregrin Took + Umbral Collar Zealot is 4321-5777-6798, and its published steps are the '
+      + 'clearest statement of the loop in the data: activate the outlet by sacrificing a Food, '
+      + 'Camellia answers with a Squirrel, Took’s replacement returns a Food alongside it, '
+      + 'repeat. Food-neutral, Squirrel-positive, and the only demand on the third card is a free '
+      + 'repeatable sacrifice a Food is a legal cost for. The interesting question was the one '
+      + 'behind it: what else fills that slot.\n\n'
+      + '**The enumeration is machine-checkable, and that is the new thing here.** Every previous '
+      + 'pass in this file read a handful of cards somebody chose; this one read the cost line of '
+      + 'all 7,365 names in the snapshot, because Forge serves its card scripts as files on '
+      + 'raw.githubusercontent.com and the whole set fetches in 72 seconds at twelve concurrent '
+      + 'requests. 174 cards have an activated ability whose entire cost is one sacrifice. 23 of '
+      + 'those will take a Food; Jungle Patrol’s Wood clause drops it to 22; 14 of the 22 '
+      + 'are already published behind Peregrin Took, leaving 8. Spellbook’s list is 17, and '
+      + 'the missing 3 are each a different mechanism — Ninja Pizza gives the Food its OWN '
+      + 'sacrifice ability, Ashnod’s Altar pays for Camellia’s forage, Grinding Station '
+      + 'taps but untaps itself on the Food entering (its trigger reads ARTIFACT, not creature, '
+      + 'which is why the Food and not the Squirrel is what resets it). 14 + 3 = 17 with no '
+      + 'residue, which is the first time an outlet slot in this file has been closed rather than '
+      + 'sampled.\n\n'
+      + 'The other arm was the Ygra diff, and it is the one that answers the question as asked. '
+      + '13 outlets are behind Ygra and not behind Took; 11 of the 13 are creature-eaters that '
+      + 'cannot be, and the remaining 2 — Bill the Pony and Mushroom Watchdogs — are free Food '
+      + 'outlets Spellbook already publishes behind CAMELLIA in the Ygra version of the very same '
+      + 'slot. Those two are rows now on the strongest evidence this method produces: not a peer '
+      + 'that resembles the card, the card itself, in the same slot, one list over.\n\n'
+      + 'Six rows: Bill the Pony, Mushroom Watchdogs, Evereth, Viceroy of Plunder, Rusted '
+      + 'Slasher, Thermal Navigator, Oxidda Daredevil. Three of them (Evereth, Rusted Slasher, '
+      + 'Thermal Navigator) share no combo shape with any outlet Spellbook put behind Took — '
+      + 'Evereth is in one published combo, the other two only in Emry, Lurker of the Loch shapes '
+      + '— so no substitution score would ever have proposed them. That is the argument for '
+      + 'reading a slot from card text rather than from a score, stated as three rows.\n\n'
+      + 'ALL SIX CLAIM LESS THAN THE COMBO THEY CITE. Spellbook tags 4321-5777-6798 with '
+      + '"Infinite Food tokens", "Infinite card draw" and "Infinite death triggers"; none of the '
+      + 'three holds. Foods are created every lap and never accumulate, Took’s draw wants '
+      + 'three at once, and nothing dies — the Squirrels pile up untouched. Kept results are the '
+      + 'Squirrels, the ETB, the LTB and the sacrifice triggers, plus a counter where the '
+      + 'outlet’s rider is one.\n\n'
+      + '**READ THE CAMELLIA ENTRY’S RULE-OUT NARROWLY, and this is the case that shows why.** '
+      + 'ruledOutSets() already returns `Camellia, the Seedmiser + Peregrin Took` — killed on '
+      + '2026-08-03 because the loop there had to spend three Foods a cycle and got one Squirrel '
+      + 'back, the outlet being Took’s OWN "Sacrifice three Foods: Draw a card". That is a fact '
+      + 'about the two-card shape and nothing else. Hand the pair any outlet that takes ONE Food '
+      + 'and the arithmetic reverses, which is why 4321-5777-6798 is published and why there are '
+      + 'six more rows here. A `sets` entry answers "has this exact combination been ruled out", '
+      + 'not "is there anything here" — the note at the top of this file says the answer is yes '
+      + 'or nothing-recorded, and a two-card rule-out is silent about every third card.',
   },
 ];
 
