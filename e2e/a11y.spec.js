@@ -101,9 +101,19 @@ test('what the page opens on press is clean', async ({ page }) => {
   await page.goto('/index.html');
   await search(page);
 
-  const steps = page.locator('#included .steps-toggle').first();
-  await steps.click();
-  await expect(page.locator('#included .steps').first()).toBeVisible();
+  // On a row that stays whole, chosen by that and not by being first: a collapsed row
+  // keeps its versions — and their steps controls — inside a closed disclosure, so the
+  // first .steps-toggle in the panel is not necessarily one a reader can press. Which
+  // row leads is an ordering decision in combos.js, and this test is about what a
+  // disclosure builds when it opens.
+  //
+  // Both halves are scoped to that row. Pressing one row's control and then reading
+  // ".steps in the panel, first" is two rows, and it passed only while they happened to
+  // be the same one — the panel is full of steps panels that belong to rows nobody
+  // pressed, every one of them legitimately hidden.
+  const row = page.locator('#included .panel-body > .combo:not(:has(> h3 .either))').first();
+  await row.locator('.steps-toggle').first().click();
+  await expect(row.locator('.steps').first()).toBeVisible();
   await expectClean(page);
 
   await page.getByRole('button', { name: 'Interchangeable' }).click();

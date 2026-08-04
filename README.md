@@ -214,10 +214,56 @@ tier — the grey list is the page's subject, not noise on a row about something
 ### The combos you have: easiest first, named alphabetically
 
 **Combos in your deck** leads with the ones you can actually pull off: every 2-card combo,
-then every 3-card, then every 4-card, most played within each size. Two cards on the table
-is a different proposition from four, and popularity alone buried the easy lines among the
-hard ones — a well-played four-card combo used to sit above a two-card one nobody has
-registered.
+then every 3-card, then every 4-card. Two cards on the table is a different proposition
+from four, and popularity alone buried the easy lines among the hard ones — a well-played
+four-card combo used to sit above a two-card one nobody has registered.
+
+**Within a size the rows read the way every other list of combos reads**: the biggest block
+of versions first, then smaller blocks, then the rows that stand alone, and alphabetically
+inside each. That is `byDrawnRow()`. It is the same rule as *The list is sorted on the same
+drawn names* further down this section, so the argument for why blocks lead and what "the
+drawn name" means is there rather than repeated here.
+
+This panel used to be the exception, ordered by size and then play count. The exception cost
+it exactly what the rule buys. Four rows of the fixture deck read "Cauldron Familiar +
+Samwise Gamgee + the one that changes" and sat at positions 11, 12, 13 and **16**, with a
+Camellia row and an Archangel row wedged in:
+
+```
+by play count                                     by what the row draws
+11. Cauldron Familiar + Samwise + Viscera Seer     6. Cauldron Familiar + Samwise + Carrion Feeder
+12. Cauldron Familiar + Samwise + Carrion Feeder   7. Cauldron Familiar + Samwise + Umbral Collar…
+13. Cauldron Familiar + Samwise + Warren Soul…     8. Cauldron Familiar + Samwise + Viscera Seer
+14. Camellia, the Seedmiser + Peregrin Took + …    9. Cauldron Familiar + Samwise + Warren Soul…
+15. Archangel of Thune + Scurry Oak + any of 3    10. Chatterfang + Warren Soultrader + any of 3
+16. Cauldron Familiar + Samwise + Umbral Collar…  11. Chatterfang + Warren Soultrader + Academy…
+```
+
+The differing card was already aligned in one column — that shipped the day before — and it
+had nothing to align against. Play count is the reason the four were split, and play count is
+not on screen: nothing about the gap was explicable to somebody reading the page.
+
+**A row here can already be a block**, which is the one thing that is different from the
+nested lists. A collapsed row is several versions folded into one line, so it counts as
+*one* row against "biggest block first" — the choice it offers is on the row itself where
+the reader can see it, and what the block term counts is rows a reader has to compare
+against each other. Position 10 above is a collapsed row sitting with the two whole rows
+that share its cards: `groupVariants()` would not merge them, because they pay off
+differently, and to the reader they are still three rows one card apart.
+
+The block a row is counted under is read off the family that claimed it, never off "the
+drawn name minus its last card". Those are the same thing on a row with a family and wrong
+on a row without one — a lone row's whole card list would become a key, and a key of n−1
+cards is exactly what a collapsed row's shared cards are, so a 2-card row would be counted
+into a 3-card row's block. Size keeps them apart on screen, so the damage would be silent:
+an inflated count promoting a row over the block it should follow.
+
+Two rows can still draw the same words. The standing Chatterfang deck puts
+`Ashnod's Altar + Ghave, Guru of Spores + any of 4` directly above the same two cards
+`+ any of 2` — two sets of interchangeable cards that pay off differently, so one row each.
+More versions leads, and if even that ties, the line of choices under the heading, which is
+the next thing on screen that tells them apart. Anything left to arrival order is an order
+nobody chose.
 
 Nothing is added to the rows to say so. The size is already on screen, spelled out in the
 card names: `Rosie Cotton of South Lane + Scurry Oak` is visibly a two-card combo, and a
@@ -377,9 +423,14 @@ sorted, and one checks the answer cannot depend on the order the rows arrived in
 over the standing Chatterfang deck it is 195 drawn lists and 1,983 rows with no row's cards
 moving.
 
-**Combos in your deck** is deliberately left out: it is ranked by size and play count, and
-`groupVariants()` hands its rows back in the order they arrived precisely so grouping
-cannot reshuffle the most-played combo down the page.
+**Combos in your deck** used to be left out of all of this, on the grounds that it is
+ranked by play count and `groupVariants()` hands its rows back in the order they arrived so
+that grouping cannot reshuffle the most-played combo down the page. It is in now, by
+`byDrawnRow()` — the rows of that panel are groups rather than variants, which is the only
+real difference, and *The combos you have* above has the before-and-after. `groupVariants()`
+still does not reorder, and the reason it does not is better than the old one: grouping is
+not a place to make an ordering decision, so the caller's order survives it and the caller
+decides. What changed is that the caller now decides something.
 
 Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that
@@ -405,9 +456,10 @@ still leads — a card unlocking four combos beats one unlocking three however p
 three are — because "+N combos" is what the page claims and the ranking has to match it.
 Popularity decides between cards that make the same claim.
 
-**Inside a card, size leads and the card names break the tie** — not popularity. Both nested
-lists work this way: *Combos this unlocks* under a suggestion, and *The combos it holds
-together* under one of your own cards.
+**Inside a list of combos, size leads and the card names break the tie** — not popularity.
+All three lists work this way: *Combos this unlocks* under a suggestion, *The combos it
+holds together* under one of your own cards, and **Combos in your deck** itself, which was
+the last one play count still ordered and is not any more.
 
 Size first, because sorting those lists on play count alone put a 4-card line at the top of a
 list whose own heading read *1 × 2-card · 4 × 3-card · 7 × 4-card* — two orderings of one set
@@ -431,6 +483,13 @@ Nothing there is out of order and all of it reads as unsorted, because the play 
 on screen — the Archangel rows are scattered across positions 1, 2 and 7, and a reader
 scanning for a card cannot see why. Popularity still ranks the cards *above* these lists,
 which is the job it is for: deciding which suggestion to show first.
+
+So **play count no longer decides the position of a single row a reader sees.** It ranks
+cards, which is a claim the page makes out loud — "+4 combos", most-played first among the
+cards making the same claim — and it orders nothing else. `matchDeck()` still returns
+`included` sorted by size then play count, because a stable base order is worth more than an
+arbitrary one and `tools/try-deck.js` prints that list rather than the panel; every panel
+built from it re-orders what it is handed.
 
 Popularity is a tie-break rather than the ranking, and `pop` is absent from some variants:
 a missing one counts as zero, so ordering never depends on whether a field is there. With
@@ -536,6 +595,39 @@ It matters because the flat list actively misleads. Four different cards each
 claiming "+7 combos" at the top of the suggestions look like four options worth
 seven combos apiece; they are one option worth seven, described four times.
 
+**Three versions, not two.** A pair is written out as two rows; from three up it folds
+into one. `COLLAPSE_FROM` in `combos.js` is that number.
+
+Count what a collapsed row actually spends: a heading, the line listing the choices, the
+link line, the result chips, and the "All N versions" summary — five blocks, against six
+for two written-out rows. So for a pair the fold saves almost nothing, and it charges for
+that nothing. The heading says *any of 2* instead of naming the second card, both cards
+are printed on the very next line regardless, and each combo's own Spellbook link and
+*How it works* go behind a disclosure somebody has to open to reach them.
+
+From three up the arithmetic reverses and keeps reversing, because the versions of a
+group produce **identical** results by construction — that is what merging them requires
+— so eight written-out rows are eight copies of the same block of result chips. That is
+what the fold is for, and it is why the answer here is a threshold rather than dropping
+the fold altogether. On the standing Chatterfang deck, which holds 32 pairs against 23
+larger groups:
+
+```
+                             fixture deck    Chatterfang deck
+folding from two (before)      22 rows            84 rows
+folding from three (now)       23 rows           116 rows
+never folding                  33 rows           233 rows
+```
+
+`groupVariants()` counts on the members still **free**, not on the bucket, so a family of
+three that loses one member to a larger family is a pair and is written out too —
+otherwise the threshold would hold for families read straight off the data and not for
+the ones left over.
+
+Nothing else changes: the rows a pair becomes are still one card apart, so
+[the ordering](#the-combos-you-have-easiest-first-named-alphabetically) still sends that
+card last and still keeps them side by side.
+
 **Identical results are required, and that is deliberate.** Two variants only
 collapse when they produce exactly the same list. This under-groups: each
 interchangeable card brings its own rider, so `Scurry Oak + Sadistic Glee` shows
@@ -559,10 +651,13 @@ is the only version worth building. `compact()` currently keeps none of it.
 Two details worth keeping:
 
 - **Grouping must not reorder.** `groupVariants()` returns groups in the order
-  their first variant arrived, because the caller has already sorted them —
-  smallest combo first, most played within a size — and neither ordering should
-  be undone on the way to the screen. The layout test caught this when the first
-  pass sorted by group size instead.
+  their first variant arrived. The reason used to be that the caller had already
+  sorted them and that ordering should survive; the reason now is the stronger one
+  underneath it — a function that both merges rows and moves them can only be
+  reasoned about as a whole, so grouping merges and the caller orders. The caller
+  does order, with `byDrawnRow()`; see
+  [The combos you have](#the-combos-you-have-easiest-first-named-alphabetically).
+  The layout test caught this when the first pass sorted by group size instead.
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
@@ -1903,6 +1998,28 @@ assertions ride along inside the layout runs, for the same reason:
   card the group shows — the recommended one included — with every term exact.
 - **"Combos this unlocks"** must run smallest-first. The fixture's most-played combo
   is deliberately also its largest, so sorting on popularity alone fails the run.
+- **Every combo row reads as what it shares, then what changes** — some split of its
+  names into two sorted runs, in "Combos in your deck" as well as in the nested lists.
+  That panel's check asserted plain *alphabetical* until the row ordering reached it, and
+  passed the whole time, because no row of the fixture has a family. Mutation tested:
+  reversing the shared band fails nine viewport cases. The other half of the same check —
+  that a family lands in one place — **cannot fail on this fixture** and is written down
+  as such in the source: reversing the rows inside a size tier leaves the run green and
+  fails `test/grouping.test.js`, where the property is pinned on a built panel. It stays
+  because it starts biting the day a fixture holds two rows a card apart, and because a
+  green run should not be read as proof of the half it cannot see.
+- **The result chips** — tier order, the fold, three colours, the height folding saves —
+  are read off *a row with a game-winning result*, not off the first row on the page.
+  Reading the first one tied every one of those checks to a decision belonging elsewhere:
+  reordering this panel turned them all red on a page whose chips had not moved.
+- **A row still folds its interchangeable part**, which the fixture has to supply and
+  nearly stopped supplying. Both of its interchangeable families were pairs, and pairs are
+  written out now, so the moment the threshold moved the page drew no collapsed row at all
+  — and every assertion about that shape would have passed while checking nothing. The run
+  said so instead: *"no combo row collapsed its interchangeable part"*, at every viewport.
+  The fixture carries a third version off the same partner now. It is Great Whale rather
+  than a new card on purpose, because Great Whale is already on the map, so the map's card
+  count does not move and its geometry assertions stay about geometry.
 - **The divider down a suggestion row** is walked piece by piece — the left border of
   every block in the card's column — and each has to be drawn, at the same x, starting
   where the piece above ended. The gutter is checked for the opposite: it must draw
@@ -2001,7 +2118,8 @@ Static site, zero dependencies, no build step:
   cards via `groupSuggestions()` / `groupVariants()`, and works out the deck's bracket
   floor in `bracketCheck()`. Also the small view helpers that need testing without a
   browser: `edhrecSlug()`, `scryfallSetQuery()` for the whole-choice comparison link,
-  and `orderComboNames()` for the order a combo's cards are named in.
+  and the ordering — `orderComboNames()` for where a card sits inside a row,
+  `byDrawnName()` and `byDrawnRow()` for where a row sits in its list.
 - `graph.js` — the combo map's arithmetic (`ComboGraph`): `build()` turns the
   combos the deck can assemble into a graph of cards and the pairs that share
   one, `layout()` places that graph on a canvas with a deterministic

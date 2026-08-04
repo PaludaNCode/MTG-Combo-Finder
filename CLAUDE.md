@@ -266,6 +266,35 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   to stop, one file over. Write `\\d` inside the harness. Two of these were written and
   caught in one session; the second only because the run reported *every* row failing,
   which is what a regex matching nothing looks like from the outside.
+  **A backtick in there ends the harness**, including one inside a comment — the same
+  literal runs from `const HARNESS =` to just past `runOne()`, some 1,500 lines, so a
+  comment naming a CSS selector the way you would in prose takes the whole file out with
+  a `SyntaxError: Unexpected token ':'` pointing at the comment. That one at least fails
+  loudly at parse; the backslash does not.
+- **A pair of interchangeable cards does not collapse, and that is the rule rather than a
+  bug.** `COLLAPSE_FROM = 3` in `combos.js`: a fold costs a reader an indirection and
+  saves a pair almost no height, so two versions are written out and three or more fold.
+  Two consequences worth knowing before touching it. `groupVariants()` counts the members
+  still *free*, so a family of three that loses one to a bigger family is a pair and is
+  written out too. And **a fixture whose only families are pairs draws no collapsed row at
+  all** — `test/fixtures/dataset.js` carries a third version specifically so the "any of
+  N" shape stays covered, and `npm run verify` fails loudly if it stops being there.
+- **Driving the mouse to `boundingBox()` coordinates does not scroll.** `locator.click()`
+  scrolls its target into view; `page.mouse.click(box.x + 4, box.y + 4)` does not, and an
+  earlier press in the same test may already have scrolled the element half out of the
+  window. The map's background-clears-the-comparison test went red that way — the map's
+  top sat 230px above the viewport, the click landed on nothing, and the assertion read
+  the unchanged page as a failure to clear. Use `locator.click({ position })` for a point
+  on an element.
+- **A check that reads "the first row" is a check pinned to somebody else's decision.**
+  Reordering "Combos in your deck" turned three of them red on a page where nothing they
+  were about had moved: the layout run read its result chips off `.combo:first-child` —
+  tier order, the fold, three colours, none of which is about being first — and two
+  browser tests took the first row for an uncollapsed one, so they lost the Spellbook
+  link and the steps control the moment a collapsed row led. Ask for the row by the shape
+  the check needs (`:not(:has(> h3 .either))`, "a row with a `.tier-win` chip") and scope
+  every half of the assertion to *that* row: the a11y test pressed one row's control and
+  read another row's panel, and passed for as long as they happened to be the same row.
 - **Assert what a reader sees, not `textContent`.** Some row text is in the DOM twice
   with CSS showing one reading — the official/unofficial split is `17+7` in a narrow
   column and `17 official · 7 unofficial` in a wide one, both always present. A check

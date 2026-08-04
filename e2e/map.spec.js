@@ -116,8 +116,14 @@ test('pressing the background clears the comparison', async ({ page }) => {
   await expect(map.locator('.node.is-picked')).toHaveCount(1);
 
   // A corner of the map, which is canvas rather than any card.
-  const box = await map.boundingBox();
-  await page.mouse.click(box.x + 4, box.y + 4);
+  //
+  // Clicked through the locator so the point is scrolled into view first. Reading
+  // boundingBox() and driving the mouse to those coordinates does not scroll, and
+  // pressing a card above already has: on this fixture the map's top ends up 230px
+  // above the window, so the click went off-screen and quietly hit nothing — the
+  // comparison stayed exactly as it was and the test read that as "the background did
+  // not clear it". The map was fine; only the arithmetic was.
+  await map.click({ position: { x: 4, y: 4 } });
   await expect(map.locator('.node.is-picked')).toHaveCount(0);
   await expect(page.locator('#graph .map-picked')).toHaveClass(/is-empty/);
 });
