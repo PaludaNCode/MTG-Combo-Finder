@@ -3154,8 +3154,16 @@ where the glyph sits inside it, which is the whole question — and reports what
 to put the two ink centres on one line. That is **4.5px** at the total's 14.88px sign, or
 **.302em** of the sign's own size, and `vertical-align: .3em` lands 4.45px of it. One value
 covers both places the sign is drawn, and not by luck: it is always `.62em` of whatever it
-sits in, so the shift that centres it is the same fraction of itself either way. The run fails
-if the rendered shift and the measured ideal drift more than a pixel apart.
+sits in, so the shift that centres it is the same fraction of itself either way.
+
+Both are checked, and the second had to be **built** to be checked at all: this deck has no
+unofficial combos, so it draws no split, and the `31+9` in the gutter — the case the fix was
+reported for — was the one nothing in the run rendered. Measured there it is 2.31px raised
+against a 2px ideal, on a 7.74px sign. That ideal is `.258em` of itself rather than `.302em`,
+because ink metrics do not scale perfectly through hinting at 7px, which is why the assertion
+allows a pixel rather than demanding equality. The split's `+` exists only in the narrow
+reading — given room, the split spells itself out in words and separates them with a `·` — so
+the run expects two signs where the column is under 560px and one where it is not.
 
 **And the air around the text was trimmed with it.** Two paddings stack before a card name
 gets anything — the panel's and the card's — and `npm run verify` prints the pair as one

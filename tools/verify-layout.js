@@ -587,21 +587,6 @@ function measure(win, doc) {
   // so "the centre of the digits" and "the centre of the plus" are numbers, and the shift
   // that makes them equal is arithmetic instead of taste.
   const signAlign = (() => {
-    // Whichever sign is rendered: the one between a split's halves, or the "+" in front of
-    // a suggestion's total. Same class, same question, and this deck draws only the second.
-    const sign = [...doc.querySelectorAll('.sign')].find((e) => e.getBoundingClientRect().width);
-    const host = sign && sign.parentNode;
-    if (!sign || !host) return null;
-
-    // The digits measured as an inline span beside the sign, inheriting the host's font, so
-    // the two measurements are the same shape: an inline box's height is its font's ascent
-    // plus descent, which makes its bottom a fixed distance under the shared baseline. A
-    // Range over the text node would report the line box instead and answer a different
-    // question.
-    const probe = doc.createElement('span');
-    probe.appendChild(doc.createTextNode('20'));
-    host.insertBefore(probe, sign);
-
     const ctx = doc.createElement('canvas').getContext('2d');
     const ink = (node, text) => {
       const cs = win.getComputedStyle(node);
@@ -615,23 +600,67 @@ function measure(win, doc) {
         bottom: node.getBoundingClientRect().bottom,
       };
     };
-    const d = ink(probe, '20');
-    const p = ink(sign, '+');
-    probe.remove();
 
-    // A box's bottom is its baseline plus that font's descent, so the difference of the two
-    // baselines is how far the sign has actually been raised off the digits'.
-    const raised = (d.bottom - d.descent) - (p.bottom - p.descent);
-    return {
-      // What it would take to put the two ink centres on the same line.
-      ideal: Math.round((d.centre - p.centre) * 100) / 100,
-      raised: Math.round(raised * 100) / 100,
-      signSize: p.size,
-      // The same shift as a multiple of the sign's own font size, which is the unit
-      // vertical-align reads an em in. (No backticks in here: this is inside a template
-      // literal, and one closes it.)
-      idealEm: Math.round(((d.centre - p.centre) / p.size) * 1000) / 1000,
+    // One sign, against where it should sit. The digits are measured as an inline span
+    // beside it, inheriting the same font, so the two measurements are the same shape: an
+    // inline box's height is its font's ascent plus descent, which makes its bottom a fixed
+    // distance under the shared baseline. A Range over the text node would report the line
+    // box and answer a different question.
+    const measure = (sign, where) => {
+      const host = sign && sign.parentNode;
+      if (!sign || !host || !sign.getBoundingClientRect().width) return null;
+      const probe = doc.createElement('span');
+      probe.appendChild(doc.createTextNode('20'));
+      host.insertBefore(probe, sign);
+      const d = ink(probe, '20');
+      const p = ink(sign, '+');
+      probe.remove();
+      // A box's bottom is its baseline plus that font's descent, so the difference of the
+      // two baselines is how far the sign has actually been raised off the digits'.
+      const raised = (d.bottom - d.descent) - (p.bottom - p.descent);
+      return {
+        where,
+        ideal: Math.round((d.centre - p.centre) * 100) / 100,
+        raised: Math.round(raised * 100) / 100,
+        signSize: p.size,
+        idealEm: Math.round(((d.centre - p.centre) / p.size) * 1000) / 1000,
+      };
     };
+
+    const out = [];
+    // The sign in front of a suggestion's total, which this deck draws.
+    const total = doc.querySelector('.row-total > .sign');
+    const inTotal = measure(total, 'total');
+    if (inTotal) out.push(inTotal);
+
+    // And the one between a split's halves — the case the fix was reported for, and the one
+    // no fixture here renders, because this deck has no unofficial combos. Built the same
+    // way the gutter's worst case is, since a rule that is right at one size and unchecked
+    // at the other is half a rule.
+    const host = doc.querySelector('.row-numbers');
+    if (host) {
+      const span = (cls, text) => {
+        const e = doc.createElement('span');
+        if (cls) e.className = cls;
+        if (text) e.appendChild(doc.createTextNode(text));
+        return e;
+      };
+      const half = (cls, count, word) => {
+        const e = span(cls, count);
+        e.appendChild(span('word', ' ' + word));
+        return e;
+      };
+      const built = span('row-split');
+      built.appendChild(half('official', '31', 'official'));
+      built.appendChild(span('sign', '+'));
+      built.appendChild(span('dot', ' · '));
+      built.appendChild(half('ours', '9', 'unofficial'));
+      host.appendChild(built);
+      const inSplit = measure(built.querySelector(':scope > .sign'), 'split');
+      if (inSplit) out.push(inSplit);
+      built.remove();
+    }
+    return out;
   })();
 
   // What the gutter actually needs, so its width is a measurement rather than a memory.
@@ -2394,11 +2423,19 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // The sign between two numbers sits on their centre, not on their baseline. Asserted
     // against the ink measurement rather than against the value in the stylesheet, so this
     // stays true if either font size moves.
-    const sg = v.signAlign;
-    if (!sg) {
-      problems.push('no sign rendered, so its alignment is untested');
-    } else if (Math.abs(sg.raised - sg.ideal) > 1) {
-      problems.push(`the "+" is raised ${sg.raised}px where ${sg.ideal}px centres it on the digits`);
+    // Both sizes the sign is drawn at, since one value in the stylesheet has to be right for
+    // both: the "+" in front of a total, and the one between a split's halves. The second
+    // only exists in the narrow reading — where the column has room, the split spells itself
+    // out in words and shows a "·" instead — so expecting two everywhere failed the wide
+    // viewports on a page doing exactly the right thing.
+    const wantSigns = (v.headingShape && v.headingShape.column < HEADING_INLINE_AT) ? 2 : 1;
+    if (v.signAlign.length < wantSigns) {
+      problems.push(`${v.signAlign.length} sign(s) measured where ${wantSigns} are drawn`);
+    }
+    for (const sg of v.signAlign) {
+      if (Math.abs(sg.raised - sg.ideal) > 1) {
+        problems.push(`the "+" in a ${sg.where} is raised ${sg.raised}px where ${sg.ideal}px centres it`);
+      }
     }
 
     const gut = v.gutterNeeds;
@@ -2948,10 +2985,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       // The shape the headings took and the two numbers that chose it, so a changed
       // threshold is visible in a passing run rather than only in a failure.
-      const signNote = v.signAlign
-        ? `sign raised ${v.signAlign.raised}px of the ${v.signAlign.ideal}px that centres it `
-          + `(${v.signAlign.idealEm}em of its ${v.signAlign.signSize}px)`
-        : 'no split to measure the sign in';
+      const signNote = v.signAlign.length
+        ? 'signs ' + v.signAlign.map((sg) => `${sg.where} raised ${sg.raised}px of ${sg.ideal}px`
+          + ` (${sg.idealEm}em of ${sg.signSize}px)`).join(', ')
+        : 'no sign measured';
       const gutterNote = v.gutterNeeds
         ? `gutter ${v.gutterNeeds.column}px holds ${v.gutterNeeds.widest}px (${v.gutterNeeds.what})`
           + `, worst case 0+1889 is ${v.gutterNeeds.worst}px, pad ${v.gutterNeeds.pad}px`

@@ -771,8 +771,16 @@ button:disabled { opacity: .6; cursor: wait; }
  *
  * One value covers both places the sign is drawn, and not by luck: it is always .62em of
  * whatever it sits in, so the shift that centres it is the same fraction of itself whether
- * that parent is a 1.5rem total or a .78rem split. The run fails if the rendered shift and
- * the measured ideal drift more than a pixel apart. Closes #131. */
+ * that parent is a 1.5rem total or a .78rem split. Both are checked, and the second had to
+ * be *built* to be checked at all — this deck has no unofficial combos, so it draws no
+ * split, and the case the fix was reported for was the one nothing rendered. Measured there:
+ * 2.31px raised against a 2px ideal, where the sign is 7.74px. (The ideal is .258em of
+ * itself at that size rather than .302em, because ink metrics do not scale perfectly through
+ * hinting at 7px — which is why the assertion is a pixel of tolerance and not an equality.)
+ * The run fails if either drifts more than a pixel from its own ideal.
+ *
+ * The split's "+" only exists in the narrow reading: where the column has room, the split
+ * spells itself out in words and separates them with a "·". Closes #131. */
 .sign {
   color: var(--muted);
   font-size: .62em;
