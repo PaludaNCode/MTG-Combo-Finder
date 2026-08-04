@@ -49,28 +49,32 @@ jobs:
       # So it branches instead of refusing. main is still never pushed to; the commit lands
       # on a branch named after the run, and the summary says where and offers the PR.
       - uses: actions/checkout@v7
+      # Before the decision step, not after: that step runs node now.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
 
+      # The decision is tools/cache-target-branch.js, not four lines of shell here, and the
+      # reason is that shell in a `run:` block is the one kind of code in this repository
+      # nothing can test: exercising it means dispatching the workflow, and exercising the
+      # branch that only fires on the default branch means merging this file to the default
+      # branch first — a round trip per attempt. test/cache-target-branch.test.js covers both
+      # paths in milliseconds and `checks` runs it on every PR.
       - name: Decide where the commit goes
         id: target
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          if [ "$GITHUB_REF_NAME" = "$DEFAULT_BRANCH" ]; then
-            branch="card-text/run-${GITHUB_RUN_NUMBER}"
+          branch="$(node tools/cache-target-branch.js)"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          if [ "$branch" != "$GITHUB_REF_NAME" ]; then
             {
-              echo "Dispatched from \`$DEFAULT_BRANCH\`, which refuses direct pushes, so this"
+              echo "Dispatched from \`$GITHUB_REF_NAME\`, which refuses direct pushes, so this"
               echo "run commits to \`$branch\` instead."
               echo ''
             } >> "$GITHUB_STEP_SUMMARY"
-          else
-            branch="$GITHUB_REF_NAME"
           fi
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22'
 
       - name: Fetch the card text
         env:
