@@ -4448,8 +4448,67 @@ literally.
 `.github/workflows/deploy.yml` publishes the repo root to GitHub Pages on every push
 to `main`, and does: the repository is public, Pages is enabled and built from the
 workflow rather than from a branch, and every merge produces a `github-pages`
-deployment. The live answer is the Actions tab, or the deployments list —
-`gh api repos/PaludaNCode/MTG-Combo-Finder/deployments?environment=github-pages`.
+deployment. The live answer for *the job* is the Actions tab, or the deployments list —
+`gh api repos/PaludaNCode/MTG-Combo-Finder/deployments?environment=github-pages`. The live
+answer for *the site* is the footer, which is a different question and usually the one
+being asked: see below.
+
+### The footer says which build it is and when that build arrived
+
+`Build 18965e5 · deployed 2026-08-25 15:00:00 UTC`, on both pages, rewritten by one step
+in `deploy.yml`.
+
+The SHA alone did not answer the question it was added for. "Am I seeing the new version
+or a cached one?" is a question about *time*, and a SHA only answers it if you go and look
+the SHA up — so the reader who most needs the line is the one least able to use it.
+
+**Deploy time, not commit time**, and they come apart exactly when it matters. A re-run
+publishes an old commit; the data-branch job can rebuild without any new commit at all.
+Beyond that, the commit's date is derivable from the SHA already on the line, where the
+deploy time is recoverable from nowhere else — so of the two facts available, this is the
+one worth spending the space on. `GITHUB_SHA` carries no timestamp either way, so the step
+produces one with `date -u`.
+
+**Fixed-width, and labelled UTC.** The format is `%Y-%m-%d %H:%M:%S`, which sorts, has no
+variable-width month, and reads the same to everyone. The `UTC` suffix is three characters
+buying the line's only real failure mode away: unlabelled, a deploy that landed a minute
+ago reads as two hours stale to anyone on UTC+2, and they conclude their change has not
+shipped — the exact wrong answer, delivered confidently. It is wrapped in
+`<time datetime="…">` with an ISO value beside the human one, so "4 minutes ago" can
+replace the text later without changing what the step writes.
+
+**Both markers are guarded, because an unstamped footer looks completely normal.** The
+step greps for each substitution it just made and fails the deploy if either matched
+nothing — otherwise the page ships `Build local · not deployed` with nothing anywhere to
+say so, which is the same invisible failure as an unstamped asset URL one section down.
+The time marker's guard matches only the rewritten shape: the source marker holds no tags,
+so it cannot satisfy that grep by accident. Both timestamps are computed once before the
+loop over the two pages — a `date` call per page would let `index.html` and `tiers.html`
+disagree by a second while both guards still passed, and a line read for its exact time is
+the wrong place to be approximately right.
+
+**The layout check measures the deployed line, not the one it serves.** Locally, and under
+`npm run verify` and `npm run test:ui`, the footer reads `Build local · not deployed` —
+twenty characters shorter than production. Measuring that would pass a footer that
+overflows in production and nowhere else. So `DEPLOYED_BUILD_LINE` in
+`tools/verify-layout.js` holds the real line and both harnesses substitute it before
+measuring. It is the *widest* the deploy can produce rather than a sample, and that is a
+property of the format: seven SHA characters and a fixed-width timestamp mean there is
+exactly one production line to check.
+
+Two halves, both of which were verified by breaking them. The width check reports the
+footer's own contribution to the document's overflow, so a page already overflowing for an
+unrelated reason is not reported twice. And `hasMarker` fails the run if `#built` is
+missing from a page — without it, the substitution matches nothing and every number after
+it describes the local line while looking like it covered the deployed one, which is a
+check that passes for a footer it never saw. Measured: 48 characters, one line, 19px at
+every viewport including 390px, where the content box is 356px.
+
+**What it is for, day to day.** Confirming a deploy no longer means asking the Actions API
+whether a run finished. The push says which SHA went out; the footer says which SHA is
+being served and when it got there. Comparing seven characters on the page you are already
+looking at is both cheaper and a stronger claim, because a green deploy job does not prove
+the CDN is serving the new bytes and the footer does.
 
 This used to carry a caveat that Pages on a **private** repo needs a paid plan, so make
 the repo public or run the page locally until then. Both halves of that are settled and

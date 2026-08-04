@@ -144,6 +144,23 @@ const { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished, stepsFiles }
 const STEPS_FILES = Object.fromEntries(Object.entries(stepsFiles())
   .map(([at, body]) => [at, { type: 'application/json', body }]));
 
+// The footer's build line exactly as deploy.yml publishes it, substituted in by both
+// harnesses before they measure it.
+//
+// This run serves the pages unstamped, where the line reads "Build local · not
+// deployed" — twenty characters shorter than the real one. Measuring that would pass
+// a footer that overflows in production and nowhere else, which is the same class of
+// vacuum as an assertion matching nothing: the check would run, and be about a string
+// no reader ever sees.
+//
+// It is the widest the deploy can produce rather than a sample of it, and that is a
+// property of the format rather than luck: the short SHA is always seven characters
+// and the timestamp is fixed-width, digits throughout. So there is exactly one
+// production line to check and this is it. A format with a variable-width month or an
+// unpadded day would need the worst case picked by hand instead.
+const DEPLOYED_BUILD_LINE = 'Build <code id="build">1234567</code> · '
+  + '<span id="built">deployed <time datetime="2026-12-31T23:59:59Z">2026-12-31 23:59:59 UTC</time></span>';
+
 // The page under test is loaded inside an iframe sized to each viewport.
 // Media queries evaluate against the iframe's own width, so the result no
 // longer depends on whether the browser binary honours --window-size — the
@@ -1144,6 +1161,7 @@ function measure(win, doc) {
     map,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
+    footer: deployedFooter(win, doc),
     panels,
     topPiece,
     tabs,
@@ -1771,6 +1789,7 @@ function runOne(vp) {
         const out = {
           ok: true, name: vp.name, requested: vp.width, width: win.innerWidth,
           overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
+          footer: deployedFooter(win, doc),
           sections: [...doc.querySelectorAll('.tier h2')].map((h) => h.textContent),
           chipCounts: [...doc.querySelectorAll('.chip .n')].map((n) => n.textContent),
           chipHeight: (doc.querySelector('.chip') || {}).offsetHeight,
@@ -1813,6 +1832,69 @@ function report(results) {
   fetch('/_verdict', { method: 'POST', body: body });
 }
 </script>`;
+
+// Appended to both harnesses, for the checks both pages need. Neither page owns the
+// footer's build line — it is stamped into each of them by the same deploy step — so a
+// probe for it that lived in one harness would check one page and quietly leave the
+// other to production.
+const SHARED = `<script>
+const DEPLOYED_BUILD_LINE = ${JSON.stringify(DEPLOYED_BUILD_LINE)};
+
+// The footer as deployed, measured rather than assumed. See DEPLOYED_BUILD_LINE for
+// why this run cannot just read what it serves.
+//
+// hasMarker is not a formality. If #built is ever dropped from a page the substitution
+// below matches nothing, and every number after it describes the local line while
+// looking like it covered the deployed one — a check that passes for a footer it never
+// saw. The deploy's grep guard catches the removal too, but a step later, and only
+// after the page is built.
+function deployedFooter(win, doc) {
+  const line = doc.querySelector('.build');
+  const marker = line && line.querySelector('#built');
+  if (!line || !marker) return { hasMarker: false, added: 0, height: 0, text: '' };
+  const before = line.innerHTML;
+  const baseline = doc.documentElement.scrollWidth - doc.documentElement.clientWidth;
+  line.innerHTML = DEPLOYED_BUILD_LINE;
+  const out = {
+    hasMarker: true,
+    // The footer's own contribution to the overflow, not the document's total. A page
+    // already overflowing for an unrelated reason is reported by the check that owns
+    // that, and must not be reported a second time here as a footer problem.
+    added: (doc.documentElement.scrollWidth - doc.documentElement.clientWidth) - baseline,
+    height: Math.round(line.getBoundingClientRect().height),
+    text: line.textContent,
+  };
+  line.innerHTML = before;
+  return out;
+}
+</script>`;
+
+// The other half of the probe above, and shared for the same reason: one deploy step
+// stamps this line into both pages, so one rule judges it on both. Split across the
+// two reporting loops, the tier page's footer would answer to whatever that loop
+// happened to check, which for the whole of this line's history was nothing.
+// Printed on every viewport's ok line, so the check cannot pass quietly for a footer
+// it never measured. "deployed footer" with no height beside it would be the visible
+// shape of a probe that found no marker — which is a failure above, but this is what
+// makes a green run legible rather than merely green.
+function footerNote(f) {
+  if (!f || !f.hasMarker) return 'NO deployed footer measured';
+  return `deployed footer ${f.height}px, ${f.added}px overflow`;
+}
+
+function footerProblems(f) {
+  if (!f) return ['no footer measurement in this capture — deployedFooter() did not run'];
+  if (!f.hasMarker) {
+    return ['the footer has no #built marker: the deploy has nothing to stamp the time into, '
+      + 'and the width check found no line to measure'];
+  }
+  // Wrapping onto a second line is fine and expected at 390px — 48 characters do not
+  // fit a phone's footer and were never going to. Overflowing the document is not:
+  // that is the whole page scrolling sideways for a line nobody reads on purpose.
+  return f.added > 0
+    ? [`the deployed build line overflows by ${f.added}px ("${f.text}")`]
+    : [];
+}
 
 // index.html with ?v= on every asset URL, the same rewrite .github/workflows/
 // deploy.yml performs. Asserting the count here too, so this cannot silently
@@ -1914,7 +1996,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const server = serve(ROOT, {
       ...STEPS_FILES,
       '/combos.json': { type: 'application/json', body: JSON.stringify(fixture) },
-      '/_page.html': { type: 'text/html', body: harness + REPORTER },
+      '/_page.html': { type: 'text/html', body: harness + SHARED + REPORTER },
       // index.html as the deploy publishes it: every asset URL stamped. The
       // query is stripped when the file is served, so this only exercises the
       // URLs the page and the worker build, which is the point.
@@ -2279,6 +2361,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 
     const problems = [];
     if (v.overflow > 0) problems.push(`horizontal overflow of ${v.overflow}px`);
+    problems.push(...footerProblems(v.footer));
     // Combos in your deck, how they connect, cards carrying them, suggested
     // additions. Four, not five: "One slot away" was removed. The bracket check is
     // not among them either — it stopped being a panel and became a line beside the
@@ -3312,7 +3395,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}, ${footerNote(v.footer)}`);
     }
   }
 
@@ -3326,6 +3409,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const problems = [];
     if (Math.abs(t.width - t.requested) > 20) problems.push(`rendered at ${t.width}px, not ${t.requested}px`);
     if (t.overflow > 0) problems.push(`horizontal overflow of ${t.overflow}px`);
+    problems.push(...footerProblems(t.footer));
     if (t.sections.length !== 3) problems.push(`expected 3 tier sections, got ${t.sections.length}`);
     if (t.chipHeight < 44) problems.push('a filter chip is under 44px tall');
     if (t.rows < 3) problems.push(`only ${t.rows} result rows rendered`);
@@ -3341,7 +3425,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       failed = true;
       console.error(`FAIL ${t.name} @${t.width}px — ${problems.join('; ')}`);
     } else {
-      console.log(`ok   ${t.name} @${t.width}px — ${t.rows} results, chips ${t.chipCounts.join('/')}, flagged: ${t.flagText}`);
+      console.log(`ok   ${t.name} @${t.width}px — ${t.rows} results, chips ${t.chipCounts.join('/')}, flagged: ${t.flagText}, ${footerNote(t.footer)}`);
     }
   }
 

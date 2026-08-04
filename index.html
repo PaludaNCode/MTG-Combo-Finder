@@ -135,8 +135,17 @@
          matters more now that a copy is kept between visits. -->
     <p class="data-age" id="data-age" hidden></p>
     <!-- Replaced with the commit SHA at deploy, so "am I seeing the new
-         version or a cached one?" is answerable without guessing. -->
-    <p class="build">Build <code id="build">local</code></p>
+         version or a cached one?" is answerable without guessing.
+         The time beside it is when this build was *deployed*, not when its
+         commit was written. The SHA already identifies the commit and its date
+         is one lookup away, where the deploy time is recoverable from nowhere
+         else — and the two come apart exactly when the question is being
+         asked, because a re-run publishes an old commit. Fixed-width and
+         UTC-labelled on purpose: the line is read to compare against "now", and
+         an unlabelled time reads two hours stale to anyone on UTC+2, which is
+         the one wrong answer it must not give. Both markers are rewritten by
+         the same step in deploy.yml, which fails if either is left alone. -->
+    <p class="build">Build <code id="build">local</code> · <span id="built">not deployed</span></p>
   </footer>
 
   <script src="parser.js"></script>

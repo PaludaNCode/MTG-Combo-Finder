@@ -49,11 +49,29 @@ jobs:
       - name: Cache-bust asset URLs with the commit SHA
         run: node tools/stamp-assets.js "${GITHUB_SHA}" index.html tiers.html --worker sw.js
 
-      - name: Stamp the build id so the pages say what they are running
+      - name: Stamp the build id and deploy time so the pages say what they are running
         run: |
+          # Both timestamps computed once, before the loop. A `date` call per page
+          # would let index.html and tiers.html disagree by a second, and every
+          # guard below would still pass on both — the two pages would simply
+          # answer "when did this deploy?" differently, which is the one thing
+          # this line exists to be trusted about.
+          #
+          # Deploy time, not commit time: GITHUB_SHA carries no timestamp, the
+          # commit's date is derivable from the SHA that is already on the line,
+          # and a re-run publishes an old commit. See index.html for the rest.
+          built_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          built_human="$(date -u '+%Y-%m-%d %H:%M:%S') UTC"
           for page in index.html tiers.html; do
             sed -i "s|<code id=\"build\">[^<]*</code>|<code id=\"build\">${GITHUB_SHA:0:7}</code>|" "$page"
+            sed -i "s|<span id=\"built\">[^<]*</span>|<span id=\"built\">deployed <time datetime=\"${built_iso}\">${built_human}</time></span>|" "$page"
+            # One guard per marker. An unstamped footer looks completely normal,
+            # so a substitution that quietly matched nothing would publish
+            # "Build local · not deployed" with nothing anywhere to say so.
+            # The second pattern matches only the rewritten shape: the source
+            # marker holds no tags, so it cannot satisfy this grep.
             grep -q "<code id=\"build\">${GITHUB_SHA:0:7}</code>" "$page"
+            grep -q "<span id=\"built\">deployed <time datetime=\"${built_iso}\">${built_human}</time></span>" "$page"
           done
 
       # All three on their Node 24 majors. The Node 20 runtime is deprecated and every
