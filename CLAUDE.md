@@ -113,8 +113,12 @@ logic is unit-testable without a DOM.
 >
 > 1. **`card-text.json`**, the committed cache of Scryfall's wording, filled on a runner by the
 >    *Cache card text* workflow. No request, so it works here. **If your cards are missing, run
->    that workflow first.** **Never hand-write into it** — only the workflow does, or it becomes
->    the unverified recollection this rule exists to stop, wearing authority.
+>    that workflow first** — semicolons between names, and **it commits to the branch you
+>    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
+>    the PR link, because `main` refuses direct pushes. It used to *refuse* that dispatch, and
+>    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
+>    the workflow does, or it becomes the unverified recollection this rule exists to stop,
+>    wearing authority.
 > 2. **Scryfall live** — 403s at CONNECT here; fine on a runner.
 > 3. **Forge card scripts** on `raw.githubusercontent.com`, banner-marked as Forge's wording, not
 >    Scryfall's: no colour identity, legalities or printings. **Cross-check anything the reasoning
@@ -196,6 +200,14 @@ loosely.
   before you filter, and put the decision in an exported function (`sweepStatus()`,
   `skippedLines()`) → `test/deck-tools.test.js`.
   README § *What a tool says about itself is not exempt*.
+- **Shell inside a workflow's `run:` block is the only code here nothing can test**, so a
+  decision must not live there. Exercising it means dispatching the workflow, and exercising a
+  path that only fires on the default branch means merging the workflow to the default branch
+  *first* — a round trip per attempt, which is why one wrong `if` in *Cache card text* survived
+  as long as it did. The decision goes in a tool and the `run:` block calls it →
+  `tools/cache-target-branch.js`, `test/cache-target-branch.test.js` covers both paths in
+  milliseconds. **Patching that YAML also deleted `setup-node` once** and the step needed
+  `node`: read back the parsed step list, not the diff.
 - **`HARNESS` in `verify-layout.js` is a template literal**, so a regex loses its backslashes:
   `/\d+ combos/` becomes `/d+ combos/` and matches nothing, which passes → write `\\d`. **A
   backtick anywhere in it, comments included, ends the literal** — ~1,500 lines from
@@ -353,8 +365,12 @@ loosely.
 **Check it yourself, then say what you checked.** A claim with a command behind it beats a
 confident sentence, and most rules in this file exist because something untested read as fine.
 
-**Never confirm a deploy from the Actions API** — `actions_list` returns ~395 KB a call. Name the
-SHA that went out and point at the footer: deploys are asynchronous and do not need waiting on.
+**Never confirm a deploy from the Actions API** — `actions_list` returns ~395 KB a call, and
+**scoping it does not save you**: one workflow with `per_page: 3` still came back 136 KB and had to
+be read off disk with `python3 -c` instead. Name the SHA that went out and point at the footer:
+deploys are asynchronous and do not need waiting on. To ask *why a run failed*, go straight to
+`get_job_logs` with the job id — `failed_only` plus a `run_id` works too, and `tail_lines` under a
+few hundred returns the cleanup epilogue rather than the failure.
 
 **And you cannot read the footer from here.** `paludancode.github.io` is 403 at CONNECT like every
 other blocked host — `raw.githubusercontent.com` is the only one allowed — and the deploy publishes
