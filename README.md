@@ -4343,6 +4343,44 @@ Spellbook's templates still carry Scryfall queries. They run together from the
 Same as [MTG-Pricerunner](https://github.com/PaludaNCode/MTG-Pricerunner): trunk-based,
 short-lived branches.
 
+### A fresh session's `main` is realigned before anything reads it
+
+`.claude/hooks/session-start.sh`, registered as a `SessionStart` hook in
+`.claude/settings.json`.
+
+A remote session's clone can carry a `main` that is not the `main` anybody else means. One
+did: root `ac6d991d8 Initial commit`, 38 commits, sharing **no** ancestor with the remote at
+all — `git merge-base main origin/main` returned nothing. The upstream history had been
+rewritten after the image the clone came from was built, so the local ref was a fossil
+pointing at commits that exist on no remote branch. `git checkout main` landed on a tree
+187 commits stale and `git pull` refused as divergent, and none of that looks like a stale
+ref while it is happening; it looks like a broken repository.
+
+This had been written down as *never trust a local `main`* for a while, which is a fix that
+works for whoever reads it first and remembers at the right moment. The hook makes it true
+rather than documented: fetch with `--prune`, and if `main` is not checked out and differs
+from `origin/main`, tag whatever `main` holds that the remote does not as
+`archive/main-<sha>` and realign the ref.
+
+It refuses rather than guesses, and it never discards a commit:
+
+| situation | what it does |
+|---|---|
+| not a remote session | nothing — a laptop's clone is the developer's to manage |
+| `origin` unreachable | nothing, and says so; no network is not a reason to fail a session |
+| `main` is checked out | nothing — never move a ref out from under a working tree |
+| `main` already matches | nothing |
+| `main` has unique commits | tags them, prints the restore command, then realigns |
+
+`--prune` earns its place on its own: merged branches auto-delete on this repository, so
+without it `git branch -r` lists what existed when the container was built rather than what
+exists. Two sessions working the same clone found that out the hard way.
+
+**Nothing is installed there, and nothing should be.** No dependencies is a rule here and
+ESLint and Playwright are fetched per run, so the hook is git hygiene and nothing else. It
+runs synchronously — every line is latency on every session — so the bar for adding one is
+that it genuinely has to happen before the first tool call.
+
 **Outstanding work lives in GitHub issues, and nowhere else.** There is no backlog file in
 this repository, and there deliberately is not one any more: two of them existed — a review
 of 2 Aug 2026 and a second of 3 Aug 2026 — and both were deleted on 3 Aug 2026 once their

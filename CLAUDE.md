@@ -500,9 +500,26 @@ carry a `main` ref that is not the `main` anybody else means — one of them poi
 project's original unsquashed history (`#1`–`#35`, back to *Initial commit*), sharing no
 recent ancestor with the remote at all, so `git checkout main` landed on a tree 148
 commits stale and `git pull` refused as divergent. Nothing was wrong with the repository.
-So: `git fetch origin main` and compare against `origin/main`, always. If a local `main`
-is already wrong, `git reset --hard origin/main` fixes it — archive the old tip in a
-branch first if it might not be junk.
+So: `git fetch origin main` and compare against `origin/main`, always.
+
+**A `SessionStart` hook now does that for you, in remote sessions** —
+`.claude/hooks/session-start.sh`, registered in `.claude/settings.json`. It fetches with
+`--prune` and, if `main` is not checked out and differs from `origin/main`, tags anything
+`main` holds that the remote does not as `archive/main-<sha>` and then realigns the ref.
+It ran here and found the fossil: 38 commits, archived, `main` moved to the real tip.
+
+The rule above stays, because the hook is not a guarantee. It is remote-only by design (a
+laptop's clone is the developer's to manage), it skips silently when `origin` cannot be
+reached, and it will not move `main` while `main` is checked out. So `origin/main` is still
+what you compare against; the hook just means you are much less likely to meet the fossil
+in the first place. If you do, `git reset --hard origin/main` fixes it — archive the old tip
+first if it might not be junk, which is exactly what the hook does.
+
+**Anything else that wants to run at session start goes in that same script.** There is
+nothing to install — no dependencies is a rule here, and ESLint and Playwright are fetched
+per run — so the hook is git hygiene and nothing else. Keep it that way unless something
+genuinely has to happen before the first tool call: it runs synchronously, so every line in
+it is latency on every session.
 
 **This repository generates exactly two kinds of merge conflict, by construction.**
 Neither is a judgement call, and both look worse than they are:
