@@ -8,6 +8,185 @@ A bit like [Commander Spellbook](https://commanderspellbook.com/)'s "Find My Com
 but the matching happens in your browser against a published copy of their
 database — see [Why the data is published, not queried live](#why-the-data-is-published-not-queried-live).
 
+## How to read this file
+
+This README is the reference for the repository. Every rule in it is recorded with the
+measurement or the failure that produced it, which is why most sections read as an argument
+rather than as a specification — the rejected alternative and the bug that closed it are the
+part worth keeping, and the part nothing else in the repository holds. It is long on purpose
+and cutting it would cost exactly what it is for.
+
+Four things follow, and they matter most to a reader arriving through a search rather than
+from the top:
+
+- **Several sections record a decision that was later reversed**, so the argument you meet
+  first may be the one that lost. Where that is true the current rule is stated in bold
+  *before* the history — [the fold](#the-fold-was-taken-out-once-and-put-back), [the
+  unofficial panel's ordering](#the-unofficial-panel-was-sorted-on-nothing-at-all), [reading
+  a card](#reading-a-card-when-scryfall-is-unreachable), [the removed *One slot away*
+  panel](#the-panel-that-could-not-answer-its-own-question). Never take a rule from a
+  partial read of one of those.
+- **Numbers here are measurements.** The ones this repository can count are checked on every
+  CI run — see [The numbers in this file are checked](#the-numbers-in-this-file-are-checked).
+  Anything measured against Spellbook's published database is a snapshot of somebody else's
+  data taken on a particular morning, so it stays prose and stays the kind of figure to
+  re-measure rather than trust.
+- **`CLAUDE.md` is the operating index — what to run, where things live, what fails
+  silently. This file is the *why* behind it.** `README § X` there names a section below.
+- **The live answer always beats the prose.** Where a section names a command
+  (`npm run verify`, `gzip -9 -c unofficial.js | wc -c`,
+  `node tools/substitution-scope.js`), that command is the current figure and the paragraph
+  around it is the reasoning.
+
+### Find it fast
+
+Every section, by what it answers. Grouped in document order, so this doubles as the
+contents.
+
+**Results, ranking and what a row says** — the four panels under a search
+
+| Section | Answers |
+| --- | --- |
+| [Cleaning up combo results](#cleaning-up-combo-results) | why `HU`/`PU` utility results are dropped at fetch time and deduped at render time; `summarizeResults()` |
+| [Three tiers, three colours](#three-tiers-three-colours) | green/yellow/grey; why `result-tiers.js` is an inventory of exact strings rather than pattern matching; why grey folds behind "+N more" |
+| [Spotting a result from a new set](#spotting-a-result-from-a-new-set) | how an unclassified result surfaces — `tiers.html`, `reportUnclassified()` |
+| [The combos you have: easiest first, named alphabetically](#the-combos-you-have-easiest-first-named-alphabetically) | row order in every panel: size, then block, then the drawn name. `byDrawnRow()`, `byDrawnName()`, `orderComboNames()`, lead and trail, families claiming rows |
+| [The unofficial panel was sorted on nothing at all](#the-unofficial-panel-was-sorted-on-nothing-at-all) | the compact-vs-expanded shape trap; `variantCardNames()` must take either; block size before alphabetical |
+| [Ranking, and what popularity is for](#ranking-and-what-popularity-is-for) | `pop` ranks cards and orders no row a reader sees; size leads inside a list |
+| [What the count is made of](#what-the-count-is-made-of) | the size pills under a total (`1 × 2-card`), why a slot counts as a card, why only the two-card pill is filled |
+| [Collapsing interchangeable cards](#collapsing-interchangeable-cards) | `groupVariants()`, `COLLAPSE_FROM`, why identical results are required and fuzzy matching is refused |
+| [The fold was taken out once, and put back](#the-fold-was-taken-out-once-and-put-back) | the measurement that reversed the removal — rows repeating a chip block |
+| [Comparing a whole choice at once](#comparing-a-whole-choice-at-once) | *Compare all N on Scryfall* and *See all N cards*; `scryfallSetQuery()`, why terms are exact |
+| [Template slots ("a Persist Creature")](#template-slots-a-persist-creature) | how a slot becomes a card list; why `templates.json` is generated and checked in; staleness detection |
+| [What templates are actually used for](#what-templates-are-actually-used-for) | which templates combos actually ask for; slot assignment is Kuhn's algorithm, not greedy |
+| [The panel that could not answer its own question](#the-panel-that-could-not-answer-its-own-question) | why *One slot away* was removed and what survived it; `resolveSlots()`, `assignSlots()`, `unresolvable` |
+
+**How a combo is executed** — the steps disclosure
+
+| Section | Answers |
+| --- | --- |
+| [How a combo is executed](#how-a-combo-is-executed) | why steps are fetched per combo rather than published in the payload; the four states; how an unofficial row attributes borrowed steps |
+| [One file per combo, and the four cleverer things it beat](#one-file-per-combo-and-the-four-cleverer-things-it-beat) | the publish shape, measured against blob+offset, sharding, SQLite and Parquet; why `raw.githubusercontent.com` byte ranges lie; why the id is the URL |
+| [What a variant actually contains](#what-a-variant-actually-contains) | the real field names in Spellbook's export; `ComboSteps.pick()` / `normalize()`; `peek-variant.yml` |
+
+**The combo map**
+
+| Section | Answers |
+| --- | --- |
+| [The combo map](#the-combo-map) | solid vs dashed lines, dot size, line weight, the three view chips |
+| [Picking two or three cards out](#picking-two-or-three-cards-out) | what pinning cards compares; `compare()` counts from combos, not from pairs |
+| [Why interchangeable had to be its own relation](#why-interchangeable-had-to-be-its-own-relation) | why shared-combo lines alone push the cards a reader wants grouped apart; the asymmetric pull |
+| [The highlight follows the chip, and the chip that did not fit](#the-highlight-follows-the-chip-and-the-chip-that-did-not-fit) | why the *Game-ending* chip was removed; the tier stays on the number |
+| [Which cards light up, not just which lines are drawn](#which-cards-light-up-not-just-which-lines-are-drawn) | `ComboGraph.litFor()` — the highlight is scoped to the visible relation |
+| [The number on a line](#the-number-on-a-line) | which counts are drawn at rest; numbers placed before names; deterministic seeding; no charting library |
+| [What a real deck does to it](#what-a-real-deck-does-to-it) | the crowding fixes — dot separation, canvas sizing, six label positions, the node ceiling |
+| [A phone gets a different map, not a smaller one](#a-phone-gets-a-different-map-not-a-smaller-one) | `sizeFor()`; canvas units against column width; trimming the canvas to the drawing |
+| [Asking how wide the column is](#asking-how-wide-the-column-is-and-the-601ms-it-used-to-cost) | why `clientWidth` mid-render cost a forced layout, and the `ResizeObserver` that replaced it; the guard is a count of reads |
+
+**Getting the page on screen**
+
+| Section | Answers |
+| --- | --- |
+| [The combos come first, and the rest of the page arrives after](#the-combos-come-first-and-the-rest-of-the-page-arrives-after) | why `renderResults()` yields after the combos; why the deferred panels are emptied rather than left; render tokens |
+| [Adding a card, and searching again](#adding-a-card-and-searching-again) | `+ Add to deck`; `DeckParser.addMainDeckCard()` writes into the biggest main-deck run |
+| [When the heading and the card count disagree](#when-the-heading-and-the-card-count-disagree) | `DECK_SIZED_RUN` — a command zone too big to be one |
+| [Why the same argument does not extend to the sideboard](#why-the-same-argument-does-not-extend-to-the-sideboard) | why sideboard cards stay out at every size |
+
+**Bracket and legality**
+
+| Section | Answers |
+| --- | --- |
+| [Classifying the decklist: which bracket is it?](#classifying-the-decklist-which-bracket-is-it) | which two criteria are checkable off a card list, and why the answer is a floor |
+| [One line, in the shape of the colour identity](#one-line-in-the-shape-of-the-colour-identity) | the five pips, three states, and the hover/focus/tap panel behind them |
+| [Whether the list is allowed](#whether-the-list-is-allowed-is-a-different-question-from-how-strong-it-is) | off-identity and banned cards; why only `banned`; why a legal deck gets silence |
+| [The Game Changer list is read, not kept](#the-game-changer-list-is-read-not-kept) | why the list comes off Scryfall's `game_changer` flag and what warns when it stops |
+
+**Layout, themes and the test suites**
+
+| Section | Answers |
+| --- | --- |
+| [Layout](#layout) | the 900px two-column split, thumb-sized headers |
+| [Light and dark, from one set of tokens](#light-and-dark-from-one-set-of-tokens) | `:root[data-theme='light']`; why brass/green/red are darkened rather than reused |
+| [The reader picks, the system only suggests](#the-reader-picks-the-system-only-suggests) | `theme.js` loading from `<head>`; why the CSS keys on the attribute and not a media query; the sun/moon button |
+| [Two browser test suites](#two-browser-test-suites-and-which-check-belongs-in-which) | **geometry goes in `verify`, gestures go in `test:ui`** |
+| [The numbers in this file are checked](#the-numbers-in-this-file-are-checked) | what `npm run check:readme` anchors on; why a pattern matching nothing is a failure |
+| [The decisions live where a test can reach them](#the-decisions-live-where-a-test-can-reach-them) | why `view-model.js` exists: if getting it wrong renders happily, it is a decision |
+| [The accessibility check](#the-accessibility-check-and-the-four-things-it-found) | axe-core over both pages and themes; why `opacity` is not a way to quieten a colour; `--faint` |
+| [What the layout test proves](#what-the-layout-test-proves) | every assertion `npm run verify` makes, and which of them exist because the failure is silent |
+
+**File map**
+
+| Section | Answers |
+| --- | --- |
+| [How it works](#how-it-works) | every file in the repository and what it owns; the CSP on both pages |
+
+**The published data and the search**
+
+| Section | Answers |
+| --- | --- |
+| [Why the data is published, not queried live](#why-the-data-is-published-not-queried-live) | Spellbook's `CORS_ALLOWED_ORIGIN_REGEXES`; the `data` branch as a build artifact |
+| [The two fields that repeat are published once each](#the-two-fields-that-repeat-are-published-once-each) | interning `c`/`p` into `names`/`results`; why `decode()` shares string objects rather than teaching call sites integers |
+| [The combo id is not published, because it is derivable](#the-combo-id-is-not-published-because-it-is-derivable) | `cardIds`, `rebuildId()`, and why a row that does not rebuild exactly keeps its literal id |
+| [The fixture is authored readably and served published](#the-fixture-is-authored-readably-and-served-published) | `asPublished()`; the `tiers.html` outage that proved the gap |
+| [The shell offline](#the-shell-offline-and-why-the-html-is-the-one-thing-not-cached-first) | `sw.js`: network-first HTML, cache-first for stamped URLs only; the hand-written precache exception |
+| [Downloading the database once, not once a visit](#downloading-the-database-once-not-once-a-visit) | Cache Storage, `If-None-Match`, dropping abandoned `CACHE_NAME`s, and why nothing ever awaits the cache |
+| [The search runs beside the page, not in it](#the-search-runs-beside-the-page-not-in-it) | `search-worker.js` and the in-page fallback |
+| [What the search cost, in the footer](#what-the-search-cost-in-the-footer) | the download/parse/match line, and the two designs its first reading killed |
+| [Colours come from the cards, not from a commander](#colours-come-from-the-cards-not-from-a-commander) | why commander detection was deleted |
+| [Use the bulk export, never the paged API](#use-the-bulk-export-never-the-paged-api) | the streaming scanner; the cumulative quota that makes paging fail |
+| [The publish is gated on yesterday's snapshot](#the-publish-is-gated-on-yesterdays-snapshot) | `check-snapshot.js`, the 10% fall, `allow_shrink`, and what it deliberately does not do |
+| [Colour identity comes from Scryfall](#colour-identity-comes-from-scryfall) | the oracle bulk pass; why tokens must not be published |
+| [Telling the reader which cards were not recognised](#telling-the-reader-which-cards-were-not-recognised) | `unrecognizedCards()`; `tooMuchOfTheDeck()` — a thin map must produce silence |
+| [Testing the publisher against a fixture](#testing-the-publisher-against-a-fixture) | `--fixture`; why `test/fixtures/export.json` is deliberately not a happy path |
+| [API contract notes](#api-contract-notes) | camelCase on the wire; `uses[].card.name`, `produces[].feature.name` |
+| [Known gaps in the published data](#known-gaps-in-the-published-data) | why a card appears in fewer combos than its functional twin |
+
+**Unofficial combos** — `unofficial.js`
+
+| Section | Answers |
+| --- | --- |
+| [Unofficial combos: the page's own second opinion](#unofficial-combos-the-pages-own-second-opinion) | what the file is and where its rows are drawn |
+| [The row says whose it is](#the-row-says-whose-it-is-so-the-list-does-not-have-to) | the `unofficial` pin before the confidence pin; why the merged list has no heading |
+| [One shape, sixteen rows: Kitchen Finks and Heroic Feast](#one-shape-sixteen-rows-kitchen-finks-and-heroic-feast) | a worked family, and why it is rows rather than a stand-in rule; `swaps: [...]` two steps deep |
+| [The lifegain families](#the-lifegain-families-thirty-six-rows) | the five shapes one deck's lifegain loops exposed, and the rule-outs |
+| [What this cannot find: a card Spellbook has never used](#what-this-cannot-find-a-card-spellbook-has-never-used) | the method's blind spot, worked through Hammerhead |
+| [Reading a card when Scryfall is unreachable](#reading-a-card-when-scryfall-is-unreachable) | the source order — `card-text.json`, then Scryfall, then Forge; the Forge slug rule; `verdict()` |
+| [A cache a runner filled](#and-now-a-third-source-ahead-of-both-a-cache-a-runner-filled) | why the cache outranks a live fetch; why nothing hand-writes into `card-text.json` |
+| [What the file-per-card shape is good for](#and-the-thing-the-file-per-card-shape-turns-out-to-be-good-for) | enumerating a slot from Forge's cost lines instead of sampling it |
+| [One card, 1,889 combos](#one-card-1889-combos-why-this-one-is-a-rule-and-not-rows) | `STAND_INS` and `standInRows()`; what a rule deliberately does not reach; why names stayed the key |
+| [Why it is a separate panel and not a badge](#why-it-is-a-separate-panel-and-not-a-badge) | why these rows stay out of the combo count and the bracket check |
+| [A combo heading is a list of cards](#a-combo-heading-is-a-list-of-cards-so-it-breaks-between-them) | flex items per card, `flex: 0 0 auto`, the `::before` separator, the pill's inner element |
+| [Where the second number goes](#where-the-second-number-goes-and-why-it-is-a-second-number) | the number gutter, the `official · unofficial` split, **and the `border-left` divider down the card's column** |
+| [The card's links share its name's line where the row is wide](#the-cards-links-share-its-names-line-where-the-row-is-wide-and-that-threshold-is-not-the-splits) | why that threshold is 750px of column and the split's is 560px |
+| [Matching the unofficial rows costs one pass](#matching-the-unofficial-rows-costs-one-pass-however-many-rules-there-are) | one index, one walk, whatever the rule count; the `identityIndex()` memoisation |
+| [What each row has to carry](#what-each-row-has-to-carry) | `verified` vs `derived`; what `test/unofficial.test.js` enforces |
+| [They graduate rather than accumulate](#they-graduate-rather-than-accumulate) | `matchUnofficial()` dropping published rows; the standing issue the nightly job maintains |
+| [What the file costs](#what-the-file-costs-and-the-size-at-which-it-stops-being-source) | the gzipped size at which `COMBOS` moves to the `data` branch, and what that would cost |
+| [The audit, and what it ruled out](#the-audit-and-what-it-ruled-out) | the substitution method, the rule-outs, `research-log.js`, and why a provisional zero is the most dangerous entry it can hold |
+
+**Deck import, and what a browser may read**
+
+| Section | Answers |
+| --- | --- |
+| [Data-source research](#data-source-research-why-commander-spellbook-only) | why Commander Spellbook is the only combo database |
+| [Why Moxfield URLs can't be loaded](#why-moxfield-urls-cant-be-loaded) | their access policy, and why a CORS proxy is refused |
+| [Getting a deck in from a site we can't read](#getting-a-deck-in-from-a-site-we-cant-read) | drop and pick; `acceptDeckFile()`, `looksLikeText()`, how a refusal is worded |
+| [Whether another site could be a URL](#whether-another-site-could-be-a-url-and-how-that-gets-decided) | `tools/probe-cors.js`, the controls it carries, and the answers it got |
+| [Archidekt may no longer be readable either](#archidekt-may-no-longer-be-readable-either) | the control that failed, and how to settle it |
+
+**Running things, and shipping them**
+
+| Section | Answers |
+| --- | --- |
+| [Commands](#commands) | every command, with what it costs and what it is for |
+| [Answering questions from the data](#answering-questions-from-the-data) | the read-only tools — `try-deck`, `combos-with`, `template-users`, `lookup-card`, `substitution-scope`, `deck-cards`, `deck-gaps` |
+| [What a tool says about itself is not exempt](#what-a-tool-says-about-itself-is-not-exempt) | two tools that reported confidently wrong summaries, and where those decisions live now |
+| [Branching strategy](#branching-strategy) | trunk-based flow, the `main` ruleset, and the two rules deliberately left off it |
+| [A fresh session's `main` is realigned](#a-fresh-sessions-main-is-realigned-before-anything-reads-it) | the `SessionStart` hook, and the fossil `main` that made it necessary |
+| [Deploying](#deploying) | `deploy.yml`, asset stamping, and the action versions |
+| [The footer says which build it is](#the-footer-says-which-build-it-is-and-when-that-build-arrived) | why deploy time and not commit time; the guards on both markers; `DEPLOYED_BUILD_LINE` |
+| [And the deploy reads it back off the live page](#and-the-deploy-reads-it-back-off-the-live-page) | why a green `deploy-pages` was not proof, and what replaced it |
+
 ## Features
 
 - **Combos in your deck** — every known combo your current 99 (or 60) can already pull off,
@@ -395,6 +574,10 @@ family it belongs to rather than wherever a second sort would put it.
 
 #### The unofficial panel was sorted on nothing at all
 
+**Current rule: `variantCardNames()` takes a combo in either shape, and every ordering
+caller goes through it.** Never work around the shape at a call site — that workaround is
+what hid the bug below for as long as it hid.
+
 For a while it only *said* it ordered all three. The unofficial panel shipped in the order
 its rows happen to sit in `unofficial.js`, and the reason is worth writing down because
 nothing about it looked wrong.
@@ -662,8 +845,10 @@ left over.
 
 #### The fold was taken out once, and put back
 
-Worth recording, because the version of this section that argued for removing it was on
-`main` for about an hour and read as settled.
+**Current rule: the fold is in and `COLLAPSE_FROM` stands.** The argument below is the one
+that lost, kept because it was good enough to ship and the measurement that beat it is the
+reason the rule is what it is. Worth recording, because the version of this section that
+argued for removing it was on `main` for about an hour and read as settled.
 
 The argument was the one above, one step further: a folded row prints every choice card on
 the line under its heading, so it hides nothing, and it cannot carry a Spellbook link or a
@@ -934,6 +1119,11 @@ Four rules, all of them about not overclaiming:
   start claiming combos.
 
 ### The panel that could not answer its own question
+
+**Current rule: there are four result panels, and a combo whose slot the deck cannot fill
+appears nowhere at all.** Template slots themselves are untouched — a *filled* slot still
+renders and still counts as a card. The section below is the record of removing the fifth
+panel, and it reverses what this section used to argue for.
 
 There used to be a fifth panel here, **One slot away**: combos the deck held every named
 card for and could not assemble because nothing in it filled their slot. It is gone, and
@@ -1965,14 +2155,17 @@ This README states real counts, and CLAUDE.md has long carried a note asking peo
 to remember that when they change a data file. `npm run check:readme` is that note,
 mechanised, and CI runs it.
 
-Seven claims, each anchored on a phrase in the prose and compared to the file it
-describes:
+Each claim is anchored on a phrase in the prose and compared to the file it describes.
+**No count of the claims is written here on purpose** — it would be an unchecked number in
+the one section about unchecked numbers, and it had already drifted once, reading *seven*
+against a checker that ran eight. `npm run check:readme` prints the list and the total.
 
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
 | `All 398 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
+| `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
 | `Cards in the file \| 21,769 \| **12,472**` | `templates.json` |
@@ -3146,6 +3339,13 @@ Golgari deck can actually run, and had no way of being told about.
 
 ### Reading a card when Scryfall is unreachable
 
+**Current rule: `tools/lookup-card.js` asks three sources in this order — the committed
+`card-text.json` cache, then Scryfall live, then Forge's card scripts — and says which one
+answered.** The two-source version below is the earlier state; the cache went in front of
+both afterwards, and [why that ordering is the whole
+design](#and-now-a-third-source-ahead-of-both-a-cache-a-runner-filled) is the subsection
+after this one. Only a Forge answer carries a banner.
+
 "Read the card" assumes a network that will serve you the card, and that assumption
 failed on 3 Aug 2026: an agent sandbox with an egress proxy allowlisting
 `raw.githubusercontent.com` got `CONNECT tunnel failed, response 403` for
@@ -4123,10 +4323,9 @@ six existing rows covered three sacrifice outlets and left the rest of Sadistic 
 untouched. Nine of the Rosie rows and twelve of the Necrosynthesis ones were read against
 the cards; the remaining 23 are `derived`.
 
-**A high substitution score is never a verdict.** Two cards filling the same slot in
-1,384 other contexts says they are interchangeable *somewhere*, not here. Whether a
-substitution holds is a question about the cards, and this database cannot answer it
-either way — which is exactly why the panel prints its confidence rather than hiding it.
+**A high substitution score is never a verdict** — the worked example is under
+[Known gaps in the published data](#known-gaps-in-the-published-data) and is not repeated
+here. Which is exactly why the panel prints its confidence rather than hiding it.
 
 **Reporting upstream is still the better fix.** When Spellbook adds a variant the next
 daily snapshot picks it up, and the row here graduates on its own.
@@ -4289,16 +4488,10 @@ npm run verify:unofficial
 
 # Layout smoke test — REQUIRED after any UI change. Renders the real page at
 # 390/768/1440/1920 px and fails on horizontal overflow, a collapse control that
-# doesn't collapse, or the desktop columns not splitting. Also asserts the
-# behaviour that is invisible when it breaks: the kept copy of the database
-# being used on the second load, the decklist surviving a search, Clear
-# actually clearing, the share link's whole round trip, the same output with
-# Worker taken away, "+ Add to deck" leaving the deck with more combos than it
-# had, the bracket pips and the explanation behind them, the theme toggle
-# overriding the system and being remembered, the Scryfall comparison link
-# naming every card in a choice, and the combo map drawing a readable graph that
-# grows when a card is added — and that the search really did run where it was
-# supposed to. See "What the layout test proves" below.
+# doesn't collapse, or the desktop columns not splitting. Most of what it asserts
+# is behaviour that is invisible when it breaks — a map with every node at one
+# point is valid SVG and an empty panel. Every assertion is enumerated under
+# "What the layout test proves" above rather than restated here.
 npm run verify
 
 # Browser tests — the same pages driven rather than measured, at a desktop and a

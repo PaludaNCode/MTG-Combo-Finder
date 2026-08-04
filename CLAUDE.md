@@ -1,9 +1,14 @@
 # CLAUDE.md
 
-Operating notes for Claude Code here. **The README is the reference** — ~4,600 lines, kept
+Operating notes for Claude Code here. **The README is the reference** — ~4,900 lines, kept
 current, holding the *why*, the measurements and the history behind every rule below. This file is
 the index: what to run, where things live, what fails silently. `README § X` means read that
 section before changing what it names.
+
+**Don't grep the README blind — read `README § How to read this file` first.** It carries
+*Find it fast*, a section-by-section table of what each one answers, and it names the sections
+whose opening argument is the one that was *reversed*; those state the current rule in bold
+before the history, and a partial read of one without it picks up the superseded rule.
 
 `→` introduces the check that catches the mistake. Every number is a measurement.
 
