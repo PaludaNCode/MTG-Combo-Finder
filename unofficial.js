@@ -9759,6 +9759,162 @@
       'Infinite +1/+1 counters on a creature',
     ],
   },
+
+    // ---- the outlet slot behind Camellia + Peregrin Took ------------------------
+    //
+    // Spellbook's own published steps for Camellia, the Seedmiser + Peregrin Took +
+    // Umbral Collar Zealot are four lines: activate the outlet by sacrificing a Food,
+    // Camellia answers the sacrifice with a 1/1 Squirrel, Peregrin Took's replacement
+    // puts an additional Food back alongside it, repeat. So the loop is Food-neutral
+    // and Squirrel-positive, and the *only* thing it asks of the third card is a free
+    // repeatable outlet that will eat one Food. The Zealot's surveil is never used.
+    //
+    // That makes the slot enumerable, and Spellbook enumerates it: seventeen outlets
+    // behind Peregrin Took, twenty-nine behind Ygra, Eater of All, which fills the same
+    // slot by making every other creature a Food. The six rows below are what the two
+    // lists disagree about plus what neither holds — see the research-log entry for the
+    // full sweep, including the eleven creature-only outlets that are behind Ygra and
+    // cannot be behind Took, because Took's Food is an artifact and they will not eat it.
+    //
+    // **These rows claim less than the combo they cite, on purpose.** Spellbook tags the
+    // Zealot version with "Infinite Food tokens", "Infinite card draw" and "Infinite
+    // death triggers"; none of the three survives the arithmetic. The Food count is flat
+    // — one spent, one returned — so Foods are created infinitely often but never
+    // accumulate, and Peregrin Took's own draw wants three of them at once. Nothing in
+    // the loop dies either: the Squirrels pile up untouched. What is left is the part
+    // that is actually unbounded, and it is still a win: the Squirrels.
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Bill the Pony'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5777-6798',
+        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Umbral Collar Zealot', in: 'Bill the Pony', inId: 1441 },
+      why: 'Bill the Pony reads "Sacrifice a Food:" where the Zealot reads "Sacrifice another '
+        + 'creature or artifact:", and a Food is what this loop feeds either of them — free, '
+        + 'repeatable, no tap. His rider targets a creature you control and he is one himself, '
+        + 'so there is always a legal target. Spellbook already publishes him as a free Food '
+        + 'outlet behind Camellia in the Ygra, Eater of All version of this slot (1441-5776-5777) '
+        + 'and simply does not list him behind Peregrin Took. He is also the one outlet here '
+        + 'that satisfies the combo’s own prerequisite: "when Bill the Pony enters, create '
+        + 'two Food tokens".',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Mushroom Watchdogs'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5777-6798',
+        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Umbral Collar Zealot', in: 'Mushroom Watchdogs', inId: 7627 },
+      why: 'Another free "Sacrifice a Food:", and like Bill the Pony already published behind '
+        + 'Camellia in the Ygra version of this slot (5776-5777-7627) but not behind Peregrin '
+        + 'Took. "Activate only as a sorcery" is the one difference from the Zealot and it does '
+        + 'not bound the loop, which runs as many times as you like in your own main phase with '
+        + 'an empty stack — it only means you cannot run it in response to removal. The counter '
+        + 'lands every lap, so the Dog is the second unbounded thing here.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Evereth, Viceroy of Plunder'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5777-6798',
+        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Umbral Collar Zealot', in: 'Evereth, Viceroy of Plunder', inId: 6495 },
+      why: 'Evereth is the Zealot’s cost word for word — "Sacrifice another creature or '
+        + 'artifact:" — so the Food he eats is the same Food, and he keeps the counter the '
+        + 'Zealot spends on surveil. Spellbook has him in exactly one combo, which is why no '
+        + 'score proposes him: the pairing came off reading the slot rather than off shared '
+        + 'shapes. Sorcery-speed only, on the same reasoning as Mushroom Watchdogs. His '
+        + 'Treasure clause never fires here and does not need to.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Rusted Slasher'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5777-6798',
+        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Umbral Collar Zealot', in: 'Rusted Slasher', inId: 1026 },
+      why: '"Sacrifice an artifact: Regenerate this creature." A Food is an artifact, the cost '
+        + 'is the whole cost, and regeneration shields stack harmlessly however many times you '
+        + 'do it — so the rider being useless is exactly what makes this a clean substitution '
+        + 'rather than a different combo. Spellbook publishes the same outlet in the Atog '
+        + 'shapes it belongs to and puts thirteen other free artifact-eaters behind Peregrin '
+        + 'Took; this one it missed. Colourless, so unlike every other row here it costs the '
+        + 'deck no colour it did not already need for Camellia.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Thermal Navigator'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5777-6798',
+        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Umbral Collar Zealot', in: 'Thermal Navigator', inId: 3721 },
+      why: '"Sacrifice an artifact: This creature gains flying until end of turn." The same '
+        + 'reading as Rusted Slasher and the same conclusion: free, repeatable, eats the Food, '
+        + 'and a rider that is redundant after the first activation and therefore cannot break '
+        + 'the loop. Also colourless. Both it and Rusted Slasher sit in the data only in Emry, '
+        + 'Lurker of the Loch shapes, which is why the substitution score never proposed either '
+        + '— they share no shape with any outlet Spellbook put behind Peregrin Took.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Oxidda Daredevil'],
+      confidence: 'verified',
+      from: {
+        id: '4321-5777-6798',
+        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Umbral Collar Zealot', in: 'Oxidda Daredevil', inId: 7369 },
+      why: '"Sacrifice an artifact: This creature gains haste until end of turn." Free, '
+        + 'repeatable, and the Food is an artifact. The haste is redundant on the second lap '
+        + 'and irrelevant on the first, which is the point: nothing about the rider gates the '
+        + 'sacrifice. Worth having anyway, because "Infinite creature tokens" wants haste from '
+        + 'somewhere to be lethal this turn and the Daredevil is not the card that gives it — '
+        + 'the Squirrels enter without it, so this row is a win the turn after, like the '
+        + 'thirteen artifact-eaters Spellbook does list.',
+      produces: [
+        'Infinite creature tokens',
+        'Infinite ETB',
+        'Infinite LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

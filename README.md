@@ -1907,7 +1907,7 @@ describes:
 | claim | counted from |
 | --- | --- |
 | `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 392 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 398 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
 | `**134** (14 skipped)` | `templates.json` |
@@ -3214,6 +3214,36 @@ off as Scryfall's, and a refused network reported as a typo.
 slug that reaches nothing is indistinguishable from a card Forge does not have, so
 without those the fallback could rot into uselessness in silence.
 
+#### And the thing the file-per-card shape turns out to be good for
+
+Forge being *files* rather than an API has a consequence nothing above uses: the whole
+snapshot fetches at once. All 7,365 distinct card names in the published data resolve in
+**72 seconds at twelve concurrent requests**, 7,306 of them answered. That is cheap enough
+to stop choosing which cards to read.
+
+Which changes what a sweep can claim. Every pass in `research-log.js` before 4 Aug 2026 read
+a handful of cards somebody picked — and the README's own warning above is that a pass is
+only ever "nothing remains open *of the ones that were asked about*". Given every card's
+text, a slot can be enumerated instead of sampled, because Forge's cost line is structured:
+
+```
+A:AB$ Surveil | Cost$ Sac<1/Creature.Other;Artifact.Other/another creature or artifact> | Amount$ 1
+```
+
+Asking which cards have an activated ability whose *entire* cost is one sacrifice — no mana,
+no tap, no life — is a grep over that, and it answers **174** across the snapshot. Narrowing
+to the ones a Food is a legal cost for leaves **23**. That is the free-sacrifice-outlet slot,
+completely, and the Camellia + Peregrin Took pass closed against it with no residue: 14 of
+the 23 were already published behind Took, 1 is Jungle Patrol's Wood-only clause, 3 of
+Spellbook's 17 work by a different mechanism entirely, and the remaining 6 became rows.
+
+**The filter proposes; it does not decide.** Two of the eight it turned up died on reading,
+and both died in the *effect* column where no cost filter can see: Krark-Clan Shaman's
+"1 damage to each creature without flying" kills the 1/1 Shaman on the first lap, and
+Cauldron Familiar's free Food sacrifice is activated from the graveyard and so fires once
+per trip there. This does not replace reading the card. It replaces guessing which cards to
+read, which is the step that was quietly bounding every pass in the log.
+
 ### One card, 1,889 combos: why this one is a rule and not rows
 
 Four rows can be written by hand. Nearly nineteen hundred cannot, and a file with
@@ -3704,7 +3734,7 @@ the checking actually went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 392 hand-written rows cite a published combo. 367 of them and the three stand-in rules
+All 398 hand-written rows cite a published combo. 373 of them and the three stand-in rules
 are `verified`; the other 25 are `derived`, which is what that label was being kept for.
 They came from the whole-file sweep below rather than from a question about one card,
 and every one of them is a loop whose two halves Spellbook publishes separately without
@@ -3894,8 +3924,8 @@ the same method at every card in the database instead of at one. At the strict b
 **1,779 interchangeable pairs implying 4,835 combos Spellbook has not published**. Loosen
 it to 0.80 and it is 3,106 pairs and 31,017 combos. Those are candidates, not owed rows,
 and the paragraph below is why: the pairs that dominate the total are sacrifice outlets,
-which is exactly where the method is least trustworthy. But **855 candidates have been
-read, out of thousands proposed** — and which 855 is no longer a matter of reading the
+which is exactly where the method is least trustworthy. But **874 candidates have been
+read, out of thousands proposed** — and which 874 is no longer a matter of reading the
 prose above: `research-log.js` records every pass, the cards it covered, and why each
 rule-out was a rule-out. It is the index this section spent its whole existence not
 having. `node tools/substitution-scope.js` prints the other half from it — the cards
