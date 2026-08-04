@@ -9960,7 +9960,7 @@
     // out of card-text.json.
     {
       cards: ['Light of Promise', 'Scurry Oak', 'Aunt May'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2919-4186-6823',
         cards: ['Archangel of Thune', 'Scurry Oak', 'Aunt May'],
@@ -9971,7 +9971,7 @@
     },
     {
       cards: ['Light of Promise', 'Herd Baloth', 'Aunt May'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2919-3197-6823',
         cards: ['Archangel of Thune', 'Herd Baloth', 'Aunt May'],
@@ -9982,7 +9982,7 @@
     },
     {
       cards: ['Light of Promise', 'Basking Broodscale', 'Aunt May'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '5641-6823-7743',
         cards: ['Heroic Feast', 'Basking Broodscale', 'Aunt May'],
@@ -9993,7 +9993,7 @@
     },
     {
       cards: ['Light of Promise', 'Scurry Oak', 'Virulent Emissary'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '4186-7173-7743',
         cards: ['Heroic Feast', 'Scurry Oak', 'Virulent Emissary'],
@@ -10004,7 +10004,7 @@
     },
     {
       cards: ['Light of Promise', 'Herd Baloth', 'Virulent Emissary'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '3197-7173-7743',
         cards: ['Heroic Feast', 'Herd Baloth', 'Virulent Emissary'],
@@ -10111,6 +10111,468 @@
       swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
       why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
       produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+
+    // ---- the two lifegain-on-entry cards that read "you control" ----------------
+    //
+    // Asked because a reader said Virulent Emissary and Aunt May are in far fewer combos
+    // than Essence Warden, and they are: 54 and 82 against Essence Warden's 121 and Soul
+    // Warden's 149. The whole of the difference is one clause.
+    //
+    //   Essence Warden / Soul Warden   "Whenever another creature enters, you gain 1 life."
+    //   Virulent Emissary / Aunt May   "Whenever another creature YOU CONTROL enters,
+    //                                   you gain 1 life."
+    //
+    // The Wardens also see an opponent's creature enter. A combo loop does not care: every
+    // creature these loops put onto the battlefield is one of yours — your Soldiers off
+    // Darien, your Squirrels off Scurry Oak, your Eldrazi Spawn off Basking Broodscale,
+    // your Citizens off Stimulus Package, your Insects off The Locust God. So the narrower
+    // trigger sees all of them and the loop runs at the same rate, which is why the swap
+    // holds across 39 shapes rather than a handful.
+    //
+    // Aunt May's second line ("If it's a Spider, put a +1/+1 counter on it") and Virulent
+    // Emissary's deathtouch are riders that no loop here touches. Nothing in these rows
+    // rests on either.
+    //
+    // Every card in every row was read: 27 partners out of card-text.json, the two subjects
+    // and seven more pasted in from Scryfall by the reader who asked, because every Scryfall
+    // host is refused at CONNECT from this sandbox and the Cache card text workflow had not
+    // landed. That is why these are `verified` and the Light of Promise rows above were not.
+    //
+    // FIVE SHAPES WERE LEFT OPEN rather than written: Enduring Renewal + Warren Soultrader,
+    // Ratchet + Sculpting Steel, and Scurry Oak + Yawgmoth. Each is a published Warden combo
+    // whose loop does not follow from the three cards' text alone — Enduring Renewal needs
+    // something free to recast, Ratchet needs its copy back in the graveyard, and Yawgmoth
+    // puts -1/-1 counters where Scurry Oak wants +1/+1. A loop nobody has traced is not a
+    // row. research-log.js names them.
+    {
+      cards: ['Virulent Emissary', 'Scurry Oak', 'Spider-Man, Peter Parker'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4186-6824',
+        cards: ['Essence Warden', 'Scurry Oak', 'Spider-Man, Peter Parker'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Herd Baloth', 'Spider-Man, Peter Parker'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3197-6824',
+        cards: ['Essence Warden', 'Herd Baloth', 'Spider-Man, Peter Parker'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Sunbond', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4017-4186',
+        cards: ['Essence Warden', 'Sunbond', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Herd Baloth', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3197-4017',
+        cards: ['Essence Warden', 'Herd Baloth', 'Sunbond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Cleric Class', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-4186',
+        cards: ['Essence Warden', 'Cleric Class', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Cleric Class', 'Herd Baloth'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-3197',
+        cards: ['Essence Warden', 'Cleric Class', 'Herd Baloth'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Lurking Roper', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '859-2741-4702',
+        cards: ['Essence Warden', 'Lurking Roper', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Trudge Garden', 'Mana Echoes'],
+      confidence: 'verified',
+      from: {
+        id: '2308-2440-2741',
+        cards: ['Essence Warden', 'Trudge Garden', 'Mana Echoes'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite colorless mana', 'Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Lurking Roper', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-859-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Lurking Roper', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '859-1424-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Famished Paladin', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Famished Paladin', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '1424-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Famished Paladin', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3957-4702',
+        cards: ['Essence Warden', 'Famished Paladin', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Essence Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Pandemonium'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Pandemonium'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
+      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Sunbond', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4017-4186',
+        cards: ['Essence Warden', 'Sunbond', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Herd Baloth', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3197-4017',
+        cards: ['Essence Warden', 'Herd Baloth', 'Sunbond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Basking Broodscale', 'Sunbond'],
+      confidence: 'verified',
+      from: {
+        id: '2741-4017-5641',
+        cards: ['Essence Warden', 'Basking Broodscale', 'Sunbond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana'],
+    },
+    {
+      cards: ['Aunt May', 'Cleric Class', 'Scurry Oak'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-4186',
+        cards: ['Essence Warden', 'Cleric Class', 'Scurry Oak'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Cleric Class', 'Herd Baloth'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-3197',
+        cards: ['Essence Warden', 'Cleric Class', 'Herd Baloth'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Aunt May', 'Basking Broodscale', 'Cleric Class'],
+      confidence: 'verified',
+      from: {
+        id: '104-2741-5641',
+        cards: ['Essence Warden', 'Basking Broodscale', 'Cleric Class'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature', 'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana'],
+    },
+    {
+      cards: ['Aunt May', 'Stimulus Package', 'Warren Soultrader'],
+      confidence: 'verified',
+      from: {
+        id: '397-2741-5670',
+        cards: ['Essence Warden', 'Stimulus Package', 'Warren Soultrader'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Basking Broodscale', 'Valentin, Dean of the Vein // Lisette, Dean of the Root'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3097-5641',
+        cards: ['Essence Warden', 'Basking Broodscale', 'Valentin, Dean of the Vein // Lisette, Dean of the Root'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite LTB', 'Infinite ETB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite +1/+1 counters on creatures you control'],
+    },
+    {
+      cards: ['Aunt May', 'Yawgmoth, Thran Physician', 'The Locust God'],
+      confidence: 'verified',
+      from: {
+        id: '1339-2741-4279',
+        cards: ['Essence Warden', 'Yawgmoth, Thran Physician', 'The Locust God'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite card draw', 'Near-infinite lifegain triggers', 'Near-infinite ETB', 'Infinite draw triggers', 'Near-infinite LTB', 'Near-infinite death triggers', 'Near-infinite sacrifice triggers', 'Near-infinite -1/-1 counters'],
+    },
+    {
+      cards: ['Aunt May', 'Lurking Roper', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '859-2741-4702',
+        cards: ['Essence Warden', 'Lurking Roper', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Trudge Garden', 'Mana Echoes'],
+      confidence: 'verified',
+      from: {
+        id: '2308-2440-2741',
+        cards: ['Essence Warden', 'Trudge Garden', 'Mana Echoes'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite colorless mana', 'Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Lurking Roper', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-859-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Lurking Roper', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '859-1424-2741',
+        cards: ['Essence Warden', 'Lurking Roper', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Famished Paladin', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Elemental Mastery'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Famished Paladin', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '1424-2741-3957',
+        cards: ['Essence Warden', 'Famished Paladin', 'Presence of Gond'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Famished Paladin', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '2741-3957-4702',
+        cards: ['Essence Warden', 'Famished Paladin', 'Splinter Twin'],
+      },
+      swap: { out: 'Essence Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Essence Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Pandemonium'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Pandemonium'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
+      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
+      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
     },
   ];
 
