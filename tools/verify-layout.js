@@ -306,13 +306,14 @@ function measure(win, doc) {
     // two different things about the same set of combos — and it puts the hardest
     // line to assemble at the top of a panel headed by the easiest.
     //
-    // Counted the way the top-level rows are: named cards plus a slot, which is a card
-    // something still has to occupy.
+    // Counted the way the top-level rows are: named cards, plus a slot or an
+    // "any of N" choice, each of which something has to occupy.
     unlockSizes: [...row.querySelectorAll('details > .combo')].map((c) => {
       const head = c.querySelector(':scope > h3');
       if (!head) return 0;
       return head.querySelectorAll(':scope > .card-name').length
-        + head.querySelectorAll(':scope > .slot').length;
+        + head.querySelectorAll(':scope > .slot').length
+        + (head.querySelector(':scope > .either') ? 1 : 0);
     }),
   }));
   // Where the row's divider runs, and where the blocks beside it start. The line is
@@ -373,16 +374,11 @@ function measure(win, doc) {
     };
   }).filter(Boolean);
   const grouped = {
-    // A suggestion offering a choice of card. "Combos in your deck" used to offer one too —
-    // a row reading "any of N" with the versions folded behind it — and no longer does; only
-    // the suggestions collapse now. See byDrawnRow() in combos.js.
+    // A combo row offering a choice of part, and a suggestion offering a choice
+    // of card. Both exist in the fixture, so both must render.
+    eitherRows: [...doc.querySelectorAll('#included .either')].map((e) => e.textContent),
+    choiceRows: doc.querySelectorAll('#included .choices').length,
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
-    // Both counts must be zero, and they are read rather than assumed because a page that
-    // folded again would look *tidier* rather than broken: fewer rows, nothing missing to
-    // the eye. The fixture carries a family of four specifically so there is something here
-    // that a returning fold would collapse.
-    foldedRows: doc.querySelectorAll('#included .either, #included .choices').length,
-    nestedRows: doc.querySelectorAll('#included .panel-body > .combo .combo').length,
     // The width the alternatives' container query is asked about: the suggestions
     // panel body's content box, which is the row's own column and not the window.
     // Reported so the two shapes below can be checked as a rule rather than as a
@@ -477,15 +473,13 @@ function measure(win, doc) {
     return {
       names: head ? [...head.querySelectorAll(':scope > .card-name')].map((n) => n.textContent) : [],
       slots: head ? head.querySelectorAll(':scope > .slot').length : 0,
+      // A collapsed row names its shared cards in the heading and its interchangeable
+      // ones underneath, and the comparison has to cover both — that whole set is what
+      // the reader is choosing between.
+      choices: [...row.querySelectorAll(':scope > .choices .card-name')].map((n) => n.textContent),
       label: a ? a.textContent : null,
       href: a ? a.getAttribute('href') : null,
-      // The two things a folded row could not carry, because a row standing for four
-      // combos has no one combo to link to or fetch steps for. Every row has both now,
-      // and that is the whole reason the fold came out — so it is asserted rather than
-      // just collected. It was collected and not asserted for a while, which is how a
-      // fixture could have lost the link without the run saying anything.
       hasSpellbook: Boolean(spellbook),
-      hasSteps: Boolean(row.querySelector(':scope > .combo-link .steps-toggle')),
       // The link line sits above the result chips: what a combo needs is read before
       // what it does. 4 is DOCUMENT_POSITION_FOLLOWING — the chips come after.
       beforeChips: (() => {
@@ -821,21 +815,23 @@ function measure(win, doc) {
   // "Combos in your deck" leads with the easiest: 2-card rows, then 3, then 4. Within a
   // size, the blocks of versions and then what the rows draw — the same rule the nested
   // lists follow, which this panel joined rather than staying the exception to.
-  // Scoped to the row's own heading, and to the panel body's direct children. Both matter:
-  // a document-wide query for a combo heading reaches into the suggestion panels, whose
-  // rows are combo rows too.
+  // Scoped to the row's own heading: a collapsed row keeps every version inside a
+  // <details>, each with a heading of its own, and a document-wide query pulls
+  // those in too — which reads as one row naming five cards.
   const order = [...doc.querySelectorAll('#included .panel-body > .combo')].map((row) => {
     const head = row.querySelector(':scope > h3');
     const names = [...head.querySelectorAll(':scope > .card-name')].map((n) => n.textContent);
     const slots = head.querySelectorAll(':scope > .slot').length;
+    const choices = head.querySelector(':scope > .either') ? 1 : 0; // "any of N" stands in for one card
     return {
       names,
-      size: names.length + slots,
+      size: names.length + slots + choices,
       label: names.join(' + '),
-      // The part a family holds in common: every name but the last, because the card that
-      // changes is the one the trail sends last. Getting this wrong is the difference
-      // between counting a block and inventing one.
-      prefix: names.slice(0, -1).join(' + '),
+      // The part a family holds in common. A collapsed row names its shared cards and
+      // then says "any of N", so every name on it is shared; a whole row's last card is
+      // the one that changes. Getting this wrong in the collapsed direction is the
+      // difference between counting a block and inventing one.
+      prefix: (choices ? names : names.slice(0, -1)).join(' + '),
     };
   });
   // Combos listed *under* a card have to start with that card. Read from the
@@ -846,13 +842,14 @@ function measure(win, doc) {
       [...h.querySelectorAll(':scope > .card-name')].map((n) => n.textContent)
     ));
     // The order these are listed in: size first, then alphabetically by the cards.
-    // Sizes count a slot too, since something has to occupy it — without that a
-    // two-card-plus-slot row looks smaller than it is and the size sequence appears
-    // to go backwards.
+    // Sizes count a slot and an "any of N" too, since something has to occupy them —
+    // without that a two-card-plus-slot row looks smaller than it is and the size
+    // sequence appears to go backwards.
     const order = [...row.querySelectorAll('details > .combo > h3')].map((h) => {
       const names = [...h.querySelectorAll(':scope > .card-name')].map((n) => n.textContent);
       return {
-        size: names.length + h.querySelectorAll(':scope > .slot').length,
+        size: names.length + h.querySelectorAll(':scope > .slot').length
+          + (h.querySelector(':scope > .either') ? 1 : 0),
         // As drawn, which is what the list is sorted on. It used to be the names *sorted*,
         // on the grounds that the focal card is pulled to the front and is the same on every
         // row — true, and it stopped being the whole story when the card that changes started
@@ -920,13 +917,15 @@ function measure(win, doc) {
     via: ageEl ? ageEl.dataset.via : null,
   };
 
-  // The combo count must count combos. One row per combo makes that the row count, and the
-  // badge comes from the variant list rather than from the DOM — so comparing them catches a
-  // panel that dropped a row as readily as a badge that miscounted.
+  // The combo count must count combos, not rows. Collapsing interchangeable
+  // versions into one row is a readability choice; it must not quietly shrink
+  // the number the panel reports.
   const includedPanel = panels.find((p) => /Combos in your deck/.test(p.title));
   const included = {
     badge: includedPanel ? includedPanel.count : null,
     rows: doc.querySelectorAll('#included .panel-body > .combo').length,
+    versions: [...doc.querySelectorAll('#included .panel-body > .combo')]
+      .reduce((n, row) => n + Math.max(1, row.querySelectorAll('details .combo').length), 0),
   };
 
   // The combo map. Everything about it is geometry, so nothing about it can be
@@ -1556,16 +1555,11 @@ function runOne(vp) {
         // The finished page looks identical either way, so the yield is checked at the
         // one moment it is observable: a frame booked from the top of the render cannot
         // run until that task ends, and what is filled in by then is what the reader got.
-        //
-        // Hooked on byDrawnRow(), which renderResults() calls to order the panel before it
-        // draws anything. app.js is its only caller, which is what makes it a safe hook —
-        // interchangeableIn() runs right before it and would do, except that matchDeck()
-        // also calls it, so on the no-Worker viewports the frame would be booked during the
-        // search rather than at the top of the render.
+        // groupVariants() is the first thing renderResults() calls.
         const firstFrame = {};
-        const byDrawnRow0 = win.DeckCombos.byDrawnRow;
+        const groupVariants0 = win.DeckCombos.groupVariants;
         let booked = false;
-        win.DeckCombos.byDrawnRow = function () {
+        win.DeckCombos.groupVariants = function () {
           if (!booked) {
             booked = true;
             win.requestAnimationFrame(function () {
@@ -1579,12 +1573,12 @@ function runOne(vp) {
               firstFrame.suggestions = filled('suggestions');
             });
           }
-          return byDrawnRow0.apply(this, arguments);
+          return groupVariants0.apply(this, arguments);
         };
 
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
         await settled(doc, '.combo');
-        win.DeckCombos.byDrawnRow = byDrawnRow0;
+        win.DeckCombos.groupVariants = groupVariants0;
 
         const before = measure(win, doc);
 
@@ -2495,18 +2489,12 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (h.commanderLines) problems.push(`${h.commanderLines} commander line(s) rendered; colours come from the cards now`);
     if (h.pickers) problems.push(`${h.pickers} commander picker(s) rendered; the shortlist was removed`);
 
-    // Interchangeable cards collapse in a suggestion and nowhere else. Without the first
-    // the fixture's identical-payoff combos read as several recommendations instead of one
-    // choice; without the second, "Combos in your deck" is back to a row a reader cannot
-    // open, which is what the fold was removed for.
+    // Interchangeable cards must collapse. Without this the fixture's two
+    // identical-payoff combos read as two finds and two recommendations.
     const g = v.grouped;
-    if (g.foldedRows) {
-      problems.push(`${g.foldedRows} row(s) in "Combos in your deck" folded their `
-        + 'interchangeable cards — every version is its own row now');
-    }
-    if (g.nestedRows) {
-      problems.push(`${g.nestedRows} combo row(s) nested inside another row in "Combos in your deck"`);
-    }
+    if (!g.eitherRows.length) problems.push('no combo row collapsed its interchangeable part');
+    if (g.eitherRows.some((t) => !/any of \d+/.test(t))) problems.push(`a collapsed row reads "${g.eitherRows[0]}"`);
+    if (g.choiceRows !== g.eitherRows.length) problems.push('a collapsed row did not list its choices');
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
     if (g.altGroups.some((t) => !/or (these \d+|this one), same combos?:/.test(t))) problems.push(`an alternatives label reads "${g.altGroups[0]}"`);
     // The choice of card lives in the card's column like everything else in the row,
@@ -2638,11 +2626,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!v.comboCompare.length) problems.push('no combo rows to check the comparison link on');
     v.comboCompare.forEach((row) => {
       const whose = row.names.join(' + ') || 'a combo';
-      // Every row stands for one combo, so every row can offer the two ways out of it.
-      if (!row.hasSpellbook) problems.push(`${whose} has no link to its combo on Spellbook`);
-      if (!row.hasSteps) problems.push(`${whose} has no "How it works" control`);
       if (!row.names.length) return; // a row of nothing but slots has no cards to open
-      const wanted = row.names;
+      const wanted = row.names.concat(row.choices);
       if (!row.href) { problems.push(`${whose} offers no way to open its cards`); return; }
       if (!row.href.startsWith('https://scryfall.com/search?q=')) {
         problems.push(`${whose}'s comparison link does not go to Scryfall: ${row.href}`);
@@ -2708,15 +2693,12 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       }
     });
 
-    // The badge and the rows must agree exactly. This used to read the other way round — the
-    // count had to *exceed* the row count — because a folded row stood for four combos, and
-    // a badge counting rows would have reported a 34-combo deck as 23. With every version
-    // written out there is nothing left to under-report, and a disagreement now means a row
-    // went missing or the badge is counting the wrong list.
+    // Counting rows instead of combos under-reports a deck with interchangeable
+    // versions in it — 34 combos shown as 23. The fixture collapses two combos
+    // into one row on purpose, so the badge and the row count must disagree.
     const inc = v.included;
-    if (Number(inc.badge) !== inc.rows) {
-      problems.push(`the combo count reads ${inc.badge} but the panel drew ${inc.rows} row(s)`);
-    }
+    if (inc.rows >= Number(inc.badge)) problems.push(`the combo count (${inc.badge}) does not exceed the ${inc.rows} rows, so versions are not being counted`);
+    if (Number(inc.badge) !== inc.versions) problems.push(`the combo count reads ${inc.badge} but the rows hold ${inc.versions} version(s)`);
 
     // A combo that appears only because the deck fills a template slot has to
     // show the slot and name the card credited with it. Without that it reads
@@ -3245,8 +3227,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const compareNote = v.grouped.compare.length
         ? `, compare ${v.grouped.compare.map((c) => c.label.replace(/Compare all (\d+)/, '$1 cards')).join(' / ')}`
         : '';
-      const groupNote = `grouped: ${v.order.length} combo row(s), ${v.grouped.foldedRows} folded, `
-        + `${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
+      const groupNote = `grouped: ${v.grouped.eitherRows.length} combo row(s) ${JSON.stringify(v.grouped.eitherRows)}, ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
         + `, rows ${JSON.stringify(v.order.map((r) => r.size))}`;

@@ -106,6 +106,7 @@ async function main() {
   // ---- combos --------------------------------------------------------------
   const matched = DeckCombos.matchDeck(data, deckNames, allEntries);
   const included = matched.included.map(DeckCombos.expand);
+  const groups = DeckCombos.groupVariants(included);
   const counts = tierCounts(included);
 
   const identity = matched.identity ? [...matched.identity].join('') : '';
@@ -113,10 +114,7 @@ async function main() {
   say();
   say('## Combos in the deck');
   say();
-  // One row per combo, since the fold came out — so there is no second number here any
-  // more. It used to read "N combos in M rows", which was the count that mattered while
-  // a row could stand for four of them.
-  say(`**${included.length} combos** `
+  say(`**${included.length} combos** in ${groups.length} rows `
     + `— ${MARK.win} ${counts.win} win · ${MARK.decisive} ${counts.decisive} decisive · ${MARK.other} ${counts.other} other`);
   say();
 
@@ -176,8 +174,12 @@ async function main() {
 
   say('| # | combo | slot filled by | best result |');
   say('|---:|---|---|---|');
-  included.forEach((v, i) => {
-    const label = DeckCombos.variantCardNames(v).join(' + ');
+  groups.forEach((g, i) => {
+    const v = g.variants[0];
+    const names = DeckCombos.variantCardNames(v);
+    const label = g.choices && g.choices.length > 1
+      ? g.shared.join(' + ') + ` + any of ${g.choices.length}`
+      : names.join(' + ');
     const fills = (v.fills || []).map((f) => `${f.card} _(${f.slot})_`).join(', ');
     const best = bestResult(resultNames(v));
     say(`| ${i + 1} | ${label} | ${fills || '—'} | ${best ? MARK[best.tier] + ' ' + best.name : '—'} |`);
