@@ -1613,6 +1613,30 @@ async function runUnofficial(vp) {
           .filter(function (c) { return !c.querySelector('.derived-note'); }).length,
         // DOCUMENT_POSITION_FOLLOWING is 4.
         unofficialIsBelow: (order & 4) === 4,
+        // The two panels' opening sentences, which sit one above the other and have to
+        // read as a pair. The unofficial one used to be .empty -- a colour and nothing
+        // else -- so it ran the panel's whole width at 1rem while the note above it
+        // wrapped at 62ch of .92rem, and the difference said nothing. Measured rather
+        // than asserted by class name: the point is what a reader sees, and two classes
+        // could agree in the markup and still lay out differently.
+        //
+        // No backticks in here, deliberately: this whole function is inside the HARNESS
+        // template literal, and one in a comment ends it.
+        notes: (() => {
+          const box = (sel) => {
+            const p = doc.querySelector(sel);
+            if (!p) return null;
+            const r = p.getBoundingClientRect();
+            const cs = win.getComputedStyle(p);
+            return {
+              left: Math.round(r.left),
+              width: Math.round(r.width),
+              size: cs.fontSize,
+              colour: cs.color,
+            };
+          };
+          return { pieces: box('#pieces .panel-note'), unofficial: box('#unofficial .panel-note') };
+        })(),
         overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
@@ -2285,6 +2309,24 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!u.unofficialIsBelow) wrong.push('the unofficial panel is not below the published one');
       if (u.officialRows) wrong.push(`${u.officialRows} combos leaked into the published panel`);
       if (!u.officialEmpty) wrong.push('the published panel does not say it found nothing');
+      // The two panels' opening sentences, side by side down the page. Same left edge and
+      // same measure, or one of them reads as a different kind of thing than the other.
+      const n = u.notes || {};
+      if (!n.pieces) wrong.push('"Combos in your deck" has no opening sentence');
+      else if (!n.unofficial) wrong.push('the unofficial panel has no opening sentence');
+      else {
+        if (n.pieces.left !== n.unofficial.left) {
+          wrong.push(`the two panel notes start at different x (${n.pieces.left}px vs ${n.unofficial.left}px)`);
+        }
+        // A pixel of tolerance, not equality: 62ch resolves against each panel's own
+        // font metrics and the two need only agree to the eye.
+        if (Math.abs(n.pieces.width - n.unofficial.width) > 1) {
+          wrong.push(`the two panel notes are different widths (${n.pieces.width}px vs ${n.unofficial.width}px)`);
+        }
+        if (n.pieces.size !== n.unofficial.size) {
+          wrong.push(`the two panel notes are set at different sizes (${n.pieces.size} vs ${n.unofficial.size})`);
+        }
+      }
       // ...and it has to show its working, or it is just an assertion on screen.
       if (!['verified', 'derived'].includes(u.badge)) wrong.push(`no confidence badge: "${u.badge}"`);
       if (!(u.badgeClass || '').includes(u.badge)) wrong.push('the badge is not styled by its confidence');
@@ -2333,7 +2375,8 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
         console.log(`ok   ${v.name} — ${u.rows} row [${u.badge}] ${u.cards.join(' + ')}, `
-          + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty`);
+          + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty, `
+          + `both notes at x=${n.pieces.left}px × ${n.pieces.width}px ${n.pieces.size}`);
       }
       continue;
     }
