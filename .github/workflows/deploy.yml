@@ -95,3 +95,49 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v5
+
+      # Did the CDN actually serve it?
+      #
+      # `deploy-pages` succeeding means the artifact was accepted, not that anybody
+      # visiting the site gets it. Those are different claims, and only the second one is
+      # what "deployed" means to a reader. Pages' CDN caches by full URL and a deploy
+      # purges nothing, which is the whole reason the assets carry `?v=<sha>` — the HTML
+      # itself is the one thing that has to come back fresh, and until now nothing checked
+      # that it did.
+      #
+      # So the runner reads its own live page and looks for the SHA it stamped into the
+      # footer a few steps above. That is the same check a person does by eye, done by the
+      # one machine in this pipeline that can reach the site: `raw.githubusercontent.com`
+      # is the only host a sandboxed session can talk to, so this cannot be done from
+      # anywhere else, and a green job was standing in for it.
+      #
+      # Retried rather than checked once, because propagation is not instant and a first
+      # miss is normal. Twelve attempts, 10s apart — two minutes, against a deploy step
+      # that itself takes about one. A run that never sees the new SHA fails the deploy,
+      # which is the point: a deploy nobody is being served is not a deploy.
+      - name: Confirm the live page is serving this build
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          want="${GITHUB_SHA:0:7}"
+          url="${PAGE_URL:-https://paludancode.github.io/MTG-Combo-Finder/}"
+          echo "Looking for build ${want} at ${url}"
+          for attempt in $(seq 1 12); do
+            # Cache-busted per attempt: without it a CDN edge can answer every retry from
+            # the same stale entry and the loop measures nothing but its own patience.
+            body="$(curl -fsSL --max-time 20 "${url}?deploy-check=${want}-${attempt}" || true)"
+            if printf '%s' "$body" | grep -q "<code id=\"build\">${want}</code>"; then
+              served="$(printf '%s' "$body" \
+                | grep -oE '<code id="build">[^<]*</code>.*<span id="built">[^<]*' \
+                | head -1 || true)"
+              echo "Serving ${want} after ${attempt} attempt(s)."
+              echo "footer: ${served}"
+              echo "The live page is serving build \`${want}\`." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "attempt ${attempt}: not yet"
+            sleep 10
+          done
+          echo "::error::The live page never served build ${want}. deploy-pages reported success, so the artifact was accepted — what failed is the CDN serving it."
+          exit 1
