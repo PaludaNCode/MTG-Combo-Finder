@@ -3498,7 +3498,21 @@ function captionDrift(notes) {
       // Busier cards are drawn bigger, which is the only thing the sizes say.
       if (new Set(m.dots.map((d) => d.r)).size < 2) problems.push('every card on the map is the same size');
       if (m.labels.some((t) => !t)) problems.push('a card on the map is unlabelled');
-      if (m.titled.some((t) => !/ — in \d+ combos?$/.test(t))) problems.push('a card on the map has no hover text');
+      // Named, not just counted. This said only "a card on the map has no hover text",
+      // which reddened a CI run at 390px that six local runs could not reproduce — and
+      // left nothing to go on, because the one thing worth knowing is which card and what
+      // its title actually said. A check that cannot be diagnosed from its own message
+      // costs a run per guess.
+      const untitled = m.titled.filter((t) => !/ — in \d+ combos?$/.test(t));
+      if (untitled.length) {
+        problems.push(`${untitled.length} of ${m.titled.length} cards on the map have no `
+          + `hover text: ${JSON.stringify(untitled.slice(0, 3))}`);
+      }
+      // And that there is one per card. A title missing entirely is invisible to the test
+      // above, which only reads the titles that exist.
+      if (m.titled.length !== m.dots.length) {
+        problems.push(`the map drew ${m.dots.length} cards and ${m.titled.length} hover texts`);
+      }
       // And it scales with the column rather than overflowing it — the panel is
       // 760px wide by design and the phone viewport is 390.
       if (m.width > v.outWidth + 1) problems.push(`the map is ${m.width}px wide in a ${v.outWidth}px column`);
