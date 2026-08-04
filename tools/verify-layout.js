@@ -815,9 +815,15 @@ function measure(win, doc) {
       return {
         size: names.length + h.querySelectorAll(':scope > .slot').length
           + (h.querySelector(':scope > .either') ? 1 : 0),
-        // Compared on the names sorted, not as drawn: the focal card is pulled to the
-        // front on screen, and it is the same card on every row here.
-        sig: names.slice().sort().join(' + '),
+        // As drawn, which is what the list is sorted on. It used to be the names *sorted*,
+        // on the grounds that the focal card is pulled to the front and is the same on every
+        // row — true, and it stopped being the whole story when the card that changes started
+        // going last: rows now sort by what they share before what differs, so comparing
+        // alphabetical signatures asserted a rule the page had stopped following. It passed
+        // only because no nested list in this deck holds two rows a card apart.
+        drawn: names.join(' + '),
+        // Everything but the last card: the part a family holds in common.
+        prefix: names.slice(0, -1).join(' + '),
       };
     });
     return { focal, combos, order };
@@ -2758,32 +2764,62 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           if (DeckCombos_nameKey(names[0]) !== DeckCombos_nameKey(row.focal)) {
             problems.push(`${where}: "${names.join(' + ')}" does not start with ${row.focal}`);
           }
+          // Three bands: the card the list is under, the cards this row shares with its
+          // neighbours, then the card that makes it this row. Checked as the shape rather
+          // than against the families, which the DOM does not carry — there has to be some
+          // split of the tail into two sorted runs. Plain alphabetical satisfies it with an
+          // empty second run, which is right: that is what a row with no family draws.
+          //
+          // This replaces "everything after the focal is alphabetical", which was the rule
+          // before the card that changes started going last, and which passed here only
+          // because no nested list in this deck holds two rows a card apart.
           const rest = names.slice(1);
-          const sorted = rest.slice().sort((a, b) => a.localeCompare(b));
-          if (rest.join('|') !== sorted.join('|')) {
-            problems.push(`${where}: the cards after ${row.focal} are not alphabetical in "${names.join(' + ')}"`);
+          const sortedRun = (xs) => xs.every((x, i) => i === 0 || xs[i - 1].localeCompare(x) <= 0);
+          const banded = rest.some((_, k) => sortedRun(rest.slice(0, k + 1)) && sortedRun(rest.slice(k + 1)));
+          if (rest.length && !banded) {
+            problems.push(`${where}: "${names.join(' + ')}" is not the lead, then what it shares, then what changes`);
           }
         }
       }
       if (!checked) problems.push(`no ${where} combo lists the cards of, so the lead order is untested`);
 
-      // And the rows themselves: smallest first, then alphabetically by their cards.
-      // Play count used to order these, which scatters every repeated partner down the
-      // list — the reported symptom was one row sitting third of eleven because it had
-      // more plays than the two above it, in a list where no play count is on screen.
+      // And the rows themselves: smallest first, then the blocks of versions, biggest first,
+      // then alphabetically. Play count used to order these, which scatters every repeated
+      // partner down the list — the reported symptom was one row sitting third of eleven
+      // because it had more plays than the two above it, in a list where no play count is on
+      // screen.
+      //
+      // Two claims, and neither is "alphabetical by the sorted names", which is what this
+      // checked until the rows started sorting on what they draw. Size still leads; and a
+      // family lands together, which is the property the whole ordering exists for and the
+      // one a reader actually sees. Contiguity is checked instead of the sequence itself
+      // because the DOM does not carry the family sizes the order also turns on.
+      //
+      // Say plainly what this is worth today: **the contiguity half cannot fail on this
+      // fixture**, because no nested list in this deck holds two rows a card apart. Mutation
+      // tested, which is the only way to know: reversing the row order inside a size tier
+      // leaves this run green and fails test/combos.test.js, where the same property is
+      // pinned on a built list. The band check above does bite here — the same mutation
+      // applied to the card order fails nine viewport cases. This stays because it costs
+      // nothing and starts biting the day a fixture holds a family, and it is written down so
+      // that nobody reads a green run as proof of the half it cannot see.
       for (const row of rows) {
         const order = row.order || [];
         for (let i = 1; i < order.length; i++) {
-          const prev = order[i - 1];
-          const cur = order[i];
-          if (cur.size < prev.size) {
-            problems.push(`${where}: under ${row.focal}, a ${cur.size}-card combo follows a ${prev.size}-card one`);
+          if (order[i].size < order[i - 1].size) {
+            problems.push(`${where}: under ${row.focal}, a ${order[i].size}-card combo follows a ${order[i - 1].size}-card one`);
             break;
           }
-          if (cur.size === prev.size && cur.sig.localeCompare(prev.sig) < 0) {
-            problems.push(`${where}: under ${row.focal}, "${cur.sig}" is listed after "${prev.sig}"`);
+        }
+        const seen = new Map();
+        for (let i = 0; i < order.length; i++) {
+          const key = order[i].size + '@' + order[i].prefix;
+          if (!seen.has(key)) { seen.set(key, i); continue; }
+          if (seen.get(key) !== i - 1) {
+            problems.push(`${where}: under ${row.focal}, rows sharing "${order[i].prefix}" are split apart`);
             break;
           }
+          seen.set(key, i);
         }
       }
     }
