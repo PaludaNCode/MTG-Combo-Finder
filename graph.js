@@ -60,8 +60,8 @@
   //
   // Measured exactly rather than by similarity: two cards are interchangeable in
   // a combo when the rest of that combo is identical, which is the same rule
-  // interchangeableIn() uses to sit "Scurry Oak + Sadistic Glee + Carrion Feeder"
-  // and its Viscera Seer version next to each other. A looser measure — how many
+  // groupVariants() uses to collapse "Scurry Oak + Sadistic Glee + Carrion Feeder"
+  // and its Viscera Seer version into one row. A looser measure — how many
   // partners two cards happen to share — was tried on a real deck and produced
   // 302 pairs against this one's 48, most of them saying nothing.
 

@@ -42,18 +42,17 @@ test('a pasted decklist produces the combos in it', async ({ page }) => {
 
   // A combo row names its cards and links to the combo on Spellbook.
   //
-  // Every row, not a row chosen for being whole. This used to have to skip the collapsed
-  // rows — one row standing for four combos has no single combo to link to, so the links
-  // lived on the versions inside its disclosure, and the assertion went red the day the
-  // ordering put a collapsed row on top. The fold is gone and one row is one combo, so the
-  // link is now a property of every row and asserted as one.
-  const rows = page.locator('#included .panel-body > .combo');
-  await expect(rows.first().locator('.card-name').first()).not.toBeEmpty();
-  const count = await rows.count();
-  expect(count).toBeGreaterThan(0);
-  for (let i = 0; i < count; i += 1) {
-    await expect(rows.nth(i).locator('.combo-link a[href*="commanderspellbook.com"]')).toBeVisible();
-  }
+  // The link is asserted on a row that stays whole, selected by that rather than by
+  // being first. A collapsed row is one combo with a choice of part, and its Spellbook
+  // links belong to the versions inside its disclosure — there is no single combo for
+  // the row itself to link to. Which row leads the panel is an ordering decision made
+  // in combos.js, and this assertion is not about it: it went red the day that ordering
+  // changed and put a collapsed row on top, on a page where nothing about the links had
+  // moved.
+  const first = page.locator('#included .panel-body > .combo').first();
+  await expect(first.locator('.card-name').first()).not.toBeEmpty();
+  const whole = page.locator('#included .panel-body > .combo:not(:has(> h3 .either))').first();
+  await expect(whole.locator('.combo-link a[href*="commanderspellbook.com"]')).toBeVisible();
 });
 
 test('the decklist survives a reload', async ({ page }) => {

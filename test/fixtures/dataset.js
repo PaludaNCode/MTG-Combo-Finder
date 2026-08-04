@@ -73,22 +73,22 @@ const FIXTURE = {
     // Interchangeable with combo 2: same partner, same result, one card swapped.
     // Both are already in the deck.
     { id: '8', c: ['Basalt Monolith', 'Sword of the Meek'], p: ['Infinite colorless mana'], i: 'C', pop: 80 },
-    // A third and a fourth off the same partner, so the fixture carries a family of four
-    // interchangeable versions. These were added when "Combos in your deck" folded a family
-    // of four or more into one "any of N" row, to keep that shape covered; the fold is gone
-    // and they now draw four ordinary rows. They stay because a family of four is what the
-    // ordering has to keep together — `npm run verify` reads these four rows as one block,
-    // with the card that varies last on each, which is the whole of how a family stays
-    // legible now that nothing merges it.
+    // A third and a fourth off the same partner, which is what makes this group *fold*.
+    // Only families of COLLAPSE_FROM versions or more collapse — see combos.js — so a
+    // fixture whose families are all smaller than that draws no collapsed row at all, and
+    // every assertion about the shape (the "any of N" heading, the line of choices under
+    // it, the "All N versions" disclosure, the compare link covering the whole choice)
+    // goes quietly vacuous. The run says so out loud rather than passing: it failed with
+    // "no combo row collapsed its interchangeable part" at every viewport the moment the
+    // threshold first moved. **Anyone raising COLLAPSE_FROM again has to add another
+    // version here**, and the run will say so.
     //
-    // All four are cards already on the map rather than new ones, so the map's card count
-    // does not move and its geometry assertions stay about geometry. Great Whale adds two
-    // interchangeable relations — it stands in for Rings of Brighthearth and for Sword of
-    // the Meek — which is 2 of the 6 swap lines the map draws; `npm run verify` prints that
-    // count per viewport. (It read "7 rather than 5" here for a while, which nothing
-    // asserted and the run has been printing 6 against.) Palinchron adds no new pairing of
-    // its own: it is already in a combo with each of the other three (16, 17 and 15), and
-    // cards that appear together are by definition not standing in for each other.
+    // Both are cards already on the map rather than new ones, so the map's card count does
+    // not move and its geometry assertions stay about geometry. Great Whale adds two
+    // interchangeable relations — it now stands in for Rings of Brighthearth and for Sword
+    // of the Meek — which is why the map's count of those is 7 rather than 5. Palinchron
+    // adds none at all: it is already in a combo with each of the other three (16, 17 and
+    // 15), and cards that appear together are by definition not standing in for each other.
     { id: '18', c: ['Basalt Monolith', 'Great Whale'], p: ['Infinite colorless mana'], i: 'U', pop: 79 },
     { id: '19', c: ['Basalt Monolith', 'Palinchron'], p: ['Infinite colorless mana'], i: 'U', pop: 78 },
     // The same two cards standing in for each other a *second* time, off a
