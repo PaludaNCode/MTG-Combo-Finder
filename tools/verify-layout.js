@@ -167,6 +167,31 @@ function visibleTextIn(win, node) {
   }).join('');
 }
 
+// The row the result-chip assertions are about — the tier order, the fold, the three
+// colours, the height folding saves.
+//
+// Not the first .combo on the page, which is what they used to read — and note that a
+// backtick cannot be written in this comment: everything from HARNESS down is one
+// template literal, and one would end it. Nothing about those checks
+// is about the first row; they need *a* row whose results span the tiers, and taking the
+// first one quietly made every one of them depend on a decision belonging to another
+// panel entirely. Ordering "Combos in your deck" by what its rows draw rather than by
+// play count changed which combo leads, and eight viewports failed on chips that had not
+// moved: "a game-winning result was not listed first" on a page whose tier ordering was
+// perfectly intact.
+//
+// So ask for the row that exercises them: one with a game-winning result, and among
+// those the one with the most chips. Ties keep document order, so the answer does not
+// depend on the sort. If no row has one the fallback is the first row, and the
+// assertions then fail as they should — a fixture that has stopped covering the green
+// tier is exactly what "the green tier rendered nothing" is for.
+function tieredCombo(doc) {
+  const rows = [...doc.querySelectorAll('#included .panel-body > .combo')];
+  const chips = (row) => row.querySelectorAll('.results .result').length;
+  const withWin = rows.filter((row) => row.querySelector('.results .result.tier-win'));
+  return withWin.slice().sort((a, b) => chips(b) - chips(a))[0] || doc.querySelector('.combo');
+}
+
 function measure(win, doc) {
   const visibleText = (node) => visibleTextIn(win, node);
   const panels = [...doc.querySelectorAll('.panel')].map((p) => ({
@@ -787,8 +812,9 @@ function measure(win, doc) {
       missingPills: doc.querySelectorAll('#results .slot-missing').length,
     };
   })();
-  // "Combos in your deck" leads with the easiest: 2-card rows, then 3, then 4.
-  // Card names inside a row are alphabetical, so two rows can be compared.
+  // "Combos in your deck" leads with the easiest: 2-card rows, then 3, then 4. Within a
+  // size, the blocks of versions and then what the rows draw — the same rule the nested
+  // lists follow, which this panel joined rather than staying the exception to.
   // Scoped to the row's own heading: a collapsed row keeps every version inside a
   // <details>, each with a heading of its own, and a document-wide query pulls
   // those in too — which reads as one row naming five cards.
@@ -797,7 +823,16 @@ function measure(win, doc) {
     const names = [...head.querySelectorAll(':scope > .card-name')].map((n) => n.textContent);
     const slots = head.querySelectorAll(':scope > .slot').length;
     const choices = head.querySelector(':scope > .either') ? 1 : 0; // "any of N" stands in for one card
-    return { names, size: names.length + slots + choices, label: names.join(' + ') };
+    return {
+      names,
+      size: names.length + slots + choices,
+      label: names.join(' + '),
+      // The part a family holds in common. A collapsed row names its shared cards and
+      // then says "any of N", so every name on it is shared; a whole row's last card is
+      // the one that changes. Getting this wrong in the collapsed direction is the
+      // difference between counting a block and inventing one.
+      prefix: (choices ? names : names.slice(0, -1)).join(' + '),
+    };
   });
   // Combos listed *under* a card have to start with that card. Read from the
   // closed <details> — the rows are in the DOM whether or not it is open.
@@ -1041,7 +1076,7 @@ function measure(win, doc) {
     };
   })();
 
-  const firstCombo = doc.querySelector('.combo');
+  const firstCombo = tieredCombo(doc);
   const chips = firstCombo ? [...firstCombo.querySelectorAll('.results .result')].map((c) => ({
     text: c.textContent, win: c.classList.contains('tier-win'),
     decisive: c.classList.contains('tier-decisive'),
@@ -1530,7 +1565,9 @@ function runOne(vp) {
         // has to be opened before all three colours are on screen at once.
         // Scope to the same combo card throughout: the pieces panel re-renders
         // these, so a document-wide query picks up other cards' unopened folds.
-        const combo0 = doc.querySelector('.combo');
+        // The same row measure() read its chips from, or the folded and open numbers
+        // below are two rows' heights compared against each other.
+        const combo0 = tieredCombo(doc);
         const results0 = combo0.querySelector('.results');
         // The height the fold is buying, measured on the same element either side of the
         // press. This is the whole point of folding grey, so it is worth a number rather
@@ -2835,12 +2872,43 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       }
     }
     if (new Set(sizes).size < 2) problems.push('every combo row is the same size, so the ordering proves nothing');
+    // What the row shares, then what changes — two sorted runs, the same shape the nested
+    // lists are held to, minus the lead band this panel has no lead for.
+    //
+    // This asserted plain alphabetical until now, which stopped being the rule the day a
+    // whole row started sending its differing card last. It passed anyway, because no row
+    // of this fixture has a family, so it was green against a page that had changed
+    // underneath it — the same false green ce7a835 cleared out of the nested lists and
+    // missed here. A row with no family satisfies the shape with an empty second run,
+    // which is exactly what such a row draws.
+    const sortedRun = (xs) => xs.every((x, i) => i === 0 || xs[i - 1].localeCompare(x) <= 0);
     for (const row of v.order) {
-      const sorted = row.names.slice().sort((a, b) => a.localeCompare(b));
-      if (row.names.join('|') !== sorted.join('|')) {
-        problems.push(`a combo row is not alphabetical: "${row.label}"`);
+      const banded = row.names.some((_, k) => sortedRun(row.names.slice(0, k + 1))
+        && sortedRun(row.names.slice(k + 1)));
+      if (row.names.length && !banded) {
+        problems.push(`a combo row is not what it shares then what changes: "${row.label}"`);
         break;
       }
+    }
+    // And a family lands in one place, which is what the ordering is for and the thing a
+    // reader actually sees. Contiguity rather than the sequence itself, because the DOM
+    // does not carry the block sizes the order also turns on.
+    //
+    // Worth saying plainly: **this cannot fail on the current fixture**, whose six rows
+    // share no prefix — mutation tested, and reversing the rows inside a size tier leaves
+    // this run green while failing test/grouping.test.js, where the property is pinned on
+    // a built panel. It stays because it costs nothing and starts biting the day a fixture
+    // holds two rows a card apart, and it is written down so nobody reads a green run as
+    // proof of the half it cannot see.
+    const seen = new Map();
+    for (let i = 0; i < v.order.length; i++) {
+      const key = v.order[i].size + '@' + v.order[i].prefix;
+      if (!seen.has(key)) { seen.set(key, i); continue; }
+      if (seen.get(key) !== i - 1) {
+        problems.push(`combo rows sharing "${v.order[i].prefix}" are split apart`);
+        break;
+      }
+      seen.set(key, i);
     }
     // Under a card, that card leads and the rest follow alphabetically.
     for (const [where, rows] of Object.entries(v.leads)) {

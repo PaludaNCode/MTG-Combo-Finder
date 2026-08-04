@@ -265,7 +265,11 @@
     const card = el('article', 'combo');
 
     const header = el('h3');
-    RenderRows.alphabetical(group.shared).forEach((name, i) => {
+    // From DeckCombos.comboRowNames(), which is also what the panel's rows were sorted
+    // on. Not RenderRows.alphabetical(group.shared), which gives the same answer today:
+    // the point is that it cannot stop giving the same answer, because a sort comparing
+    // a string the heading does not draw is a sort nobody can see is wrong.
+    DeckCombos.comboRowNames(group).forEach((name, i) => {
       if (i > 0) header.appendChild(el('span', 'plus', ' + '));
       header.appendChild(el('span', 'card-name', name));
     });

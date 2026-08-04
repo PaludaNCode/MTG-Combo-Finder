@@ -262,3 +262,169 @@ test('interchangeableIn: a family down to one unclaimed row does not order it', 
   assert.ok(trails.get(rows[0]), 'the family of three still orders its rows');
   assert.strictEqual(trails.get(rows[3]), undefined, 'a lone leftover row is left alphabetical');
 });
+
+// ---- the order "Combos in your deck" reads in --------------------------------
+//
+// The panel used to be the exception: size, then play count. Every other list of combos
+// sorts on what its rows draw, and the exception cost this one the same thing it costs
+// anywhere — four rows of the fixture deck reading "Cauldron Familiar + Samwise Gamgee +
+// the one that changes" sat at 11, 12, 13 and 16, split by two rows about other cards,
+// so the aligned column had nothing to align against.
+//
+// The rows here are groups rather than variants, which is the whole difficulty: a row can
+// already be a block of versions folded into one line.
+
+const { byDrawnRow, comboRowNames } = require('../combos.js');
+
+// The panel as app.js builds it: group, then order the groups.
+const panel = (variants) => {
+  const trails = interchangeableIn(variants);
+  return byDrawnRow(groupVariants(variants), trails)
+    .map((g) => comboRowNames(g, trails).join(' + ')
+      + (g.choices.length >= 2 ? ' + any of ' + g.choices.length : ''));
+};
+
+test('byDrawnRow: rows a card apart sit together even when grouping kept them separate', () => {
+  // Two combos one card apart that pay off differently, so groupVariants() must leave
+  // them as two rows — and a third row that sorts alphabetically between them.
+  const rows = panel([
+    variant('1', ['Cauldron Familiar', 'Samwise Gamgee', 'Viscera Seer'], ['Infinite death triggers']),
+    variant('2', ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'], ['Infinite mill']),
+    variant('3', ['Cauldron Familiar', 'Samwise Gamgee', 'Carrion Feeder'], ['Infinite lifegain']),
+  ]);
+  assert.deepStrictEqual(rows, [
+    'Cauldron Familiar + Samwise Gamgee + Carrion Feeder',
+    'Cauldron Familiar + Samwise Gamgee + Viscera Seer',
+    'Camellia, the Seedmiser + Peregrin Took + Umbral Collar Zealot',
+  ]);
+});
+
+// A collapsed row is one row, whatever it folds away, so it counts as one against the
+// family term — and it belongs beside the rows that share its cards. The live fixture
+// deck draws exactly this: "Chatterfang + Warren Soultrader + any of 3" with two whole
+// rows that share those two cards and pay off differently.
+test('byDrawnRow: a collapsed row sits in the family it shares its cards with', () => {
+  const rows = panel([
+    variant('1', ['Chatterfang', 'Warren Soultrader', 'Soul Warden'], ['Infinite tokens']),
+    variant('2', ['Chatterfang', 'Warren Soultrader', 'Essence Warden'], ['Infinite tokens']),
+    variant('3', ['Aetherflux Reservoir', 'Bolas\'s Citadel'], ['Infinite damage']),
+    variant('4', ['Chatterfang', 'Warren Soultrader', 'Academy Manufactor'], ['Infinite Food']),
+    variant('5', ['Chatterfang', 'Warren Soultrader', 'Peregrin Took'], ['Infinite Clues']),
+  ]);
+  assert.deepStrictEqual(rows, [
+    // Size first: the 2-card combo leads whatever the names and the blocks do.
+    'Aetherflux Reservoir + Bolas\'s Citadel',
+    'Chatterfang + Warren Soultrader + any of 2',
+    'Chatterfang + Warren Soultrader + Academy Manufactor',
+    'Chatterfang + Warren Soultrader + Peregrin Took',
+  ]);
+});
+
+test('byDrawnRow: the biggest block of rows leads, then smaller, then the rows on their own', () => {
+  const rows = panel([
+    // One row of its own that sorts alphabetically above everything else.
+    variant('single', ['Animation Module', 'Cauldron Familiar', 'Samwise Gamgee'], ['Infinite mill']),
+    // A block of two: same cards but one, different payoffs, so two rows.
+    variant('two-a', ['Herd Baloth', 'Necrosynthesis', 'Zulaport Cutthroat'], ['Infinite drain']),
+    variant('two-b', ['Herd Baloth', 'Necrosynthesis', 'Blood Artist'], ['Infinite lifegain']),
+    // A block of three.
+    variant('three-a', ['Kitchen Finks', 'Viscera Seer', 'Archangel of Thune'], ['Infinite lifegain']),
+    variant('three-b', ['Kitchen Finks', 'Viscera Seer', 'Heliod, Sun-Crowned'], ['Infinite damage']),
+    variant('three-c', ['Kitchen Finks', 'Viscera Seer', 'Heroic Feast'], ['Infinite tokens']),
+  ]);
+  assert.deepStrictEqual(rows, [
+    'Kitchen Finks + Viscera Seer + Archangel of Thune',
+    'Kitchen Finks + Viscera Seer + Heliod, Sun-Crowned',
+    'Kitchen Finks + Viscera Seer + Heroic Feast',
+    'Herd Baloth + Necrosynthesis + Blood Artist',
+    'Herd Baloth + Necrosynthesis + Zulaport Cutthroat',
+    'Animation Module + Cauldron Familiar + Samwise Gamgee',
+  ]);
+});
+
+// Two collapsed rows can name the same cards and differ only in what they fold away,
+// which the Chatterfang deck draws: "Ashnod's Altar + Ghave, Guru of Spores + any of 4"
+// above the same two cards "+ any of 2". Their drawn names are one string, so without a
+// tie-break the two rows fall back to the order they happened to arrive in.
+test('byDrawnRow: two rows naming the same cards break the tie on what they offer', () => {
+  const rows = [
+    variant('a1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'W'], ['Infinite tokens']),
+    variant('a2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'X'], ['Infinite tokens']),
+    variant('a3', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'Y'], ['Infinite tokens']),
+    variant('b1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'M'], ['Infinite mana']),
+    variant('b2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'N'], ['Infinite mana']),
+  ];
+  const drawn = panel(rows);
+  assert.deepStrictEqual(drawn, [
+    'Ashnod\'s Altar + Ghave, Guru of Spores + any of 3',
+    'Ashnod\'s Altar + Ghave, Guru of Spores + any of 2',
+  ], 'the row offering more versions leads');
+  assert.deepStrictEqual(panel(rows.slice().reverse()), drawn,
+    'and the answer does not depend on the order they arrived in');
+});
+
+// Rows move and cards do not. The comparator reads the drawn name, and reading it is one
+// keystroke from rewriting it — the same invariant test/combos.test.js pins for the
+// nested lists, asked of the panel that draws groups.
+test('byDrawnRow: ordering the rows leaves every row saying exactly what it said', () => {
+  const rows = [
+    variant('1', ['Kitchen Finks', 'Viscera Seer', 'Archangel of Thune'], ['Infinite lifegain']),
+    variant('2', ['Kitchen Finks', 'Viscera Seer', 'Heliod, Sun-Crowned'], ['Infinite damage']),
+    variant('3', ['Scurry Oak', 'Archangel of Thune', 'Soul Warden'], ['Infinite tokens']),
+    variant('4', ['Scurry Oak', 'Archangel of Thune', 'Essence Warden'], ['Infinite tokens']),
+    variant('5', ['Animation Module', 'Cauldron Familiar'], ['Infinite mill']),
+  ];
+  const trails = interchangeableIn(rows);
+  const groups = groupVariants(rows);
+  const before = groups.map((g) => comboRowNames(g, trails).join(' + ')).sort();
+  const after = byDrawnRow(groups, trails).map((g) => comboRowNames(g, trails).join(' + ')).sort();
+  assert.deepStrictEqual(after, before, 'a row was redrawn, not just moved');
+});
+
+test('byDrawnRow: nothing in, nothing out', () => {
+  assert.deepStrictEqual(byDrawnRow([], new Map()), []);
+  assert.deepStrictEqual(byDrawnRow(null, new Map()), []);
+  assert.deepStrictEqual(comboRowNames(null), []);
+});
+
+// The block a row is counted under is read off the family that claimed it, not off "the
+// drawn name minus its last card" — which is the same thing on the rows that have a
+// family and is wrong on the rows that do not. A lone row's *whole* card list would
+// become a key, and a key of n-1 cards is exactly what a collapsed row's shared cards
+// are: the 2-card row below would be counted into the 3-card row's block. Size keeps
+// them apart on screen, so the damage is silent — an inflated count promoting a row over
+// the block it should follow.
+test('byDrawnRow: a lone row is not counted into a bigger row that shares its cards', () => {
+  const rows = panel([
+    variant('lone', ['A', 'B'], ['Infinite mill']),
+    // A collapsed row whose shared cards are that lone row's whole combo.
+    variant('c1', ['A', 'B', 'C'], ['Infinite tokens']),
+    variant('c2', ['A', 'B', 'D'], ['Infinite tokens']),
+    // A real block of two: same cards but one, different payoffs, so two rows.
+    variant('b1', ['E', 'F', 'G'], ['Infinite lifegain']),
+    variant('b2', ['E', 'F', 'H'], ['Infinite damage']),
+  ]);
+  assert.deepStrictEqual(rows, [
+    'A + B',
+    'E + F + G',
+    'E + F + H',
+    'A + B + any of 2',
+  ], 'the real block of two leads the 3-card rows');
+});
+
+// And when even the version counts match, the last thing on screen that tells the two
+// rows apart is the line of choices under the heading. Two rows drawing the same words
+// in a page-order nobody chose is the failure this closes.
+test('byDrawnRow: two rows offering the same many versions order on the choices they list', () => {
+  const rows = [
+    variant('q1', ['A', 'B', 'M'], ['Infinite mana']),
+    variant('q2', ['A', 'B', 'N'], ['Infinite mana']),
+    variant('p1', ['A', 'B', 'C'], ['Infinite tokens']),
+    variant('p2', ['A', 'B', 'D'], ['Infinite tokens']),
+  ];
+  const listed = (vs) => byDrawnRow(groupVariants(vs), interchangeableIn(vs))
+    .map((g) => g.choices.slice().sort().join(' · '));
+  assert.deepStrictEqual(listed(rows), ['C · D', 'M · N']);
+  assert.deepStrictEqual(listed(rows.slice().reverse()), ['C · D', 'M · N'],
+    'and not whichever arrived first');
+});

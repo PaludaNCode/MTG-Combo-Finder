@@ -380,8 +380,11 @@
       groups.push({ at: index, shared: variantCardNames(variant), choices: [], variants: [variant] });
     });
 
-    // Hand them back in the order they arrived — the caller sorted by popularity,
-    // and grouping must not quietly reshuffle the most-played combo down the page.
+    // Hand them back in the order they arrived. Grouping is not a place to make an
+    // ordering decision — a function that both merges rows and moves them can only be
+    // reasoned about as a whole — so the caller's order survives it and the caller
+    // decides what the order should be. For "Combos in your deck" that is byDrawnRow()
+    // below, which needs the groups before it can order them.
     groups.sort((a, b) => a.at - b.at);
     return groups.map(({ at, ...group }) => group);
   }
@@ -459,6 +462,103 @@
       }
     }
     return trails;
+  }
+
+  // ---- the order "Combos in your deck" reads in -------------------------------
+  //
+  // The cards a row of that panel names, in the order its heading draws them.
+  //
+  // Two shapes, and the whole point of this function is that the ordering below and the
+  // rendering both ask it rather than each spelling the shape out. A sort comparing a
+  // string the page does not draw is a sort nobody can see is wrong — the exact failure
+  // byDrawnName() was written to fix one panel over, and there the drawn name came from
+  // one function already.
+  //
+  // A collapsed row names its shared cards and then says "any of N", so the cards it
+  // *names* are the shared ones — the interchangeable ones are the thing at the end that
+  // every one of them varies in. A whole row names all of its cards, ordered by the rule
+  // every other panel uses, with the card that changes sent last.
+  function comboRowNames(group, trails) {
+    if (!group) return [];
+    if (group.choices.length >= 2) {
+      return group.shared.slice().sort((a, b) => a.localeCompare(b));
+    }
+    const only = group.variants[0];
+    return orderComboNames(variantCardNames(only), { trail: trails && trails.get(only) });
+  }
+
+  // The rows of "Combos in your deck", in reading order: the same rule byDrawnName()
+  // gives every other list of combos, transposed onto rows that are groups.
+  //
+  // This panel used to be the exception, ordered by size and then play count, and the
+  // exception cost it the thing the rule buys. Four rows of the fixture deck read
+  // "Cauldron Familiar + Samwise Gamgee + the one that changes" and sat at positions 11,
+  // 12, 13 and **16**, with a Camellia row and an Archangel row wedged in — so the
+  // difference was aligned in one column and the reader still had to work out which rows
+  // to compare it across. Play count is the reason they were split, and it is not on
+  // screen: nothing about the gap is explicable to somebody reading the page.
+  //
+  // Three terms, unchanged from the other lists:
+  //
+  //   size          — a 2-card line is a different proposition from a 4-card one, and it
+  //                   leads. Nothing is lost to it, because a family's rows are all the
+  //                   same size: they share every card but one.
+  //   family, desc  — the biggest block of versions first, then smaller, then the rows
+  //                   that stand alone. A block of three is one decision between three
+  //                   cards; a row on its own is one thing. The decisions read first.
+  //   drawn name    — what the row actually says, so rows sort by what they share before
+  //                   what differs and a family lands in one place.
+  //
+  // What is different here is that a row can already *be* a block: a collapsed group is
+  // several versions folded into one row. That row is still one row, so it counts as one,
+  // and the choice it offers is on the row itself where the reader can see it. What the
+  // family term counts is rows the reader has to compare against each other.
+  //
+  // `trails` is interchangeableIn() over the panel's variants — the same lookup the render
+  // side is handed, so a row's family here is the family whose card it actually sends last.
+  function byDrawnRow(groups, trails) {
+    const list = (groups || []).slice();
+    const drawn = new Map(list.map((g) => [g, comboRowNames(g, trails).join(' + ')]));
+
+    // The cards a row shares with its siblings — the axis it is drawn along, and so the
+    // key its block is counted under. Read off the claimed family rather than off the
+    // drawn string: "everything but the last card" would also collide two rows that
+    // merely look alike, and a family of two that no row is drawn as would order rows
+    // against a block the reader cannot see.
+    const blockKey = (g) => {
+      if (g.choices.length >= 2) return sortedKeys(g.shared);
+      const only = g.variants[0];
+      const trail = new Set((trails && trails.get(only) || []).map(nameKey));
+      const names = variantCardNames(only);
+      // No family: nothing beside it to line up against, so it is a block of one. Marked
+      // so a lone row's full card list can never be read as some other row's shared part.
+      if (!trail.size) return '@' + sortedKeys(names);
+      return sortedKeys(names.filter((n) => !trail.has(nameKey(n))));
+    };
+
+    const rows = new Map();
+    for (const g of list) {
+      const k = blockKey(g);
+      rows.set(k, (rows.get(k) || 0) + 1);
+    }
+    const family = (g) => rows.get(blockKey(g)) || 1;
+
+    // Two collapsed rows can share every card they name and differ only in what they
+    // fold away — the Chatterfang deck draws "Ashnod's Altar + Ghave, Guru of Spores +
+    // any of 4" directly above the same two cards "+ any of 2", because the two sets pay
+    // off differently and groupVariants() must not merge them. Their drawn names are the
+    // same string, so without this they fell back to whatever order they arrived in.
+    // More versions first, the same way the biggest block leads, and then the line under
+    // the heading — which is the next thing on screen that tells them apart.
+    const choicesOf = (g) => g.choices.slice().sort((x, y) => x.localeCompare(y)).join(' · ');
+
+    // Rows move and cards do not: comboRowNames() decides what a row says and this only
+    // decides where it sits. test/grouping.test.js pins that both ways round.
+    return list.sort((a, b) => comboSize(a.variants[0]) - comboSize(b.variants[0])
+      || family(b) - family(a)
+      || drawn.get(a).localeCompare(drawn.get(b))
+      || b.variants.length - a.variants.length
+      || choicesOf(a).localeCompare(choicesOf(b)));
   }
 
   // ---- matching against the bundled combo dataset -------------------------
@@ -732,9 +832,15 @@
     }
 
     // The combos the deck can assemble lead with the easiest: every 2-card combo,
-    // then every 3-card one, and so on, most played first within each size. The
-    // rest stay ordered by popularity alone — a suggestion is a card to add
-    // rather than a line to look for, and its own sizes are shown on its row.
+    // then every 3-card one, and so on. The rest stay ordered by popularity alone —
+    // a suggestion is a card to add rather than a line to look for, and its own
+    // sizes are shown on its row.
+    //
+    // Play count breaks the tie here and no longer decides anything a reader sees:
+    // the panel these become is ordered by byDrawnRow() after grouping, and the map
+    // and the pieces panel both re-order what they are handed. It stays because a
+    // stable, explicable base order is worth more than an arbitrary one — and
+    // because tools/try-deck.js prints this list rather than the panel.
     included.sort(bySizeThenPopularity);
     almost.sort(byPopularity);
     almostByAddingColors.sort(byPopularity);
@@ -1415,7 +1521,7 @@
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
-    groupSuggestions, groupVariants, interchangeableIn, variantSignature,
+    groupSuggestions, groupVariants, interchangeableIn, comboRowNames, byDrawnRow, variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
     comboSize, sizeBreakdown, bracketCheck, legalityCheck,
     decode, rebuildId,

@@ -266,6 +266,11 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   to stop, one file over. Write `\\d` inside the harness. Two of these were written and
   caught in one session; the second only because the run reported *every* row failing,
   which is what a regex matching nothing looks like from the outside.
+  **A backtick in there ends the harness**, including one inside a comment — the same
+  literal runs from `const HARNESS =` to just past `runOne()`, some 1,500 lines, so a
+  comment naming a CSS selector the way you would in prose takes the whole file out with
+  a `SyntaxError: Unexpected token ':'` pointing at the comment. That one at least fails
+  loudly at parse; the backslash does not.
 - **Assert what a reader sees, not `textContent`.** Some row text is in the DOM twice
   with CSS showing one reading — the official/unofficial split is `17+7` in a narrow
   column and `17 official · 7 unofficial` in a wide one, both always present. A check
