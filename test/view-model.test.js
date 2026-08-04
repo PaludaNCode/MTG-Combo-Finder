@@ -100,6 +100,54 @@ test('a partial loss names both halves', () => {
   assert.match(text, /Cut both and 2 of the 5 combos they appear in would go; the other 3 have a stand-in\.$/);
 });
 
+// ---- deckCombosNote ----------------------------------------------------------
+//
+// The panel is headed "Combos in your deck" and its rows are cards, so its badge and its
+// row count disagree by design — a real deck's 233 combos are carried by some smaller set
+// of its cards. This sentence is the only thing on the page that reconciles the two, which
+// makes every number in it a claim a reader will check. The numbers below are this test's
+// own; the deck's real ones need combos.json, which is a build artifact.
+
+test('the note says how many combos and how many cards carry them', () => {
+  const note = View.deckCombosNote(233, 0, 63);
+  assert.strictEqual(note.count, 233, 'the badge is the published total');
+  assert.match(note.sentence, /^233 combos published by Commander Spellbook, carried by 63 of your cards\./);
+});
+
+// Ours are never counted as published data, here as everywhere else — a badge of 241
+// would credit Spellbook with eight rows it has not published.
+test('our own rows are counted apart from the published ones', () => {
+  const note = View.deckCombosNote(233, 8, 64);
+  assert.strictEqual(note.count, 233);
+  assert.match(note.sentence, /233 combos published by Commander Spellbook and 8 of ours, carried by 64 of your cards/);
+});
+
+// A card can carry nothing but combos of ours, which used to leave it out of this panel
+// altogether. The badge has nothing to show, and the sentence has to say why rather than
+// leaving a reader with rows and no number.
+test('a deck with nothing published still says what it has', () => {
+  const note = View.deckCombosNote(0, 3, 4);
+  assert.strictEqual(note.count, null, 'no badge, rather than a badge reading 0');
+  assert.match(note.sentence, /^3 combos of ours, none published by Commander Spellbook, carried by 4 of your cards\./);
+});
+
+test('one of anything is singular', () => {
+  assert.match(View.deckCombosNote(1, 0, 1).sentence, /^1 combo published .* carried by 1 of your card\./);
+});
+
+// Nothing at all is the panel's empty line, not a sentence about zero.
+test('no combos means no sentence', () => {
+  assert.strictEqual(View.deckCombosNote(0, 0, 0), null);
+});
+
+// The second half is what stops the row count reading as a miscount, so it is pinned
+// rather than left to the wording.
+test('the note explains what a row is and what its number means', () => {
+  const sentence = View.deckCombosNote(233, 0, 63).sentence;
+  assert.match(sentence, /Each row is one card/);
+  assert.match(sentence, /cutting that card would cost/);
+});
+
 // ---- sizePills --------------------------------------------------------------
 
 test('one combo of one size needs no multiplier', () => {

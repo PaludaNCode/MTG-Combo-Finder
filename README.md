@@ -31,22 +31,21 @@ branch.
 
 ## Features
 
-- **Combos in your deck** — every known combo your current 99 (or 60) can already pull off, with what it
-  produces, a link to Spellbook, and **How it works**: the prerequisites and steps on the row itself,
-  fetched for the one combo you open.
+- **Combos in your deck** — every known combo your current 99 (or 60) can already pull off, read **one
+  card at a time**: a row per card that carries one, ranked by how many, so you see what cutting a card
+  costs before you cut it. Open a row for its combos, each with what it produces, a link to Spellbook and
+  **How it works** — the prerequisites and steps, fetched for the one combo you open. **− Remove** takes
+  the card out of the list and searches again. Under it, **[the combo map](#the-combo-map)**: the same
+  combos as a picture.
 - **Suggested additions** — every combo you're *one card away* from, aggregated per missing card and
   ranked ("add Rings of Brighthearth → unlocks 4 combos"), ties broken on popularity. **+ Add to deck**
   appends the card and re-runs the search against the database already in memory.
-- **Cards carrying your combos** — every card in a combo you can assemble, ranked by how many, so you can
-  see what cutting one costs before you cut it — and **[the combo map](#the-combo-map)**, the same combos
-  as a picture.
 - **Size breakdowns** everywhere a count appears: a `+3` reads *1 × 2-card · 1 × 3-card · 1 × 4-card*.
 - **Which bracket the list is in** — five pips under the colour identity. A floor, never a verdict, with
   the reasoning and the unchecked criteria one hover away. Beside it, **whether the list is *allowed***:
   off-identity cards and Commander bans, and nothing at all when there is neither.
 - **Interchangeable cards are one decision, not many.** On a real 99-card deck that took 141 suggestions
-  to 81 and 34 combo rows to 23. **The count still says 34.** **Compare all N on Scryfall** opens a whole
-  choice on one page.
+  to 81. **Compare all N on Scryfall** opens a whole choice on one page.
 - **It works with the network off**, **cards it did not recognise are named**, suggestions **split by
   colour**, and deck import from an Archidekt URL, a dropped export file, or any site's text export.
 - **Collapsible results**, **light or dark**, a **decklist that survives a reload**, **Copy link**, and a
@@ -94,26 +93,38 @@ An unclassified result is reported in two places, because a silent one would be 
 does not list at the top in red with the lines to paste in, and `reportUnclassified()` prints it in the
 data workflow log. `verify` renders `tiers.html` against a fixture holding a deliberately unknown result.
 
-### The combos you have: easiest first, named alphabetically
+### The combos you have: one row per card, most carried first
 
-**Combos in your deck** leads with every 2-card combo, then every 3-card, then every 4-card. Two cards on
+**Combos in your deck** is a list of *your cards*, ranked by how many combos each one carries — the
+number in the gutter is what cutting it would cost. Open a card and its combos are written out
+underneath, easiest first: every 2-card combo, then every 3-card, then every 4-card, because two cards on
 the table is a different proposition from four.
 
-**Within a size, `byDrawnRow()` orders on what the row actually draws**: the biggest block of versions
-first, then smaller blocks, then rows that stand alone, alphabetically inside each. Sorting on the
-alphabetical signature instead scattered the families the row ordering had just lined up. A collapsed row
-counts as *one* row, and the block it is counted under is read off the family that claimed it — never off
-"the drawn name minus its last card", which would file a 2-card row into a 3-card block.
+**This panel used to be a list of combos**, one row per combo, with families of interchangeable versions
+folded into an "any of N" row. It was 233 rows on the standing Chatterfang deck, and the thing they could
+not say is the thing the deck's owner is deciding: that six of those combos all hang off the same two
+cards. `byDrawnRow()` and `comboRowNames()` ordered those rows and are gone with them, and so is the
+`+ any of N` fold — see [Collapsing interchangeable cards](#collapsing-interchangeable-cards) for what
+that measurement was and why it does not transfer.
+
+**The badge counts combos and the rows are cards, so the two numbers disagree**: the standing Chatterfang
+deck's 233 combos hang off at most the 103 cards in its main deck, and in practice far fewer. The panel
+says both numbers in a sentence under the heading, from `DeckView.deckCombosNote()` — the only thing
+standing between a reader and "233 rows, most of them missing". `verify` checks the badge against the set
+of distinct combos the panel actually reaches, and that both numbers appear in the sentence. **The row
+count itself is not a figure recorded here**: it needs `combos.json`, which is a build artifact, so
+`node tools/deck-cards.js test/fixtures/chatterfang-deck.txt` is the live answer.
 
 **The cards in a row are alphabetical**, sorted at render time only; matching, grouping and slot
 assignment keep Spellbook's published order, since `groupVariants()` reasons about a card's position.
 
-Three ordering rules, all in `DeckCombos.orderComboNames(names, {lead, trail})`:
+Three ordering rules for the cards inside a row, all in
+`DeckCombos.orderComboNames(names, {lead, trail})`:
 
 - **Where a combo is listed under a card, that card goes first.** For a suggestion the lead is read
   **per variant**, not from the group.
-- **Where a row differs from its neighbours by one card, that card goes last**, in nested lists as well
-  as collapsed groups, so the difference lands in the same place every time.
+- **Where a row differs from its neighbours by one card, that card goes last**, wherever combos are
+  listed side by side, so the difference lands in the same place every time.
 - **A row can sit in two families at once**, so a family **claims** the rows it orders, biggest first;
   crossing families are left holding one unclaimed row each and are skipped.
 
@@ -123,7 +134,7 @@ unlike [collapsing](#collapsing-interchangeable-cards), which also requires the 
 
 **Blocks are ordered by how many rows they hold, largest first, then alphabetically**, since a block is a
 choice the reader is making; a row with no family counts as a family of one, and combo size outranks
-both. **All of this orders rows and never cards** — two tests hold that every row's drawn cards are
+both. **All of this orders rows and never cards** — a test holds that every row's drawn cards are
 identical before and after sorting, and that the answer cannot depend on arrival order.
 
 #### The unofficial panel was sorted on nothing at all
@@ -167,7 +178,7 @@ COMBOS  │ EDHREC · Scryfall · + Add to deck
   2+1   │ 1 × 2-card   1 × 3-card   1 × 4-card
 ```
 
-**And so does every card in *Cards carrying your combos***, where the argument runs in reverse: a card
+**And so does every card in *Combos in your deck***, where the argument runs in reverse: a card
 holding up three two-card lines is a very different card to cut than one holding up nine four-card ones.
 The case that settles it — **Pitiless Plunderer** ranks 5th on "+6 combos" and five of those six need four
 cards, while **Ashnod's Altar** outranks it on "+7", every one of them three.
@@ -185,10 +196,17 @@ combos — read off the data, so no wording is interpreted. It matters because t
 four cards each claiming "+7 combos" look like four options worth seven apiece; they are one option
 worth seven, described four times.
 
-**`COLLAPSE_FROM = 4`.** Pairs and triples are written out as rows; four and up fold into one. A
-folded triple prints every choice card on the line under its heading, so it has hidden nothing — it
-has asked the reader to assemble three combos in their head and put each one's link behind a
-disclosure. Four is where the fold stops being an indirection and starts being a summary:
+**`groupVariants()` and `COLLAPSE_FROM = 4` no longer draw anything.** They folded families of versions
+into an `any of N` row in the panel that listed every combo, and that panel is gone: *Combos in your deck*
+is one row per card and writes every version out inside it. What remains of them is
+`tools/try-deck.js`, which groups a deck's combos into families as a text summary — a useful unit when
+reading 233 combos as a list, and the only caller left.
+
+The threshold's reasoning, kept because it is the argument for the number rather than for the fold: pairs
+and triples were written out and four and up folded, because a folded triple prints every choice card on
+the line under its heading and so hides nothing — it asks the reader to assemble three combos in their
+head and puts each one's link behind a disclosure. Four is where it stops being an indirection and starts
+being a summary:
 
 ```
 fold from        2      3      4      5    never
@@ -197,9 +215,8 @@ fixture deck    22     23     33     33       33
 ```
 
 `groupVariants()` counts on the members still **free**, not on the bucket, so a family that loses
-members to a larger one and drops below the threshold is written out too. **A fixture whose families are
-all smaller draws no collapsed row at all**, so raising the number means adding a version to
-`test/fixtures/dataset.js`. Tests read the exported constant, with exactly one pinning the number.
+members to a larger one and drops below the threshold is written out too. Tests read the exported
+constant, with exactly one pinning the number.
 
 **Identical results are required, and that is deliberate.** This under-groups, and the tempting repair
 is to compare results loosely. **Don't.** Kiki-Jiki pairs with a hundred partners producing everything
@@ -208,25 +225,33 @@ is ever worth fixing, the fix is exact rather than fuzzy: Spellbook *authors* a 
 variants from it, so the parent recipe would group them with nothing inferred. `compact()` keeps none.
 
 - **Grouping must not reorder.** A function that both merges rows and moves them can only be reasoned
-  about as a whole, so grouping merges and the caller orders, with `byDrawnRow()`. **Nothing is lost** —
-  every variant lands in exactly one group, asserted in `test/grouping.test.js`.
+  about as a whole, so grouping merges and the caller orders. **Nothing is lost** — every variant lands in
+  exactly one group, asserted in `test/grouping.test.js`.
 - **Each option is a grid, never a wrapping line** — *name · links · + Add* on one row where there is
   room, *name* above *links · + Add* where there is not. As a wrapping flex row a long name pushed its
   **+ Add** onto a second line and no two buttons shared an edge. The *width* decides, not the name.
 - **The name is clipped, not shortened.** The full text stays in the DOM for screen readers,
   find-in-page and copying.
 
-#### The fold was taken out once, and put back
+#### The fold was taken out twice: once wrongly, once with the panel
 
-**Current rule: the fold is in and `COLLAPSE_FROM` stands.** Recorded because the version of this
-section arguing for removal was on `main` for about an hour and read as settled. The measurement that
-reversed it: **149 of the Chatterfang deck's 233 unfolded rows repeated a block of result chips
-already on screen**, against 36 of 120 folded. A family's versions produce identical results by
-construction — that is what merging them requires — so writing them out adds copies, not information.
+**Current rule: there is no fold, because there is no panel of combo rows to fold.** The history is worth
+keeping, because the two removals are not the same removal and the second must not be read as vindicating
+the first.
 
-The honest counter-argument, which stands: a collapsed row shows its chips **N+1** times if you open
-it. So the fold does not reduce repetition in the DOM, it reduces the repetition a reader scrolls
-past, which is the one that costs them anything.
+**The first was wrong.** A version of this section arguing for removal was on `main` for about an hour and
+read as settled. The measurement that reversed it: **149 of the Chatterfang deck's 233 unfolded rows
+repeated a block of result chips already on screen**, against 36 of 120 folded. A family's versions produce
+identical results by construction — that is what merging them requires — so writing them out adds copies,
+not information. The honest counter-argument, which stood: a collapsed row shows its chips **N+1** times if
+you open it, so the fold reduced the repetition a reader *scrolls past* rather than the repetition in the
+DOM — which is the one that costs them anything.
+
+**The second took the panel with it.** That measurement is about 233 rows side by side in one panel, and
+that arrangement no longer exists: the combos are written out under the card that carries them, a dozen or
+so at a time, behind a disclosure a reader opened on purpose. The repetition the fold was buying back is
+not repetition on screen any more. **If a panel of combo rows ever returns, the 149-of-233 figure returns
+with it** — `node tools/try-deck.js test/fixtures/chatterfang-deck.txt` still prints the families.
 
 #### Comparing a whole choice at once
 
@@ -297,20 +322,21 @@ error, it silently yields a slightly wrong card list.
 
 ### The panel that could not answer its own question
 
-**Current rule: there are four result panels, and a combo whose slot the deck cannot fill appears
+**Current rule: there are three result panels, and a combo whose slot the deck cannot fill appears
 nowhere at all.** Template slots themselves are untouched — a *filled* slot still renders, still names
 the card credited with filling it, and still counts as a card.
 
-There used to be a fifth, **One slot away**. It went because it is the one section that could not
+There used to be five. **One slot away** went first, because it is the one section that could not
 answer its own question: a slot 394 cards fill has no card to recommend, so every row reduced to a
-slot name, a count and a handful of examples. The four panels around it each end in something you can
-act on; this one ended in a research task.
+slot name, a count and a handful of examples. The panels around it each end in something you can
+act on; this one ended in a research task. The list of combo rows went later, folded into the cards
+that carry them — see [the combos you have](#the-combos-you-have-one-row-per-card-most-carried-first).
 
 **What was given up, plainly:** the fact itself. `node tools/deck-gaps.js deck.txt` answers it from a
 terminal, which is a different audience from somebody pasting a decklist into a page.
 
 `slotCandidates()` went with the panel; `resolveSlots()`, `assignSlots()` and `templates.json` stayed.
-`npm run verify` expects four panels and asserts the fixture's one-slot-short combo appears
+`npm run verify` expects three panels and asserts the fixture's one-slot-short combo appears
 **nowhere**, across every combo link on the page. **One field outlived it** — `unresolvable`, the
 names for the query-less templates, is still published because the tools read it and because a
 template with no card list must still be a slot the deck cannot fill rather than an unnamed one.
@@ -396,8 +422,8 @@ a line between two cards that overlap.**
 | **Line weight** | how much the pair overlaps, capped so one busy pair does not draw a bar across the map |
 | **Line colour** | on a solid line, the best result behind it, in the same three tiers |
 
-What it adds over the panels is shape: *Cards carrying your combos* will tell you Basalt Monolith is in
-five combos, and cannot tell you the deck is one artifact-mana engine with a Heliod cluster bolted on.
+What it adds over the panel is shape: *Combos in your deck* will tell you Basalt Monolith is in five
+combos, and cannot tell you the deck is one artifact-mana engine with a Heliod cluster bolted on.
 
 **Three chips — *Both*, *Works together*, *Interchangeable* — filter lines, and nothing moves when you
 switch**: the layout is worked out from both relations at once, so the filter only takes lines away. There
@@ -409,8 +435,8 @@ it is a decision about what the picture claims and `node --test` cannot reach `r
 sentence under the map is deliberately not scoped** — it answers "what would cutting these cost", a fact
 about the deck rather than about which lines are on screen.
 
-**A card filling a template slot is on the map like any other**, and a test pins the map and *Cards
-carrying your combos* to the same set of cards so they cannot drift.
+**A card filling a template slot is on the map like any other**, and a test pins the map and *Combos in
+your deck* to the same set of cards so they cannot drift.
 
 ### Picking two or three cards out
 
@@ -444,21 +470,27 @@ search. The map is one image to a screen reader.
 ## Rendering order: the combos come first
 
 `renderResults()` was one synchronous task, and a browser cannot paint in the middle of one — so on a
-520-combo deck at 390px throttled 4× the reader watched a dead page for **3,094ms**, though their combos
-had been built after about 800ms. Yielding after the combos puts them on screen in **797ms**. **This is a
-trade, not a free win**: total building goes up, and what changes is that the reader is not made to watch
-it. **The three deferred panels are emptied immediately and filled a frame later** — three panels visibly
-absent beats three panels quietly wrong, and clearing them was most of the win anyway.
+520-combo deck at 390px throttled 4× the reader watched a dead page for **3,094ms**, though the answer had
+been built after about 800ms. Yielding after it puts it on screen in **797ms**. **This is a trade, not a
+free win**: total building goes up, and what changes is that the reader is not made to watch it. **The
+deferred panels are emptied immediately and filled a frame later** — a panel visibly absent beats a panel
+quietly a search out of date, and clearing them was most of the win anyway.
+
+**The cut is after "Combos in your deck"**, which is the answer and the first thing on screen; the map and
+the suggestions wait a frame. Those figures were measured when the answer was a list of combo rows and have
+not been re-measured for a list of cards, so read them as why the split exists rather than as what it costs
+today.
 
 Two things that are easy to get wrong: the suggestion panel's work is called *inside* the deferred callback
 rather than passed to it, since arguments are evaluated immediately; and every deferred callback carries
 the token of the render that booked it, because **+ Add to deck** fires a search straight away.
-`tools/verify-layout.js` asserts in both directions — the combos are in that first frame, and the other
+`tools/verify-layout.js` asserts in both directions — the answer is in that first frame, and the other
 panels are not.
 
 ## Adding a card, and searching again
 
-**+ Add to deck** writes `1 <card>` into the decklist, keeps the list, and submits the form.
+**+ Add to deck** writes `1 <card>` into the decklist, keeps the list, and submits the form. **− Remove**,
+on every row of *Combos in your deck*, is the same journey backwards.
 
 **The card goes into the main deck, not onto the end of the box.** Appended below a `Sideboard:`
 heading it parses as a sideboard card, so the next search suggests it again and the button looks like
@@ -492,6 +524,23 @@ disables the button and re-reads both boxes; **the list is saved before the sear
 debounce; and **the status line survives the search**, handed to the next one rather than replaced 200ms
 later. The layout test presses the button and asserts the deck ends up holding **more combos than it
 did**, because an append that forgets to search again looks fine on screen.
+
+### Taking one back out
+
+**− Remove** sits on every row of *Combos in your deck*, because that panel is ranked by what cutting a
+card would cost — every row is already an argument about keeping it, and the next step was to go and find
+the line in the box by hand.
+
+`DeckParser.removeDeckCard(text, name, key)` takes the whole line out, quantity and all: the row promises
+that the card's combos go with it, and decrementing `2 Sol Ring` to `1` would leave every one of them
+where it was. **Both boxes are edited**, since a commander is a card in the deck and the panel lists it as
+one. **A sideboard copy is left alone** — it is not in the deck, so nothing on the page rests on it.
+
+**`key` is required rather than defaulted, and that is the interesting part.** The name on the button is
+Commander Spellbook's spelling; the line is whatever the reader pasted, set codes and all. The page passes
+`DeckCombos.nameKey`, which `parser.js` must not depend on — so a default here would be that rule written
+out a second time, and the failure when the two drifted would be a button that silently removes nothing.
+Nothing matched is reported as an error rather than swallowed, for the same reason.
 
 ## Classifying the decklist: which bracket is it?
 
@@ -673,12 +722,15 @@ Three habits the suite enforces:
 
 - **Never pin a check to "the first row".** `.combo:first-child` reddened three checks about tier order
   and the fold when the panel was reordered — ask by the shape the check needs, and **scope both halves of
-  the assertion to that row**.
+  the assertion to that row**. The same trap in a new place: a combo row now only renders inside a card's
+  disclosure, so `verify` **opens them all before it measures anything**. Left shut, every rect is zero,
+  the heading, chip, pill and divider checks read boxes the browser never laid out, and they pass.
 - **Assert what a reader sees, not `textContent`** — the official/unofficial split is in the DOM twice, so
   `visibleTextIn()`. And `boundingBox()` coordinates do not scroll, so use `locator.click({ position })`.
 - **A check nobody has seen fail is a check nobody has seen work.** A fixture can also stop supplying the
   case a check needs — when `COLLAPSE_FROM` moved, the page drew no collapsed row and every assertion about
-  that shape would have passed while checking nothing, so the run says so instead.
+  that shape would have passed while checking nothing, so the run says so instead. When that shape left the
+  page for good, the checks left with it rather than being kept green against nothing.
 
 ## How it works
 
@@ -701,7 +753,7 @@ under Node and a named global in a browser, so logic is unit-testable without a 
 | `page-dom.js` | `PageDom` | DOM helpers, `setStatus`, the collapsible `panel` |
 | `render-rows.js` | `RenderRows` | the vocabulary every result row is built from |
 | `render-combos.js` | `RenderCombos` | a combo as a row + its steps disclosure |
-| `render-suggestions.js` | `RenderSuggestions` | suggestions, pieces, slots, unofficial panels |
+| `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck*, suggestions, unofficial panel |
 | `render-map.js` | `RenderMap` | the map's drawing half |
 | `deck-io.js` | `DeckIO` | the decklist, the share link, the dropped file |
 | `app.js` | — | wiring, the search, bracket and legality lines |
@@ -1062,24 +1114,31 @@ narrow/wide decision uses, rather than a third measured number.
   `flex: 0 0 auto` moves a card to the next line instead.
 - **The `+` belongs to the item it introduces**, drawn as a `::before`. As its own span it was a flex item
   free to end a line alone. `display: none` rather than an emptied span, so it leaves the a11y tree.
-- **Two heading items are not cards** — the `any of N` fold and a template slot, both outlined pills.
-  **The outline goes on an inner element, never on the flex item itself**, or the separator lands inside
-  the outline it should sit beside. Geometry alone cannot check that, so the run asserts it structurally.
+- **One heading item is not a card** — a template slot, an outlined pill. **The outline goes on an inner
+  element, never on the flex item itself**, or the separator lands inside the outline it should sit beside.
+  Geometry alone cannot check that, so the run asserts it structurally. There were two of these; the
+  `any of N` fold was the other.
 - **The link line's separators only exist between two offers on one line.** As flex items of their own, a
   wrap moved the chip to the next line and left the dot behind.
 
 `npm run verify` asserts both shapes from geometry rather than `textContent`, and skips headings inside a
 closed disclosure — every rect there is zero, so a perfectly laid-out page would report as broken.
 
+**The column a row is measured against is the container the query actually answers, not the panel body.**
+A combo row sits inside a card's disclosure, which is a `rows` container of its own — 450px of a 689px
+body at 768px. Read off the body, the run demanded the inline shape of a column too narrow to hold it and
+called a correct page broken; and the row's *gutter* still answers the body, so the two are read
+separately.
+
 ### Where the second number goes, and why it is a second number
 
-Leaving our rows out of two panels answered their own questions wrong: **Cards carrying your combos**
+Leaving our rows out of two panels answered their own questions wrong: **Combos in your deck**
 omitted Hammerhead entirely, and a panel that exists to price a cut cannot price it at zero. So both count
 both — **the total, and whose it is underneath**, in a gutter down the left:
 
 ```
    15   │ Scurry Oak                    ← 10 of Spellbook's, 5 of ours
-COMBOS  │ EDHREC · Scryfall
+COMBOS  │ EDHREC · Scryfall · − Remove
  10+5   │ 2 × 2-card   13 × 3-card
         │ ▾ Combos this unlocks         ← the fold is the card's, not the row's
 ```

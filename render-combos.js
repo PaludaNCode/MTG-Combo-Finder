@@ -144,15 +144,21 @@
     return outer;
   }
 
-  // `opts.steps` puts the "How it works" disclosure on the row. Off by default,
-  // and deliberately not on every row that draws a combo: the steps are how you
-  // execute a line you have, so they belong on the two panels that answer "what
-  // can this deck do" — the combos found and the unofficial ones — and nowhere
-  // else. A suggestion is a combo the deck cannot assemble yet, a one-slot-away
-  // row is the same, and the pieces panel relists combos the found panel has
-  // already offered them on, once per card in each. Left on all four, a page
-  // carried 429 controls, most of them a second or third way to ask the same
-  // question.
+  // `opts.steps` puts the "How it works" disclosure on the row. Off by default, and
+  // deliberately not on every row that draws a combo: the steps are how you execute a
+  // line you *have*, so they belong on the panels that answer "what can this deck do" —
+  // "Combos in your deck" and the unofficial rows — and nowhere else. A suggestion is a
+  // combo the deck cannot assemble yet, so its steps are instructions for a deck the
+  // reader has not got.
+  //
+  // It was off for the pieces panel on the grounds that it relisted combos a panel above
+  // had already offered the steps on, once per card in each: left on all four panels of
+  // the day, a page carried 429 controls. That panel above is gone — "Combos in your
+  // deck" *is* the pieces panel now — so the alternative is not a second way to ask, it
+  // is no way to ask. So it is on, and the cost comes back: the control is built once per
+  // card in each combo rather than once per combo, and it is built inside a closed
+  // disclosure, which is why it delays nothing a reader is looking at. The 429 was
+  // measured across four panels and has not been re-measured for one.
   function comboCard(variant, deckNames, lead, trail, opts) {
     const card = el('article', 'combo');
 
@@ -274,74 +280,19 @@
     return card;
   }
 
-  // A combo you can already assemble, with the parts that are interchangeable
-  // shown as a choice rather than as separate combos. The variants are real and
-  // still reachable — each keeps its own link to Spellbook.
-  // `trails` is the panel's answer to "what does this row differ from its neighbours
-  // by", from DeckCombos.interchangeableIn() over every combo in the panel. A row this
-  // function collapses has a better answer of its own — its group's choices, which is
-  // the set the heading is counting — so the lookup is only consulted for the rows that
-  // stay whole. Those sit between collapsed rows that do line up, and reading
-  // alphabetically while their neighbours read shared-then-different was the one place
-  // this panel still moved the difference around.
-  function comboGroupCard(group, trails) {
-    if (group.choices.length < 2) {
-      const only = group.variants[0];
-      return comboCard(only, null, null, trails && trails.get(only), { steps: true });
-    }
+  // There was a second row shape here: a combo whose interchangeable part was drawn as
+  // "+ any of 5" with the versions folded into a disclosure, for the panel that listed
+  // every combo the deck could assemble as its own row. That panel is gone — "Combos in
+  // your deck" is one row per card, and a card's combos are written out in full inside
+  // it — so nothing built a group row any more, and a renderer nothing renders is worse
+  // than no renderer. See groupVariants() in combos.js, which still groups for the map.
+  //
+  // The fold it drew was answering a real measurement: 149 of the Chatterfang deck's 233
+  // rows repeated a block of result chips already on screen, because a family's versions
+  // produce identical results by construction. That measurement was about 233 rows side
+  // by side in one panel, which is exactly the arrangement that no longer exists.
 
-    const card = el('article', 'combo');
-
-    const header = el('h3');
-    // From DeckCombos.comboRowNames(), which is also what the panel's rows were sorted
-    // on. Not RenderRows.alphabetical(group.shared), which gives the same answer today:
-    // the point is that it cannot stop giving the same answer, because a sort comparing
-    // a string the heading does not draw is a sort nobody can see is wrong.
-    DeckCombos.comboRowNames(group).forEach((name, i) => {
-      if (i > 0) header.appendChild(el('span', 'plus', ' + '));
-      header.appendChild(el('span', 'card-name', name));
-    });
-    header.appendChild(el('span', 'plus', ' + '));
-    header.appendChild(pill('either', 'any of ' + group.choices.length));
-    card.appendChild(header);
-
-    const choices = el('p', 'choices');
-    RenderRows.alphabetical(group.choices).forEach((name, i) => {
-      if (i > 0) choices.appendChild(document.createTextNode(' · '));
-      choices.appendChild(el('span', 'card-name', name));
-    });
-    card.appendChild(choices);
-
-    // Same order as the rows above: what it needs, then what it does.
-    // The same one-press look at the cards the other rows get. A collapsed row asks
-    // for its shared cards plus one of the interchangeable ones, so the comparison
-    // covers the whole set — that is what the reader is choosing between.
-    const groupCards = RenderRows.alphabetical(group.shared).concat(RenderRows.alphabetical(group.choices));
-    const groupCompare = RenderRows.cardsOnScryfall(
-      groupCards,
-      `See all ${groupCards.length} cards`,
-      `Open all ${groupCards.length} cards this row involves on Scryfall`
-    );
-    if (groupCompare) {
-      const p = el('p', 'combo-link');
-      p.appendChild(groupCompare);
-      card.appendChild(p);
-    }
-
-    card.appendChild(RenderRows.resultChips(group.variants[0]));
-
-    const details = el('details');
-    details.appendChild(el('summary', null, `All ${group.variants.length} versions`));
-    // The interchangeable cards go last in every version, so each row reads in the
-    // same shape as the heading above them — the shared cards, then the one that
-    // makes this version this version.
-    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices, { steps: true })));
-    card.appendChild(details);
-
-    return card;
-  }
-
-  const api = { stepsList, stepsDisclosure, comboCard, comboGroupCard };
+  const api = { stepsList, stepsDisclosure, comboCard };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

@@ -77,7 +77,7 @@ logic is unit-testable without a DOM.
 | `page-dom.js` | `PageDom` | DOM helpers, `setStatus`, the collapsible `panel` |
 | `render-rows.js` | `RenderRows` | the vocabulary every result row is built from |
 | `render-combos.js` | `RenderCombos` | a combo as a row + its steps disclosure |
-| `render-suggestions.js` | `RenderSuggestions` | suggestions, pieces, slots, unofficial panels |
+| `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck* (a row per card), suggestions, unofficial |
 | `render-map.js` | `RenderMap` | the map's drawing half |
 | `deck-io.js` | `DeckIO` | the decklist, the share link, the dropped file |
 | `app.js` | — | wiring, the search, bracket and legality lines |
@@ -233,14 +233,23 @@ loosely.
 
 ### Layout and CSS
 
-- **`COLLAPSE_FROM = 4`: pairs and triples of interchangeable cards do not collapse.** That is the
-  rule, not a bug. `groupVariants()` counts the members still *free*, so a family cut below the
-  threshold by a bigger one is written out too; **a fixture whose families are all smaller draws no
-  collapsed row at all**, so `test/fixtures/dataset.js` carries enough versions and raising the
-  number means adding one; tests read the exported constant, exactly one pinning it.
-- **Do not remove the fold without answering the measurement**: **149 of the Chatterfang deck's 233
-  rows** repeat a block of chips already on screen, because a family's versions produce identical
-  results by construction. README § *The fold was taken out once, and put back*.
+- **`groupVariants()` / `COLLAPSE_FROM = 4` draw nothing on the page any more.** The `any of N` fold
+  belonged to the panel that listed every combo as its own row, and that panel is gone: *Combos in your
+  deck* is one row per card. The only caller left is `tools/try-deck.js`, which groups a deck's combos into
+  families as a text summary. Tests read the exported constant, exactly one pinning it.
+- **The 149-of-233 measurement that justified the fold does not transfer, and comes back with the panel.**
+  It counted rows repeating a block of chips *side by side in one panel*; combos are now written out under
+  the card that carries them, behind a disclosure. If a list of combo rows ever returns, so does the
+  figure. README § *The fold was taken out twice*.
+- **A combo row only renders inside a card's disclosure**, so `verify` opens every one before it measures
+  anything — every rect inside a closed `<details>` is 0, and the heading, chip, pill and divider checks
+  all pass against boxes the browser never laid out.
+- **A row's own column is the disclosure, not the panel body** — 450px of a 689px body at 768px, because
+  `.combo.suggestion > details` is a nested `rows` container. The row's *gutter* still answers the panel
+  body, so the two are measured separately → `headingShape.column` vs `numberColumns[].column`.
+- **A count beside a panel heading may not count the panel's rows.** *Combos in your deck* is headed with a
+  combo count and lists *cards*, so the two disagree by design and the panel has to say so →
+  `DeckView.deckCombosNote()`, and `verify` checks the badge against the distinct combos the panel reaches.
 - **Row layout keys on the row's own column, not the viewport, and the two disagree** — 704px at a
   768px window but **442px at 900px**, where the shell hands 370px to the decklist, so
   `min-width: 900px` styles the narrower case as though it were roomier. → `@container rows (min-width: …)`
@@ -253,6 +262,10 @@ loosely.
   carry its own piece** or the line stops at it. **The gutter draws none of it** and spans the rows
   rather than sizing one; `verify` fails if a `border-right` reappears, since a second line at the
   same x is invisible and undoes the whole thing. README § *Where the second number goes*.
+- **A translucent fill is a contrast bug waiting for a background to move.** The result chips were a
+  10%-alpha tint; on `--panel` that measured 4.97:1 in the light theme and on the `--panel-2` a nested
+  combo sits on, 4.19:1 — a fail. They are flat `--win-fill` / `--decisive-fill` tokens now, the same
+  colour wherever the chip lands → `e2e/a11y.spec.js`, which had never opened one of those disclosures.
 - **`opacity` is not a way to make a colour quieter** — it applies after the colour is chosen and
   spends an already-allocated contrast budget invisibly; three of four rules that did it were
   hundredths under AA. `--faint` is the token for text below `--muted`, **only safe on `--bg`** →

@@ -23,7 +23,7 @@ async function serviceWorkerReady(page) {
 async function search(page, deck) {
   await page.locator('#decklist').fill(deck || DECKS.marked);
   await page.getByRole('button', { name: 'Find combos' }).click();
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
 }
 
 test('a second visit works with the network off, and can still search', async ({ page, context }) => {
@@ -44,7 +44,7 @@ test('a second visit works with the network off, and can still search', async ({
 
   // And the answer comes back, from the snapshot already in hand.
   await page.getByRole('button', { name: 'Find combos' }).click();
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
   await expect(page.locator('#status')).toContainText('known combos');
 });
 
@@ -81,5 +81,5 @@ test('the page works when the worker is unavailable', async ({ page }) => {
   });
   await page.goto('/index.html');
   await search(page);
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
 });

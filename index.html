@@ -111,16 +111,24 @@
              identity, and cards banned in Commander. Two different accusations, so
              two lines, and nothing at all when there is neither. -->
         <div id="legality"></div>
-        <div id="included"></div>
+        <!-- "Combos in your deck": the combos this list can already assemble, read
+             one card at a time. It leads the results because it is the answer, and
+             it is the only panel rendered before the first paint — see afterPaint()
+             in app.js for what waits.
+
+             The id is still `pieces`, and deliberately: the panel that used to list
+             the combos row by row was `included` and is gone, so a rename here would
+             make every stylesheet rule, layout check and spec that says `#pieces`
+             look like it belongs to the old panel rather than this one. -->
+        <div id="pieces"></div>
         <!-- The same question, answered on our own authority rather than
              Spellbook's: combos found by substituting cards Spellbook itself
              treats as interchangeable elsewhere. Absent unless the deck has one. -->
         <div id="unofficial"></div>
         <!-- The same combos as a picture: a dot per card, a line between two the
-             same combo needs. Under the lists it summarises, and redrawn from
+             same combo needs. Under the panel it summarises, and redrawn from
              scratch by every search, so adding a card moves the map too. -->
         <div id="graph"></div>
-        <div id="pieces"></div>
         <div id="suggestions"></div>
       </section>
     </div>

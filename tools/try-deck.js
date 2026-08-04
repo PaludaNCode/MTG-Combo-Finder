@@ -114,7 +114,7 @@ async function main() {
   say();
   say('## Combos in the deck');
   say();
-  say(`**${included.length} combos** in ${groups.length} rows `
+  say(`**${included.length} combos** in ${groups.length} families of interchangeable versions `
     + `— ${MARK.win} ${counts.win} win · ${MARK.decisive} ${counts.decisive} decisive · ${MARK.other} ${counts.other} other`);
   say();
 
@@ -172,7 +172,12 @@ async function main() {
   // that question is answered now. This tool reports what the page shows, so it stops
   // here too.
 
-  say('| # | combo | slot filled by | best result |');
+  // Grouped by family rather than listed one per line, which is this tool's own summary
+  // and no longer the shape of a panel: "Combos in your deck" is one row per card and
+  // writes every version out inside it. Kept because a family is the useful unit when
+  // reading 233 combos as text — and because groupVariants() is otherwise called from
+  // nowhere, which is worth knowing if it ever needs changing.
+  say('| # | family | slot filled by | best result |');
   say('|---:|---|---|---|');
   groups.forEach((g, i) => {
     const v = g.variants[0];
@@ -213,8 +218,9 @@ async function main() {
   }
   say();
 
+  // What the page leads with, in its own order: "Combos in your deck" is this list.
   const pieces = DeckCombos.comboPieces(included);
-  say('## Cards carrying the most combos');
+  say('## Combos in your deck — the cards carrying the most');
   say();
   for (const p of pieces.slice(0, 10)) say(`- ${p.card} — ${p.count}`);
   say();

@@ -101,6 +101,48 @@
     }));
   }
 
+  // ---- what "Combos in your deck" is a list of --------------------------------
+
+  // The panel is headed "Combos in your deck" and its rows are *cards*, one per card
+  // that carries at least one. That mismatch is the whole reason this function exists:
+  // the count beside the heading has to be combos, because that is what the heading
+  // says, and it will therefore disagree with the number of rows underneath it: the
+  // standing Chatterfang deck's 233 combos are carried by some subset of its 103 cards.
+  // A three-figure badge over a two-figure list of rows, with nothing explaining the
+  // difference, is a page that looks right and says something false — which is the rule
+  // for what belongs in this file.
+  //
+  // So both numbers are stated, in the panel, in one sentence: how many combos, and
+  // how many of your cards carry them.
+  //
+  // `official` and `ours` stay apart for the same reason they do on every row — an
+  // unofficial row is not published data and is never counted as though it were. A
+  // deck can be all one or all the other: a card can carry nothing but combos of ours.
+  //
+  // Returns null when there is nothing to say, and the panel prints its empty line
+  // instead. The badge is `count`, which is the published total alone — the same
+  // number the panel that used to list the combos row by row carried.
+  function deckCombosNote(official, ours, cards) {
+    if (!official && !ours) return null;
+    const combos = (n) => n + ' combo' + (n === 1 ? '' : 's');
+    const carried = `carried by ${cards} of your card${cards === 1 ? '' : 's'}`;
+
+    let what;
+    if (official && ours) {
+      what = `${combos(official)} published by Commander Spellbook and ${ours} of ours`;
+    } else if (official) {
+      what = `${combos(official)} published by Commander Spellbook`;
+    } else {
+      what = `${combos(ours)} of ours, none published by Commander Spellbook`;
+    }
+
+    return {
+      count: official || null,
+      sentence: `${what}, ${carried}. Each row is one card: the number beside it is what `
+        + 'cutting that card would cost, and the combos behind it are folded away underneath.',
+    };
+  }
+
   // ---- the numbers a row carries, and whose combos they are -------------------
 
   // A result row's numbers sit in a column of their own rather than in the
@@ -445,6 +487,7 @@
     UNKNOWN_NAMED,
     UNKNOWN_LIMIT,
     sizePills,
+    deckCombosNote,
     rowNumbers,
     bracketProse,
     timingSentence,

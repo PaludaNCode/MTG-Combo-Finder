@@ -1,5 +1,6 @@
-// The three panels that answer "what now": cards to add, the cards already carrying your
-// combos, and the unofficial rows. (There were four; see below for the one that went.)
+// The three panels that answer "what has this deck got, and what now": "Combos in your
+// deck" — one row per card of yours that carries one — the unofficial rows, and the cards
+// worth adding. (There were four; two went, and each is written down where it was.)
 //
 // All three are lists of rows built from render-rows.js, and the combos they cite are drawn
 // by render-combos.js — so this file is mostly about grouping, ordering and what each
@@ -96,7 +97,7 @@
     const details = el('details');
     details.appendChild(el('summary', null, 'Combos this unlocks'));
     // One list, ours and Spellbook's together, ordered by groupSuggestions() — the same
-    // shape "Cards carrying your combos" below draws. Ours used to sit under a heading of
+    // shape "Combos in your deck" above draws. Ours used to sit under a heading of
     // their own beneath the published ones; each row says whose it is now, which leaves
     // the order free to put a row of ours beside the family it belongs to.
     //
@@ -135,10 +136,16 @@
     head.appendChild(el('span', 'card-name', piece.card));
     main.appendChild(head);
 
+    // The same line a suggestion carries — where to read about the card, then the one
+    // thing you can do with it from here. On a suggestion that is "+ Add to deck"; here
+    // it is the cut, which is the decision this panel is ranked by. The stylesheet moves
+    // the whole line up beside the name where the column has room, exactly as it does
+    // for a suggestion, so both panels' rows keep one shape.
     const links = el('p', 'card-links');
     links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(piece.card), 'EDHREC'));
     links.appendChild(document.createTextNode(' · '));
     links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + piece.card + '"'), 'Scryfall'));
+    links.appendChild(RenderRows.removeButton(piece.card));
     main.appendChild(links);
 
     // The same breakdown a suggestion carries, for the same reason: "in 9 combos" is
@@ -155,9 +162,13 @@
     details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
     // The card whose combos these are leads every row, and what differs between them
     // goes last — the same shape the suggestion above uses, for the same reason.
+    //
+    // `steps: true`, unlike the suggestion's list: these are combos the deck can actually
+    // do, and this is the only place on the page one is drawn. See comboCard() in
+    // render-combos.js for what that costs.
     const trails = DeckCombos.interchangeableIn(piece.combos);
     piece.combos.forEach((v) => details.appendChild(
-      RenderCombos.comboCard(v, null, piece.card, trails.get(v))
+      RenderCombos.comboCard(v, null, piece.card, trails.get(v), { steps: true })
     ));
     card.appendChild(details);
 
@@ -208,15 +219,30 @@
     ));
   }
 
+  // "Combos in your deck" — the panel the results lead with, and the only one built
+  // before the page paints.
+  //
+  // It answers the question a card at a time rather than a combo at a time, which is
+  // the whole change: there was a panel above this one listing every combo as its own
+  // row, and it is gone. On the standing Chatterfang deck that was 233 rows, every one of
+  // them a set of cards the reader had to hold in their head to notice that the same few
+  // cards were carrying most of it. One row per card says that in the gutter, and the
+  // combos are still all there, folded into the card that holds them.
+  //
+  // Never absent, unlike the panels below it. A deck with no combos at all is exactly
+  // the reader who most needs to be told so, and a missing panel says it to nobody.
   function renderPieces(container, included, unofficial) {
-    if (!included.length && !(unofficial || []).length) {
-      container.textContent = '';
+    const pieces = DeckCombos.comboPieces(included, unofficial);
+    // The badge is combos and the rows are cards, so the two numbers disagree on
+    // purpose and the sentence below reconciles them. DeckView owns both — see
+    // deckCombosNote() for why a count that renders perfectly is still a decision.
+    const note = DeckView.deckCombosNote(included.length, (unofficial || []).length, pieces.length);
+    const body = panel(container, 'pieces', 'Combos in your deck', note && note.count);
+    if (!note) {
+      body.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
       return;
     }
-    const pieces = DeckCombos.comboPieces(included, unofficial);
-    const body = panel(container, 'pieces', 'Cards carrying your combos', pieces.length);
-    // The per-card count says this already; a sentence restating it for the
-    // top card is just noise above the list.
+    body.appendChild(el('p', 'panel-note', note.sentence));
     pieces.forEach((p) => body.appendChild(pieceCard(p)));
   }
 
