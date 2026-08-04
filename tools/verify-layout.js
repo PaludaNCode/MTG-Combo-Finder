@@ -26,9 +26,19 @@ const { execFile } = require('node:child_process');
 const { rewriteAssets } = require('./stamp-assets.js');
 
 const ROOT = path.join(__dirname, '..');
+// charset=utf-8 on every one of them, and it is load-bearing rather than tidy. Without it
+// the browser sniffs the encoding per file, and CI's Chrome decoded the em dash in
+// render-map.js's hover text as mojibake while the Chromium here guessed UTF-8 and passed
+// — so `verify` failed on one viewport with "a card on the map has no hover text" and no
+// local run could reproduce it. GitHub Pages serves these with a charset, so the page was
+// never wrong in production; only this server was, which is the worst shape a harness bug
+// can take. Any new text type added here needs the same suffix.
 const MIME = {
-  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.json': 'application/json', '.svg': 'image/svg+xml',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml; charset=utf-8',
 };
 
 // The `rows` container width at which a combo heading stops stacking one card per line and
