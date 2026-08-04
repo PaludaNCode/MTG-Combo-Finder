@@ -147,8 +147,8 @@ which ranks a deck's cards by how many published combos name them — what subst
 5. **Read the survivors against the cards** — the peer version's published steps are the best
    evidence, since they say what the loop actually does.
 6. **Write the rows** citing the peer combo, and **log the pass with its rule-outs.** The
-   rule-outs are the valuable part: the README's oldest audit is more useful for its 35 rejections
-   than its 9 survivors.
+   rule-outs are the valuable part: the README's oldest audit is more useful for the 35 it ruled
+   out than for what survived.
 
 `verified` = somebody read both cards. `derived` = both halves are published and the pairing was
 reasoned. **Use `derived` rather than reading loosely and claiming `verified`.**

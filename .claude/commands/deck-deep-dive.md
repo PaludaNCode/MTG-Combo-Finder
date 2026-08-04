@@ -72,8 +72,8 @@ Add an entry to `research-log.js` per subject: `subject`, `cards`, `cardIds`, `d
 
 `proposed` and `examined` differ whenever a rule-out is mechanical — record both. Give
 every rule-out a **reason**; give a count only where you actually counted. The rule-outs
-are the valuable part: the oldest audit in the README is more useful for its 35
-rejections than its 9 survivors.
+are the valuable part: the oldest audit in the README is more useful for the 35 it
+ruled out than for what survived.
 
 ## 5. Check, then report
 
