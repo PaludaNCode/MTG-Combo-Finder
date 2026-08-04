@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const {
   groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn, orderComboNames,
-  computeSuggestions, deckNameSet, variantSignature,
+  computeSuggestions, deckNameSet, variantSignature, variantCardNames,
 } = require('../combos.js');
 
 // n versions of one combo: the same shared cards, a different last card on each.
@@ -468,4 +468,71 @@ test('byDrawnRow: two rows offering the same many versions order on the choices 
   assert.deepStrictEqual(listed(rows), ['aa-0', 'zz-0']);
   assert.deepStrictEqual(listed(rows.slice().reverse()), ['aa-0', 'zz-0'],
     'and not whichever arrived first');
+});
+
+// ---- one list, ours among Spellbook's ---------------------------------------
+//
+// A suggestion used to draw two lists: the published combos, then a heading saying whose
+// the rest were, then ours. The argument was that "somebody published this" is not a
+// property of a row — which is true, and splitting the list made it the property that
+// decided where a row *sat*. So a row of ours landed below the fold, away from the family
+// it belongs to, and a reader comparing near-identical lines had to compare them across a
+// heading. "Cards carrying your combos" never did that, and this is now the same shape.
+//
+// Each row says whose it is instead; that badge is render-combos.js's job and the layout
+// run's to check. What belongs here is the order.
+
+const oursVariant = (id, needs, ...cardNames) => Object.assign(
+  variant(id, cardNames, ['Infinite tokens']),
+  { needs: [needs], unofficial: { confidence: 'verified' } }
+);
+
+test('groupSuggestions: a suggestion lists ours and Spellbook\'s in one order', () => {
+  // Everything but "Add Me" is in the deck, so every row below is one card away from it
+  // — which is what puts them all under the same suggestion.
+  const deck = deckNameSet(
+    ['Held', 'Alpha', 'Beta', 'Gamma', 'Delta'].map((card) => ({ card }))
+  );
+  // Three published, one of ours whose cards sort into the middle of them.
+  const published = [
+    variant('p1', ['Held', 'Add Me', 'Alpha'], ['Infinite tokens']),
+    variant('p2', ['Held', 'Add Me', 'Gamma'], ['Infinite tokens']),
+    variant('p3', ['Held', 'Add Me', 'Delta'], ['Infinite tokens']),
+  ];
+  const unofficial = [oursVariant('u1', 'Add Me', 'Held', 'Add Me', 'Beta')];
+
+  const [group] = groupSuggestions(
+    computeSuggestions(published, deck, unofficial), deck
+  );
+
+  assert.strictEqual(group.combos.length, 4, 'every combo the card unlocks, in one list');
+  // Ours sits where its cards put it, not after the published ones.
+  const ids = group.combos.map((v) => v.id);
+  assert.deepStrictEqual(ids, ['p1', 'u1', 'p3', 'p2'],
+    `ours was not ordered among them: ${ids.join(', ')}`);
+  // And the counts stay apart, because "+3" and "+1 of our own" are different claims.
+  assert.strictEqual(group.unlocks.length, 3);
+  assert.strictEqual(group.unofficial.length, 1);
+});
+
+test('groupSuggestions: the merged list leads with the card you would be adding', () => {
+  const deck = deckNameSet(
+    ['Held', 'Zebra', 'Aardvark'].map((card) => ({ card }))
+  );
+  const published = [variant('p1', ['Held', 'Zebra', 'Add Me'], ['Infinite tokens'])];
+  const unofficial = [oursVariant('u1', 'Add Me', 'Held', 'Aardvark', 'Add Me')];
+  const [group] = groupSuggestions(computeSuggestions(published, deck, unofficial), deck);
+  // The lead is per row and has to be the one the render side draws, or the list was
+  // ordered on a string nobody sees.
+  for (const v of group.combos) {
+    assert.strictEqual(orderComboNames(variantCardNames(v), { lead: 'Add Me' })[0], 'Add Me');
+  }
+});
+
+test('groupSuggestions: a suggestion with nothing of ours still gets its list', () => {
+  const deck = deckNameSet([{ card: 'Held' }]);
+  const published = [variant('p1', ['Held', 'Add Me'], ['Infinite tokens'])];
+  const [group] = groupSuggestions(computeSuggestions(published, deck, []), deck);
+  assert.deepStrictEqual(group.combos.map((v) => v.id), ['p1']);
+  assert.strictEqual(group.unofficial.length, 0);
 });

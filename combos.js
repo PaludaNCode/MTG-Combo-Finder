@@ -347,7 +347,31 @@
       }
       group.cards.push(suggestion.card);
     }
-    for (const group of groups.values()) group.cards.sort((a, b) => a.localeCompare(b));
+
+    // The card this row would have you add, per variant rather than per group: the group's
+    // cards are interchangeable, so which of them a given combo is short of differs from
+    // row to row, and taking the representative would put the wrong card first on most of
+    // them. The render side reads it the same way, which it has to — an ordering compared
+    // on a lead the page does not draw is compared on a string nobody sees.
+    const shortOf = (v) => variantCardNames(v)
+      .find((n) => !deckNames || !deckNames.has(nameKey(n)));
+
+    for (const group of groups.values()) {
+      group.cards.sort((a, b) => a.localeCompare(b));
+      // **One list, ours and Spellbook's together**, the way "Cards carrying your combos"
+      // has always drawn them. They used to be two, with ours under a heading of their
+      // own below the published ones, on the argument that whether somebody published a
+      // combo is not a property of a row. It is still not — but splitting the list made
+      // it the property that decides where a row *sits*, which put a row of ours below
+      // the fold and away from the family it belongs to, and asked a reader comparing
+      // eight near-identical lines to compare them across a heading. The row says whose
+      // it is; see the unofficial badge in render-combos.js. The order does not have to.
+      //
+      // The counts stay apart. `unlocks` and `unofficial` keep their own lengths for the
+      // gutter and the split, because "+4" and "+4 of our own" are different claims —
+      // that part was never about ordering.
+      group.combos = byDrawnName(group.unlocks.concat(group.unofficial), shortOf);
+    }
     return [...groups.values()].sort(
       (a, b) => (b.unlocks.length + b.unofficial.length) - (a.unlocks.length + a.unofficial.length)
         || b.unlocks.length - a.unlocks.length

@@ -50,7 +50,10 @@
     links.appendChild(RenderRows.addButton(first));
     main.appendChild(links);
 
-    const sizes = RenderRows.sizeRow(group.unlocks.concat(group.unofficial || []));
+    // The same set the disclosure below lists, asked for as that set rather than
+    // re-assembled here: two places building "both halves" from the parts is two places
+    // that can disagree about what the row's breakdown counts.
+    const sizes = RenderRows.sizeRow(group.combos);
     if (sizes) main.appendChild(sizes);
 
     card.appendChild(main);
@@ -92,31 +95,25 @@
 
     const details = el('details');
     details.appendChild(el('summary', null, 'Combos this unlocks'));
-    // The card being suggested is the one this deck does not hold. Read per
-    // variant rather than taken from the group: a group of interchangeable
-    // cards has a different one of them in each of its combos.
+    // One list, ours and Spellbook's together, ordered by groupSuggestions() — the same
+    // shape "Cards carrying your combos" below draws. Ours used to sit under a heading of
+    // their own beneath the published ones; each row says whose it is now, which leaves
+    // the order free to put a row of ours beside the family it belongs to.
+    //
+    // The card being suggested is the one this deck does not hold. Read per variant
+    // rather than taken from the group: a group of interchangeable cards has a different
+    // one of them in each of its combos. It must agree with the lead the list was sorted
+    // under, which is why both come from the same rule.
     const shortOf = (v) => DeckCombos.variantCardNames(v)
       .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
     // …and the card that varies between these rows goes last, so the list reads as
     // one shape: the card you would add, the cards it works with, then the piece
     // this row swaps. Worked out over the list as drawn, since that is what the
-    // reader is comparing — and separately for ours below, which is its own list.
-    const trails = DeckCombos.interchangeableIn(group.unlocks);
-    group.unlocks.forEach((v) => details.appendChild(
+    // reader is comparing — which is now the whole list rather than half of it.
+    const trails = DeckCombos.interchangeableIn(group.combos);
+    group.combos.forEach((v) => details.appendChild(
       RenderCombos.comboCard(v, deckNames, shortOf(v), trails.get(v))
     ));
-    // Ours below the published ones and under their own heading, for the same
-    // reason they get their own panel rather than a badge: the difference is not
-    // a property of a row, it is whether somebody published it.
-    if (ours) {
-      details.appendChild(el('p', 'ours-head', ours === 1
-        ? 'And one this project believes in, which Spellbook has not published:'
-        : 'And ' + ours + ' this project believes in, which Spellbook has not published:'));
-      const ourTrails = DeckCombos.interchangeableIn(group.unofficial);
-      group.unofficial.forEach((v) => details.appendChild(
-        RenderCombos.comboCard(v, deckNames, shortOf(v), ourTrails.get(v))
-      ));
-    }
     card.appendChild(details);
 
     return card;

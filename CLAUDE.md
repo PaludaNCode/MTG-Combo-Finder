@@ -366,6 +366,13 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **The unofficial panel is never counted as published data.** Its rows stay out of
   the combo count and the bracket check, and every row has to name the published
   combo it came from. `test/unofficial.test.js` enforces that shape.
+- **Two panels list ours and Spellbook's in one order** — the suggestions and the pieces —
+  so what marks a row as ours is the `unofficial` pin on the row, before the confidence
+  pin. It used to be a heading above a second list, which made "who published this" decide
+  where a row *sat* and split families across it. The counts stay apart (`+3 official ·
+  +1 unofficial`) and the standalone panel stays; only the ordering merged. The pin is
+  drawn on every unofficial row rather than behind a flag, because a missing pin in a
+  merged list attributes our work to Spellbook and nothing on screen would say otherwise.
 - **Rows leave the file because the nightly job noticed, not because somebody
   remembered.** `update-data.yml` verifies every citation against the snapshot it just
   published: a broken one fails the job, and a row Spellbook has *since published*

@@ -224,6 +224,18 @@
     // nobody has published is only worth showing if it shows its working.
     if (derived) {
       const note = el('p', 'derived-note');
+      // Whose row this is, before how far the checking went. Two panels now list ours and
+      // Spellbook's in one order — the suggestions and the pieces — so a reader scanning
+      // down either needs the difference on the row rather than in a heading above some
+      // of them. It reads "unofficial · verified": not published, and read against the
+      // cards. Those are different claims and the second does not imply the first.
+      //
+      // Drawn on every unofficial row, including the ones in the panel that is entirely
+      // unofficial, where it agrees with the heading. That is the cheap redundancy; the
+      // alternative is a flag whose two states have to stay right at six call sites, and
+      // whose failure mode is a missing badge in a merged list — which is the exact thing
+      // this exists to prevent.
+      note.appendChild(el('span', 'derived-badge unofficial', 'unofficial'));
       note.appendChild(el('span', 'derived-badge ' + derived.confidence, derived.confidence));
       // Usually one swap. A row may instead name a chain of them, and then the
       // reader is owed every step: "B in place of A, then D in place of C" is a

@@ -2048,6 +2048,14 @@ assertions ride along inside the layout runs, for the same reason:
   fails `test/grouping.test.js`, where the property is pinned on a built panel. It stays
   because it starts biting the day a fixture holds two rows a card apart, and because a
   green run should not be read as proof of the half it cannot see.
+- **Every unofficial row says so on itself.** The suggestion panel's list holds ours and
+  Spellbook's in one order, so nothing above a row tells a reader which it is. The run
+  counts the rows of ours in that list and the `unofficial` pins on them and fails if the
+  two disagree — a merged list that lost the pin silently attributes our work to
+  Spellbook. It also checks the pin is read *before* the confidence one, and that a
+  heading has not reappeared to split the list in two again. Both badges are asked for by
+  what they are rather than by being first, which is what the old check did: it read
+  `.derived-badge` and got whichever came first, and that is the one that changed.
 - **The result chips** — tier order, the fold, three colours, the height folding saves —
   are read off *a row with a game-winning result*, not off the first row on the page.
   Reading the first one tied every one of those checks to a decision belonging elsewhere:
@@ -2821,6 +2829,49 @@ answer it either way.
 Everything above comes from Spellbook and is shown on their authority. `unofficial.js`
 is the one exception — the surviving output of that substitution audit, rendered in its
 own panel below **Combos in your deck** and never counted among them.
+
+### The row says whose it is, so the list does not have to
+
+Two panels list ours and Spellbook's together: **Cards carrying your combos**, which
+always has, and **Suggested additions**, which used to draw two lists — the published
+combos, a heading reading *And 5 this project believes in, which Spellbook has not
+published:*, then ours.
+
+The argument for the heading was that whether somebody published a combo is not a
+property of a row. That is right, and splitting the list made it the property that
+decided where a row *sat* — which is a stronger claim than the one anybody wanted. A row
+of ours went below the fold and away from the family it belongs to, and a reader
+comparing eight near-identical lines had to compare them across a heading:
+
+```
+before                                        after
+▾ Combos this unlocks                         ▾ Combos this unlocks
+    Cleric Class + Herd Baloth + Essence…         Cleric Class + Herd Baloth + Case of…
+    Cleric Class + Herd Baloth + Hinter…      [unofficial][verified]
+    Cleric Class + Herd Baloth + Soul Warden      Cleric Class + Herd Baloth + Elas il-Kor…
+  And 4 this project believes in, which           Cleric Class + Herd Baloth + Essence…
+  Spellbook has not published:                    Cleric Class + Herd Baloth + Hinter…
+    Cleric Class + Herd Baloth + Case of…         Cleric Class + Herd Baloth + Soul Warden
+    Cleric Class + Herd Baloth + Elas il-Kor…
+```
+
+So the row carries it instead: **an `unofficial` pin before the confidence pin**, reading
+*unofficial · verified* — not published, and read against the cards. Those are separate
+claims and the second does not imply the first, which is why they are two pins and not
+one. It is drawn in the accent the unofficial half is spoken in everywhere else on the
+page, so a reader meets one colour for "not Spellbook's" rather than three.
+
+**The counts stay apart.** `+3 official · +1 unofficial` under the total is untouched:
+that was never about ordering, and "+4" and "+4 of our own" remain different claims.
+So does the panel — ours still get one of their own, below the published combos, because
+a panel is where somebody goes to read *our* work rather than somewhere they arrive by
+scrolling.
+
+The pin is drawn on every unofficial row, including the ones in that panel, where it
+agrees with the heading above them. That redundancy is deliberate and cheap; the
+alternative is a flag whose two states have to stay right at six call sites, and whose
+failure mode is a missing pin in a merged list — which is the exact thing it exists to
+prevent.
 
 ### One shape, sixteen rows: Kitchen Finks and Heroic Feast
 
