@@ -118,33 +118,29 @@
   // what" — without moving a single card: the layout is the same picture, and
   // only which lines are drawn changes. Which is the point of laying it out from
   // both relations at once.
-  // The first three ask which *relation* to draw. The fourth asks what the combo
-  // behind a line is worth, which is a different question on the same picture — and on
-  // a deck whose map runs to a hundred lines it is the one that makes it readable.
-  //
-  // Interchangeable lines are not in the game-ending view, deliberately: a swap line
-  // says "these two do the same job", there is no combo behind it and so no tier to
-  // filter it by. The title says so rather than leaving it to be noticed.
+  // Every chip asks the same kind of question — which *relation* to draw — so the picture
+  // always means one thing. A fourth chip once asked something else, "show only the lines
+  // whose combo ends the game", and it is gone: a tier is a property of the combo behind a
+  // line rather than a relation between two cards, so it could not include interchangeable
+  // lines at all and the view had to explain its own absence in its tooltip.
   const MAP_VIEWS = [
     { id: 'all', label: 'Both', spoken: 'Show every line' },
     { id: 'combo', label: 'Works together', spoken: 'Show only pairs a combo needs' },
     { id: 'swap', label: 'Interchangeable', spoken: 'Show only cards that stand in for each other' },
-    {
-      id: 'win',
-      label: 'Game-ending',
-      spoken: 'Show only pairs whose combo wins the game — interchangeable lines are not shown, '
-        + 'since they are not combos and have no result',
-    },
   ];
 
-  function mapFilter(svg) {
+  // `onChange` re-lights the map, because the highlight follows the view: switching chips
+  // while a card is pinned has to re-answer the question, not leave the previous view's
+  // answer glowing under the new one's lines.
+  function mapFilter(svg, onChange) {
     const row = el('div', 'map-filter');
     row.setAttribute('role', 'group');
     row.setAttribute('aria-label', 'Which lines to show');
     const buttons = [];
     const select = (view) => {
-      svg.classList.remove('show-all', 'show-combo', 'show-swap', 'show-win');
+      svg.classList.remove('show-all', 'show-combo', 'show-swap');
       svg.classList.add('show-' + view);
+      if (onChange) onChange(view);
       buttons.forEach((b) => {
         const on = b.dataset.view === view;
         b.classList.toggle('is-active', on);
@@ -257,10 +253,10 @@
     svg.appendChild(nodeLayer);
 
     const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-    // What each card touches, so picking one out is a lookup rather than a search
-    // of the DOM on every pointer move — and every line with both its ends, for
-    // the same reason.
-    const touching = new Map(graph.nodes.map((n) => [n.id, { nodes: new Set([n.id]) }]));
+    // Every line with both its ends, so lighting a comparison is a lookup rather than a
+    // search of the DOM on every pointer move. Which cards a card touches is
+    // ComboGraph.litFor()'s job now: it has to answer per view, and that is a decision
+    // about what the picture claims rather than a drawing detail.
     const drawn = [];
 
     graph.links.forEach((linkData) => {
@@ -295,9 +291,10 @@
       // fifty, and there is room for all of them.
       let count = null;
       if (linkData.countX != null) {
-        // The tier goes on the number as well as on the line, so a filter by tier
-        // takes the pair together. Without it the game-ending view hid every count,
-        // including the ones belonging to the lines it was showing.
+        // The tier goes on the number as well as on the line, so anything that filters
+        // lines takes their counts with them. A view that hid a line and left its number
+        // floating is what this prevents — and it stays now the tier view is gone, because
+        // the relation views filter on `.swap` the same way and would do the same thing.
         count = svgEl('text', 'count' + (swap ? ' swap' : ' tier-' + linkData.tier)
           + (linkData.countShown ? '' : ' is-crowded'));
         count.setAttribute('x', linkData.countX);
@@ -308,12 +305,8 @@
 
       // Both ends kept on the line itself, so lighting a comparison can ask "is
       // this line between two of the picked cards" without searching the DOM.
-      drawn.push({ a: a.id, b: b.id, parts: count ? [line, count] : [line] });
+      drawn.push({ a: a.id, b: b.id, swap, parts: count ? [line, count] : [line] });
 
-      [[a, b], [b, a]].forEach(([from, to]) => {
-        const near = touching.get(from.id);
-        near.nodes.add(to.id);
-      });
     });
 
     const groups = new Map();
@@ -382,23 +375,25 @@
     // to someone who cannot see the map light up.
     summary.setAttribute('role', 'status');
 
+    // Which relation is on screen. The chips own it; light() reads it.
+    let view = 'all';
+
     const clear = () => {
       svg.classList.remove('is-lit');
       lit.forEach((node) => node.classList.remove('is-lit'));
       lit.length = 0;
     };
 
-    // ids: the cards to light. One of them lights everything it touches; several
-    // light only what they have in common.
+    // ids: the cards to light. One of them lights everything it touches; several light
+    // only what they have in common. **Both readings are scoped to the visible relation** —
+    // see ComboGraph.litFor(). Hovering in the Interchangeable view used to light the cards
+    // the hovered one combos with, which is a different question from the one the chips say
+    // the picture is answering.
     const light = (ids) => {
       clear();
       if (!ids.length) return;
       const chosen = new Set(ids);
-      const near = ids.map((id) => (touching.get(id) || { nodes: new Set() }).nodes);
-      const shared = ids.length === 1
-        ? [...near[0]]
-        : [...near[0]].filter((id) => !chosen.has(id) && near.every((set) => set.has(id)));
-      const on = new Set([...ids, ...shared]);
+      const on = ComboGraph.litFor(graph, ids, view);
       svg.classList.add('is-lit');
       on.forEach((id) => {
         const g = groups.get(id);
@@ -406,8 +401,11 @@
       });
       // A line counts when it joins two lit cards and at least one of them was
       // picked: between two shared partners is a relation of theirs, not of the
-      // comparison.
+      // comparison. And it has to be a line the view is drawing — lighting one the
+      // stylesheet has hidden is the same mismatch one layer down.
       drawn.forEach((line) => {
+        if (view === 'combo' && line.swap) return;
+        if (view === 'swap' && !line.swap) return;
         if (!on.has(line.a) || !on.has(line.b)) return;
         if (!chosen.has(line.a) && !chosen.has(line.b)) return;
         line.parts.forEach((part) => { part.classList.add('is-lit'); lit.push(part); });
@@ -469,7 +467,7 @@
     // the legend is drawn with the same classes the map is so it cannot describe
     // a line the map no longer has, and the summary answers a press. Inserted
     // around it all the same.
-    body.appendChild(mapFilter(svg));
+    body.appendChild(mapFilter(svg, (chosen) => { view = chosen; rest(); }));
     body.appendChild(mapLegend());
     body.appendChild(svg);
     describe();

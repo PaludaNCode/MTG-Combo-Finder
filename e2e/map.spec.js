@@ -163,6 +163,42 @@ test('each card announces itself and its comparison', async ({ page }) => {
   await expect(page.locator('#graph .map-picked')).toHaveAttribute('role', 'status');
 });
 
+// Pressing a chip changes which lines are drawn *and* which cards light up. The second
+// half shipped broken — the swap view drew dashed lines and lit the hovered card's combo
+// partners — and neither browser suite noticed, because both press Interchangeable and
+// neither looked at a node's class afterwards.
+//
+// A real hover with a real mouse, which is this suite's job; tools/verify-layout.js checks
+// the same rule from geometry and ComboGraph.litFor() is unit-tested. Three levels because
+// the failure was invisible at all three.
+test('hovering in the interchangeable view lights stand-ins, not combo partners', async ({ page }) => {
+  const map = page.locator('#graph .combo-map');
+  await page.getByRole('button', { name: 'Interchangeable' }).click();
+
+  // A card that actually has a dashed line, found by hovering until one lights rather than
+  // assumed: not every card on the map has a stand-in, and the first one here does not — a
+  // hard-coded index made this pass by lighting nothing at all, which is the shape of
+  // vacuous check this test exists to replace.
+  const nodes = map.locator('.node');
+  const total = await nodes.count();
+  let hovered = -1;
+  for (let i = 0; i < total; i += 1) {
+    await nodes.nth(i).locator('.dot').hover();
+    if (await map.locator('.edge.is-lit').count()) { hovered = i; break; }
+  }
+  expect(hovered, 'no card on this map lights a line in the interchangeable view').toBeGreaterThan(-1);
+
+  await expect(map).toHaveClass(/is-lit/);
+  // Every lit line in this view has to be a dashed one. A solid line lit under a chip that
+  // hides solid lines is the mismatch, stated as the thing a reader would see.
+  await expect(map.locator('.edge:not(.swap).is-lit')).toHaveCount(0);
+  // And a card lit with no dashed line to the hovered one is the same mismatch on the nodes
+  // rather than the lines — which is what was actually reported.
+  const litNodes = await map.locator('.node.is-lit').count();
+  const litEdges = await map.locator('.edge.swap.is-lit').count();
+  expect(litNodes).toBeLessThanOrEqual(litEdges + 1); // the hovered card, plus one per line
+});
+
 test('the filter shows either relation without moving a card', async ({ page }) => {
   const map = page.locator('#graph .combo-map');
   const at = () => map.locator('.node .dot').evaluateAll(

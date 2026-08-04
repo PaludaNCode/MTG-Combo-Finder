@@ -1290,25 +1290,18 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* Either question on its own. The cards do not move — the layout is worked out
    from both relations at once and stays put — so switching views is the same
-   picture with one set of lines taken away, and a card's neighbours are still
-   its neighbours. */
+   picture with one set of lines taken away.
+
+   The count goes with its line in both rules. A view that hid a line and left its
+   number floating over nothing is what pairing them prevents.
+
+   These rules hide lines; which *cards* light up is ComboGraph.litFor(), and the two have
+   to agree. They did not: highlighting walked every relation whatever was on screen, so
+   the swap view drew dashed lines and lit combo partners. */
 .combo-map.show-combo .edge.swap,
 .combo-map.show-combo .count.swap,
 .combo-map.show-swap .edge:not(.swap),
 .combo-map.show-swap .count:not(.swap) { display: none; }
-
-/* And the third question, which is not about the relation but about what the combo
-   behind the line is worth: on a real deck's map, "show only the lines that end the
-   game" is the view that makes a hundred-line picture readable.
-
-   Interchangeable lines go too, and that is a decision rather than a side effect. A
-   swap line says "these two do the same job" — there is no combo behind it and so no
-   tier it could be filtered by, and leaving them in would answer a question about
-   game-enders with a screenful of lines that are not combos at all. The chip's title
-   says so, because a filter that silently drops a category is worse than one that
-   does not filter. */
-.combo-map.show-win .edge:not(.tier-win),
-.combo-map.show-win .count:not(.tier-win) { display: none; }
 
 /* The count on a line. Small, in the map's own background halo, and centred on
    the line it belongs to. */

@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const {
-  build, layout, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+  build, layout, litFor, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT,
 } = require('../graph.js');
 const { comboPieces } = require('../combos.js');
 
@@ -792,4 +792,63 @@ test('layout: a phone renders type at a legible size', () => {
   const graph = placed(dense(), sizeFor(20, column));
   const onScreen = (column / graph.width) * graph.fontSize;
   assert.ok(onScreen >= 10, `card names would render at ${onScreen.toFixed(1)}px on a phone`);
+});
+
+// ---- what lights up, and in which view --------------------------------------
+//
+// The map draws two relations and its chips show one at a time. Highlighting used to walk
+// every link whatever was on screen, so hovering in the Interchangeable view lit the cards
+// the hovered one *combos with* — dashed lines on screen, a works-together answer glowing
+// underneath. Several lit cards had no dashed line to the hovered one at all, and a card
+// that did was left dim.
+//
+// A synthetic graph rather than a real deck, because the point is the relation and not the
+// data: A combos with C, and A is interchangeable with S.
+
+const litGraph = () => ({
+  links: [
+    { source: 'a', target: 'c', kind: 'combo' },
+    { source: 'a', target: 's', kind: 'swap' },
+  ],
+});
+
+test('litFor: the swap view lights what stands in, not what combos', () => {
+  const on = litFor(litGraph(), ['a'], 'swap');
+  assert.ok(on.has('s'), 'the card joined by a dashed line is dim');
+  assert.ok(!on.has('c'), 'a combo partner lit in the interchangeable view');
+  assert.ok(on.has('a'), 'the hovered card is always lit');
+});
+
+test('litFor: the combo view lights partners, not stand-ins', () => {
+  const on = litFor(litGraph(), ['a'], 'combo');
+  assert.ok(on.has('c'));
+  assert.ok(!on.has('s'), 'a stand-in lit in the works-together view');
+});
+
+test('litFor: both views together light everything the card touches', () => {
+  const on = litFor(litGraph(), ['a'], 'all');
+  assert.deepStrictEqual([...on].sort(), ['a', 'c', 's']);
+});
+
+// Several picked cards light only what they have in common — that is what makes a
+// comparison mean "these are the cards you would lose" — and the scoping applies there too.
+test('litFor: a comparison narrows to the visible relation as well', () => {
+  const graph = {
+    links: [
+      { source: 'a', target: 'shared', kind: 'combo' },
+      { source: 'b', target: 'shared', kind: 'combo' },
+      { source: 'a', target: 'swapOnly', kind: 'swap' },
+      { source: 'b', target: 'swapOnly', kind: 'swap' },
+    ],
+  };
+  assert.deepStrictEqual([...litFor(graph, ['a', 'b'], 'combo')].sort(), ['a', 'b', 'shared']);
+  assert.deepStrictEqual([...litFor(graph, ['a', 'b'], 'swap')].sort(), ['a', 'b', 'swapOnly']);
+  // The picked cards themselves stay lit even when they share nothing in this view.
+  assert.deepStrictEqual([...litFor({ links: [] }, ['a', 'b'], 'combo')].sort(), ['a', 'b']);
+});
+
+test('litFor: nothing picked, nothing lit', () => {
+  assert.strictEqual(litFor(litGraph(), [], 'all').size, 0);
+  assert.strictEqual(litFor(litGraph(), null, 'all').size, 0);
+  assert.strictEqual(litFor({}, ['a'], 'all').size, 1);
 });

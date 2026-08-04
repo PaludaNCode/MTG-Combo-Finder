@@ -232,6 +232,51 @@
   //   lost             how many of those would actually go if all were cut —
   //                    a combo survives when every picked card in it has a
   //                    stand-in still in the deck
+  // Which cards light up when `ids` are hovered or pinned, in a given view.
+  //
+  // **The lit set follows the relation on screen.** The map draws two relations and its
+  // chips show one at a time, and highlighting used to ignore that entirely: it walked
+  // every link regardless of `kind`, so hovering in the Interchangeable view lit the cards
+  // the hovered one *combos with* — several of them with no dashed line to it at all, and
+  // at least one card genuinely joined to it left dim. A picture answering a question
+  // nobody asked, on top of the one they did.
+  //
+  // `view` is 'combo', 'swap', or anything else for both.
+  //
+  // One id lights everything it touches. Several light only what they have in common,
+  // which is what makes a two-card comparison mean "these are the cards you would lose",
+  // and the picked cards themselves are always lit.
+  //
+  // Here rather than in render-map.js because it is a decision about what the picture
+  // claims, and node --test cannot reach the renderer.
+  function litFor(graph, ids, view) {
+    const picked = (ids || []).filter(Boolean);
+    if (!picked.length) return new Set();
+
+    const wanted = (link) => (view === 'combo' ? link.kind !== 'swap'
+      : view === 'swap' ? link.kind === 'swap'
+        : true);
+
+    const near = new Map();
+    const add = (from, to) => {
+      if (!near.has(from)) near.set(from, new Set([from]));
+      near.get(from).add(to);
+    };
+    picked.forEach((id) => add(id, id));
+    ((graph && graph.links) || []).forEach((link) => {
+      if (!wanted(link)) return;
+      add(link.source, link.target);
+      add(link.target, link.source);
+    });
+
+    const sets = picked.map((id) => near.get(id) || new Set([id]));
+    const chosen = new Set(picked);
+    const shared = picked.length === 1
+      ? [...sets[0]]
+      : [...sets[0]].filter((id) => !chosen.has(id) && sets.every((set) => set.has(id)));
+    return new Set([...picked, ...shared]);
+  }
+
   function compare(graph, keys) {
     const picked = (keys || []).filter((key) => (graph.names || new Map()).has(key));
     const combos = (graph && graph.combos) || [];
@@ -795,7 +840,7 @@
   }
 
   const api = {
-    build, layout, compare, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LIMIT,
+    build, layout, compare, litFor, sizeFor, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_LIMIT,
   };
 
   if (typeof module !== 'undefined' && module.exports) {
