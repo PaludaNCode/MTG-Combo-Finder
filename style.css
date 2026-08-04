@@ -884,14 +884,6 @@ button:disabled { opacity: .6; cursor: wait; }
    go with it, then what its combos cost to assemble. */
 .row-main { min-width: 0; }
 .combo.suggestion .row-name { margin: 0; font-size: 1rem; }
-/* Ours below the published ones inside "Combos this unlocks", under a heading
- * that says whose they are before the first one is read. */
-.ours-head {
-  margin: .9rem 0 .3rem;
-  font-size: .85rem;
-  color: var(--accent);
-}
-
 .card-links { margin: .1rem 0 .35rem; font-size: .85rem; }
 
 /* On a suggestion or a piece row this line is everything you can do with the card
@@ -1666,6 +1658,10 @@ summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
   text-transform: uppercase;
   vertical-align: .05em;
 }
+/* Whose row it is, in the accent the unofficial half is spoken in everywhere else on
+   the page — the split's "ours" count and the heading that used to sit above these rows
+   both use it, so a reader meets one colour for "not Spellbook's" rather than three. */
+.derived-badge.unofficial { color: var(--accent); }
 /* Two words that mean quite different things, so they do not look the same:
    one was read against the cards, the other was inferred from coverage. */
 .derived-badge.verified { color: var(--ok); }

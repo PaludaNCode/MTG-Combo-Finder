@@ -1390,7 +1390,11 @@ async function runUnofficial(vp) {
 
     const panel = doc.querySelector('#unofficial .panel');
     const row = doc.querySelector('#unofficial .combo');
-    const badge = row && row.querySelector('.derived-badge');
+    // Each badge asked for by what it is, not by being first. A row carries two now —
+    // whose it is, then how far the checking went — and reading ".derived-badge" got
+    // whichever the markup happened to put first, which is the one that just changed.
+    const badge = row && row.querySelector('.derived-badge.verified, .derived-badge.derived');
+    const whose = row && row.querySelector('.derived-badge.unofficial');
     const link = row && row.querySelector('.combo-link a');
     const included = doc.getElementById('included');
     const unofficial = doc.getElementById('unofficial');
@@ -1432,6 +1436,13 @@ async function runUnofficial(vp) {
         cards: row ? [...row.querySelectorAll('h3 .card-name')].map(function (n) { return n.textContent; }) : [],
         badge: badge ? badge.textContent : null,
         badgeClass: badge ? badge.className : null,
+        badgeColour: badge ? win.getComputedStyle(badge).color : null,
+        whose: whose ? whose.textContent : null,
+        // Which of the two a reader meets first. Whose row it is decides whether the
+        // rest of the note is worth reading at all, so it leads.
+        whoseFirst: (whose && badge)
+          ? (whose.compareDocumentPosition(badge) & 4) === 4 : null,
+        whoseColour: whose ? win.getComputedStyle(whose).color : null,
         note: row && row.querySelector('.derived-note') ? row.querySelector('.derived-note').textContent : '',
         link: link ? link.textContent : null,
         href: link ? link.getAttribute('href') : null,
@@ -1487,8 +1498,18 @@ async function runSuggested(vp) {
         // One total on the row, carrying both halves.
         totals: row ? row.querySelectorAll('.row-total').length : 0,
         total: row ? row.querySelector('.row-total').textContent : null,
-        // ...and the combos behind them are listed under a heading that says so.
-        heading: row && row.querySelector('.ours-head') ? row.querySelector('.ours-head').textContent : null,
+        // ...and the combos behind them are listed in one order, ours among Spellbook's,
+        // with each row of ours saying so on itself. There is no heading to read any more:
+        // splitting the list made "who published this" decide where a row sits, and that
+        // is what the badge replaced. So what gets checked is that the disclosure holds
+        // rows, and that every row of ours in it carries the badge — a merged list where
+        // the badge went missing is a list that silently attributes our work to Spellbook.
+        listed: row ? row.querySelectorAll('details > .combo').length : 0,
+        ourRows: row ? row.querySelectorAll('details > .combo .derived-note').length : 0,
+        ourBadges: row ? row.querySelectorAll('details > .combo .derived-badge.unofficial').length : 0,
+        // Nothing may reintroduce a heading between them: it would put the rows of ours
+        // back below a divider and undo the ordering they were merged for.
+        splitHeads: row ? row.querySelectorAll('details > .ours-head').length : 0,
         // The unofficial half has to be visibly its own claim: a colour of its
         // own against the published half beside it, rather than the same grey.
         colour: ours.length ? win.getComputedStyle(ours[0]).color : null,
@@ -1991,9 +2012,12 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // sentence has to survive somewhere a screen reader can reach it. A row whose
       // whole case is ours saying nothing about that is the bug this run exists for.
       if (!/none published/.test(g.spoken || '')) wrong.push(`the split is unspoken: "${g.spoken}"`);
-      if (!/Spellbook has not published/.test(g.heading || '')) {
-        wrong.push(`the combos are not marked as ours: "${g.heading}"`);
+      if (!g.listed) wrong.push('the suggestion lists no combos at all');
+      if (!g.ourRows) wrong.push('no row in the list is one of ours, so the badge is untested');
+      if (g.ourBadges !== g.ourRows) {
+        wrong.push(`${g.ourRows} of our rows carry ${g.ourBadges} badges saying so`);
       }
+      if (g.splitHeads) wrong.push('the list is split by a heading again, not ordered as one');
       // Outlined in the accent rather than filled like the published badge: the
       // page spends its other colours on result tiers, and a fourth would read as
       // one. If this ever computes to the same treatment, the distinction is gone.
@@ -2028,6 +2052,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       // ...and it has to show its working, or it is just an assertion on screen.
       if (!['verified', 'derived'].includes(u.badge)) wrong.push(`no confidence badge: "${u.badge}"`);
       if (!(u.badgeClass || '').includes(u.badge)) wrong.push('the badge is not styled by its confidence');
+      // And whose row it is, which is the badge that has to survive a merged list: the
+      // suggestions and the pieces both draw ours and Spellbook's in one order now, so
+      // nothing above a row says which it is.
+      if (u.whose !== 'unofficial') wrong.push(`the row does not say it is ours: "${u.whose}"`);
+      if (u.whoseFirst !== true) wrong.push('the confidence is read before whose row it is');
+      if (u.whoseColour === u.badgeColour) {
+        wrong.push('whose row it is and how checked it is are the same colour');
+      }
       if (!/in place of/.test(u.note)) wrong.push('the row does not say which card was swapped');
       // A row two swaps deep has to print both. The claim gets weaker with each
       // step, and a reader who is only shown the last one cannot see that.

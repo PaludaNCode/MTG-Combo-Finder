@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const {
   matchUnofficial, standInRows, identityString, deckNameSet, nameKey, expand,
+  variantCardNames, comboSize,
 } = require('../combos.js');
 const { COMBOS, STAND_INS } = require('../unofficial.js');
 const fs = require('node:fs');
@@ -736,4 +737,52 @@ test('unofficial.js is still small enough to ship as source', () => {
     + 'costs, and the size at which it stops being source" coming due. Move COMBOS to the '
     + 'data branch as JSON, or move the threshold on purpose and say why.',
   );
+});
+
+// ---- the order the panel is drawn in ----------------------------------------
+//
+// matchUnofficial() sorts before search.js expands, which is the trap: variantCardNames()
+// read `uses` alone, and these rows carry `c`. So the sort compared every row's drawn name
+// as '' against '', found no row sharing cards with any other, and handed back 46 rows in
+// the order they happen to sit in unofficial.js. Nothing failed. Combo size still
+// separated them, because comboSize() worked around the shape at its own call site, so the
+// panel looked ordered — 2-card rows, then 3-card rows — and inside a size it was the file.
+//
+// The rows are one shape short of the panel's real ones on purpose: this is exactly the
+// pre-expand shape matchUnofficial() hands back, which is the shape that broke.
+test('unofficial: the panel is ordered by what its rows draw, before anything expands', () => {
+  const dataset = { cardIdentity: { A: 'G', B: 'G', M: 'G', X: 'G', Y: 'G', Z: 'G' } };
+  const row = (...cards) => ({
+    cards,
+    produces: ['Infinite tokens'],
+    confidence: 'derived',
+    from: { id: '1-2-3', cards: ['A', 'B'] },
+    swap: { out: 'B', in: cards[cards.length - 1] },
+    why: 'For the ordering, not the reasoning.',
+  });
+  // A family of three sharing [A, B], with a row about other cards dropped in the middle
+  // of the file to sort between them if the order is the file's rather than the panel's.
+  const rows = [row('A', 'B', 'X'), row('M', 'Z', 'Z2'), row('A', 'B', 'Y'), row('A', 'B', 'Z')];
+  const names = deck('A', 'B', 'M', 'X', 'Y', 'Z', 'Z2');
+
+  const drawn = matchUnofficial(dataset, rows, names, []).map((v) => v.c.join(' + '));
+  assert.deepStrictEqual(drawn, [
+    'A + B + X',
+    'A + B + Y',
+    'A + B + Z',
+    'M + Z + Z2',
+  ], 'the family is together and the odd row follows, whatever order the file holds');
+});
+
+// The root cause, asked directly. Two shapes, one contract — the same one comboSize()
+// documents. A caller holding a compact row used to get an empty list, which is not an
+// error and not a zero: it is a value every ordering rule accepts.
+test('unofficial: a combo names its cards in either shape, compact or expanded', () => {
+  const compact = { id: '1', c: ['Scurry Oak', 'Viscera Seer'], p: ['Infinite scry 1'] };
+  assert.deepStrictEqual(variantCardNames(compact), ['Scurry Oak', 'Viscera Seer']);
+  assert.deepStrictEqual(variantCardNames(expand(compact)), ['Scurry Oak', 'Viscera Seer']);
+  assert.strictEqual(comboSize(compact), comboSize(expand(compact)));
+  // And the shapes nothing should throw on.
+  assert.deepStrictEqual(variantCardNames(null), []);
+  assert.deepStrictEqual(variantCardNames({}), []);
 });

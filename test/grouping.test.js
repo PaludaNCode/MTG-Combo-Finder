@@ -4,9 +4,19 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const {
-  groupSuggestions, groupVariants, interchangeableIn, orderComboNames,
-  computeSuggestions, deckNameSet, variantSignature,
+  groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn, orderComboNames,
+  computeSuggestions, deckNameSet, variantSignature, variantCardNames,
 } = require('../combos.js');
+
+// n versions of one combo: the same shared cards, a different last card on each.
+//
+// Written against COLLAPSE_FROM rather than a literal, so moving the threshold does not
+// mean rewriting the suite around it — the tests below say "one short of the threshold"
+// and "at the threshold", which is what they are actually about. One test pins the number
+// itself, because a suite that only ever asks that would happily follow the constant
+// anywhere, including somewhere nobody chose.
+const family = (shared, results, n, tag) => Array.from({ length: n }, (_, i) =>
+  variant(`${tag}${i}`, shared.concat(`${tag}-${i}`), results));
 
 // The real shape: cards under `uses`, results under `produces`.
 const variant = (id, cards, produces) => ({
@@ -89,74 +99,70 @@ test('variantSignature: the same combo with one slot filled differently matches'
 // ---- combos you already have ----------------------------------------------
 
 test('groupVariants: variants differing in one card collapse into a choice', () => {
-  const groups = groupVariants([
-    variant('1', ['Scurry Oak', 'Archangel of Thune', 'Soul Warden'], ['Infinite creature tokens']),
-    variant('2', ['Scurry Oak', 'Archangel of Thune', 'Essence Warden'], ['Infinite creature tokens']),
-    variant('3', ['Scurry Oak', 'Archangel of Thune', 'Prosperous Innkeeper'], ['Infinite creature tokens']),
-  ]);
+  const groups = groupVariants(
+    family(['Scurry Oak', 'Archangel of Thune'], ['Infinite creature tokens'], COLLAPSE_FROM, 'w')
+  );
 
   assert.strictEqual(groups.length, 1);
   assert.deepStrictEqual(groups[0].shared.sort(), ['Archangel of Thune', 'Scurry Oak']);
-  assert.deepStrictEqual(groups[0].choices.sort(),
-    ['Essence Warden', 'Prosperous Innkeeper', 'Soul Warden']);
-  assert.strictEqual(groups[0].variants.length, 3);
+  assert.strictEqual(groups[0].choices.length, COLLAPSE_FROM);
+  assert.strictEqual(groups[0].variants.length, COLLAPSE_FROM);
 });
 
 test('groupVariants: an unrelated combo stands on its own', () => {
-  const groups = groupVariants([
-    variant('1', ['A', 'B'], ['Infinite lifegain']),
-    variant('2', ['A', 'C'], ['Infinite lifegain']),
-    variant('3', ['A', 'D'], ['Infinite lifegain']),
-    variant('4', ['X', 'Y'], ['Infinite damage']),
-  ]);
+  const groups = groupVariants(
+    family(['A'], ['Infinite lifegain'], COLLAPSE_FROM, 'a')
+      .concat([variant('4', ['X', 'Y'], ['Infinite damage'])])
+  );
   assert.strictEqual(groups.length, 2);
   const alone = groups.find((g) => !g.choices.length);
   assert.deepStrictEqual(alone.shared, ['X', 'Y']);
   assert.strictEqual(alone.variants.length, 1);
 });
 
-// The threshold, from both sides. A pair is two rows; the same pair with a third
-// version is one. Written as one test because the number is the whole subject — a pair
-// that collapses and a triple that does not are the two ways to get this wrong, and
-// they are one edit apart.
-test('groupVariants: two versions stay two rows, three become a choice', () => {
-  const pair = groupVariants([
-    variant('1', ['A', 'B'], ['Infinite lifegain']),
-    variant('2', ['A', 'C'], ['Infinite lifegain']),
-  ]);
-  assert.strictEqual(pair.length, 2, 'a pair is written out');
-  assert.ok(pair.every((g) => !g.choices.length && g.variants.length === 1));
-  // Nothing is lost on the way: both variants still come back, exactly once each.
-  assert.deepStrictEqual(pair.flatMap((g) => g.variants.map((v) => v.id)).sort(), ['1', '2']);
-
-  const triple = groupVariants([
-    variant('1', ['A', 'B'], ['Infinite lifegain']),
-    variant('2', ['A', 'C'], ['Infinite lifegain']),
-    variant('3', ['A', 'D'], ['Infinite lifegain']),
-  ]);
-  assert.strictEqual(triple.length, 1, 'three versions are one decision');
-  assert.deepStrictEqual(triple[0].choices.slice().sort(), ['B', 'C', 'D']);
+// The number itself, pinned. Every other test here is written against COLLAPSE_FROM and
+// would follow it anywhere; this one is the reason that is safe. Four is a judgement —
+// a triple has every one of its cards on screen already, so folding it asks the reader to
+// assemble three combos out of a heading and a list rather than saving them anything.
+test('groupVariants: the threshold is four, and it is a decision rather than a default', () => {
+  assert.strictEqual(COLLAPSE_FROM, 4,
+    'if this moved on purpose, move it here too — and add a version to test/fixtures/dataset.js');
 });
 
-// Counted on the rows still free, not on the bucket. A family of three that loses one
-// member to a bigger family is a pair, and a pair is written out — otherwise the
-// threshold would hold for families read off the data and not for families left over.
-test('groupVariants: a family down to two survivors is written out, not folded', () => {
-  const groups = groupVariants([
-    // A family of three on [P], which claims all three...
-    variant('1', ['P', 'x'], ['Infinite mill']),
-    variant('2', ['P', 'y'], ['Infinite mill']),
-    variant('3', ['P', 'z'], ['Infinite mill']),
-    // ...leaving these two crossing it on [x] and [y] with only themselves free.
-    variant('4', ['Q', 'x'], ['Infinite mill']),
-    variant('5', ['Q', 'y'], ['Infinite mill']),
-  ]);
+// The threshold from both sides. One short of it is written out; at it, one row. Written
+// as one test because the number is the whole subject, and the two ways to get it wrong
+// are one edit apart.
+test('groupVariants: one short of the threshold stays written out, at it becomes a choice', () => {
+  const under = groupVariants(family(['A'], ['Infinite lifegain'], COLLAPSE_FROM - 1, 'u'));
+  assert.strictEqual(under.length, COLLAPSE_FROM - 1, 'below the threshold every version is a row');
+  assert.ok(under.every((g) => !g.choices.length && g.variants.length === 1));
+  // Nothing is lost on the way: every variant still comes back, exactly once.
+  assert.strictEqual(under.flatMap((g) => g.variants).length, COLLAPSE_FROM - 1);
+
+  const at = groupVariants(family(['A'], ['Infinite lifegain'], COLLAPSE_FROM, 'v'));
+  assert.strictEqual(at.length, 1, 'at the threshold they are one decision');
+  assert.strictEqual(at[0].choices.length, COLLAPSE_FROM);
+});
+
+// Counted on the rows still free, not on the bucket. A family that loses members to a
+// bigger one is smaller than it looks, and if what is left is under the threshold it is
+// written out — otherwise the rule would hold for families read straight off the data and
+// not for the ones left over.
+test('groupVariants: a family cut below the threshold is written out, not folded', () => {
+  // A full family on [P], which claims all of its rows...
+  const claimed = family(['P'], ['Infinite mill'], COLLAPSE_FROM, 'p');
+  // ...leaving these crossing it on each of those cards with only themselves free. One
+  // short of the threshold, so they are rows rather than a choice.
+  const leftover = claimed.slice(0, COLLAPSE_FROM - 1).map((v, i) =>
+    variant(`q${i}`, ['Q', `p-${i}`], ['Infinite mill']));
+  const groups = groupVariants(claimed.concat(leftover));
+
   const folded = groups.filter((g) => g.choices.length);
-  assert.strictEqual(folded.length, 1, 'only the family of three folds');
-  assert.deepStrictEqual(folded[0].choices.slice().sort(), ['x', 'y', 'z']);
+  assert.strictEqual(folded.length, 1, 'only the family that kept its rows folds');
+  assert.deepStrictEqual(folded[0].shared, ['P']);
   assert.deepStrictEqual(
     groups.filter((g) => !g.choices.length).flatMap((g) => g.variants.map((v) => v.id)).sort(),
-    ['4', '5']
+    leftover.map((v) => v.id).sort()
   );
 });
 
@@ -174,11 +180,7 @@ test('groupVariants: every variant lands in exactly one group', () => {
 });
 
 test('groupVariants: the result does not depend on input order', () => {
-  const variants = [
-    variant('1', ['A', 'B'], ['Infinite lifegain']),
-    variant('2', ['A', 'C'], ['Infinite lifegain']),
-    variant('3', ['A', 'D'], ['Infinite lifegain']),
-  ];
+  const variants = family(['A'], ['Infinite lifegain'], COLLAPSE_FROM, 'o');
   const shape = (gs) => gs.map((g) => [g.shared.slice().sort(), g.choices.slice().sort()]);
   assert.deepStrictEqual(shape(groupVariants(variants)), shape(groupVariants(variants.slice().reverse())));
 });
@@ -346,14 +348,12 @@ test('byDrawnRow: rows a card apart sit together even when grouping kept them se
 });
 
 // A collapsed row is one row, whatever it folds away, so it counts as one against the
-// family term — and it belongs beside the rows that share its cards. The live fixture
-// deck draws exactly this: "Chatterfang + Warren Soultrader + any of 3" with two whole
+// family term — and it belongs beside the rows that share its cards. The live tuning deck
+// draws exactly this: a "Chatterfang + Warren Soultrader + any of N" row with two whole
 // rows that share those two cards and pay off differently.
 test('byDrawnRow: a collapsed row sits in the family it shares its cards with', () => {
   const rows = panel([
-    variant('1', ['Chatterfang', 'Warren Soultrader', 'Soul Warden'], ['Infinite tokens']),
-    variant('2', ['Chatterfang', 'Warren Soultrader', 'Essence Warden'], ['Infinite tokens']),
-    variant('2b', ['Chatterfang', 'Warren Soultrader', 'Prosperous Innkeeper'], ['Infinite tokens']),
+    ...family(['Chatterfang', 'Warren Soultrader'], ['Infinite tokens'], COLLAPSE_FROM, 'tok'),
     variant('3', ['Aetherflux Reservoir', 'Bolas\'s Citadel'], ['Infinite damage']),
     variant('4', ['Chatterfang', 'Warren Soultrader', 'Academy Manufactor'], ['Infinite Food']),
     variant('5', ['Chatterfang', 'Warren Soultrader', 'Peregrin Took'], ['Infinite Clues']),
@@ -361,7 +361,7 @@ test('byDrawnRow: a collapsed row sits in the family it shares its cards with', 
   assert.deepStrictEqual(rows, [
     // Size first: the 2-card combo leads whatever the names and the blocks do.
     'Aetherflux Reservoir + Bolas\'s Citadel',
-    'Chatterfang + Warren Soultrader + any of 3',
+    `Chatterfang + Warren Soultrader + any of ${COLLAPSE_FROM}`,
     'Chatterfang + Warren Soultrader + Academy Manufactor',
     'Chatterfang + Warren Soultrader + Peregrin Took',
   ]);
@@ -395,19 +395,13 @@ test('byDrawnRow: the biggest block of rows leads, then smaller, then the rows o
 // tie-break the two rows fall back to the order they happened to arrive in. Both groups
 // are three or more here, since a pair is written out rather than folded.
 test('byDrawnRow: two rows naming the same cards break the tie on what they offer', () => {
-  const rows = [
-    variant('a1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'V'], ['Infinite tokens']),
-    variant('a2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'W'], ['Infinite tokens']),
-    variant('a3', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'X'], ['Infinite tokens']),
-    variant('a4', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'Y'], ['Infinite tokens']),
-    variant('b1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'L'], ['Infinite mana']),
-    variant('b2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'M'], ['Infinite mana']),
-    variant('b3', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'N'], ['Infinite mana']),
-  ];
+  const shared = ['Ashnod\'s Altar', 'Ghave, Guru of Spores'];
+  const rows = family(shared, ['Infinite tokens'], COLLAPSE_FROM + 1, 'big')
+    .concat(family(shared, ['Infinite mana'], COLLAPSE_FROM, 'small'));
   const drawn = panel(rows);
   assert.deepStrictEqual(drawn, [
-    'Ashnod\'s Altar + Ghave, Guru of Spores + any of 4',
-    'Ashnod\'s Altar + Ghave, Guru of Spores + any of 3',
+    `Ashnod's Altar + Ghave, Guru of Spores + any of ${COLLAPSE_FROM + 1}`,
+    `Ashnod's Altar + Ghave, Guru of Spores + any of ${COLLAPSE_FROM}`,
   ], 'the row offering more versions leads');
   assert.deepStrictEqual(panel(rows.slice().reverse()), drawn,
     'and the answer does not depend on the order they arrived in');
@@ -448,9 +442,7 @@ test('byDrawnRow: a lone row is not counted into a bigger row that shares its ca
   const rows = panel([
     variant('lone', ['A', 'B'], ['Infinite mill']),
     // A collapsed row whose shared cards are that lone row's whole combo.
-    variant('c1', ['A', 'B', 'C'], ['Infinite tokens']),
-    variant('c2', ['A', 'B', 'D'], ['Infinite tokens']),
-    variant('c3', ['A', 'B', 'E'], ['Infinite tokens']),
+    ...family(['A', 'B'], ['Infinite tokens'], COLLAPSE_FROM, 'c'),
     // A real block of two: same cards but one, different payoffs, so two rows.
     variant('b1', ['E', 'F', 'G'], ['Infinite lifegain']),
     variant('b2', ['E', 'F', 'H'], ['Infinite damage']),
@@ -459,7 +451,7 @@ test('byDrawnRow: a lone row is not counted into a bigger row that shares its ca
     'A + B',
     'E + F + G',
     'E + F + H',
-    'A + B + any of 3',
+    `A + B + any of ${COLLAPSE_FROM}`,
   ], 'the real block of two leads the 3-card rows');
 });
 
@@ -467,17 +459,80 @@ test('byDrawnRow: a lone row is not counted into a bigger row that shares its ca
 // rows apart is the line of choices under the heading. Two rows drawing the same words
 // in a page-order nobody chose is the failure this closes.
 test('byDrawnRow: two rows offering the same many versions order on the choices they list', () => {
-  const rows = [
-    variant('q1', ['A', 'B', 'M'], ['Infinite mana']),
-    variant('q2', ['A', 'B', 'N'], ['Infinite mana']),
-    variant('q3', ['A', 'B', 'O'], ['Infinite mana']),
-    variant('p1', ['A', 'B', 'C'], ['Infinite tokens']),
-    variant('p2', ['A', 'B', 'D'], ['Infinite tokens']),
-    variant('p3', ['A', 'B', 'E'], ['Infinite tokens']),
-  ];
+  const rows = family(['A', 'B'], ['Infinite mana'], COLLAPSE_FROM, 'zz')
+    .concat(family(['A', 'B'], ['Infinite tokens'], COLLAPSE_FROM, 'aa'));
   const listed = (vs) => byDrawnRow(groupVariants(vs), interchangeableIn(vs))
-    .map((g) => g.choices.slice().sort().join(' · '));
-  assert.deepStrictEqual(listed(rows), ['C · D · E', 'M · N · O']);
-  assert.deepStrictEqual(listed(rows.slice().reverse()), ['C · D · E', 'M · N · O'],
+    .map((g) => g.choices.slice().sort()[0]);
+  // Both rows draw the same words and fold the same number away, so the only thing left
+  // that a reader can see is the line of choices under the heading.
+  assert.deepStrictEqual(listed(rows), ['aa-0', 'zz-0']);
+  assert.deepStrictEqual(listed(rows.slice().reverse()), ['aa-0', 'zz-0'],
     'and not whichever arrived first');
+});
+
+// ---- one list, ours among Spellbook's ---------------------------------------
+//
+// A suggestion used to draw two lists: the published combos, then a heading saying whose
+// the rest were, then ours. The argument was that "somebody published this" is not a
+// property of a row — which is true, and splitting the list made it the property that
+// decided where a row *sat*. So a row of ours landed below the fold, away from the family
+// it belongs to, and a reader comparing near-identical lines had to compare them across a
+// heading. "Cards carrying your combos" never did that, and this is now the same shape.
+//
+// Each row says whose it is instead; that badge is render-combos.js's job and the layout
+// run's to check. What belongs here is the order.
+
+const oursVariant = (id, needs, ...cardNames) => Object.assign(
+  variant(id, cardNames, ['Infinite tokens']),
+  { needs: [needs], unofficial: { confidence: 'verified' } }
+);
+
+test('groupSuggestions: a suggestion lists ours and Spellbook\'s in one order', () => {
+  // Everything but "Add Me" is in the deck, so every row below is one card away from it
+  // — which is what puts them all under the same suggestion.
+  const deck = deckNameSet(
+    ['Held', 'Alpha', 'Beta', 'Gamma', 'Delta'].map((card) => ({ card }))
+  );
+  // Three published, one of ours whose cards sort into the middle of them.
+  const published = [
+    variant('p1', ['Held', 'Add Me', 'Alpha'], ['Infinite tokens']),
+    variant('p2', ['Held', 'Add Me', 'Gamma'], ['Infinite tokens']),
+    variant('p3', ['Held', 'Add Me', 'Delta'], ['Infinite tokens']),
+  ];
+  const unofficial = [oursVariant('u1', 'Add Me', 'Held', 'Add Me', 'Beta')];
+
+  const [group] = groupSuggestions(
+    computeSuggestions(published, deck, unofficial), deck
+  );
+
+  assert.strictEqual(group.combos.length, 4, 'every combo the card unlocks, in one list');
+  // Ours sits where its cards put it, not after the published ones.
+  const ids = group.combos.map((v) => v.id);
+  assert.deepStrictEqual(ids, ['p1', 'u1', 'p3', 'p2'],
+    `ours was not ordered among them: ${ids.join(', ')}`);
+  // And the counts stay apart, because "+3" and "+1 of our own" are different claims.
+  assert.strictEqual(group.unlocks.length, 3);
+  assert.strictEqual(group.unofficial.length, 1);
+});
+
+test('groupSuggestions: the merged list leads with the card you would be adding', () => {
+  const deck = deckNameSet(
+    ['Held', 'Zebra', 'Aardvark'].map((card) => ({ card }))
+  );
+  const published = [variant('p1', ['Held', 'Zebra', 'Add Me'], ['Infinite tokens'])];
+  const unofficial = [oursVariant('u1', 'Add Me', 'Held', 'Aardvark', 'Add Me')];
+  const [group] = groupSuggestions(computeSuggestions(published, deck, unofficial), deck);
+  // The lead is per row and has to be the one the render side draws, or the list was
+  // ordered on a string nobody sees.
+  for (const v of group.combos) {
+    assert.strictEqual(orderComboNames(variantCardNames(v), { lead: 'Add Me' })[0], 'Add Me');
+  }
+});
+
+test('groupSuggestions: a suggestion with nothing of ours still gets its list', () => {
+  const deck = deckNameSet([{ card: 'Held' }]);
+  const published = [variant('p1', ['Held', 'Add Me'], ['Infinite tokens'])];
+  const [group] = groupSuggestions(computeSuggestions(published, deck, []), deck);
+  assert.deepStrictEqual(group.combos.map((v) => v.id), ['p1']);
+  assert.strictEqual(group.unofficial.length, 0);
 });

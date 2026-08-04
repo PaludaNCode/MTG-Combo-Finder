@@ -271,14 +271,25 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   comment naming a CSS selector the way you would in prose takes the whole file out with
   a `SyntaxError: Unexpected token ':'` pointing at the comment. That one at least fails
   loudly at parse; the backslash does not.
-- **A pair of interchangeable cards does not collapse, and that is the rule rather than a
-  bug.** `COLLAPSE_FROM = 3` in `combos.js`: a fold costs a reader an indirection and
-  saves a pair almost no height, so two versions are written out and three or more fold.
-  Two consequences worth knowing before touching it. `groupVariants()` counts the members
-  still *free*, so a family of three that loses one to a bigger family is a pair and is
-  written out too. And **a fixture whose only families are pairs draws no collapsed row at
-  all** — `test/fixtures/dataset.js` carries a third version specifically so the "any of
-  N" shape stays covered, and `npm run verify` fails loudly if it stops being there.
+- **A combo has two shapes and the ordering code sees the wrong one if you let it.** A
+  compact row from the dataset carries `c` (strings); one through `expand()` carries `uses`
+  (objects). **Sorting happens before expansion, rendering after it.** `variantCardNames()`
+  handles both now — it did not, and every caller holding a compact row got an empty list,
+  which no ordering rule objects to. That shipped the unofficial panel in `unofficial.js`
+  file order for a while: `matchUnofficial()` sorts and `search.js` expands afterwards, so
+  46 rows were compared as `''` against `''`. It looked fine because `comboSize()` worked
+  around the shape at *its* call site, so sizes still separated the rows. Never add that
+  workaround back to a call site — fix the contract.
+- **A pair or a triple of interchangeable cards does not collapse, and that is the rule
+  rather than a bug.** `COLLAPSE_FROM = 4` in `combos.js`: below it every version is its
+  own row. Three consequences before touching it. `groupVariants()` counts the members
+  still *free*, so a family cut below the threshold by a bigger one is written out too.
+  **A fixture whose families are all smaller than the threshold draws no collapsed row at
+  all** — `test/fixtures/dataset.js` carries enough versions specifically so the "any of N"
+  shape stays covered, `npm run verify` fails loudly if it stops being there, and raising
+  the number again means adding another version there. And the tests are written against
+  the exported constant rather than the literal, with exactly one pinning the number, so
+  moving it is cheap but never accidental.
 - **Driving the mouse to `boundingBox()` coordinates does not scroll.** `locator.click()`
   scrolls its target into view; `page.mouse.click(box.x + 4, box.y + 4)` does not, and an
   earlier press in the same test may already have scrolled the element half out of the
@@ -355,6 +366,13 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
 - **The unofficial panel is never counted as published data.** Its rows stay out of
   the combo count and the bracket check, and every row has to name the published
   combo it came from. `test/unofficial.test.js` enforces that shape.
+- **Two panels list ours and Spellbook's in one order** — the suggestions and the pieces —
+  so what marks a row as ours is the `unofficial` pin on the row, before the confidence
+  pin. It used to be a heading above a second list, which made "who published this" decide
+  where a row *sat* and split families across it. The counts stay apart (`+3 official ·
+  +1 unofficial`) and the standalone panel stays; only the ordering merged. The pin is
+  drawn on every unofficial row rather than behind a flag, because a missing pin in a
+  merged list attributes our work to Spellbook and nothing on screen would say otherwise.
 - **Rows leave the file because the nightly job noticed, not because somebody
   remembered.** `update-data.yml` verifies every citation against the snapshot it just
   published: a broken one fails the job, and a row Spellbook has *since published*
