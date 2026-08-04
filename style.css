@@ -513,11 +513,21 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .empty { color: var(--muted); }
 
-/* The line under "Combos in your deck" that reconciles its two numbers: the badge
-   counts combos and the rows are cards, so a three-figure badge sits above a two-figure
-   list of rows and the sentence is what stops that reading as a miscount. --muted rather than --faint: --faint is only
-   safe on --bg and this sits on a panel, and a sentence the badge cannot be understood
-   without is not decoration. See DeckView.deckCombosNote(). */
+/* A panel's opening sentence — the line under "Combos in your deck" that reconciles its
+   two numbers, and the one under "Unofficial combos" that says whose rows those are.
+   Both panels draw one, so both use this: they sit one above the other on the page, and
+   the unofficial note used to be `.empty` (a colour and nothing else), which put the two
+   at different measures and different sizes with nothing gained by the difference.
+
+   The first of them exists because the badge counts combos and the rows are cards, so a
+   three-figure badge sits above a two-figure list of rows and the sentence is what stops
+   that reading as a miscount. --muted rather than --faint: --faint is only safe on --bg
+   and this sits on a panel, and a sentence the badge cannot be understood without is not
+   decoration. See DeckView.deckCombosNote().
+
+   62ch is the measure both get. A panel body is 967px at a 1440px window and this text is
+   .92rem, so an unconstrained line runs to about 130 characters — twice a comfortable one,
+   and the reason the unofficial note read as a wall rather than as a caption. */
 .panel-note {
   margin: 0 0 .9rem;
   max-width: 62ch;

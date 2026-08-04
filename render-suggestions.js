@@ -203,7 +203,13 @@
       return;
     }
     const body = panel(container, 'unofficial', 'Unofficial combos', rows.length);
-    body.appendChild(el('p', 'empty',
+    // The same class the note under "Combos in your deck" uses, because this is the same
+    // kind of thing: a sentence explaining the panel it heads. It was `.empty` — which
+    // sets a colour and nothing else — so the two intros sat in adjacent panels at
+    // different measures and different sizes, this one running the panel's whole width
+    // while the other wrapped at 62ch. `.empty` is for a panel with nothing in it, and
+    // this panel has rows.
+    body.appendChild(el('p', 'panel-note',
       'Not published by Commander Spellbook. Each of these was found by swapping a card for '
       + 'one Spellbook treats as interchangeable in other combos, and each says which swap it '
       + 'is and how far the checking went. They are not counted in the totals above, and the '
