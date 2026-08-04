@@ -58,7 +58,9 @@
   <footer>
     <p>The classification itself lives in <code>result-tiers.js</code> — a written-down list, not a
       set of patterns. To move a result between tiers, move its name between lists.</p>
-    <p class="build">Build <code id="build">local</code></p>
+    <!-- Both markers are rewritten at deploy, and both are guarded there. See
+         index.html for why the time is the deploy's and not the commit's. -->
+    <p class="build">Build <code id="build">local</code> · <span id="built">not deployed</span></p>
   </footer>
 
   <script src="result-tiers.js"></script>
