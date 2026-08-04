@@ -334,9 +334,19 @@ loosely.
 **Check it yourself, then say what you checked.** A claim with a command behind it beats a
 confident sentence, and most rules in this file exist because something untested read as fine.
 
-**Never confirm a deploy from the Actions API** — `actions_list` returns ~395 KB a call, and a green
-deploy job still does not prove the CDN is serving the new bytes. **The footer does.** Name the SHA
-that went out and point at it: deploys are asynchronous and do not need waiting on.
+**Never confirm a deploy from the Actions API** — `actions_list` returns ~395 KB a call. Name the
+SHA that went out and point at the footer: deploys are asynchronous and do not need waiting on.
+
+**And you cannot read the footer from here.** `paludancode.github.io` is 403 at CONNECT like every
+other blocked host — `raw.githubusercontent.com` is the only one allowed — and the deploy publishes
+through `actions/deploy-pages`, an artifact, so there is no branch to read it off either. That left
+the Actions API as the only signal available in a sandbox, which is why this rule kept being broken.
+
+**The deploy checks it for you now.** Its last step reads the live page from the runner, which can
+reach it, and fails if the CDN never serves the SHA it just stamped into the footer — twelve tries,
+10s apart. So "the deploy job is green" now means what reading the footer used to mean, and is the
+one case where the job's conclusion is enough. It was not before: `deploy-pages` succeeding means
+the artifact was accepted, not that anyone is being served it.
 
 **A closing report, in order:** what changed and where the reasoning lives (a `README §`, an issue
 number) · what was run and what it said, in real numbers rather than "tests pass" · what was

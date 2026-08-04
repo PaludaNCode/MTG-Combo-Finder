@@ -4536,6 +4536,30 @@ loop over the two pages — a `date` call per page would let `index.html` and `t
 disagree by a second while both guards still passed, and a line read for its exact time is
 the wrong place to be approximately right.
 
+#### And the deploy reads it back off the live page
+
+`deploy-pages` succeeding means the artifact was accepted. It does not mean anyone visiting
+the site gets it, and those are different claims — only the second is what "deployed"
+means to a reader. Pages' CDN caches by full URL and a deploy purges nothing, which is the
+whole reason the assets carry `?v=<sha>`; the HTML itself is the one thing that has to come
+back fresh, and nothing checked that it did.
+
+So the last step of the deploy fetches its own live URL and looks for the SHA it stamped
+into the footer a few steps earlier — the same check a person does by eye, run by the one
+machine in the pipeline that can reach the site. Twelve attempts 10s apart, because
+propagation is not instant and a first miss is normal, and each request carries a different
+cache-busting query so a CDN edge cannot answer every retry from one stale entry and let
+the loop measure nothing but its own patience. A run that never sees the new SHA **fails
+the deploy**: a deploy nobody is being served is not a deploy.
+
+This also settles a rule that could not be followed. `CLAUDE.md` says never to confirm a
+deploy from the Actions API and to read the footer instead — good advice that is impossible
+from a sandboxed session, where `paludancode.github.io` is 403 at CONNECT and
+`raw.githubusercontent.com` is the only reachable host. There is no branch to read the
+footer off either, because Pages is deployed from an artifact. With the check inside the
+deploy, "the deploy job is green" now carries what reading the footer used to carry, and is
+the one case where a job's conclusion is enough on its own.
+
 **The layout check measures the deployed line, not the one it serves.** Locally, and under
 `npm run verify` and `npm run test:ui`, the footer reads `Build local · not deployed` —
 twenty characters shorter than production. Measuring that would pass a footer that
