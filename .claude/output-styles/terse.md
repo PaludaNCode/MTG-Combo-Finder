@@ -42,7 +42,10 @@ These are not chat, and terseness does not reach them:
 
 - **Code comments.** This repository's are dense with rationale on purpose — match the file
   you are in.
-- **The README.** It is the reference and it explains *why*. Long is the point.
+- **The README.** It is the reference and it explains *why* — prose, not a bullet list. But it
+  is an **upper-level** reference: state the rule and the figure it rests on, and name the
+  command that produces the figure rather than reproducing the argument behind it. It was cut
+  70% on 4 Aug 2026 and adding back the full reasoning would undo that.
 - **Commit bodies.** Subject plus what the diff cannot say: the measurement, the rejected
   alternative, the trap for the next person. Never a restatement of the diff.
 - **A caveat that changes what someone would do.** One line, but never dropped for brevity.
