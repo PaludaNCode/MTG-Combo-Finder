@@ -1272,6 +1272,108 @@ rescales the same picture rather than re-laying it out for the new shape. The ma
 is also one image to a screen reader, with a one-line description; everything on
 it is written out in words in the panels above, which is the better read anyway.
 
+### Asking how wide the column is, and the 601ms it used to cost
+
+The scaling above needs one number from the page: how wide the column the map
+lands in actually is. It cannot be read off the window — at 1000px the page is two
+columns and this is not the wider one — so `renderGraph()` measured the panel it
+had just built, with `body.clientWidth`.
+
+That property read was the single most expensive line on the page. Reading any
+geometry flushes pending style and layout for the *whole document*, and this one
+ran mid-render: "Combos in your deck" had just put ~15,000 nodes in, so the read
+laid the page out, and then the pieces and suggestions panels added ~78,000 more
+and it was laid out again before paint. Two full layouts a search, and the first
+one bought nothing but a number. On a 520-combo deck at 390px with the CPU
+throttled 4× it was **601ms of a 3,620ms search** — more than the download, the
+parse and the matching put together, which is 600ms of that same search.
+
+**Drawing the map earlier does not fix it, and was measured making it worse.**
+The obvious move is to build the map before the heavy panels, since `#graph` sits
+in a fixed place in `index.html` and building it early moves nothing a reader
+sees. On a re-search that is slower, not faster: the *previous* render is still in
+the document, so an early read flushes a bigger tree than the late one did. It
+went 3,689ms to 4,106ms. The problem was never where the read happened.
+
+So the render path does not read geometry at all. A `ResizeObserver` on the panel
+body keeps the width in a variable, and its callback runs after layout, where the
+number is already computed and costs nothing to take. Warm searches went 3,689ms
+to 2,965ms, a fifth of the whole search, and the map is identical — checked at
+five widths, on two decks, on a first search and a re-search. The first search on
+a fresh page still reads the width directly, because there is nothing to observe
+until the section has been laid out once; that one is unavoidable and is paid once.
+
+Two details that are easy to get wrong here. The observer takes
+`borderBoxSize`, not `contentRect` — `.panel-body` carries 1rem of side padding,
+which `clientWidth` includes and `contentRect` excludes, so the neat-looking
+option draws every map 32px narrower than before. And `panel()` throws the body
+away and builds a new one every search, so the observation has to be moved to the
+new node each time while the cached number carries over, since what it describes
+is the column and the column has not changed.
+
+**The guard is a count, not a duration.** A regression here is invisible twice
+over: the page draws exactly the same map, and a timing threshold on a shared
+runner is a flake. `tools/verify-layout.js` counts reads of `clientWidth` while a
+re-search runs and fails if there are any — `columnWidth()` holds the only
+synchronous read of it in the shipped page, and by the second search the cache is
+warm, so zero really means zero. That is also why the observer takes the width off
+the entry rather than reading `target.clientWidth`, which would have been correct
+and free: it would have put two counts of noise into a check whose whole value is
+that the answer is exactly zero.
+
+## The combos come first, and the rest of the page arrives after
+
+The page was slow on a phone, and the reason turned out not to be that it did too
+much work. It was that it did all of it before letting the browser draw anything.
+
+`renderResults()` was one synchronous task: combos, then the unofficial rows, then
+the map, then the pieces panel, then the suggestions panel. A browser cannot paint
+in the middle of a task, so on a 520-combo deck at 390px with the CPU throttled 4×
+the reader watched a dead page for **3,094ms** — even though their combos had been
+built after about 800ms of it. The remaining two seconds went on three panels that
+are nine screens below the fold and that nobody has scrolled to yet.
+
+It now yields after the combos. Same work, different order:
+
+| | combos on screen | everything built |
+|---|---:|---:|
+| one task | 3,094ms | 2,066ms |
+| yielding | **797ms** | 2,558ms |
+
+**This is a trade, not a free win.** Total building goes *up* — scheduling frames
+costs something — so the phone does slightly more work than it did. What changes is
+that the reader is not made to watch it. The number that got 3.9× better is the only
+one they experience; the number that got worse describes work happening behind an
+answer they are already reading.
+
+**The three panels are emptied immediately and filled a frame later**, rather than
+left alone until their replacements are ready. Leaving them would be smoother — no
+gap, no re-grow — and would put the previous deck's numbers under a list that had
+already changed, for a second and a half, every time somebody pressed **+ Add to
+deck**. The map has a rule about this already: one search behind says the added card
+is in no combos. Three panels visibly absent beats three panels quietly wrong.
+
+Clearing them turned out to be most of the win as well as the honest choice. An
+earlier version that deferred the panels but left the old contents in place only
+reached 1,674ms, because the frame carrying the combos still had to lay out and
+paint the 93,000 nodes of the previous render sitting underneath them.
+
+**Two things that are easy to get wrong here.** The suggestions panel's
+`computeSuggestions()` and `groupSuggestions()` calls are *inside* the deferred
+callback rather than passed to it as arguments — as arguments they are evaluated
+immediately, which would leave ~150ms of the work they were supposed to defer on the
+critical path, to hand a finished list to a function that will not be called for
+another frame. And every deferred callback carries the token of the render that
+booked it and does nothing if a newer search has started, because "+ Add to deck"
+fires a search straight away and a stale callback landing late would draw the
+previous deck's map over the current deck's results.
+
+`tools/verify-layout.js` books a frame from the top of the render and records which
+panels are filled by the time it runs. It asserts in both directions: the combos are
+in that frame, and the pieces and suggestions panels are not. Checking only the first
+would pass on a page that had gone back to one task; checking only the second would
+pass on a page that painted nothing at all.
+
 ## Adding a card, and searching again
 
 Every suggestion carries **+ Add to deck**, and so does every interchangeable

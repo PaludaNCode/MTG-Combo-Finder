@@ -1487,8 +1487,42 @@ function runOne(vp) {
         if (vp.noWorker) delete win.Worker;
         doc.getElementById('commanders').value = '';
         doc.getElementById('decklist').value = DECKS[vp.deck];
+
+        // What is on screen the first time the browser can paint after a search.
+        //
+        // renderResults() builds the combos, yields, and builds the three panels below
+        // them a frame later — because a browser cannot paint in the middle of a task,
+        // so a single-task render made a reader wait for panels nine screens down before
+        // seeing anything at all. On a 520-combo deck at 390px with the CPU throttled 4x
+        // that was the difference between 3,094ms and 797ms to the answer.
+        //
+        // The finished page looks identical either way, so the yield is checked at the
+        // one moment it is observable: a frame booked from the top of the render cannot
+        // run until that task ends, and what is filled in by then is what the reader got.
+        // groupVariants() is the first thing renderResults() calls.
+        const firstFrame = {};
+        const groupVariants0 = win.DeckCombos.groupVariants;
+        let booked = false;
+        win.DeckCombos.groupVariants = function () {
+          if (!booked) {
+            booked = true;
+            win.requestAnimationFrame(function () {
+              const filled = function (id) {
+                const node = doc.getElementById(id);
+                return Boolean(node && node.getElementsByTagName('*').length > 3);
+              };
+              firstFrame.included = filled('included');
+              firstFrame.graph = filled('graph');
+              firstFrame.pieces = filled('pieces');
+              firstFrame.suggestions = filled('suggestions');
+            });
+          }
+          return groupVariants0.apply(this, arguments);
+        };
+
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
         await settled(doc, '.combo');
+        win.DeckCombos.groupVariants = groupVariants0;
 
         const before = measure(win, doc);
 
@@ -1545,6 +1579,25 @@ function runOne(vp) {
           // worse than no picture — it says the added card is in no combos.
           mapBefore: before.map ? before.map.dots.length : 0,
         };
+        // The map's column width used to be read as body.clientWidth in the middle of
+        // the render. Reading a geometry property flushes style and layout for the whole
+        // document, and this one ran after "Combos in your deck" had been rebuilt and
+        // before the pieces and suggestions panels went in — so the page was laid out
+        // twice per search, and the first one bought nothing but a number. On a
+        // 520-combo deck at 390px with the CPU throttled 4x it was 601ms of a 3,620ms
+        // search. It comes off a ResizeObserver now, where layout is already settled.
+        //
+        // A count and not a duration, because a regression here is invisible twice over:
+        // the page draws exactly the same map, and a timing threshold on a shared runner
+        // is a flake. render-map.js:columnWidth() holds the only synchronous read of this
+        // property in the shipped page, and on a re-search it must not be reached at all
+        // — the cache is warm by now, and the fallback is for the first search only.
+        const widthDesc = Object.getOwnPropertyDescriptor(win.Element.prototype, 'clientWidth');
+        let widthReads = 0;
+        Object.defineProperty(win.Element.prototype, 'clientWidth', {
+          configurable: true,
+          get: function () { widthReads += 1; return widthDesc.get.call(this); },
+        });
         if (addBtn) {
           addBtn.click();
           // Wait for the count to move rather than for a guessed interval: the whole
@@ -1560,6 +1613,10 @@ function runOne(vp) {
             await new Promise((r) => setTimeout(r, 50));
           }
           await new Promise((r) => setTimeout(r, 120));
+          // Read before measure(), which reads geometry everywhere by design and would
+          // swamp the count. renderResults() is synchronous, so by the time the badge
+          // above was seen to move the whole re-search has already been drawn.
+          afterAdd.widthReads = widthReads;
           const now = measure(win, doc);
           // The escape is doubled because this whole harness is a template literal
           // in tools/verify-layout.js: a lone \\n would become a real newline here
@@ -1585,6 +1642,8 @@ function runOne(vp) {
           const kept = win.localStorage.getItem('mtg-combo-finder.deck');
           afterAdd.kept = kept ? JSON.parse(kept).decklist : '';
         }
+        // Put the real accessor back before anything else measures the page.
+        Object.defineProperty(win.Element.prototype, 'clientWidth', widthDesc);
 
         // The decklist is kept between visits, so a search has to have stored
         // it — and Clear has to actually empty it, list and copy both.
@@ -1599,7 +1658,7 @@ function runOne(vp) {
         };
 
         resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
-          { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear }));
+          { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear, firstFrame }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -2695,6 +2754,27 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // The caveat is the reason a bracket number here is honest at all.
     if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket explanation does not say what it did not check');
 
+    // The combos reach the screen before the panels below them are built. See the note
+    // beside firstFrame in the harness: this is the difference between a reader waiting
+    // 797ms and 3,094ms on a phone, and the finished page is identical either way, so
+    // the first frame is the only place it can be seen.
+    //
+    // Asserted in both directions on purpose. "The combos are there" alone would pass if
+    // the yield were removed and everything arrived at once, which is the regression;
+    // "the suggestions are not there" alone would pass on a page that painted nothing.
+    const frame1 = v.firstFrame || {};
+    if (!frame1.included) {
+      problems.push('the first painted frame after a search has no combos in it — the reader '
+        + 'waits for the whole render before seeing anything');
+    }
+    if (frame1.suggestions || frame1.pieces) {
+      problems.push('the first painted frame already holds '
+        + [frame1.pieces && 'the pieces panel', frame1.suggestions && 'the suggestions panel']
+          .filter(Boolean).join(' and ')
+        + ' — those are built after the yield in renderResults(), so this means the render '
+        + 'is one task again and the combos wait for panels nine screens down');
+    }
+
     // Taking a suggestion: the card lands in the decklist, the list is kept, and
     // the search runs again — proved by the deck holding more combos than it did.
     const added = v.afterAdd;
@@ -2726,6 +2806,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           + `${added.mapAfter} after — it was not rebuilt`);
       }
       if (!added.mapHasCard) problems.push(`${added.card} was added but is not on the map`);
+      // …and it was redrawn without forcing a layout to find out how wide to draw.
+      // See the note beside widthReads in the harness: the old read cost 601ms of a
+      // 3,620ms search on a phone, and nothing about the picture says whether it is
+      // back. Any number above zero here means a synchronous geometry read has
+      // returned to the render path.
+      if (added.widthReads !== 0) {
+        problems.push(`redrawing the map read clientWidth ${added.widthReads} time(s) during the `
+          + 'search — that flushes layout for the whole document; see columnWidth() in render-map.js');
+      }
     }
 
     // The decklist is the whole input; losing it on reload is the one thing a
