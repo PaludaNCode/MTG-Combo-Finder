@@ -1040,23 +1040,73 @@ function measure(win, doc) {
     const chips = [...doc.querySelectorAll('#graph .map-filter .chip')];
     const chip = (view) => chips.find((c) => c.dataset.view === view);
     const filtered = {};
-    const winEdges = [...svg.querySelectorAll('.edge.tier-win')];
     const counts = [...svg.querySelectorAll('.count')];
-    for (const view of ['swap', 'combo', 'win']) {
+    for (const view of ['swap', 'combo']) {
       if (chip(view)) chip(view).click();
       filtered[view] = {
         combos: combos.filter((e) => win.getComputedStyle(e).display !== 'none').length,
         swaps: swapEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
-        // What the game-ending view is for, and the thing that made it worth a test:
-        // the numbers on the lines carry the tier too, and without that the view hid
-        // every count including the ones belonging to the lines it was showing.
-        wins: winEdges.filter((e) => win.getComputedStyle(e).display !== 'none').length,
+        // A line's number carries the same class the line does, so a view takes the pair
+        // together. Without that a view hid every count, including the ones belonging to
+        // the lines it was showing — a number floating over nothing.
         countsShown: counts.filter((e) => win.getComputedStyle(e).display !== 'none').length,
         pressed: chip(view) ? chip(view).getAttribute('aria-pressed') : null,
         moved: [...svg.querySelectorAll('.node .dot')]
           .some((c, i) => c.cx.baseVal.value !== before[i][0] || c.cy.baseVal.value !== before[i][1]),
       };
     }
+    // Which cards light up, in the view that had it wrong. The lines are already checked
+    // above; this is the other half, and the half that shipped broken — the swap view drew
+    // dashed lines and lit the hovered card's *combo* partners, several of which have no
+    // dashed line to it at all.
+    //
+    // Read off classes rather than text. Built from the graph the page is drawing so the
+    // check cannot drift from the fixture: pick a card that has at least one stand-in and
+    // at least one combo-only partner, hover it in the swap view, and the two must differ.
+    const swapLit = (() => {
+      if (!chip('swap')) return null;
+      // The relations, read off the rendered lines. A line's ends are not on the element,
+      // so they are matched by geometry against the nodes' own centres — the same numbers
+      // the layout wrote out.
+      const nodes = [...svg.querySelectorAll('.node')].map((g) => {
+        const dot = g.querySelector('.dot');
+        return { g, x: dot.cx.baseVal.value, y: dot.cy.baseVal.value };
+      });
+      const at = (x, y) => nodes.find((n) => Math.abs(n.x - x) < 0.6 && Math.abs(n.y - y) < 0.6);
+      const rel = { swap: new Map(), combo: new Map() };
+      [...svg.querySelectorAll('.edge')].forEach((e) => {
+        const a = at(e.x1.baseVal.value, e.y1.baseVal.value);
+        const b = at(e.x2.baseVal.value, e.y2.baseVal.value);
+        if (!a || !b) return;
+        const kind = e.classList.contains('swap') ? 'swap' : 'combo';
+        [[a, b], [b, a]].forEach(([from, to]) => {
+          if (!rel[kind].has(from.g)) rel[kind].set(from.g, new Set());
+          rel[kind].get(from.g).add(to.g);
+        });
+      });
+      // A card with both kinds of neighbour, and a combo partner that is not also a
+      // stand-in — without one of those the check cannot tell the two views apart.
+      let subject = null;
+      let comboOnly = null;
+      for (const n of nodes) {
+        const swaps = rel.swap.get(n.g);
+        const partners = [...(rel.combo.get(n.g) || [])].filter((p) => !(swaps && swaps.has(p)));
+        if (swaps && swaps.size && partners.length) { subject = n; comboOnly = partners[0]; break; }
+      }
+      if (!subject) return { usable: false };
+      chip('swap').click();
+      subject.g.dispatchEvent(new win.PointerEvent('pointerenter', { bubbles: true }));
+      const standIn = [...rel.swap.get(subject.g)][0];
+      const out = {
+        usable: true,
+        subject: subject.g.getAttribute('aria-label'),
+        standInLit: standIn.classList.contains('is-lit'),
+        comboOnlyLit: comboOnly.classList.contains('is-lit'),
+      };
+      svg.dispatchEvent(new win.PointerEvent('pointerleave', { bubbles: true }));
+      return out;
+    })();
+
     if (chip('all')) chip('all').click();
 
     // Picking two cards out. The whole feature is that the answer is about the
@@ -1135,6 +1185,7 @@ function measure(win, doc) {
       }),
       legend: [...doc.querySelectorAll('#graph .map-legend li')].length,
       filtered,
+      swapLit,
       labels: [...svg.querySelectorAll('.node .label')].map((t) => t.textContent),
       titled: [...svg.querySelectorAll('.node > title')].map((t) => t.textContent),
       lineTitles: [...svg.querySelectorAll('.edge > title')].map((t) => t.textContent),
@@ -3231,17 +3282,21 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (m.filtered.combo.swaps || !m.filtered.combo.combos) {
         problems.push(`"works together" left ${m.filtered.combo.swaps} interchangeable lines on screen`);
       }
-      // Only the game-enders, and no interchangeable lines — which is a decision, not
-      // a side effect: a swap line has no combo behind it and so no tier to filter by.
-      const w = m.filtered.win;
-      if (!w.wins) problems.push('"game-ending" left no game-ending lines on screen at all');
-      if (w.combos !== w.wins) {
-        problems.push(`"game-ending" left ${w.combos} combo lines on screen but only ${w.wins} of them end the game`);
+      // A view that hides every number is a view with no counts, which is what an early
+      // version did — the class was on the line and not on the text beside it. Asked of
+      // both relation views, since both filter counts the same way.
+      // The highlight follows the view, which the lines being right does not imply.
+      const sl = m.swapLit;
+      if (!sl) problems.push('no interchangeable chip, so the view-scoped highlight is unchecked');
+      else if (!sl.usable) {
+        problems.push('no card on this map has both a stand-in and a combo-only partner, '
+          + 'so the swap view\'s highlight cannot be told apart from the combo view\'s');
+      } else {
+        if (!sl.standInLit) problems.push(`hovering ${sl.subject} in the swap view left its stand-in dim`);
+        if (sl.comboOnlyLit) problems.push(`hovering ${sl.subject} in the swap view lit a combo-only partner`);
       }
-      if (w.swaps) problems.push(`"game-ending" left ${w.swaps} interchangeable lines on screen`);
-      // A view that hides every number is a view with no counts, which is what the
-      // first version of this did — the tier class was on the line and not the text.
-      if (!w.countsShown) problems.push('"game-ending" hid every count on the map');
+      if (!m.filtered.swap.countsShown) problems.push('"interchangeable" hid every count on the map');
+      if (!m.filtered.combo.countsShown) problems.push('"works together" hid every count on the map');
       if (m.filtered.swap.pressed !== 'true') problems.push('the filter does not report which view is on');
       if (m.filtered.swap.moved || m.filtered.combo.moved) {
         problems.push('filtering the lines moved the cards');

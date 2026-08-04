@@ -78,9 +78,10 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
   them; **dashed** means they do the same job — swap one for the other and you
   still have a combo — so your four sacrifice outlets end up in one cluster
   instead of four corners. Both are drawn heavier the more they overlap and
-  carry the count as a number, and four chips let you read either relation on
-  its own — or **Game-ending**, which is the only line that matters on a map with
-  a hundred of them. **Press two or three cards** and the map shows what they have in
+  carry the count as a number, and three chips let you read either relation on
+  its own or both at once — **and the highlight follows the chip**, so hovering in
+  *Interchangeable* lights the cards that stand in for that one and nothing else.
+  **Press two or three cards** and the map shows what they have in
   common, with a line under it saying what cutting them would actually cost —
   which is not the sum of their combo counts, because a combo whose slot another
   of your cards can fill survives losing this one. Redrawn from scratch by every
@@ -1280,30 +1281,57 @@ On the tuning deck the result is six legible groups: the sacrifice outlets, the
 lifegain triggers, the counter payoffs, the lifegain payoffs, and two smaller
 pairs — none of which existed as a shape on the map before.
 
-### Filtering by what the line is worth, not just by what it is
+### The highlight follows the chip, and the chip that did not fit
 
-Three of the four chips ask **which relation** to draw: both, works-together, or
-interchangeable. The fourth asks a different question about the same picture — what the
-combo behind the line is *worth* — and on a deck whose map runs to over a hundred lines
-it is the one that makes it readable. *Show me only the lines that end the game.*
+Three chips, and every one of them asks the same kind of question: **which relation** to
+draw — both, works-together, or interchangeable. The picture always means one thing.
 
-The data was already there. `graph.js` puts the best tier of any combo behind an edge on
-the edge itself, so the filter is a class on the `<svg>` and a CSS rule, exactly like the
-relation views: the cards do not move, the layout is still worked out from both relations
-at once, and switching is the same picture with lines taken away.
+There was a fourth, *Game-ending*, and it asked something else about the same picture:
+what the combo behind a line is *worth*. It is gone. A tier is a property of the combo
+behind an edge rather than a relation between two cards, so it could not include
+interchangeable lines at all — a swap line says "these two do the same job", there is no
+combo behind it and so no tier to filter by — and the chip had to explain its own absence
+in its tooltip. A filter that silently drops a category is worse than one that does not
+filter, and a filter that has to apologise for dropping one is a filter answering the
+wrong question.
 
-**Interchangeable lines are not in that view, and that is a decision rather than a side
-effect.** A swap line says "these two do the same job" — there is no combo behind it, so
-there is no result and no tier it could be filtered by. Leaving them in would answer a
-question about game-enders with a screenful of lines that are not combos at all. The
-chip's title says so, because a filter that silently drops a category is worse than one
-that does not filter.
+**One thing it left behind stays: the tier is on the number as well as on the line.** It
+was on the line only, so the first version of that view hid every count on the map,
+including the counts belonging to the lines it was showing — a filter that removes the
+information it was opened to read. It still matters, because the relation views filter
+counts the same way and would strand a number over nothing without it, so the layout run
+still asserts a count survives in both.
 
-The part that needed a test was smaller and easier to get wrong: **the tier has to be on
-the number as well as on the line.** It was on the line only, so the first version of
-this view hid every count on the map, including the counts belonging to the lines it was
-showing — a filter that removes the information it was opened to read. The layout test
-asserts the count survives, and confirms it by failing when the class is taken off again.
+#### Which cards light up, not just which lines are drawn
+
+The chips hid **lines**. The nodes were never part of the filter, and nothing said so.
+
+Press *Interchangeable* and hover a card: dashed lines only, and the cards that lit up were
+the ones the hovered card **combos with**. The tooltip gave it away — *"Essence Warden — in
+13 combos"* — a works-together answer glowing under an interchangeability question. Several
+lit cards had no dashed line to it at all, and at least one card that was joined to it by a
+dashed line sat dim.
+
+The cause was that `render-map.js` built its neighbour sets by walking `graph.links` without
+reading `kind`, so the highlight could not tell a swap edge from a combo edge even in
+principle. The lit set follows the visible relation now: in *Interchangeable* only the cards
+that stand in for the hovered one, in *Works together* only its combo partners, in *Both*
+everything it touches — and the same scoping for a pinned two- or three-card comparison, and
+for which lines count as lit.
+
+That rule is `ComboGraph.litFor()` rather than something in the renderer, because it is a
+decision about what the picture claims and `node --test` cannot reach `render-map.js`.
+
+**The sentence under the map is deliberately not scoped.** `DeckView.pickedSentence` still
+reports the full comparison whatever chip is pressed, because it answers "what would cutting
+these cost", which is a fact about the deck rather than about which lines are on screen. The
+highlight was a bug — it contradicted the chip beside it. The sentence contradicts nothing.
+
+It shipped because nothing looked. Both browser suites already pressed *Interchangeable* and
+neither read a node's class afterwards; the layout run checked which lines were **visible**
+and never which cards were **lit**. All three levels check it now — `litFor()` in the unit
+suite, geometry in `npm run verify`, a real hover in `npm run test:ui` — and all three fail
+when the view is ignored again.
 
 ### The number on a line
 
