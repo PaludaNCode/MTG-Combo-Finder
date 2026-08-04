@@ -2133,11 +2133,23 @@ function serve(dir, extra, onVerdict) {
       url = url.slice('/stamped'.length);
     }
     if (req.method === 'POST' && url === '/_verdict') {
-      let body = '';
-      req.on('data', (chunk) => { body += chunk; });
+      // Buffered and decoded ONCE, which is the whole of this fix. `body += chunk`
+      // stringifies every chunk on its own, so a character whose UTF-8 bytes straddle a
+      // chunk boundary arrives as replacement characters — and the verdict is a JSON POST
+      // carrying every string this tool measured. It cost three commits: `verify` failed at
+      // 390px and only there, on the same card every time, with "Basalt Monolith ?? in 7
+      // combos", and no local run could reproduce it because the sandbox chunks the body
+      // differently than CI does. The em dash in render-map.js's hover text simply happened
+      // to land on the boundary in the phone verdict.
+      //
+      // Worth being plain about the size of it: nothing was wrong with the page, and this
+      // could have corrupted any measured string in any check — silently, since U+FFFD
+      // inside a JSON string parses perfectly well.
+      const chunks = [];
+      req.on('data', (chunk) => { chunks.push(chunk); });
       req.on('end', () => {
         res.end('ok');
-        onVerdict(body);
+        onVerdict(Buffer.concat(chunks).toString('utf8'));
       });
       return undefined;
     }
