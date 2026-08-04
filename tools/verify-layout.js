@@ -574,6 +574,66 @@ function measure(win, doc) {
     };
   })();
 
+  // Where the "+" between the split's halves sits, against where it should sit.
+  //
+  // The sign is set at .62em — deliberately, since at the digits' size "+24" alone needed
+  // 63px of a 54px column — and a smaller inline box shares the digits' *baseline*, not
+  // their centre. Digits have no descender, so the sign ended up about a third of their
+  // height low and read as a subscript.
+  //
+  // Measured off real ink metrics rather than box geometry: a box's height is font ascent
+  // plus descent and says nothing about where the glyph's ink sits inside it, which is the
+  // whole question. Canvas gives actualBoundingBox* for the two strings at their two sizes,
+  // so "the centre of the digits" and "the centre of the plus" are numbers, and the shift
+  // that makes them equal is arithmetic instead of taste.
+  const signAlign = (() => {
+    // Whichever sign is rendered: the one between a split's halves, or the "+" in front of
+    // a suggestion's total. Same class, same question, and this deck draws only the second.
+    const sign = [...doc.querySelectorAll('.sign')].find((e) => e.getBoundingClientRect().width);
+    const host = sign && sign.parentNode;
+    if (!sign || !host) return null;
+
+    // The digits measured as an inline span beside the sign, inheriting the host's font, so
+    // the two measurements are the same shape: an inline box's height is its font's ascent
+    // plus descent, which makes its bottom a fixed distance under the shared baseline. A
+    // Range over the text node would report the line box instead and answer a different
+    // question.
+    const probe = doc.createElement('span');
+    probe.appendChild(doc.createTextNode('20'));
+    host.insertBefore(probe, sign);
+
+    const ctx = doc.createElement('canvas').getContext('2d');
+    const ink = (node, text) => {
+      const cs = win.getComputedStyle(node);
+      ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      const m = ctx.measureText(text);
+      return {
+        size: parseFloat(cs.fontSize),
+        // Positive is above the baseline. The centre of the ink, not of the box.
+        centre: (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2,
+        descent: m.fontBoundingBoxDescent,
+        bottom: node.getBoundingClientRect().bottom,
+      };
+    };
+    const d = ink(probe, '20');
+    const p = ink(sign, '+');
+    probe.remove();
+
+    // A box's bottom is its baseline plus that font's descent, so the difference of the two
+    // baselines is how far the sign has actually been raised off the digits'.
+    const raised = (d.bottom - d.descent) - (p.bottom - p.descent);
+    return {
+      // What it would take to put the two ink centres on the same line.
+      ideal: Math.round((d.centre - p.centre) * 100) / 100,
+      raised: Math.round(raised * 100) / 100,
+      signSize: p.size,
+      // The same shift as a multiple of the sign's own font size, which is the unit
+      // vertical-align reads an em in. (No backticks in here: this is inside a template
+      // literal, and one closes it.)
+      idealEm: Math.round(((d.centre - p.centre) / p.size) * 1000) / 1000,
+    };
+  })();
+
   // What the gutter actually needs, so its width is a measurement rather than a memory.
   // Every rendered thing in it, widest first — and then the worst real case built on
   // purpose, because the fixture need not contain it: a card holding up 1,889 combos of
@@ -979,6 +1039,7 @@ function measure(win, doc) {
     legality,
     comboCompare,
     gutterNeeds,
+    signAlign,
     headingShape,
     linkLine,
     order,
@@ -2330,6 +2391,16 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // column they have to fit in. A gutter that has quietly stopped fitting shows up as a
     // wrapped label or a number over the divider, which is exactly the class of thing a
     // screenshot catches and nothing else does.
+    // The sign between two numbers sits on their centre, not on their baseline. Asserted
+    // against the ink measurement rather than against the value in the stylesheet, so this
+    // stays true if either font size moves.
+    const sg = v.signAlign;
+    if (!sg) {
+      problems.push('no sign rendered, so its alignment is untested');
+    } else if (Math.abs(sg.raised - sg.ideal) > 1) {
+      problems.push(`the "+" is raised ${sg.raised}px where ${sg.ideal}px centres it on the digits`);
+    }
+
     const gut = v.gutterNeeds;
     if (!gut || !gut.column) {
       problems.push('no gutter to measure');
@@ -2877,6 +2948,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       const headNote = `{${v.header.pips.map((p) => p.letter).join('}{')}} from the cards`;
       // The shape the headings took and the two numbers that chose it, so a changed
       // threshold is visible in a passing run rather than only in a failure.
+      const signNote = v.signAlign
+        ? `sign raised ${v.signAlign.raised}px of the ${v.signAlign.ideal}px that centres it `
+          + `(${v.signAlign.idealEm}em of its ${v.signAlign.signSize}px)`
+        : 'no split to measure the sign in';
       const gutterNote = v.gutterNeeds
         ? `gutter ${v.gutterNeeds.column}px holds ${v.gutterNeeds.widest}px (${v.gutterNeeds.what})`
           + `, worst case 0+1889 is ${v.gutterNeeds.worst}px, pad ${v.gutterNeeds.pad}px`
@@ -2924,7 +2999,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}`);
     }
   }
 

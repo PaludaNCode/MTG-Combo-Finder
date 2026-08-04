@@ -3131,18 +3131,39 @@ It was 4.2rem, and the width is now checked rather than remembered. What the gut
 hold is the worst real split — a card unlocking 1,889 combos of ours and none of
 Spellbook's, so `0+1889` — and `npm run verify` builds that case rather than hoping the
 fixture contains it: **51px** of content, against 50px for the word COMBOS beneath it. With
-.45rem of clearance that is 59px, which 3.8rem holds with 2px spare, and the divider moved
-from 99px to 93px — 6px of a 334px phone column given back to the card names. 6px is all
-there is: shrinking COMBOS was tried first and bought nothing, since 46px of label still
-sits under 51px of split, and the split cannot wrap instead because `0+1889` has no space
-in it to break at. The test fails if either stops fitting.
+.45rem of clearance that is 59px, which 3.8rem holds with 2px spare — 6px of a 334px phone
+column given back to the card names, and a later trim takes 2px more out of the clearance,
+for `calc(3.8rem - 2px)`. Shrinking COMBOS was tried first and bought nothing, since 46px of
+label still sits under 51px of split, and the split cannot wrap instead because `0+1889` has
+no space in it to break at. The test fails if either stops fitting.
+
+Absolute divider positions are deliberately not written down here. One was, for exactly one
+change: *99px to 93px*, measured before the padding either side of the column moved in the
+same pull request, which left it 87px and the note stale while still reading as a fact.
+`npm run verify` prints where the divider is per viewport on every run, which is the only
+copy that cannot go out of date.
+
+**The `+` between the halves sits on the digits' centre, not on their baseline.** It is set
+at `.62em` for a reason the stylesheet records — at the digits' size `+24` alone needed 63px
+of a 54px column — and a smaller inline box shares the baseline of the digits beside it.
+Digits have no descender, so it sat about a third of their height low and read as a subscript.
+
+The shift is measured, on every run: `npm run verify` reads the ink boxes of `20` and `+` off
+canvas at their two sizes — a box's height is font ascent plus descent and says nothing about
+where the glyph sits inside it, which is the whole question — and reports what it would take
+to put the two ink centres on one line. That is **4.5px** at the total's 14.88px sign, or
+**.302em** of the sign's own size, and `vertical-align: .3em` lands 4.45px of it. One value
+covers both places the sign is drawn, and not by luck: it is always `.62em` of whatever it
+sits in, so the shift that centres it is the same fraction of itself either way. The run fails
+if the rendered shift and the measured ideal drift more than a pixel apart.
 
 **And the air around the text was trimmed with it.** Two paddings stack before a card name
 gets anything — the panel's and the card's — and `npm run verify` prints the pair as one
 number: at 390px that was **47px of air around 309px of text**, an eighth of the column
 spent on margin twice over. At `.55rem` / `.5rem` / `.6rem` it is 35px of air and **321px of
-text**, 12px more for a name. Only at this end of the range: a 1440px column has 935px of
-text and the same 64px of air, where the air is doing what padding is for.
+text**, 12px more for a name — and a later pixel off the right only, `calc(.5rem - 1px)`,
+makes it 322px. Only at this end of the range: a 1440px column has 935px of text and the same
+64px of air, where the air is doing what padding is for.
 
 That measurement also caught the change breaking itself: an editing slip closed the
 gutter's comment early, which left prose as CSS, dropped the whole `.combo.suggestion`
