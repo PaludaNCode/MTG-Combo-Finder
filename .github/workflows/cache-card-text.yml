@@ -36,18 +36,45 @@ jobs:
     timeout-minutes: 15
     steps:
       # Never onto main: this repo's rule is branch -> PR -> checks -> merge, and a
-      # workflow with a write token is not an excuse to skip it. Same guard as
+      # workflow with a write token is not an excuse to skip it. Same rule as
       # resolve-templates.yml, for the same reason.
-      - name: Refuse to run against the default branch
-        if: github.ref_name == github.event.repository.default_branch
-        run: |
-          echo "Run this from a branch; it commits card-text.json and main is protected." >&2
-          exit 1
-
+      #
+      # This used to REFUSE when run from the default branch, and the refusal was right
+      # about the rule and wrong about what to do with it. Dispatching from main is the
+      # obvious mistake to make — it is the branch the Actions UI offers first and the one
+      # an API dispatch defaults to — and the only sign was a red X with the reason inside a
+      # log nobody opens for a workflow they expect to be slow. Two hours went on believing
+      # this workflow was broken when it had refused exactly as designed.
+      #
+      # So it branches instead of refusing. main is still never pushed to; the commit lands
+      # on a branch named after the run, and the summary says where and offers the PR.
       - uses: actions/checkout@v7
+      # Before the decision step, not after: that step runs node now.
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
+
+      # The decision is tools/cache-target-branch.js, not four lines of shell here, and the
+      # reason is that shell in a `run:` block is the one kind of code in this repository
+      # nothing can test: exercising it means dispatching the workflow, and exercising the
+      # branch that only fires on the default branch means merging this file to the default
+      # branch first — a round trip per attempt. test/cache-target-branch.test.js covers both
+      # paths in milliseconds and `checks` runs it on every PR.
+      - name: Decide where the commit goes
+        id: target
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          branch="$(node tools/cache-target-branch.js)"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          if [ "$branch" != "$GITHUB_REF_NAME" ]; then
+            {
+              echo "Dispatched from \`$GITHUB_REF_NAME\`, which refuses direct pushes, so this"
+              echo "run commits to \`$branch\` instead."
+              echo ''
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Fetch the card text
         env:
@@ -93,6 +120,16 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add card-text.json
           git commit -m "Cache oracle text for: ${CARDS}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:${BRANCH}"
+          # Where it went and how to land it. A commit on a branch nobody is told about is
+          # the same as no commit, which is the other half of the failure this step's
+          # sibling above fixes.
+          {
+            echo ''
+            echo "Committed to \`${BRANCH}\` — open the PR:"
+            echo ''
+            echo "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${BRANCH}?expand=1"
+          } >> "$GITHUB_STEP_SUMMARY"
         env:
           CARDS: ${{ inputs.cards }}
+          BRANCH: ${{ steps.target.outputs.branch }}
