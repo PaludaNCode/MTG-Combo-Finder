@@ -618,10 +618,13 @@ is the only version worth building. `compact()` currently keeps none of it.
 Two details worth keeping:
 
 - **Grouping must not reorder.** `groupVariants()` returns groups in the order
-  their first variant arrived, because the caller has already sorted them —
-  smallest combo first, most played within a size — and neither ordering should
-  be undone on the way to the screen. The layout test caught this when the first
-  pass sorted by group size instead.
+  their first variant arrived. The reason used to be that the caller had already
+  sorted them and that ordering should survive; the reason now is the stronger one
+  underneath it — a function that both merges rows and moves them can only be
+  reasoned about as a whole, so grouping merges and the caller orders. The caller
+  does order, with `byDrawnRow()`; see
+  [The combos you have](#the-combos-you-have-easiest-first-named-alphabetically).
+  The layout test caught this when the first pass sorted by group size instead.
 - **Nothing is lost.** Every variant lands in exactly one group and every
   suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
   combo still lists all its versions, each linking to its own Spellbook page.
@@ -2074,7 +2077,8 @@ Static site, zero dependencies, no build step:
   cards via `groupSuggestions()` / `groupVariants()`, and works out the deck's bracket
   floor in `bracketCheck()`. Also the small view helpers that need testing without a
   browser: `edhrecSlug()`, `scryfallSetQuery()` for the whole-choice comparison link,
-  and `orderComboNames()` for the order a combo's cards are named in.
+  and the ordering — `orderComboNames()` for where a card sits inside a row,
+  `byDrawnName()` and `byDrawnRow()` for where a row sits in its list.
 - `graph.js` — the combo map's arithmetic (`ComboGraph`): `build()` turns the
   combos the deck can assemble into a graph of cards and the pairs that share
   one, `layout()` places that graph on a canvas with a deterministic

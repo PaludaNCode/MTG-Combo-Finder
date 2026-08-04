@@ -271,6 +271,15 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   comment naming a CSS selector the way you would in prose takes the whole file out with
   a `SyntaxError: Unexpected token ':'` pointing at the comment. That one at least fails
   loudly at parse; the backslash does not.
+- **A check that reads "the first row" is a check pinned to somebody else's decision.**
+  Reordering "Combos in your deck" turned three of them red on a page where nothing they
+  were about had moved: the layout run read its result chips off `.combo:first-child` —
+  tier order, the fold, three colours, none of which is about being first — and two
+  browser tests took the first row for an uncollapsed one, so they lost the Spellbook
+  link and the steps control the moment a collapsed row led. Ask for the row by the shape
+  the check needs (`:not(:has(> h3 .either))`, "a row with a `.tier-win` chip") and scope
+  every half of the assertion to *that* row: the a11y test pressed one row's control and
+  read another row's panel, and passed for as long as they happened to be the same row.
 - **Assert what a reader sees, not `textContent`.** Some row text is in the DOM twice
   with CSS showing one reading — the official/unofficial split is `17+7` in a narrow
   column and `17 official · 7 unofficial` in a wide one, both always present. A check
