@@ -1168,6 +1168,9 @@ const PASSES = [
       'Virulent Emissary':
         'Deathtouch\n'
         + 'Whenever another creature you control enters, you gain 1 life.',
+      // Re-read against Scryfall after the fact, pasted in by the reader who asked for the
+      // pass. Word for word what Forge gave, which is why the three rows resting on it went
+      // from `derived` to `verified` without their argument changing.
       'Guide of Souls':
         'Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter).\n'
         + 'Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a '

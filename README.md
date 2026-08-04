@@ -1199,8 +1199,8 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 451 hand-written rows cite a published combo. 423 of them and the three stand-in rules are
-`verified`; the other 28 are `derived`. **Use `derived` rather than reading loosely and claiming
+All 451 hand-written rows cite a published combo. 426 of them and the three stand-in rules are
+`verified`; the other 25 are `derived`. **Use `derived` rather than reading loosely and claiming
 `verified`.**
 
 `test/unofficial.test.js` enforces the shape of both halves — every row cites a real combo id, every swap

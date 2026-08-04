@@ -10015,7 +10015,7 @@
     },
     {
       cards: ['Light of Promise', 'Scurry Oak', 'Guide of Souls'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '4186-5870-7743',
         cards: ['Heroic Feast', 'Scurry Oak', 'Guide of Souls'],
@@ -10026,7 +10026,7 @@
     },
     {
       cards: ['Light of Promise', 'Herd Baloth', 'Guide of Souls'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '3197-5870-7743',
         cards: ['Heroic Feast', 'Herd Baloth', 'Guide of Souls'],
@@ -10037,7 +10037,7 @@
     },
     {
       cards: ['Light of Promise', 'Basking Broodscale', 'Guide of Souls'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2919-5641-5870',
         cards: ['Archangel of Thune', 'Basking Broodscale', 'Guide of Souls'],
