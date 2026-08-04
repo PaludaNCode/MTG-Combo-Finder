@@ -348,6 +348,14 @@ reach it, and fails if the CDN never serves the SHA it just stamped into the foo
 one case where the job's conclusion is enough. It was not before: `deploy-pages` succeeding means
 the artifact was accepted, not that anyone is being served it.
 
+**Report the feature, not the code.** What changed for someone using the page, in the words
+on screen — panel names, chip labels, button text — with a number they can check rather than
+an adjective. Files and functions when the question is *where does this live*; never a diff
+pasted into chat, because the commit is the diff. `.claude/output-styles/terse.md` is that
+rule as an output style, on by default via `.claude/settings.json`, and it names the four
+things terseness does **not** reach: code comments, the README, commit bodies, and any
+caveat that changes what somebody would do.
+
 **A closing report, in order:** what changed and where the reasoning lives (a `README §`, an issue
 number) · what was run and what it said, in real numbers rather than "tests pass" · what was
 *proved* rather than assumed, meaning which check you broke on purpose to watch it fail · what to
