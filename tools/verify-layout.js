@@ -176,6 +176,41 @@ const results = [];
 // present in two readings with CSS showing one — the split, which spells itself out
 // where the row's column has room — so asserting on textContent would pass on a page
 // that had lost the rule and was showing both at once.
+// Every panel that opens with a caption, measured as a box. Three panels draw one and they
+// have to be one kind of thing: same left edge, same measure, same size and colour, and the
+// same distance from the heading above and the rows below. The margins are half of that and
+// were the half nobody was measuring -- a caption with a top margin sits away from its
+// heading and pushes the panel's contents down.
+//
+// One function called from two runs rather than the same reads written twice: the pair of
+// copies this replaces already differed by their indentation alone, which is one edit away
+// from differing by what they measure.
+//
+// No backticks in here, comments included: this is inside the HARNESS template literal and
+// one would end it.
+function captionBoxes(win, doc) {
+  return ['graph', 'pieces', 'unofficial'].map(function (id) {
+    const p = doc.querySelector('#' + id + ' .panel-note');
+    if (!p) return null;
+    const r = p.getBoundingClientRect();
+    const cs = win.getComputedStyle(p);
+    const next = p.nextElementSibling;
+    return {
+      panel: id,
+      left: Math.round(r.left),
+      width: Math.round(r.width),
+      size: cs.fontSize,
+      colour: cs.color,
+      marginTop: cs.marginTop,
+      marginBottom: cs.marginBottom,
+      // What the caption stands on, so the space below it is measured rather than inferred
+      // from a margin something else may be collapsing.
+      gapBelow: next ? Math.round(next.getBoundingClientRect().top - r.bottom) : null,
+      lines: Math.round(r.height / parseFloat(cs.lineHeight)),
+    };
+  }).filter(Boolean);
+}
+
 function visibleTextIn(win, node) {
   return [...node.childNodes].map((n) => {
     if (n.nodeType === 3) return n.textContent;
@@ -1010,26 +1045,7 @@ function measure(win, doc) {
     title: includedPanel ? includedPanel.querySelector('.panel-title').textContent : null,
     rows: doc.querySelectorAll('#pieces .panel-body > .combo.suggestion').length,
     note: (doc.querySelector('#pieces .panel-note') || {}).textContent || '',
-    // Every panel that opens with a caption, measured as boxes rather than trusted by
-    // class name: two classes can agree in the markup and still lay out differently, and
-    // what matters is whether a reader sees one kind of caption or three. The map's is
-    // the oldest and longest, so it is the shape the others answer to.
-    //
-    // No backticks in this comment or anywhere else in here: the whole function lives
-    // inside the HARNESS template literal, and one in a comment ends it.
-    notes: ['graph', 'pieces', 'unofficial'].map(function (id) {
-      const p = doc.querySelector('#' + id + ' .panel-note');
-      if (!p) return { panel: id, missing: true };
-      const r = p.getBoundingClientRect();
-      const cs = win.getComputedStyle(p);
-      return {
-        panel: id,
-        left: Math.round(r.left),
-        width: Math.round(r.width),
-        size: cs.fontSize,
-        colour: cs.color,
-      };
-    }).filter(function (n) { return !n.missing; }),
+    notes: captionBoxes(win, doc),
     // Every distinct published combo the panel reaches, counted off the hrefs rather
     // than off the rows: a combo appears once under each of its cards, so the rows
     // outnumber the combos and only the set of ids can be compared with the badge. Our
@@ -1642,19 +1658,7 @@ async function runUnofficial(vp) {
         //
         // No backticks in here, deliberately: this whole function is inside the HARNESS
         // template literal, and one in a comment ends it.
-        notes: ['graph', 'pieces', 'unofficial'].map(function (id) {
-          const p = doc.querySelector('#' + id + ' .panel-note');
-          if (!p) return { panel: id, missing: true };
-          const r = p.getBoundingClientRect();
-          const cs = win.getComputedStyle(p);
-          return {
-            panel: id,
-            left: Math.round(r.left),
-            width: Math.round(r.width),
-            size: cs.fontSize,
-            colour: cs.color,
-          };
-        }).filter(function (n) { return !n.missing; }),
+        notes: captionBoxes(win, doc),
         overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
@@ -2342,6 +2346,14 @@ function captionDrift(notes) {
       wrong.push(`the ${n.panel} and ${first.panel} captions are different colours `
         + `(${n.colour} vs ${first.colour})`);
     }
+    // Placement, which is the half that was going unmeasured while the comments claimed
+    // it: same distance from the heading above, same distance from the rows below.
+    for (const edge of ['marginTop', 'marginBottom']) {
+      if (n[edge] !== first[edge]) {
+        wrong.push(`the ${n.panel} and ${first.panel} captions have different ${edge} `
+          + `(${n[edge]} vs ${first[edge]})`);
+      }
+    }
   }
   return wrong;
 }
@@ -2418,7 +2430,9 @@ function captionDrift(notes) {
       } else {
         console.log(`ok   ${v.name} — ${u.rows} row [${u.badge}] ${u.cards.join(' + ')}, `
           + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty, `
-          + `${notes.length} captions at x=${notes[0].left}px × ${notes[0].width}px ${notes[0].size}`);
+          + `${notes.length} captions at x=${notes[0].left}px × ${notes[0].width}px ${notes[0].size}, `
+          + `margins ${notes[0].marginTop}/${notes[0].marginBottom}, `
+          + `${notes.map((n) => n.panel + ' ' + n.lines + ' line(s), ' + n.gapBelow + 'px above its rows').join('; ')}`);
       }
       continue;
     }
