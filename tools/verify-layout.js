@@ -378,6 +378,15 @@ function measure(win, doc) {
     // of card. Both exist in the fixture, so both must render.
     eitherRows: [...doc.querySelectorAll('#included .either')].map((e) => e.textContent),
     choiceRows: doc.querySelectorAll('#included .choices').length,
+    // The separator in front of the "any of N" pill, read off generated content because
+    // that is where it lives: the mark moved from its own span onto the ::before of the
+    // item it introduces, so textContent cannot see it and neither can visibleTextIn().
+    // It was missing for a while and every text-based assertion here was happy — the
+    // heading read "Altar of Dementia + Kitchen Finks any of 5" on the live page.
+    eitherSeps: [...doc.querySelectorAll('#included .combo > h3 > .either')].map((e) => {
+      const before = win.getComputedStyle(e, '::before').content;
+      return (before === 'none' || before === 'normal') ? '' : before.replace(/^["']|["']$/g, '');
+    }),
     altGroups: [...doc.querySelectorAll('.alternatives .alt-label')].map((e) => e.textContent),
     // The width the alternatives' container query is asked about: the suggestions
     // panel body's content box, which is the row's own column and not the window.
@@ -480,6 +489,18 @@ function measure(win, doc) {
       label: a ? a.textContent : null,
       href: a ? a.getAttribute('href') : null,
       hasSpellbook: Boolean(spellbook),
+      // A collapsed row stands for several combos, so it has no single one to link to or
+      // to fetch steps for; both live on the versions inside its disclosure instead. That
+      // is the difference the two assertions below turn on, so it is read here.
+      collapsed: Boolean(head && head.querySelector(':scope > .either')),
+      hasSteps: Boolean(row.querySelector(':scope > .combo-link .steps-toggle')),
+      // What the disclosure holds, for the collapsed case: every version has to carry the
+      // two controls the row itself cannot.
+      versions: [...row.querySelectorAll(':scope > details > .combo')].length,
+      versionsWithSpellbook: [...row.querySelectorAll(':scope > details > .combo')]
+        .filter((v) => v.querySelector('.combo-link a:not(.alt-all)')).length,
+      versionsWithSteps: [...row.querySelectorAll(':scope > details > .combo')]
+        .filter((v) => v.querySelector('.combo-link .steps-toggle')).length,
       // The link line sits above the result chips: what a combo needs is read before
       // what it does. 4 is DOCUMENT_POSITION_FOLLOWING — the chips come after.
       beforeChips: (() => {
@@ -2493,6 +2514,13 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     // identical-payoff combos read as two finds and two recommendations.
     const g = v.grouped;
     if (!g.eitherRows.length) problems.push('no combo row collapsed its interchangeable part');
+    // …and the pill is joined to the cards before it, the same way the cards are joined to
+    // each other. A heading reading "A + B any of 5" is not a list of three things.
+    g.eitherSeps.forEach((sep, i) => {
+      if (!/\+/.test(sep)) {
+        problems.push(`the "any of N" pill has no separator in front of it (row ${i + 1}, saw "${sep}")`);
+      }
+    });
     if (g.eitherRows.some((t) => !/any of \d+/.test(t))) problems.push(`a collapsed row reads "${g.eitherRows[0]}"`);
     if (g.choiceRows !== g.eitherRows.length) problems.push('a collapsed row did not list its choices');
     if (!g.altGroups.length) problems.push('no suggestion offered interchangeable alternatives');
@@ -2626,6 +2654,29 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!v.comboCompare.length) problems.push('no combo rows to check the comparison link on');
     v.comboCompare.forEach((row) => {
       const whose = row.names.join(' + ') || 'a combo';
+      // Where a reader gets to the combo itself: the Spellbook link and the steps control.
+      // `hasSpellbook` was collected here and read by nothing at all, which is the same
+      // vacuum as an assertion that matches nothing — it just looks like coverage in the
+      // capture instead of in the check.
+      //
+      // Which row carries them depends on whether it folded, and that is the point rather
+      // than an exception to work around: a row standing for four combos has no one combo
+      // to link to or fetch steps for, so both move to the versions inside its disclosure.
+      // Asserting "every row has a link" would be wrong in exactly the way that makes a
+      // reader open a disclosure to find what a plain row gives them for free.
+      if (row.collapsed) {
+        if (row.hasSpellbook) problems.push(`${whose} folds several combos but links to one`);
+        if (!row.versions) problems.push(`${whose} folds versions away and lists none of them`);
+        if (row.versionsWithSpellbook !== row.versions) {
+          problems.push(`${whose}: ${row.versions} versions carry ${row.versionsWithSpellbook} Spellbook links`);
+        }
+        if (row.versionsWithSteps !== row.versions) {
+          problems.push(`${whose}: ${row.versions} versions carry ${row.versionsWithSteps} steps controls`);
+        }
+      } else {
+        if (!row.hasSpellbook) problems.push(`${whose} has no link to its combo on Spellbook`);
+        if (!row.hasSteps) problems.push(`${whose} has no "How it works" control`);
+      }
       if (!row.names.length) return; // a row of nothing but slots has no cards to open
       const wanted = row.names.concat(row.choices);
       if (!row.href) { problems.push(`${whose} offers no way to open its cards`); return; }

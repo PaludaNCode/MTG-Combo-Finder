@@ -84,11 +84,17 @@ const FIXTURE = {
     // version here**, and the run will say so.
     //
     // Both are cards already on the map rather than new ones, so the map's card count does
-    // not move and its geometry assertions stay about geometry. Great Whale adds two
-    // interchangeable relations — it now stands in for Rings of Brighthearth and for Sword
-    // of the Meek — which is why the map's count of those is 7 rather than 5. Palinchron
-    // adds none at all: it is already in a combo with each of the other three (16, 17 and
-    // 15), and cards that appear together are by definition not standing in for each other.
+    // not move and its geometry assertions stay about geometry. Great Whale contributes two
+    // interchangeable relations — it stands in for Rings of Brighthearth and for Sword of
+    // the Meek — and Palinchron contributes none, being already in a combo with each of the
+    // other three (16, 17 and 15); cards that appear together are by definition not
+    // standing in for each other.
+    //
+    // **The map's interchangeable count is 6, and that is the run's number rather than this
+    // comment's arithmetic.** It said 7 for a while, reasoning from a base of 5 plus Great
+    // Whale's 2 and ignoring what a new combo does to the pairs already there. `npm run
+    // verify` prints the figure on every line it reports; read it there rather than
+    // deriving it here.
     { id: '18', c: ['Basalt Monolith', 'Great Whale'], p: ['Infinite colorless mana'], i: 'U', pop: 79 },
     { id: '19', c: ['Basalt Monolith', 'Palinchron'], p: ['Infinite colorless mana'], i: 'U', pop: 78 },
     // The same two cards standing in for each other a *second* time, off a
