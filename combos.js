@@ -380,125 +380,23 @@
     );
   }
 
-  // How many versions it takes before folding them into one row is worth doing.
-  //
-  // **Four.** Two and three are written out; four and up fold.
-  //
-  // The height argument alone would say three. A collapsed row spends five blocks — the
-  // heading, the line listing the choices, the link line, the result chips, and the
-  // "All N versions" summary — against three per written-out row, so a pair costs six and
-  // a triple nine. On that reading three already pays.
-  //
-  // Height is not the whole of it, and a triple on the real page is what settled it:
-  //
-  //     Basking Broodscale + Heroic Feast + any of 3
-  //     Aunt May · Essence Warden · Prosperous Innkeeper
-  //
-  // Every card is already on screen. The fold has not hidden anything — it has asked the
-  // reader to assemble three combos in their head out of a heading and a list, and put
-  // each one's Spellbook link and "How it works" behind a disclosure to be opened. Three
-  // rows that each say what they are cost four more blocks and ask nothing.
-  //
-  // The number where that reverses is where the fold stops being an indirection and
-  // starts being a summary — where a reader would not want the versions written out even
-  // if they were free, because the versions have *identical results* by construction (that
-  // is what merging requires) and eight of them are eight copies of the same block of
-  // chips. Four is the judgement, and it is a judgement rather than a measurement.
-  //
-  // What it costs, measured, so the dial can be moved on evidence. The standing Chatterfang
-  // deck holds 32 pairs, 2 triples and 21 larger groups:
-  //
-  //     fold from     2      3      4      5    never
-  //     rows         84    116    120    126      233
-  //
-  // A presentation judgement living in combos.js rather than in the render layer, for the
-  // reason orderComboNames() is here too: this is where it can be tested without a
-  // browser. The render side cannot hold it anyway — one group has to become two rows,
-  // and a function returning one element cannot do that.
-  //
-  // Exported, and the tests are written against it rather than against the literal, so
-  // moving it is one character plus a fixture. One test pins the number itself — a suite
-  // that only ever asks "one below folds, one at it does not" would follow the constant
-  // anywhere, including somewhere nobody chose.
-  const COLLAPSE_FROM = 4;
-
-  // The same idea for combos you can already assemble: variants differing in
-  // exactly one card, producing the same results, are one combo with a choice of
-  // part — from COLLAPSE_FROM versions up. Returns
-  // [{ shared: [name], choices: [name], variants: [variant] }], and every variant lands
-  // in exactly one group so nothing is lost: a pair that does not meet the threshold
-  // comes back as two groups of one, which is what a written-out row is.
-  function groupVariants(variants) {
-    const list = variants || [];
-    const keyOf = (variant, omit) => sortedKeys(
-      variantCardNames(variant).filter((_, i) => i !== omit)
-    ) + '||' + sortedKeys(producedNames(variant));
-
-    // Every way each variant could be "all of these cards, but one".
-    const buckets = new Map();
-    list.forEach((variant, index) => {
-      variantCardNames(variant).forEach((_, omit) => {
-        const k = keyOf(variant, omit);
-        if (!buckets.has(k)) buckets.set(k, []);
-        buckets.get(k).push({ index, omit });
-      });
-    });
-
-    // Biggest groups claim their members first, so a variant that could join two
-    // families joins the more useful one. Ties break on the key, so the result
-    // never depends on iteration order.
-    const order = [...buckets.entries()].sort(
-      (a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1)
-    );
-
-    const taken = new Array(list.length).fill(false);
-    const groups = [];
-    for (const [, members] of order) {
-      const free = members.filter((m) => !taken[m.index]);
-      // Counted on the members still free, not on the bucket: a family whose rows have
-      // mostly been claimed elsewhere is not a family of that size any more, and folding
-      // its two survivors would be the pair this threshold exists to leave alone.
-      if (free.length < COLLAPSE_FROM) continue;
-      free.forEach((m) => { taken[m.index] = true; });
-      const first = list[free[0].index];
-      groups.push({
-        at: Math.min(...free.map((m) => m.index)),
-        shared: variantCardNames(first).filter((_, i) => i !== free[0].omit),
-        choices: free.map((m) => variantCardNames(list[m.index])[m.omit]),
-        variants: free.map((m) => list[m.index]),
-      });
-    }
-    list.forEach((variant, index) => {
-      if (taken[index]) return;
-      groups.push({ at: index, shared: variantCardNames(variant), choices: [], variants: [variant] });
-    });
-
-    // Hand them back in the order they arrived. Grouping is not a place to make an
-    // ordering decision — a function that both merges rows and moves them can only be
-    // reasoned about as a whole — so the caller's order survives it and the caller
-    // decides what the order should be. For "Combos in your deck" that is byDrawnRow()
-    // below, which needs the groups before it can order them.
-    groups.sort((a, b) => a.at - b.at);
-    return groups.map(({ at, ...group }) => group);
-  }
-
   // The card that changes, for every variant in a list, as a lookup the render side
   // can ask one row at a time: variant -> the cards that vary across its siblings,
   // ready to hand to orderComboNames() as its `trail`.
   //
   // "The card that changes" is a fact about a *set* of rows and never about one on its
-  // own, so this takes the list exactly as it will be drawn. The lists that needed it
-  // are the ones that never collapse — a suggestion's combos, a piece's combos and the
-  // unofficial panel are one row per variant, so nothing was asking and every row fell
-  // back to alphabetical.
+  // own, so this takes the list exactly as it will be drawn. Every panel here is one row
+  // per variant — a suggestion's combos, a piece's combos, the unofficial panel and, since
+  // the fold came out, "Combos in your deck" too — so this is the only thing that knows a
+  // family exists, and a row nothing asks about falls back to alphabetical.
   //
-  // **Cards only, deliberately unlike groupVariants().** That function also requires
-  // the same results, and it must: merging two combos that do different things would
-  // tell the reader one thing when the data says two. This decides where a name sits
-  // on a line, which merges nothing and hides nothing, and the reader comparing eight
-  // rows under Chatterfang does not care that one of them also drains — they care that
-  // the piece that differs is in the same place on all eight. Held to the stricter bar
-  // it aligned five of those eight, which reads as a rule that half works.
+  // **Cards only, and the results deliberately stay out of the key.** This decides where
+  // a name sits on a line: it merges nothing, hides nothing, and cannot tell a reader
+  // that two combos are one. So the bar is only "would these rows read as a block", and
+  // the reader comparing eight rows under Chatterfang does not care that one of them also
+  // drains — they care that the piece that differs is in the same place on all eight.
+  // Held to the stricter bar, results included, it aligned five of those eight, which
+  // reads as a rule that half works.
   //
   // Keyed by the variant object, because the caller is the loop that draws those very
   // objects. A copy would miss the lookup and the row would read alphabetically —
@@ -506,8 +404,7 @@
   function interchangeableIn(variants) {
     const list = variants || [];
 
-    // Every way each row could be "all of these cards, but one" — the same first step
-    // groupVariants() takes, without the results in the key.
+    // Every way each row could be "all of these cards, but one".
     const buckets = new Map();
     list.forEach((variant, index) => {
       const names = variantCardNames(variant);
@@ -559,29 +456,39 @@
 
   // ---- the order "Combos in your deck" reads in -------------------------------
   //
-  // The cards a row of that panel names, in the order its heading draws them.
+  // **One row per combo.** This panel used to fold a family of four or more interchangeable
+  // versions into a single "any of N" row with the versions behind an "All N versions"
+  // disclosure, and it no longer does — every version is written out. The fold was removed
+  // rather than retuned, because the argument that had already settled a *triple* turns out
+  // not to stop at three: a folded row prints every one of its choice cards on the line
+  // under the heading, so it hides nothing, and what it costs is the two things that make a
+  // row actionable. A written-out row carries its own Spellbook link and its own "How it
+  // works"; the folded row carried neither, because a row standing for four combos has no
+  // one combo to link to. It asked the reader to assemble the versions in their head out of
+  // a heading and a list, and then to open a disclosure to get back what a plain row would
+  // have given them.
   //
-  // Two shapes, and the whole point of this function is that the ordering below and the
-  // rendering both ask it rather than each spelling the shape out. A sort comparing a
+  // What that costs is height, and it is real: the standing Chatterfang deck draws 233 rows
+  // where it used to draw 120, and its largest family is eight rows carrying eight copies of
+  // the same block of result chips. That was the case for folding and it is why the
+  // threshold sat at four for as long as it did. It is not worth an unlinkable row.
+  //
+  // Nothing about the *order* changed with it. Every term below was already the un-folded
+  // path — 99 of those 120 rows took it — so the rows a family becomes are still ordered
+  // side by side, by the trail interchangeableIn() gives them.
+  //
+  // The cards a row names, in the order its heading draws them. The ordering below and the
+  // rendering both ask this rather than each spelling the shape out: a sort comparing a
   // string the page does not draw is a sort nobody can see is wrong — the exact failure
-  // byDrawnName() was written to fix one panel over, and there the drawn name came from
-  // one function already.
-  //
-  // A collapsed row names its shared cards and then says "any of N", so the cards it
-  // *names* are the shared ones — the interchangeable ones are the thing at the end that
-  // every one of them varies in. A whole row names all of its cards, ordered by the rule
-  // every other panel uses, with the card that changes sent last.
-  function comboRowNames(group, trails) {
-    if (!group) return [];
-    if (group.choices.length >= 2) {
-      return group.shared.slice().sort((a, b) => a.localeCompare(b));
-    }
-    const only = group.variants[0];
-    return orderComboNames(variantCardNames(only), { trail: trails && trails.get(only) });
+  // byDrawnName() was written to fix one panel over. RenderRows.comboCardNames() is the
+  // same call with a `lead` the panels that have one pass in.
+  function comboRowNames(variant, trails) {
+    if (!variant) return [];
+    return orderComboNames(variantCardNames(variant), { trail: trails && trails.get(variant) });
   }
 
   // The rows of "Combos in your deck", in reading order: the same rule byDrawnName()
-  // gives every other list of combos, transposed onto rows that are groups.
+  // gives every other list of combos.
   //
   // This panel used to be the exception, ordered by size and then play count, and the
   // exception cost it the thing the rule buys. Four rows of the fixture deck read
@@ -591,7 +498,7 @@
   // to compare it across. Play count is the reason they were split, and it is not on
   // screen: nothing about the gap is explicable to somebody reading the page.
   //
-  // Three terms, unchanged from the other lists:
+  // Three terms, the same ones every other list uses:
   //
   //   size          — a 2-card line is a different proposition from a 4-card one, and it
   //                   leads. Nothing is lost to it, because a family's rows are all the
@@ -602,27 +509,20 @@
   //   drawn name    — what the row actually says, so rows sort by what they share before
   //                   what differs and a family lands in one place.
   //
-  // What is different here is that a row can already *be* a block: a collapsed group is
-  // several versions folded into one row. That row is still one row, so it counts as one,
-  // and the choice it offers is on the row itself where the reader can see it. What the
-  // family term counts is rows the reader has to compare against each other.
-  //
   // `trails` is interchangeableIn() over the panel's variants — the same lookup the render
   // side is handed, so a row's family here is the family whose card it actually sends last.
-  function byDrawnRow(groups, trails) {
-    const list = (groups || []).slice();
-    const drawn = new Map(list.map((g) => [g, comboRowNames(g, trails).join(' + ')]));
+  function byDrawnRow(variants, trails) {
+    const list = (variants || []).slice();
+    const drawn = new Map(list.map((v) => [v, comboRowNames(v, trails).join(' + ')]));
 
     // The cards a row shares with its siblings — the axis it is drawn along, and so the
     // key its block is counted under. Read off the claimed family rather than off the
     // drawn string: "everything but the last card" would also collide two rows that
     // merely look alike, and a family of two that no row is drawn as would order rows
     // against a block the reader cannot see.
-    const blockKey = (g) => {
-      if (g.choices.length >= 2) return sortedKeys(g.shared);
-      const only = g.variants[0];
-      const trail = new Set((trails && trails.get(only) || []).map(nameKey));
-      const names = variantCardNames(only);
+    const blockKey = (v) => {
+      const trail = new Set((trails && trails.get(v) || []).map(nameKey));
+      const names = variantCardNames(v);
       // No family: nothing beside it to line up against, so it is a block of one. Marked
       // so a lone row's full card list can never be read as some other row's shared part.
       if (!trail.size) return '@' + sortedKeys(names);
@@ -630,28 +530,27 @@
     };
 
     const rows = new Map();
-    for (const g of list) {
-      const k = blockKey(g);
+    for (const v of list) {
+      const k = blockKey(v);
       rows.set(k, (rows.get(k) || 0) + 1);
     }
-    const family = (g) => rows.get(blockKey(g)) || 1;
+    const family = (v) => rows.get(blockKey(v)) || 1;
 
-    // Two collapsed rows can share every card they name and differ only in what they
-    // fold away — the Chatterfang deck draws "Ashnod's Altar + Ghave, Guru of Spores +
-    // any of 4" directly above the same two cards "+ any of 2", because the two sets pay
-    // off differently and groupVariants() must not merge them. Their drawn names are the
-    // same string, so without this they fell back to whatever order they arrived in.
-    // More versions first, the same way the biggest block leads, and then the line under
-    // the heading — which is the next thing on screen that tells them apart.
-    const choicesOf = (g) => g.choices.slice().sort((x, y) => x.localeCompare(y)).join(' · ');
+    // Two rows can name exactly the same cards and pay off differently — Spellbook
+    // publishes those, and interchangeableIn() keeps them apart because it is the results
+    // that differ and not a card. Their drawn names are one string, so without a last term
+    // they fall back to whatever order they arrived in. What tells them apart on screen is
+    // the result chips, so that is what breaks the tie: the sort compares the next thing
+    // the reader can actually see. (The old fold broke the same tie on the choices a
+    // collapsed row listed, for the same reason.)
+    const producedBy = (v) => producedNames(v).slice().sort((x, y) => x.localeCompare(y)).join(' · ');
 
     // Rows move and cards do not: comboRowNames() decides what a row says and this only
     // decides where it sits. test/grouping.test.js pins that both ways round.
-    return list.sort((a, b) => comboSize(a.variants[0]) - comboSize(b.variants[0])
+    return list.sort((a, b) => comboSize(a) - comboSize(b)
       || family(b) - family(a)
       || drawn.get(a).localeCompare(drawn.get(b))
-      || b.variants.length - a.variants.length
-      || choicesOf(a).localeCompare(choicesOf(b)));
+      || producedBy(a).localeCompare(producedBy(b)));
   }
 
   // ---- matching against the bundled combo dataset -------------------------
@@ -930,7 +829,7 @@
     // sizes are shown on its row.
     //
     // Play count breaks the tie here and no longer decides anything a reader sees:
-    // the panel these become is ordered by byDrawnRow() after grouping, and the map
+    // the panel these become is ordered by byDrawnRow(), and the map
     // and the pieces panel both re-order what they are handed. It stays because a
     // stable, explicable base order is worth more than an arbitrary one — and
     // because tools/try-deck.js prints this list rather than the panel.
@@ -1614,7 +1513,7 @@
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
-    groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn, comboRowNames, byDrawnRow,
+    groupSuggestions, interchangeableIn, comboRowNames, byDrawnRow,
     variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
     comboSize, sizeBreakdown, bracketCheck, legalityCheck,

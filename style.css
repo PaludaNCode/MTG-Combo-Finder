@@ -30,7 +30,7 @@
   /* Yellow tier: real value that something else still has to convert. */
   --decisive: #cfc48a;
   /* Borders. --line is the everyday one on inputs, notes and chips; --line-strong
-     outlines the things that are not cards — a template slot, "any of 3". */
+     outlines the things that are not cards — a template slot. */
   --line: #333a4d;
   --line-strong: #4a536b;
   --size-line: #3f4759;
@@ -1057,26 +1057,16 @@ button:disabled { opacity: .6; cursor: wait; }
   color: var(--muted);
 }
 
-/* ---- interchangeable cards ---- */
-
-/* "+ any of 3" in a combo header: a slot, not a card, so it must not read as
-   one — hence the outline rather than the plain card styling beside it. */
-.either {
-  padding: .05rem .45rem;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-  color: var(--muted);
-  font-size: .82rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.choices { margin: .15rem 0 .1rem; font-size: .9rem; color: var(--muted); }
-.choices .card-name { color: var(--text); }
+/* "Combos in your deck" used to fold a family of four or more interchangeable versions
+   into one row reading "+ any of 4", with the choices listed under it — `.either` and
+   `.choices` styled those two. Both went with the fold; see byDrawnRow() in combos.js.
+   The rows a family becomes are ordinary combo rows, told apart by the card each sends
+   last rather than by any styling of their own. */
 
 /* ---- template slots ---- */
 
-/* "a Persist Creature" in a combo header. Same reasoning as .either: it names a
-   property, not a card, and must not be mistaken for one. */
+/* "a Persist Creature" in a combo header: it names a property, not a card, so it must
+   not read as one — hence the outline rather than the plain card styling beside it. */
 .slot {
   padding: .05rem .45rem;
   border-radius: 999px;

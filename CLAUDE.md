@@ -280,16 +280,19 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   46 rows were compared as `''` against `''`. It looked fine because `comboSize()` worked
   around the shape at *its* call site, so sizes still separated the rows. Never add that
   workaround back to a call site — fix the contract.
-- **A pair or a triple of interchangeable cards does not collapse, and that is the rule
-  rather than a bug.** `COLLAPSE_FROM = 4` in `combos.js`: below it every version is its
-  own row. Three consequences before touching it. `groupVariants()` counts the members
-  still *free*, so a family cut below the threshold by a bigger one is written out too.
-  **A fixture whose families are all smaller than the threshold draws no collapsed row at
-  all** — `test/fixtures/dataset.js` carries enough versions specifically so the "any of N"
-  shape stays covered, `npm run verify` fails loudly if it stops being there, and raising
-  the number again means adding another version there. And the tests are written against
-  the exported constant rather than the literal, with exactly one pinning the number, so
-  moving it is cheap but never accidental.
+- **"Combos in your deck" draws one row per combo, and interchangeable versions are not
+  merged — that is the rule rather than an oversight.** It used to fold a family of four or
+  more into one "any of N" row (`COLLAPSE_FROM` in `combos.js`, since removed), and the
+  README's *One row per combo, and why the fold came out* has the whole argument and what it
+  cost: 233 rows where the Chatterfang deck drew 120. The short version is that a folded row
+  printed every one of its choice cards anyway, so it hid nothing, and it could carry neither
+  a Spellbook link nor "How it works" — a row standing for four combos has no one combo to
+  link to. **Do not reintroduce it without reading that section**, and if you do, note that
+  `npm run verify` now fails on an "any of N" heading, a line of choices, a nested combo row,
+  or a row missing its link or steps control, and asserts the combo count *equals* the row
+  count. `interchangeableIn()` is what keeps a family legible now: it sends the varying card
+  last on every row so the difference sits in one column, and `byDrawnRow()` keeps the rows
+  adjacent. It is the only thing left that knows a family exists.
 - **Driving the mouse to `boundingBox()` coordinates does not scroll.** `locator.click()`
   scrolls its target into view; `page.mouse.click(box.x + 4, box.y + 4)` does not, and an
   earlier press in the same test may already have scrolled the element half out of the
@@ -303,9 +306,11 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   tier order, the fold, three colours, none of which is about being first — and two
   browser tests took the first row for an uncollapsed one, so they lost the Spellbook
   link and the steps control the moment a collapsed row led. Ask for the row by the shape
-  the check needs (`:not(:has(> h3 .either))`, "a row with a `.tier-win` chip") and scope
-  every half of the assertion to *that* row: the a11y test pressed one row's control and
-  read another row's panel, and passed for as long as they happened to be the same row.
+  the check needs ("a row with a `.tier-win` chip") and scope every half of the assertion
+  to *that* row: the a11y test pressed one row's control and read another row's panel, and
+  passed for as long as they happened to be the same row. (The two browser tests ask for
+  any row now — every row carries a link and a steps control since the fold came out — but
+  the lesson is about what a check pins itself to, not about that panel.)
 - **Assert what a reader sees, not `textContent`.** Some row text is in the DOM twice
   with CSS showing one reading — the official/unofficial split is `17+7` in a narrow
   column and `17 official · 7 unofficial` in a wide one, both always present. A check

@@ -53,12 +53,12 @@ database — see [Why the data is published, not queried live](#why-the-data-is-
 - **Interchangeable cards are one decision, not many** — Spellbook stores one variant per
   concrete card list, so a combo its own site shows as *"Spike Feeder + 1 of 8 cards"*
   arrives as eight rows. Cards that unlock **exactly** the same combos for your deck are
-  collapsed into a single suggestion — "Cleric Class, or any one of these 3 instead" — and
-  combos you can already assemble show their swappable part as *"+ any of 3"*. On a real
-  99-card deck that took 141 suggestions down to 81 and 34 combos down to 23 rows, without
-  dropping a single card or variant. **The count still says 34** — collapsing is a
-  readability choice about rows, and it must not quietly shrink the number of combos the
-  deck is credited with.
+  collapsed into a single suggestion — "Cleric Class, or any one of these 3 instead" — which
+  took a real 99-card deck's 141 suggestions down to 81 without dropping a card. Combos you
+  can already assemble are **not** collapsed: every version is its own row, and what makes a
+  family legible there is ordering rather than merging — the card that varies goes last on
+  each row, so it lines up in one column, and the rows sit together. That panel did fold, and
+  [stopped](#one-row-per-combo-and-why-the-fold-came-out); the section says what it cost.
 - **Outside your color identity** — the same ranking for cards that would require changing
   your deck's colors, shown separately.
 - **Deck import** — paste an Archidekt deck URL, drop or choose an exported deck
@@ -225,45 +225,38 @@ drawn names* further down this section, so the argument for why blocks lead and 
 drawn name" means is there rather than repeated here.
 
 This panel used to be the exception, ordered by size and then play count. The exception cost
-it exactly what the rule buys. Four rows of the fixture deck read "Cauldron Familiar +
-Samwise Gamgee + the one that changes" and sat at positions 11, 12, 13 and **16**, with a
-Camellia row and an Archangel row wedged in:
+it exactly what the rule buys. Four rows of the tuning deck read "Cauldron Familiar +
+Samwise Gamgee + the one that changes" and were scattered down the panel, with Chatterfang
+and Camellia rows wedged in between them. Both columns below are today's code drawing the
+same rows the same way; only the sort differs:
 
 ```
-by play count                                     by what the row draws
-11. Cauldron Familiar + Samwise + Viscera Seer     6. Cauldron Familiar + Samwise + Carrion Feeder
-12. Cauldron Familiar + Samwise + Carrion Feeder   7. Cauldron Familiar + Samwise + Umbral Collar…
-13. Cauldron Familiar + Samwise + Warren Soul…     8. Cauldron Familiar + Samwise + Viscera Seer
-14. Camellia, the Seedmiser + Peregrin Took + …    9. Cauldron Familiar + Samwise + Warren Soul…
-15. Archangel of Thune + Scurry Oak + any of 3    10. Chatterfang + Warren Soultrader + any of 3
-16. Cauldron Familiar + Samwise + Umbral Collar…  11. Chatterfang + Warren Soultrader + Academy…
+by play count                                        by what the row draws
+12. Cauldron Familiar + Samwise + Viscera Seer       12. Cauldron Familiar + Samwise + Carrion Feeder
+13. Chatterfang + Warren Soultrader + Essence Warden 13. Cauldron Familiar + Samwise + Umbral Collar…
+14. Cauldron Familiar + Samwise + Carrion Feeder     14. Cauldron Familiar + Samwise + Viscera Seer
+15. Cauldron Familiar + Samwise + Warren Soultrader  15. Cauldron Familiar + Samwise + Warren Soul…
+16. Camellia, the Seedmiser + Peregrin Took + …      16. Archangel of Thune + Basking Broodscale + …
+…                                                    17. Archangel of Thune + Basking Broodscale + …
+19. Cauldron Familiar + Samwise + Umbral Collar…
 ```
 
 The differing card was already aligned in one column — that shipped the day before — and it
 had nothing to align against. Play count is the reason the four were split, and play count is
 not on screen: nothing about the gap was explicable to somebody reading the page.
 
-**A row here can already be a block**, which is the one thing that is different from the
-nested lists. A collapsed row is several versions folded into one line, so it counts as
-*one* row against "biggest block first" — the choice it offers is on the row itself where
-the reader can see it, and what the block term counts is rows a reader has to compare
-against each other. Position 10 above is a collapsed row sitting with the two whole rows
-that share its cards: `groupVariants()` would not merge them, because they pay off
-differently, and to the reader they are still three rows one card apart.
-
 The block a row is counted under is read off the family that claimed it, never off "the
 drawn name minus its last card". Those are the same thing on a row with a family and wrong
 on a row without one — a lone row's whole card list would become a key, and a key of n−1
-cards is exactly what a collapsed row's shared cards are, so a 2-card row would be counted
-into a 3-card row's block. Size keeps them apart on screen, so the damage would be silent:
-an inflated count promoting a row over the block it should follow.
+cards is exactly what a family's shared cards are, so a 2-card row would be counted into the
+block of 3-card rows above it and make that block look one row bigger than it is. Size keeps
+them apart on screen, so the damage would be silent: an inflated count promoting one block
+over another it should follow.
 
-Two rows can still draw the same words. The standing Chatterfang deck puts
-`Ashnod's Altar + Ghave, Guru of Spores + any of 4` directly above the same two cards
-`+ any of 2` — two sets of interchangeable cards that pay off differently, so one row each.
-More versions leads, and if even that ties, the line of choices under the heading, which is
-the next thing on screen that tells them apart. Anything left to arrival order is an order
-nobody chose.
+Two rows can still draw the same words, because Spellbook publishes combos that name exactly
+the same cards and pay off differently, and nothing here separates those by card. What tells
+them apart on screen is the result chips, so that is what breaks the tie. Anything left to
+arrival order is an order nobody chose.
 
 Nothing is added to the rows to say so. The size is already on screen, spelled out in the
 card names: `Rosie Cotton of South Lane + Scurry Oak` is visibly a two-card combo, and a
@@ -274,7 +267,7 @@ is a card to add and its combos are hidden behind a fold — see
 **The cards in a row are alphabetical.** Spellbook lists them in the order the combo was
 authored in, so two rows sharing pieces could name them in different orders, and with no
 description shown that order carries nothing. Sorting is done at render time only — the
-matching, grouping and slot-assignment code keeps the published order, since `groupVariants()`
+matching and slot-assignment code keeps the published order, since `interchangeableIn()`
 reasons about the position of a card within a combo.
 
 **Except where a combo is listed under a card: then that card goes first.** Both nested lists
@@ -297,9 +290,9 @@ group's representative would put the wrong card first on most rows. It is the ca
 does not hold — which is also why it renders in the "missing" colour, so what you would be
 adding reads first and reads differently.
 
-**And where a row differs from the rows around it by one card, that card goes last** —
-in those nested lists too, not only in a collapsed group. The two rules apply together:
-the card the list is under, then the cards every row shares, then the card that changes.
+**And where a row differs from the rows around it by one card, that card goes last** — in
+every list that draws combos, these nested ones included. The two rules apply together: the
+card the list is under, then the cards every row shares, then the card that changes.
 
 ```
 1. Chatterfang, Squirrel General  11
@@ -326,38 +319,37 @@ the families crossing it are left holding one unclaimed row each, which is no lo
 family and is skipped, and the rest are claimed along the same axis. All four rows then
 read *lead + shared + the one that changes* and sort into one block of two pairs.
 
-Which rows count as a family, for ordering, is decided **from the cards alone** —
-deliberately unlike [collapsing](#collapsing-interchangeable-cards), which also requires
-the same results and must: merging two combos that do different things would say one
-thing where the data says two. Ordering merges nothing and hides nothing, and on the eight
-Chatterfang rows above the stricter bar aligned five, which reads as a rule that half
-works. `DeckCombos.interchangeableIn()` answers it per list, since "the card that changes"
-only means anything beside the rows it changes against.
-The versions of a collapsed group are identical but for one piece, and alphabetical
-order puts that piece wherever its name happens to fall, so the difference moves from
-line to line and the eye has to hunt for it:
+Which rows count as a family, for ordering, is decided **from the cards alone** — the
+results deliberately stay out of it. Ordering merges nothing and hides nothing, so it cannot
+tell a reader that two combos are one, and the only question is whether the rows would read
+as a block; on the eight Chatterfang rows above, adding the results to the test aligned five,
+which reads as a rule that half works. `DeckCombos.interchangeableIn()` answers it per list,
+since "the card that changes" only means anything beside the rows it changes against.
+
+The versions of a family are identical but for one piece, and alphabetical order puts that
+piece wherever its name happens to fall, so the difference moves from line to line and the
+eye has to hunt for it:
 
 ```
-Chatterfang, Squirrel General + Warren Soultrader + any of 4
-  ▾ All 4 versions
-      Chatterfang, Squirrel General + Essence Warden + Warren Soultrader
-      Chatterfang, Squirrel General + Lunarch Veteran // Luminous Phantom + Warren Soultrader
-      Chatterfang, Squirrel General + Prosperous Innkeeper + Warren Soultrader
-      Chatterfang, Squirrel General + Soul Warden + Warren Soultrader
+Chatterfang, Squirrel General + Essence Warden + Warren Soultrader
+Chatterfang, Squirrel General + Lunarch Veteran // Luminous Phantom + Warren Soultrader
+Chatterfang, Squirrel General + Prosperous Innkeeper + Warren Soultrader
+Chatterfang, Squirrel General + Soul Warden + Warren Soultrader
 ```
 
-Sending the interchangeable cards last gives every version the shape its own heading
-already has — *the shared cards, then the one that changes* — so the difference lands
-in the same place every time:
+Sending the interchangeable cards last gives every row the same shape — *the shared cards,
+then the one that changes* — so the difference lands in the same place every time:
 
 ```
-Chatterfang, Squirrel General + Warren Soultrader + any of 4
-  ▾ All 4 versions
-      Chatterfang, Squirrel General + Warren Soultrader + Essence Warden
-      Chatterfang, Squirrel General + Warren Soultrader + Lunarch Veteran // Luminous Phantom
-      Chatterfang, Squirrel General + Warren Soultrader + Prosperous Innkeeper
-      Chatterfang, Squirrel General + Warren Soultrader + Soul Warden
+Chatterfang, Squirrel General + Warren Soultrader + Essence Warden
+Chatterfang, Squirrel General + Warren Soultrader + Lunarch Veteran // Luminous Phantom
+Chatterfang, Squirrel General + Warren Soultrader + Prosperous Innkeeper
+Chatterfang, Squirrel General + Warren Soultrader + Soul Warden
 ```
+
+This is now the whole of how a family stays legible in "Combos in your deck" — that panel
+[does not merge them any more](#one-row-per-combo-and-why-the-fold-came-out), so the column
+the varying card sits in is what a reader reads the family off.
 
 All three rules are one function, `DeckCombos.orderComboNames(names, {lead, trail})`,
 kept beside the data it orders so it can be tested without a browser — twelve tests in
@@ -449,14 +441,11 @@ sorted, and one checks the answer cannot depend on the order the rows arrived in
 over the standing Chatterfang deck it is 195 drawn lists and 1,983 rows with no row's cards
 moving.
 
-**Combos in your deck** used to be left out of all of this, on the grounds that it is
-ranked by play count and `groupVariants()` hands its rows back in the order they arrived so
-that grouping cannot reshuffle the most-played combo down the page. It is in now, by
-`byDrawnRow()` — the rows of that panel are groups rather than variants, which is the only
-real difference, and *The combos you have* above has the before-and-after. `groupVariants()`
-still does not reorder, and the reason it does not is better than the old one: grouping is
-not a place to make an ordering decision, so the caller's order survives it and the caller
-decides. What changed is that the caller now decides something.
+**Combos in your deck** used to be left out of all of this, on the grounds that it is ranked
+by play count and that grouping must not reshuffle the most-played combo down the page. It is
+in now, by `byDrawnRow()`, and *The combos you have* above has the before-and-after. The
+grouping half of that argument has since gone too: the panel draws one row per combo, so
+there is nothing left to reshuffle and the ordering is the whole of what arranges it.
 
 Both orderings reach **Cards carrying your combos**: the cards themselves stay ranked by how
 many combos each holds up — that is the panel's whole question, since cutting a card that
@@ -621,59 +610,15 @@ It matters because the flat list actively misleads. Four different cards each
 claiming "+7 combos" at the top of the suggestions look like four options worth
 seven combos apiece; they are one option worth seven, described four times.
 
-**Four versions.** Two and three are written out as rows; four and up fold into one.
-`COLLAPSE_FROM` in `combos.js` is that number.
+**This applies to the suggestions and to nothing else.** Cards to *add* collapse into one
+row; combos you can already assemble do not. That was not always true, and the section below
+is why.
 
-Count what a collapsed row actually spends: a heading, the line listing the choices, the
-link line, the result chips, and the "All N versions" summary — five blocks, against
-three per written-out row. So a pair costs six and a triple nine, and on height alone the
-answer would be three.
-
-Height is not the whole of it, and a triple on the real page is what settled it:
-
-```
-Basking Broodscale + Heroic Feast + any of 3
-Aunt May · Essence Warden · Prosperous Innkeeper
-```
-
-Every card is already on screen. The fold has hidden nothing — it has asked the reader to
-assemble three combos in their head out of a heading and a list, and put each one's
-Spellbook link and *How it works* behind a disclosure to be opened. Three rows that each
-say what they are cost four more blocks and ask nothing.
-
-The number is where the fold stops being an indirection and starts being a summary: where
-a reader would not want the versions written out even if they were free, because a group's
-versions produce **identical** results by construction — that is what merging them
-requires — and eight of them are eight copies of the same block of result chips. Four is a
-judgement rather than a measurement, which is why what it costs is measured. The standing
-Chatterfang deck holds 32 pairs, 2 triples and 21 larger groups:
-
-```
-fold from        2      3      4      5    never
-Chatterfang     84    116    120    126      233
-fixture deck    22     23     33     33       33
-```
-
-`groupVariants()` counts on the members still **free**, not on the bucket, so a family
-that loses members to a larger one and drops below the threshold is written out too —
-otherwise the rule would hold for families read straight off the data and not for the ones
-left over.
-
-Nothing else changes: the rows a small family becomes are still one card apart, so
-[the ordering](#the-combos-you-have-easiest-first-named-alphabetically) still sends that
-card last and still keeps them side by side.
-
-The tests are written against `COLLAPSE_FROM` rather than against the literal, so moving it
-again is one character plus a fixture — with one test pinning the number itself, since a
-suite that only ever asks "one below folds, one at it does not" would follow the constant
-anywhere, including somewhere nobody chose.
-
-**Identical results are required, and that is deliberate.** Two variants only
-collapse when they produce exactly the same list. This under-groups: each
-interchangeable card brings its own rider, so `Scurry Oak + Sadistic Glee` shows
-separately for Carrion Feeder, Viscera Seer and Umbral Collar Zealot — five
-identical core results each, plus *Infinite scry 1* from the Seer and *Infinite
-surveil* from the Zealot.
+**Identical results are required, and that is deliberate.** Two cards only collapse when the
+combos they unlock produce exactly the same list. This under-groups: each interchangeable
+card brings its own rider, so `Scurry Oak + Sadistic Glee` is offered separately for Carrion
+Feeder, Viscera Seer and Umbral Collar Zealot — five identical core results each, plus
+*Infinite scry 1* from the Seer and *Infinite surveil* from the Zealot.
 
 The tempting repair is to compare results loosely: share a core, allow an extra
 or two each. **Don't.** It is a threshold with a story attached, and it merges
@@ -688,19 +633,66 @@ Spellbook *authors* a combo and *generates* variants from it, so the parent
 recipe — if the export names it — groups them with nothing inferred at all. That
 is the only version worth building. `compact()` currently keeps none of it.
 
-Two details worth keeping:
+**Nothing is lost.** Every suggested card survives the collapse, asserted in
+`test/grouping.test.js`, and the row lists every combo the choice unlocks.
 
-- **Grouping must not reorder.** `groupVariants()` returns groups in the order
-  their first variant arrived. The reason used to be that the caller had already
-  sorted them and that ordering should survive; the reason now is the stronger one
-  underneath it — a function that both merges rows and moves them can only be
-  reasoned about as a whole, so grouping merges and the caller orders. The caller
-  does order, with `byDrawnRow()`; see
-  [The combos you have](#the-combos-you-have-easiest-first-named-alphabetically).
-  The layout test caught this when the first pass sorted by group size instead.
-- **Nothing is lost.** Every variant lands in exactly one group and every
-  suggested card survives, both asserted in `test/grouping.test.js`. A collapsed
-  combo still lists all its versions, each linking to its own Spellbook page.
+#### One row per combo, and why the fold came out
+
+"Combos in your deck" used to fold a family of interchangeable versions into a single row —
+`Chatterfang, Squirrel General + Warren Soultrader + any of 4`, the four choices listed
+underneath, the versions themselves behind an *All 4 versions* disclosure. A `COLLAPSE_FROM`
+constant set the threshold, and it moved twice: three, then four. It is gone, and every
+version is now its own row.
+
+The argument that removed it is the argument that had already settled the threshold at three,
+followed one step further. Here is the row that settled *that*:
+
+```
+Basking Broodscale + Heroic Feast + any of 3
+Aunt May · Essence Warden · Prosperous Innkeeper
+```
+
+Every card is already on screen. The fold has hidden nothing — it has asked the reader to
+assemble three combos in their head out of a heading and a list. And it has taken something:
+a folded row carries **no Spellbook link and no *How it works***, because a row standing for
+four combos has no one combo to link to or fetch steps for. Both live on the versions inside
+the disclosure. So the reader who wants either has to open a disclosure to get back what a
+plain row would have given them.
+
+None of that changes at four, or at eight. What does change with size is height, and that was
+the real case for folding: a family's versions produce **identical** results by construction —
+that is what merging them requires — so eight rows are eight copies of the same block of
+result chips. Measured, on the standing Chatterfang deck (which holds 32 pairs, 2 triples and
+21 larger families) and on the tuning deck:
+
+```
+fold from        2      3      4      5    never
+Chatterfang     84    116    120    126      233
+tuning deck     22     23     33     33       33
+```
+
+So this cost 113 rows on the Chatterfang deck and nothing at all on the tuning deck, none of
+whose families reached four versions with identical results. That is the trade: repeated
+result chips on the big families, in exchange for every row being one combo a reader can open,
+link and read the steps for. The Chatterfang deck's largest run is nine consecutive rows,
+`Quina, Qu Gourmet + Warren Soultrader +` one of nine lifegain triggers; the tuning deck's is
+five, off `Chatterfang, Squirrel General + Warren Soultrader`.
+
+Nothing about the *ordering* moved with it, because the written-out path was already the one
+most rows took — 99 of the Chatterfang deck's 120 rows. A family's rows are one card apart, so
+[the ordering](#the-combos-you-have-easiest-first-named-alphabetically) sends that card last
+on each and keeps them adjacent; that is now the whole of how a family reads as one thing.
+
+Two things guard the removal, because a page that folded again would look *tidier* rather
+than broken — fewer rows, nothing visibly missing:
+
+- `npm run verify` fails if any row in that panel draws an "any of N" heading, a line of
+  choices or a nested combo row, and separately if any row is missing its Spellbook link or
+  its *How it works* control. The fixture deliberately keeps a family of four so there is
+  something for a returning fold to collapse.
+- The combo count and the row count must now be **equal**. That assertion used to run the
+  other way — the count had to *exceed* the rows, since a folded row stood for four combos and
+  a badge counting rows would have reported a 34-combo deck as 23.
 - **Each option is a grid, never a wrapping line.** *name · links · + Add* on one row
   where the column has room for it, and *name* above *links · + Add* where it does not
   — a grid area either way, with the name column the only one that gives:
@@ -744,11 +736,9 @@ action so it is a single press.
 **Both links sit above the result chips, not below them.** What a combo *needs* is read
 before what it *does* — the cards decide whether the row is worth reading at all, and a
 reader after the steps or the card images should not have to scroll past a wall of
-result chips to find the way out. Both row types do it in that order: an ordinary
-combo and a collapsed choice. The layout test compares the two
+result chips to find the way out. The layout test compares the two
 elements' document positions and fails if the links drop below the chips. Named cards only — a template slot has no card to open, and the row
-already names what fills it. A collapsed row's link covers its shared cards *plus* all
-the interchangeable ones, since that whole set is what the reader is choosing between.
+already names what fills it.
 
 **The wording is cut to fit the column, and the link shares its row wherever that
 fits.** The label's own sentence is 163px and the link 108px. *"or any one of these 15
@@ -1224,8 +1214,8 @@ is the question you ask when you are deciding what to cut.
 
 **Interchangeability is measured exactly, not by similarity.** Two cards are
 interchangeable in a combo when the rest of that combo is identical — the same
-rule `groupVariants()` already uses to collapse *Scurry Oak + Sadistic Glee +
-Carrion Feeder* and its Viscera Seer version into one row. A looser measure was
+rule `interchangeableIn()` already uses to sit *Scurry Oak + Sadistic Glee +
+Carrion Feeder* next to its Viscera Seer version. A looser measure was
 tried first: how many partners two cards happen to share. On the tuning deck that
 produced **302 pairs against the exact rule's 48**, most of them saying nothing
 at all, and its top entries were the same pairs the exact rule already found.
@@ -2060,14 +2050,14 @@ assertions ride along inside the layout runs, for the same reason:
   are read off *a row with a game-winning result*, not off the first row on the page.
   Reading the first one tied every one of those checks to a decision belonging elsewhere:
   reordering this panel turned them all red on a page whose chips had not moved.
-- **A row still folds its interchangeable part**, which the fixture has to supply and
-  nearly stopped supplying. Both of its interchangeable families were pairs, and pairs are
-  written out now, so the moment the threshold moved the page drew no collapsed row at all
-  — and every assertion about that shape would have passed while checking nothing. The run
-  said so instead: *"no combo row collapsed its interchangeable part"*, at every viewport.
-  The fixture carries a third version off the same partner now. It is Great Whale rather
-  than a new card on purpose, because Great Whale is already on the map, so the map's card
-  count does not move and its geometry assertions stay about geometry.
+- **No row folds its interchangeable part**, which is now the assertion — and it is read
+  rather than assumed, because a page that folded again would look tidier rather than
+  broken. The fixture keeps its family of four versions so there is something for a
+  returning fold to collapse. Those versions were added when the fold still existed and a
+  family of four was what triggered it; they earn their keep now by being the run's
+  four-row block. They are Great Whale and Palinchron rather than new cards on purpose,
+  because both are already on the map, so the map's card count does not move and its
+  geometry assertions stay about geometry.
 - **The divider down a suggestion row** is walked piece by piece — the left border of
   every block in the card's column — and each has to be drawn, at the same x, starting
   where the piece above ended. The gutter is checked for the opposite: it must draw
@@ -2163,7 +2153,7 @@ Static site, zero dependencies, no build step:
   variants into the ranked add-this-card suggestions (front-face matching for
   double-faced cards, ties broken on popularity then alphabetically), works out which
   template slots the deck fills and which it is short of, collapses interchangeable
-  cards via `groupSuggestions()` / `groupVariants()`, and works out the deck's bracket
+  cards to add via `groupSuggestions()`, and works out the deck's bracket
   floor in `bracketCheck()`. Also the small view helpers that need testing without a
   browser: `edhrecSlug()`, `scryfallSetQuery()` for the whole-choice comparison link,
   and the ordering — `orderComboNames()` for where a card sits inside a row,
