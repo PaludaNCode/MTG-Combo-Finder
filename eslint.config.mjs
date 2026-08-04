@@ -40,6 +40,9 @@ const BROWSER = {
   // the middle of a render. Guarded at the call site, so a browser without one
   // falls back to reading the width directly.
   ResizeObserver: 'readonly',
+  // How app.js gets the combos on screen before it builds the three panels below
+  // them: the frame boundary is what lets the browser paint in between.
+  requestAnimationFrame: 'readonly',
   setTimeout: 'readonly',
   clearTimeout: 'readonly',
   atob: 'readonly',

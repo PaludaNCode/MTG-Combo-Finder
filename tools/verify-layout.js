@@ -1487,8 +1487,42 @@ function runOne(vp) {
         if (vp.noWorker) delete win.Worker;
         doc.getElementById('commanders').value = '';
         doc.getElementById('decklist').value = DECKS[vp.deck];
+
+        // What is on screen the first time the browser can paint after a search.
+        //
+        // renderResults() builds the combos, yields, and builds the three panels below
+        // them a frame later — because a browser cannot paint in the middle of a task,
+        // so a single-task render made a reader wait for panels nine screens down before
+        // seeing anything at all. On a 520-combo deck at 390px with the CPU throttled 4x
+        // that was the difference between 3,094ms and 797ms to the answer.
+        //
+        // The finished page looks identical either way, so the yield is checked at the
+        // one moment it is observable: a frame booked from the top of the render cannot
+        // run until that task ends, and what is filled in by then is what the reader got.
+        // groupVariants() is the first thing renderResults() calls.
+        const firstFrame = {};
+        const groupVariants0 = win.DeckCombos.groupVariants;
+        let booked = false;
+        win.DeckCombos.groupVariants = function () {
+          if (!booked) {
+            booked = true;
+            win.requestAnimationFrame(function () {
+              const filled = function (id) {
+                const node = doc.getElementById(id);
+                return Boolean(node && node.getElementsByTagName('*').length > 3);
+              };
+              firstFrame.included = filled('included');
+              firstFrame.graph = filled('graph');
+              firstFrame.pieces = filled('pieces');
+              firstFrame.suggestions = filled('suggestions');
+            });
+          }
+          return groupVariants0.apply(this, arguments);
+        };
+
         doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
         await settled(doc, '.combo');
+        win.DeckCombos.groupVariants = groupVariants0;
 
         const before = measure(win, doc);
 
@@ -1624,7 +1658,7 @@ function runOne(vp) {
         };
 
         resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
-          { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear }));
+          { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear, firstFrame }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
       }
@@ -2719,6 +2753,27 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!bracket.closesOnSecondPress) problems.push('a second press did not close the bracket explanation again');
     // The caveat is the reason a bracket number here is honest at all.
     if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket explanation does not say what it did not check');
+
+    // The combos reach the screen before the panels below them are built. See the note
+    // beside firstFrame in the harness: this is the difference between a reader waiting
+    // 797ms and 3,094ms on a phone, and the finished page is identical either way, so
+    // the first frame is the only place it can be seen.
+    //
+    // Asserted in both directions on purpose. "The combos are there" alone would pass if
+    // the yield were removed and everything arrived at once, which is the regression;
+    // "the suggestions are not there" alone would pass on a page that painted nothing.
+    const frame1 = v.firstFrame || {};
+    if (!frame1.included) {
+      problems.push('the first painted frame after a search has no combos in it — the reader '
+        + 'waits for the whole render before seeing anything');
+    }
+    if (frame1.suggestions || frame1.pieces) {
+      problems.push('the first painted frame already holds '
+        + [frame1.pieces && 'the pieces panel', frame1.suggestions && 'the suggestions panel']
+          .filter(Boolean).join(' and ')
+        + ' — those are built after the yield in renderResults(), so this means the render '
+        + 'is one task again and the combos wait for panels nine screens down');
+    }
 
     // Taking a suggestion: the card lands in the decklist, the list is kept, and
     // the search runs again — proved by the deck holding more combos than it did.

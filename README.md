@@ -1321,6 +1321,59 @@ the entry rather than reading `target.clientWidth`, which would have been correc
 and free: it would have put two counts of noise into a check whose whole value is
 that the answer is exactly zero.
 
+## The combos come first, and the rest of the page arrives after
+
+The page was slow on a phone, and the reason turned out not to be that it did too
+much work. It was that it did all of it before letting the browser draw anything.
+
+`renderResults()` was one synchronous task: combos, then the unofficial rows, then
+the map, then the pieces panel, then the suggestions panel. A browser cannot paint
+in the middle of a task, so on a 520-combo deck at 390px with the CPU throttled 4×
+the reader watched a dead page for **3,094ms** — even though their combos had been
+built after about 800ms of it. The remaining two seconds went on three panels that
+are nine screens below the fold and that nobody has scrolled to yet.
+
+It now yields after the combos. Same work, different order:
+
+| | combos on screen | everything built |
+|---|---:|---:|
+| one task | 3,094ms | 2,066ms |
+| yielding | **797ms** | 2,558ms |
+
+**This is a trade, not a free win.** Total building goes *up* — scheduling frames
+costs something — so the phone does slightly more work than it did. What changes is
+that the reader is not made to watch it. The number that got 3.9× better is the only
+one they experience; the number that got worse describes work happening behind an
+answer they are already reading.
+
+**The three panels are emptied immediately and filled a frame later**, rather than
+left alone until their replacements are ready. Leaving them would be smoother — no
+gap, no re-grow — and would put the previous deck's numbers under a list that had
+already changed, for a second and a half, every time somebody pressed **+ Add to
+deck**. The map has a rule about this already: one search behind says the added card
+is in no combos. Three panels visibly absent beats three panels quietly wrong.
+
+Clearing them turned out to be most of the win as well as the honest choice. An
+earlier version that deferred the panels but left the old contents in place only
+reached 1,674ms, because the frame carrying the combos still had to lay out and
+paint the 93,000 nodes of the previous render sitting underneath them.
+
+**Two things that are easy to get wrong here.** The suggestions panel's
+`computeSuggestions()` and `groupSuggestions()` calls are *inside* the deferred
+callback rather than passed to it as arguments — as arguments they are evaluated
+immediately, which would leave ~150ms of the work they were supposed to defer on the
+critical path, to hand a finished list to a function that will not be called for
+another frame. And every deferred callback carries the token of the render that
+booked it and does nothing if a newer search has started, because "+ Add to deck"
+fires a search straight away and a stale callback landing late would draw the
+previous deck's map over the current deck's results.
+
+`tools/verify-layout.js` books a frame from the top of the render and records which
+panels are filled by the time it runs. It asserts in both directions: the combos are
+in that frame, and the pieces and suggestions panels are not. Checking only the first
+would pass on a page that had gone back to one task; checking only the second would
+pass on a page that painted nothing at all.
+
 ## Adding a card, and searching again
 
 Every suggestion carries **+ Add to deck**, and so does every interchangeable
