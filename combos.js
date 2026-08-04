@@ -334,10 +334,36 @@
     );
   }
 
+  // How many versions it takes before folding them into one row is worth doing.
+  //
+  // **Three, not two**, and the pair is the case this number exists to exclude. A
+  // collapsed row spends five blocks — the heading, the line listing the choices, the
+  // link line, the result chips, and the "All N versions" summary — where two written-out
+  // rows spend six. So for a pair the fold saves almost no height, and it charges for
+  // that nothing: the heading says "any of 2" instead of naming the second card, both
+  // cards are printed on the next line anyway, and each combo's own Spellbook link and
+  // "How it works" go behind a disclosure that has to be opened to reach them.
+  //
+  // At three and up the arithmetic reverses, and keeps reversing: the versions of a group
+  // produce *identical* results by construction — that is required to merge them — so
+  // eight written-out rows are eight copies of the same block of result chips. That is
+  // what the fold is for, and it is why the answer is a threshold rather than removing
+  // the fold altogether. Measured on the standing Chatterfang deck, which holds 32 pairs
+  // against 23 larger groups: writing out the pairs takes the panel from 84 rows to 116,
+  // where writing out everything takes it to 233.
+  //
+  // A presentation judgement living in combos.js rather than in the render layer, for the
+  // reason orderComboNames() is here too: this is where it can be tested without a
+  // browser. The render side cannot hold it anyway — one group has to become two rows,
+  // and a function returning one element cannot do that.
+  const COLLAPSE_FROM = 3;
+
   // The same idea for combos you can already assemble: variants differing in
   // exactly one card, producing the same results, are one combo with a choice of
-  // part. Returns [{ shared: [name], choices: [name], variants: [variant] }],
-  // and every variant lands in exactly one group so nothing is lost.
+  // part — from COLLAPSE_FROM versions up. Returns
+  // [{ shared: [name], choices: [name], variants: [variant] }], and every variant lands
+  // in exactly one group so nothing is lost: a pair that does not meet the threshold
+  // comes back as two groups of one, which is what a written-out row is.
   function groupVariants(variants) {
     const list = variants || [];
     const keyOf = (variant, omit) => sortedKeys(
@@ -365,7 +391,10 @@
     const groups = [];
     for (const [, members] of order) {
       const free = members.filter((m) => !taken[m.index]);
-      if (free.length < 2) continue;
+      // Counted on the members still free, not on the bucket: a family whose rows have
+      // mostly been claimed elsewhere is not a family of that size any more, and folding
+      // its two survivors would be the pair this threshold exists to leave alone.
+      if (free.length < COLLAPSE_FROM) continue;
       free.forEach((m) => { taken[m.index] = true; });
       const first = list[free[0].index];
       groups.push({

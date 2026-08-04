@@ -106,12 +106,58 @@ test('groupVariants: an unrelated combo stands on its own', () => {
   const groups = groupVariants([
     variant('1', ['A', 'B'], ['Infinite lifegain']),
     variant('2', ['A', 'C'], ['Infinite lifegain']),
-    variant('3', ['X', 'Y'], ['Infinite damage']),
+    variant('3', ['A', 'D'], ['Infinite lifegain']),
+    variant('4', ['X', 'Y'], ['Infinite damage']),
   ]);
   assert.strictEqual(groups.length, 2);
   const alone = groups.find((g) => !g.choices.length);
   assert.deepStrictEqual(alone.shared, ['X', 'Y']);
   assert.strictEqual(alone.variants.length, 1);
+});
+
+// The threshold, from both sides. A pair is two rows; the same pair with a third
+// version is one. Written as one test because the number is the whole subject — a pair
+// that collapses and a triple that does not are the two ways to get this wrong, and
+// they are one edit apart.
+test('groupVariants: two versions stay two rows, three become a choice', () => {
+  const pair = groupVariants([
+    variant('1', ['A', 'B'], ['Infinite lifegain']),
+    variant('2', ['A', 'C'], ['Infinite lifegain']),
+  ]);
+  assert.strictEqual(pair.length, 2, 'a pair is written out');
+  assert.ok(pair.every((g) => !g.choices.length && g.variants.length === 1));
+  // Nothing is lost on the way: both variants still come back, exactly once each.
+  assert.deepStrictEqual(pair.flatMap((g) => g.variants.map((v) => v.id)).sort(), ['1', '2']);
+
+  const triple = groupVariants([
+    variant('1', ['A', 'B'], ['Infinite lifegain']),
+    variant('2', ['A', 'C'], ['Infinite lifegain']),
+    variant('3', ['A', 'D'], ['Infinite lifegain']),
+  ]);
+  assert.strictEqual(triple.length, 1, 'three versions are one decision');
+  assert.deepStrictEqual(triple[0].choices.slice().sort(), ['B', 'C', 'D']);
+});
+
+// Counted on the rows still free, not on the bucket. A family of three that loses one
+// member to a bigger family is a pair, and a pair is written out — otherwise the
+// threshold would hold for families read off the data and not for families left over.
+test('groupVariants: a family down to two survivors is written out, not folded', () => {
+  const groups = groupVariants([
+    // A family of three on [P], which claims all three...
+    variant('1', ['P', 'x'], ['Infinite mill']),
+    variant('2', ['P', 'y'], ['Infinite mill']),
+    variant('3', ['P', 'z'], ['Infinite mill']),
+    // ...leaving these two crossing it on [x] and [y] with only themselves free.
+    variant('4', ['Q', 'x'], ['Infinite mill']),
+    variant('5', ['Q', 'y'], ['Infinite mill']),
+  ]);
+  const folded = groups.filter((g) => g.choices.length);
+  assert.strictEqual(folded.length, 1, 'only the family of three folds');
+  assert.deepStrictEqual(folded[0].choices.slice().sort(), ['x', 'y', 'z']);
+  assert.deepStrictEqual(
+    groups.filter((g) => !g.choices.length).flatMap((g) => g.variants.map((v) => v.id)).sort(),
+    ['4', '5']
+  );
 });
 
 test('groupVariants: every variant lands in exactly one group', () => {
@@ -307,6 +353,7 @@ test('byDrawnRow: a collapsed row sits in the family it shares its cards with', 
   const rows = panel([
     variant('1', ['Chatterfang', 'Warren Soultrader', 'Soul Warden'], ['Infinite tokens']),
     variant('2', ['Chatterfang', 'Warren Soultrader', 'Essence Warden'], ['Infinite tokens']),
+    variant('2b', ['Chatterfang', 'Warren Soultrader', 'Prosperous Innkeeper'], ['Infinite tokens']),
     variant('3', ['Aetherflux Reservoir', 'Bolas\'s Citadel'], ['Infinite damage']),
     variant('4', ['Chatterfang', 'Warren Soultrader', 'Academy Manufactor'], ['Infinite Food']),
     variant('5', ['Chatterfang', 'Warren Soultrader', 'Peregrin Took'], ['Infinite Clues']),
@@ -314,7 +361,7 @@ test('byDrawnRow: a collapsed row sits in the family it shares its cards with', 
   assert.deepStrictEqual(rows, [
     // Size first: the 2-card combo leads whatever the names and the blocks do.
     'Aetherflux Reservoir + Bolas\'s Citadel',
-    'Chatterfang + Warren Soultrader + any of 2',
+    'Chatterfang + Warren Soultrader + any of 3',
     'Chatterfang + Warren Soultrader + Academy Manufactor',
     'Chatterfang + Warren Soultrader + Peregrin Took',
   ]);
@@ -345,19 +392,22 @@ test('byDrawnRow: the biggest block of rows leads, then smaller, then the rows o
 // Two collapsed rows can name the same cards and differ only in what they fold away,
 // which the Chatterfang deck draws: "Ashnod's Altar + Ghave, Guru of Spores + any of 4"
 // above the same two cards "+ any of 2". Their drawn names are one string, so without a
-// tie-break the two rows fall back to the order they happened to arrive in.
+// tie-break the two rows fall back to the order they happened to arrive in. Both groups
+// are three or more here, since a pair is written out rather than folded.
 test('byDrawnRow: two rows naming the same cards break the tie on what they offer', () => {
   const rows = [
-    variant('a1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'W'], ['Infinite tokens']),
-    variant('a2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'X'], ['Infinite tokens']),
-    variant('a3', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'Y'], ['Infinite tokens']),
-    variant('b1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'M'], ['Infinite mana']),
-    variant('b2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'N'], ['Infinite mana']),
+    variant('a1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'V'], ['Infinite tokens']),
+    variant('a2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'W'], ['Infinite tokens']),
+    variant('a3', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'X'], ['Infinite tokens']),
+    variant('a4', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'Y'], ['Infinite tokens']),
+    variant('b1', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'L'], ['Infinite mana']),
+    variant('b2', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'M'], ['Infinite mana']),
+    variant('b3', ['Ashnod\'s Altar', 'Ghave, Guru of Spores', 'N'], ['Infinite mana']),
   ];
   const drawn = panel(rows);
   assert.deepStrictEqual(drawn, [
+    'Ashnod\'s Altar + Ghave, Guru of Spores + any of 4',
     'Ashnod\'s Altar + Ghave, Guru of Spores + any of 3',
-    'Ashnod\'s Altar + Ghave, Guru of Spores + any of 2',
   ], 'the row offering more versions leads');
   assert.deepStrictEqual(panel(rows.slice().reverse()), drawn,
     'and the answer does not depend on the order they arrived in');
@@ -400,6 +450,7 @@ test('byDrawnRow: a lone row is not counted into a bigger row that shares its ca
     // A collapsed row whose shared cards are that lone row's whole combo.
     variant('c1', ['A', 'B', 'C'], ['Infinite tokens']),
     variant('c2', ['A', 'B', 'D'], ['Infinite tokens']),
+    variant('c3', ['A', 'B', 'E'], ['Infinite tokens']),
     // A real block of two: same cards but one, different payoffs, so two rows.
     variant('b1', ['E', 'F', 'G'], ['Infinite lifegain']),
     variant('b2', ['E', 'F', 'H'], ['Infinite damage']),
@@ -408,7 +459,7 @@ test('byDrawnRow: a lone row is not counted into a bigger row that shares its ca
     'A + B',
     'E + F + G',
     'E + F + H',
-    'A + B + any of 2',
+    'A + B + any of 3',
   ], 'the real block of two leads the 3-card rows');
 });
 
@@ -419,12 +470,14 @@ test('byDrawnRow: two rows offering the same many versions order on the choices 
   const rows = [
     variant('q1', ['A', 'B', 'M'], ['Infinite mana']),
     variant('q2', ['A', 'B', 'N'], ['Infinite mana']),
+    variant('q3', ['A', 'B', 'O'], ['Infinite mana']),
     variant('p1', ['A', 'B', 'C'], ['Infinite tokens']),
     variant('p2', ['A', 'B', 'D'], ['Infinite tokens']),
+    variant('p3', ['A', 'B', 'E'], ['Infinite tokens']),
   ];
   const listed = (vs) => byDrawnRow(groupVariants(vs), interchangeableIn(vs))
     .map((g) => g.choices.slice().sort().join(' · '));
-  assert.deepStrictEqual(listed(rows), ['C · D', 'M · N']);
-  assert.deepStrictEqual(listed(rows.slice().reverse()), ['C · D', 'M · N'],
+  assert.deepStrictEqual(listed(rows), ['C · D · E', 'M · N · O']);
+  assert.deepStrictEqual(listed(rows.slice().reverse()), ['C · D · E', 'M · N · O'],
     'and not whichever arrived first');
 });

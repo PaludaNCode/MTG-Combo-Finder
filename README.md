@@ -595,6 +595,39 @@ It matters because the flat list actively misleads. Four different cards each
 claiming "+7 combos" at the top of the suggestions look like four options worth
 seven combos apiece; they are one option worth seven, described four times.
 
+**Three versions, not two.** A pair is written out as two rows; from three up it folds
+into one. `COLLAPSE_FROM` in `combos.js` is that number.
+
+Count what a collapsed row actually spends: a heading, the line listing the choices, the
+link line, the result chips, and the "All N versions" summary — five blocks, against six
+for two written-out rows. So for a pair the fold saves almost nothing, and it charges for
+that nothing. The heading says *any of 2* instead of naming the second card, both cards
+are printed on the very next line regardless, and each combo's own Spellbook link and
+*How it works* go behind a disclosure somebody has to open to reach them.
+
+From three up the arithmetic reverses and keeps reversing, because the versions of a
+group produce **identical** results by construction — that is what merging them requires
+— so eight written-out rows are eight copies of the same block of result chips. That is
+what the fold is for, and it is why the answer here is a threshold rather than dropping
+the fold altogether. On the standing Chatterfang deck, which holds 32 pairs against 23
+larger groups:
+
+```
+                             fixture deck    Chatterfang deck
+folding from two (before)      22 rows            84 rows
+folding from three (now)       23 rows           116 rows
+never folding                  33 rows           233 rows
+```
+
+`groupVariants()` counts on the members still **free**, not on the bucket, so a family of
+three that loses one member to a larger family is a pair and is written out too —
+otherwise the threshold would hold for families read straight off the data and not for
+the ones left over.
+
+Nothing else changes: the rows a pair becomes are still one card apart, so
+[the ordering](#the-combos-you-have-easiest-first-named-alphabetically) still sends that
+card last and still keeps them side by side.
+
 **Identical results are required, and that is deliberate.** Two variants only
 collapse when they produce exactly the same list. This under-groups: each
 interchangeable card brings its own rider, so `Scurry Oak + Sadistic Glee` shows
@@ -1979,6 +2012,14 @@ assertions ride along inside the layout runs, for the same reason:
   are read off *a row with a game-winning result*, not off the first row on the page.
   Reading the first one tied every one of those checks to a decision belonging elsewhere:
   reordering this panel turned them all red on a page whose chips had not moved.
+- **A row still folds its interchangeable part**, which the fixture has to supply and
+  nearly stopped supplying. Both of its interchangeable families were pairs, and pairs are
+  written out now, so the moment the threshold moved the page drew no collapsed row at all
+  — and every assertion about that shape would have passed while checking nothing. The run
+  said so instead: *"no combo row collapsed its interchangeable part"*, at every viewport.
+  The fixture carries a third version off the same partner now. It is Great Whale rather
+  than a new card on purpose, because Great Whale is already on the map, so the map's card
+  count does not move and its geometry assertions stay about geometry.
 - **The divider down a suggestion row** is walked piece by piece — the left border of
   every block in the card's column — and each has to be drawn, at the same x, starting
   where the piece above ended. The gutter is checked for the opposite: it must draw

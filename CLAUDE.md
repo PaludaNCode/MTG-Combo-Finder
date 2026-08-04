@@ -271,6 +271,21 @@ the second is built by CI and lives on the `data` branch. Never commit `combos.j
   comment naming a CSS selector the way you would in prose takes the whole file out with
   a `SyntaxError: Unexpected token ':'` pointing at the comment. That one at least fails
   loudly at parse; the backslash does not.
+- **A pair of interchangeable cards does not collapse, and that is the rule rather than a
+  bug.** `COLLAPSE_FROM = 3` in `combos.js`: a fold costs a reader an indirection and
+  saves a pair almost no height, so two versions are written out and three or more fold.
+  Two consequences worth knowing before touching it. `groupVariants()` counts the members
+  still *free*, so a family of three that loses one to a bigger family is a pair and is
+  written out too. And **a fixture whose only families are pairs draws no collapsed row at
+  all** — `test/fixtures/dataset.js` carries a third version specifically so the "any of
+  N" shape stays covered, and `npm run verify` fails loudly if it stops being there.
+- **Driving the mouse to `boundingBox()` coordinates does not scroll.** `locator.click()`
+  scrolls its target into view; `page.mouse.click(box.x + 4, box.y + 4)` does not, and an
+  earlier press in the same test may already have scrolled the element half out of the
+  window. The map's background-clears-the-comparison test went red that way — the map's
+  top sat 230px above the viewport, the click landed on nothing, and the assertion read
+  the unchanged page as a failure to clear. Use `locator.click({ position })` for a point
+  on an element.
 - **A check that reads "the first row" is a check pinned to somebody else's decision.**
   Reordering "Combos in your deck" turned three of them red on a page where nothing they
   were about had moved: the layout run read its result chips off `.combo:first-child` —
