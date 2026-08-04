@@ -95,10 +95,27 @@
     return ids.slice().sort((a, b) => a - b).join('-') + unique.map((t) => '--' + t).join('');
   }
 
+  // The cards a combo names, in whichever of the two shapes it is currently in: a compact
+  // row straight from the dataset (`c`, plain strings) or one that has been through
+  // expand() (`uses`, objects). The same contract comboSize() carries, and for the same
+  // reason — **sorting happens before expansion and rendering after it.**
+  //
+  // This read `uses` alone, and every caller holding a compact row got an empty list back.
+  // Not an error, not a zero: an empty list, which every ordering rule accepts. The
+  // unofficial panel shipped that way. matchUnofficial() sorts its rows with byDrawnName()
+  // and search.js expands them afterwards, so every row was compared as `''` against `''`,
+  // no row had any cards to share with another, and 46 rows came out in the order they
+  // happen to sit in unofficial.js — size still separated them, because comboSize() works
+  // around this at its own call site, which is exactly why nobody noticed.
+  //
+  // The workaround is the tell. A function two callers have to know the shape for is a
+  // function with the wrong contract, and the third caller will not know.
   function variantCardNames(variant) {
-    return ((variant && variant.uses) || [])
-      .map((u) => (u.card && u.card.name) || u.name)
-      .filter(Boolean);
+    if (!variant) return [];
+    if (variant.uses) {
+      return variant.uses.map((u) => (u.card && u.card.name) || u.name).filter(Boolean);
+    }
+    return (variant.c || []).filter((n) => typeof n === 'string' && n);
   }
 
   // How much of the world plays a combo. Spellbook publishes it per variant and
@@ -187,10 +204,15 @@
   // has been through expand() (`uses`). Sorting happens before expansion and
   // rendering after it, and a function that silently returned 0 for one of them
   // would sort every combo as though it were empty.
+  //
+  // It used to reach past variantCardNames() to do that — `variant.uses ? … : variant.c`
+  // — which made this function correct and left the shape a caller's problem. It was the
+  // only caller that knew, and the ordering rules that did not got empty lists and sorted
+  // the unofficial panel on nothing. The contract lives in variantCardNames() now, so
+  // this can just ask.
   function comboSize(variant) {
     if (!variant) return 0;
-    const named = variant.uses ? variantCardNames(variant) : (variant.c || []);
-    return named.length + ((variant.fills || []).length);
+    return variantCardNames(variant).length + ((variant && variant.fills || []).length);
   }
 
   // Smallest first, most played breaking the tie. Two cards on the table is a
@@ -336,27 +358,45 @@
 
   // How many versions it takes before folding them into one row is worth doing.
   //
-  // **Three, not two**, and the pair is the case this number exists to exclude. A
-  // collapsed row spends five blocks — the heading, the line listing the choices, the
-  // link line, the result chips, and the "All N versions" summary — where two written-out
-  // rows spend six. So for a pair the fold saves almost no height, and it charges for
-  // that nothing: the heading says "any of 2" instead of naming the second card, both
-  // cards are printed on the next line anyway, and each combo's own Spellbook link and
-  // "How it works" go behind a disclosure that has to be opened to reach them.
+  // **Four.** Two and three are written out; four and up fold.
   //
-  // At three and up the arithmetic reverses, and keeps reversing: the versions of a group
-  // produce *identical* results by construction — that is required to merge them — so
-  // eight written-out rows are eight copies of the same block of result chips. That is
-  // what the fold is for, and it is why the answer is a threshold rather than removing
-  // the fold altogether. Measured on the standing Chatterfang deck, which holds 32 pairs
-  // against 23 larger groups: writing out the pairs takes the panel from 84 rows to 116,
-  // where writing out everything takes it to 233.
+  // The height argument alone would say three. A collapsed row spends five blocks — the
+  // heading, the line listing the choices, the link line, the result chips, and the
+  // "All N versions" summary — against three per written-out row, so a pair costs six and
+  // a triple nine. On that reading three already pays.
+  //
+  // Height is not the whole of it, and a triple on the real page is what settled it:
+  //
+  //     Basking Broodscale + Heroic Feast + any of 3
+  //     Aunt May · Essence Warden · Prosperous Innkeeper
+  //
+  // Every card is already on screen. The fold has not hidden anything — it has asked the
+  // reader to assemble three combos in their head out of a heading and a list, and put
+  // each one's Spellbook link and "How it works" behind a disclosure to be opened. Three
+  // rows that each say what they are cost four more blocks and ask nothing.
+  //
+  // The number where that reverses is where the fold stops being an indirection and
+  // starts being a summary — where a reader would not want the versions written out even
+  // if they were free, because the versions have *identical results* by construction (that
+  // is what merging requires) and eight of them are eight copies of the same block of
+  // chips. Four is the judgement, and it is a judgement rather than a measurement.
+  //
+  // What it costs, measured, so the dial can be moved on evidence. The standing Chatterfang
+  // deck holds 32 pairs, 2 triples and 21 larger groups:
+  //
+  //     fold from     2      3      4      5    never
+  //     rows         84    116    120    126      233
   //
   // A presentation judgement living in combos.js rather than in the render layer, for the
   // reason orderComboNames() is here too: this is where it can be tested without a
   // browser. The render side cannot hold it anyway — one group has to become two rows,
   // and a function returning one element cannot do that.
-  const COLLAPSE_FROM = 3;
+  //
+  // Exported, and the tests are written against it rather than against the literal, so
+  // moving it is one character plus a fixture. One test pins the number itself — a suite
+  // that only ever asks "one below folds, one at it does not" would follow the constant
+  // anywhere, including somewhere nobody chose.
+  const COLLAPSE_FROM = 4;
 
   // The same idea for combos you can already assemble: variants differing in
   // exactly one card, producing the same results, are one combo with a choice of
@@ -1550,7 +1590,8 @@
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
-    groupSuggestions, groupVariants, interchangeableIn, comboRowNames, byDrawnRow, variantSignature,
+    groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn, comboRowNames, byDrawnRow,
+    variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
     comboSize, sizeBreakdown, bracketCheck, legalityCheck,
     decode, rebuildId,

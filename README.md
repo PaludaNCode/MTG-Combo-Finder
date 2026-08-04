@@ -392,6 +392,32 @@ one the render side draws, or the list is ordered on strings nobody sees. It ord
 three of these lists, ours and Spellbook's rows together, so a row of ours sits beside the
 family it belongs to rather than wherever a second sort would put it.
 
+#### The unofficial panel was sorted on nothing at all
+
+For a while it only *said* it ordered all three. The unofficial panel shipped in the order
+its rows happen to sit in `unofficial.js`, and the reason is worth writing down because
+nothing about it looked wrong.
+
+A combo exists here in two shapes: a compact row from the dataset (`c`, plain strings) and
+one that has been through `expand()` (`uses`, objects). **Sorting happens before expansion
+and rendering after it.** `variantCardNames()` read `uses` alone, so every caller holding a
+compact row got an empty list back — not an error, not a zero, an empty list, which every
+ordering rule accepts without complaint. `matchUnofficial()` sorts its own output and
+`search.js` expands it afterwards, so all 46 rows were compared as `''` against `''`, no row
+shared a card with any other, and the sort fell through to the order they arrived in.
+
+Three things kept it invisible. Combo size still separated the rows, because `comboSize()`
+worked around the shape at its own call site — so the panel looked ordered, 2-card rows and
+then 3-card rows, and only *within* a size was it the file. The render side computes its
+own trails on rows that are expanded by then, so each row's cards were correctly placed:
+the difference sat in the right column, against neighbours it had nothing to do with. And
+no test asked, because every test that orders combos builds them in the expanded shape.
+
+The workaround was the tell. A function two callers have to know the shape for is a
+function with the wrong contract, and the third caller will not know. `variantCardNames()`
+takes either shape now, `comboSize()` just asks it, and `test/unofficial.test.js` pins the
+panel's order on rows in the pre-expansion shape — which is the shape that broke.
+
 **Then the blocks are ordered by how many rows they hold, largest first, and only then
 alphabetically.** Alphabetical alone keeps a family together but says nothing about which
 family is worth reading first, so a list opened on whichever block happened to start with
@@ -595,38 +621,52 @@ It matters because the flat list actively misleads. Four different cards each
 claiming "+7 combos" at the top of the suggestions look like four options worth
 seven combos apiece; they are one option worth seven, described four times.
 
-**Three versions, not two.** A pair is written out as two rows; from three up it folds
-into one. `COLLAPSE_FROM` in `combos.js` is that number.
+**Four versions.** Two and three are written out as rows; four and up fold into one.
+`COLLAPSE_FROM` in `combos.js` is that number.
 
 Count what a collapsed row actually spends: a heading, the line listing the choices, the
-link line, the result chips, and the "All N versions" summary — five blocks, against six
-for two written-out rows. So for a pair the fold saves almost nothing, and it charges for
-that nothing. The heading says *any of 2* instead of naming the second card, both cards
-are printed on the very next line regardless, and each combo's own Spellbook link and
-*How it works* go behind a disclosure somebody has to open to reach them.
+link line, the result chips, and the "All N versions" summary — five blocks, against
+three per written-out row. So a pair costs six and a triple nine, and on height alone the
+answer would be three.
 
-From three up the arithmetic reverses and keeps reversing, because the versions of a
-group produce **identical** results by construction — that is what merging them requires
-— so eight written-out rows are eight copies of the same block of result chips. That is
-what the fold is for, and it is why the answer here is a threshold rather than dropping
-the fold altogether. On the standing Chatterfang deck, which holds 32 pairs against 23
-larger groups:
+Height is not the whole of it, and a triple on the real page is what settled it:
 
 ```
-                             fixture deck    Chatterfang deck
-folding from two (before)      22 rows            84 rows
-folding from three (now)       23 rows           116 rows
-never folding                  33 rows           233 rows
+Basking Broodscale + Heroic Feast + any of 3
+Aunt May · Essence Warden · Prosperous Innkeeper
 ```
 
-`groupVariants()` counts on the members still **free**, not on the bucket, so a family of
-three that loses one member to a larger family is a pair and is written out too —
-otherwise the threshold would hold for families read straight off the data and not for
-the ones left over.
+Every card is already on screen. The fold has hidden nothing — it has asked the reader to
+assemble three combos in their head out of a heading and a list, and put each one's
+Spellbook link and *How it works* behind a disclosure to be opened. Three rows that each
+say what they are cost four more blocks and ask nothing.
 
-Nothing else changes: the rows a pair becomes are still one card apart, so
+The number is where the fold stops being an indirection and starts being a summary: where
+a reader would not want the versions written out even if they were free, because a group's
+versions produce **identical** results by construction — that is what merging them
+requires — and eight of them are eight copies of the same block of result chips. Four is a
+judgement rather than a measurement, which is why what it costs is measured. The standing
+Chatterfang deck holds 32 pairs, 2 triples and 21 larger groups:
+
+```
+fold from        2      3      4      5    never
+Chatterfang     84    116    120    126      233
+fixture deck    22     23     33     33       33
+```
+
+`groupVariants()` counts on the members still **free**, not on the bucket, so a family
+that loses members to a larger one and drops below the threshold is written out too —
+otherwise the rule would hold for families read straight off the data and not for the ones
+left over.
+
+Nothing else changes: the rows a small family becomes are still one card apart, so
 [the ordering](#the-combos-you-have-easiest-first-named-alphabetically) still sends that
 card last and still keeps them side by side.
+
+The tests are written against `COLLAPSE_FROM` rather than against the literal, so moving it
+again is one character plus a fixture — with one test pinning the number itself, since a
+suite that only ever asks "one below folds, one at it does not" would follow the constant
+anywhere, including somewhere nobody chose.
 
 **Identical results are required, and that is deliberate.** Two variants only
 collapse when they produce exactly the same list. This under-groups: each
