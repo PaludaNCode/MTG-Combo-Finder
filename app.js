@@ -26,10 +26,11 @@
     ComboSteps.setSource(StepsSource.reader({ base: STEPS_BASE }));
   }
 
-  // The DOM helpers and the collapsible panel live in page-dom.js now: every renderer
-  // split out of this file wanted the same four, and a second copy of el() is how two
-  // parts of one page stop agreeing about markup.
-  const { $, el, panel, setStatus } = PageDom;
+  // The DOM helpers live in page-dom.js now: every renderer split out of this file
+  // wanted the same ones, and a second copy of el() is how two parts of one page stop
+  // agreeing about markup. `panel` is not among them any more — this file draws the
+  // lines above the results and nothing that sits in a collapsible section.
+  const { $, el, setStatus } = PageDom;
 
   // The deploy rewrites every asset URL in the HTML to carry `?v=<commit sha>`,
   // because the Pages CDN caches by full URL and a deploy purges nothing — so
@@ -185,9 +186,9 @@
       why.appendChild(list);
     }
 
-    // The combos behind the floor, named rather than drawn as cards: each is already
-    // rendered in full under "Combos in your deck", and repeating them there was the
-    // bulk of what made this a panel in the first place.
+    // The combos behind the floor, named rather than drawn as cards: "Combos in your
+    // deck" below reaches every one of them through the cards that carry them, and
+    // repeating them here in full was the bulk of what made this a panel at all.
     if (wins.length) {
       const list = el('p', 'why-cards');
       list.appendChild(el('span', 'why-label', wins.length === 1
@@ -271,17 +272,20 @@
   //
   // renderResults() used to be one synchronous task, and that is what made a big deck
   // feel broken: the browser cannot paint until a task finishes, so a reader whose
-  // combos were ready after ~800ms sat looking at a dead page for 2.9s while the map,
-  // the pieces panel and the suggestions panel — none of which are on screen, they are
-  // nine screens down — were built underneath them.
+  // combos were ready after ~800ms sat looking at a dead page for 2.9s while the map
+  // and the suggestions panel — neither of which is on screen, they are several screens
+  // down — were built underneath them.
   //
-  // So the render is cut in two at the only line that matters: the combos, and then
-  // everything else. Measured on a 520-combo deck at 390px with the CPU throttled 4x,
-  // combos reach the screen in 1,674ms instead of 2,905ms.
+  // So the render is cut in two at the only line that matters: the panel that answers
+  // the question, and then everything else. On the 520-combo deck the split was measured
+  // on — at 390px with the CPU throttled 4x — the answer reached the screen in 1,674ms
+  // instead of 2,905ms. Those figures were taken when the answer was a list of combo
+  // rows; "Combos in your deck" is the cards-carrying panel now and has not been
+  // re-measured, so read them as why the split exists rather than as what it costs today.
   //
-  // It is a trade and not a free win. Total work goes *up* — 1,976ms of building
-  // becomes 3,335ms, because scheduling frames costs something — so the phone does
-  // slightly more work than before. It just stops making the reader watch it happen.
+  // It is a trade and not a free win. Total work goes *up* — scheduling frames costs
+  // something — so the phone does slightly more work than before. It just stops making
+  // the reader watch it happen.
   //
   // `token` is the part that is easy to leave out and expensive to debug. A search can
   // start before the previous one's deferred half has run — "+ Add to deck" fires one
@@ -311,28 +315,11 @@
     renderLegality($('legality'), results.legality);
 
     const included = results.included;
-    // What each row differs from the rest of the panel by, so an uncollapsed row
-    // sends that card last like the collapsed ones do. Read across the whole panel
-    // rather than per group: these rows are read down one column, and a family that
-    // grouping split — two combos one card apart that do different things — is still
-    // two rows side by side to the reader.
-    const trails = DeckCombos.interchangeableIn(included);
-    // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
-    // combo with Essence Warden in that slot are one row rather than three — then
-    // ordered the way every other list of combos is ordered: size, then the biggest
-    // block of versions, then what the row draws. Grouping deliberately does not
-    // reorder, so the two steps stay separable.
-    const groups = DeckCombos.byDrawnRow(DeckCombos.groupVariants(included), trails);
-    // The count is every combo, not every row. Collapsing "Scurry Oak + Sadistic
-    // Glee + Carrion Feeder" and its Viscera Seer version into one row makes the
-    // list readable, but they are still two combos, and a deck with 34 of them
-    // should not be told it has 23. Each row says how many versions it holds.
-    const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
-    if (groups.length) {
-      groups.forEach((g) => includedBody.appendChild(RenderCombos.comboGroupCard(g, trails)));
-    } else {
-      includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
-    }
+    // The answer, and the only panel built before the page is allowed to paint. Both
+    // halves go in, because the question it asks — what does cutting this card cost me
+    // — has the same answer whoever published the combo. The two numbers stay apart on
+    // the row; see ourBadge().
+    RenderSuggestions.renderPieces($('pieces'), included, results.unofficial || []);
 
     RenderSuggestions.renderUnofficial($('unofficial'), results.unofficial || []);
 
@@ -340,27 +327,21 @@
     //
     // Emptied now and filled later, rather than left alone until their new contents
     // are ready. Leaving them would be smoother — no gap, no re-grow — and would put
-    // the previous deck's numbers on screen for a second and a half after the list
-    // above them had already changed. Three panels quietly a search out of date is
-    // worse than three panels visibly absent, and the map has a rule about this
+    // the previous deck's numbers on screen for a second and a half after the panel
+    // above them had already changed. Two panels quietly a search out of date is
+    // worse than two panels visibly absent, and the map has a rule about this
     // already: one search behind says the added card is in no combos.
     //
-    // Three textContent writes, so this costs nothing worth measuring.
+    // Two textContent writes, so this costs nothing worth measuring.
     $('graph').textContent = '';
-    $('pieces').textContent = '';
     $('suggestions').textContent = '';
 
-    // Drawn from the same `included` the list above is — Spellbook's own combos
-    // and not the unofficial ones, which is the same line "Cards carrying your
-    // combos" draws, so the two panels cannot disagree about what a card is in.
-    // Rebuilt on every search, including the one "+ Add to deck" fires, so the
-    // picture is never a search behind the list beside it.
+    // Drawn from the same `included` the panel above is — Spellbook's own combos and
+    // not the unofficial ones, which is the same line "Combos in your deck" draws, so
+    // the two cannot disagree about what a card is in. Rebuilt on every search,
+    // including the one "+ Add to deck" fires, so the picture is never a search behind
+    // the panel above it.
     afterPaint(token, () => RenderMap.renderGraph($('graph'), included));
-
-    // Both halves, because the question this panel asks — what does cutting this
-    // card cost me — has the same answer whoever published the combo. The two
-    // numbers stay apart on the row; see ourBadge().
-    afterPaint(token, () => RenderSuggestions.renderPieces($('pieces'), included, results.unofficial || []));
 
     // computeSuggestions() and groupSuggestions() are inside the deferred callback and
     // not evaluated as arguments to it, which is the difference between deferring the
@@ -625,9 +606,10 @@
     $('diagnostics').hidden = true;
     lastSent = {}; // so a report about this search never quotes the last one
     // Claimed by whichever search runs next, whether or not that is the one the
-    // add started — a note left over from an earlier add would be a lie on a
-    // search someone else asked for.
+    // add or the cut started — a note left over from an earlier press would be a
+    // lie on a search someone else asked for.
     const added = RenderRows.takeAddedNote();
+    const removed = RenderRows.takeRemovedNote();
 
     const parsed = DeckParser.parseDecklist($('decklist').value);
     const commanderParsed = DeckParser.parseDecklist($('commanders').value);
@@ -690,6 +672,7 @@
       notes.push(...trimmed);
       notes.unshift(`${(results.meta.count || 0).toLocaleString()} known combos`);
       setStatus((added ? 'Added ' + added + '. ' : '')
+        + (removed ? 'Removed ' + removed + '. ' : '')
         + 'Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
       renderResults(results, deckNames);
       renderDataAge(results.meta);

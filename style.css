@@ -24,6 +24,12 @@
   --accent: #d4a24e;
   --error: #e06c75;
   --ok: #7bc275;
+  /* What a result chip is filled with — written out rather than mixed at paint time.
+     These are the old 10%-alpha tints composited over --panel once, so the chips look
+     exactly as they did on that surface and stop changing colour when a row moves to
+     a deeper one. 6.50:1 for the green, 7.34:1 for the yellow, everywhere. */
+  --win-fill: #252e2f;
+  --decisive-fill: #2d2e31;
   /* How many cards a combo needs. Kept clear of the accent and of the three
      result-tier colours, so a size never reads as a payoff. */
   --size: #8ba7cc;
@@ -69,6 +75,10 @@
   --accent: #8a5a12;
   --error: #a8261c;
   --ok: #2c7a34;
+  /* 4.97:1 and 5.31:1 — see the dark block. The pairing that failed was these colours
+     on the same tints composited over --panel-2 instead: 4.19:1 and 4.48:1. */
+  --win-fill: #f2f9f1;
+  --decisive-fill: #faf9f3;
   --size: #3c5b84;
   --decisive: #7a6620;
   --line: #d6d2c7;
@@ -503,6 +513,19 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .empty { color: var(--muted); }
 
+/* The line under "Combos in your deck" that reconciles its two numbers: the badge
+   counts combos and the rows are cards, so a three-figure badge sits above a two-figure
+   list of rows and the sentence is what stops that reading as a miscount. --muted rather than --faint: --faint is only
+   safe on --bg and this sits on a panel, and a sentence the badge cannot be understood
+   without is not decoration. See DeckView.deckCombosNote(). */
+.panel-note {
+  margin: 0 0 .9rem;
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
 .combo {
   background: var(--panel);
   border-radius: var(--radius);
@@ -545,19 +568,18 @@ button:disabled { opacity: .6; cursor: wait; }
    one case that still has to break inside a name, which is a single name wider than the
    whole column, and it has to be allowed or the row overflows sideways instead. */
 .combo h3 > .card-name,
-.combo h3 > .slot,
-.combo h3 > .either {
+.combo h3 > .slot {
   flex: 0 0 auto;
   max-width: 100%;
 }
-/* Every kind of thing a heading can name, not just the cards. ".either" is the "any of N"
-   pill and it is the one that got missed when the separator moved from its own span onto
-   the front of the following item: it is neither a card nor a slot, so it matched nothing
-   here and its "+" simply stopped being drawn. The heading read "Kitchen Finks any of 5".
-   Invisible to every text-based check, because the mark is generated content. */
+/* Every kind of thing a heading can name, not just the cards — a template slot is the
+   other one, and it is the kind that got missed when the separator moved from its own
+   span onto the front of the following item: it is not a card, so it matched nothing
+   here and its "+" simply stopped being drawn. The heading read "Kitchen Finks
+   a Persist Creature". Invisible to every text-based check, because the mark is
+   generated content. */
 .combo h3 > .plus + .card-name::before,
-.combo h3 > .plus + .slot::before,
-.combo h3 > .plus + .either::before {
+.combo h3 > .plus + .slot::before {
   content: '+ ';
   color: var(--accent);
   font-weight: 700;
@@ -817,16 +839,24 @@ button:disabled { opacity: .6; cursor: wait; }
  * makes that a real row rather than a hypothetical one. `white-space: normal`
  * here is the safety valve — a row with a four-digit half on *both* sides would
  * wrap to two lines instead of running out of its column and over the card name. */
-/* All four panels that draw a combo row, not only the two with a gutter: the row shapes
-   below are keyed on how much room a row actually has, and a combo heading in "Combos in
-   your deck" has the same problem at the same width as one under a suggestion. The two
-   were added first because the gutter measurements needed them; a query naming `rows`
-   simply matched nothing in the other two, which reads as a rule that works everywhere
-   and silently does not. */
-#included .panel-body,
+/* All three panels that draw a combo row, not only the two with a gutter: the row shapes
+   below are keyed on how much room a row actually has, and a combo heading folded inside
+   a row of "Combos in your deck" has the same problem at the same width as one under a
+   suggestion. The gutter panels were added first because the gutter measurements needed
+   them; a query naming `rows` simply matched nothing in the others, which reads as a rule
+   that works everywhere and silently does not. */
 #unofficial .panel-body,
 #pieces .panel-body,
 #suggestions .panel-body { container: rows / inline-size; }
+
+/* And a container per disclosure, because the combo rows moved a column inwards. A
+   combo under a card in "Combos in your deck" — or under a suggestion — has the panel's
+   width minus the number gutter and two paddings: 450px of a 689px body at 768px. Left
+   to answer the panel body, the query would lay a three-card heading out inline in a
+   column 240px narrower than it was told about, and a card name would break across two
+   lines. A nested container with the same name is what `@container rows` resolves to, so
+   each disclosure answers for itself. */
+.combo.suggestion > details { container: rows / inline-size; }
 
 @container rows (min-width: 560px) {
   .combo.suggestion { grid-template-columns: 12rem minmax(0, 1fr); }
@@ -906,7 +936,8 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 /* The margin the button carried when it sat at the end of a run of links; the gap
    above places it now. */
-.row-main > .card-links .add-card { margin-left: 0; }
+.row-main > .card-links .add-card,
+.row-main > .card-links .remove-card { margin-left: 0; }
 
 /* Taking a suggestion: appends the card to the decklist and searches again.
    Outlined rather than filled — it sits at the end of a row of links, and the
@@ -930,6 +961,30 @@ button:disabled { opacity: .6; cursor: wait; }
 .add-card:hover { background: var(--accent); color: var(--brass-ink); }
 .add-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .alt-list .add-card { margin-left: .2rem; }
+
+/* Cutting a card, on the rows of "Combos in your deck". The same pill, the same size
+   and the same place in the row as + Add to deck, because both panels' rows are read
+   down one column and a control that moves between them reads as a different control.
+   Not the accent, though: the accent is what the page recommends, and this is the row
+   arguing against itself. So it sits in --muted until it is reached for, and takes
+   --error only on hover and focus — the same colour the ban line uses, which is where
+   that colour's contrast on a panel is already proved. A filled red button on each of
+   every row of a long panel would read as a wall of warnings. */
+.remove-card {
+  margin-left: .5rem;
+  padding: .15rem .5rem;
+  min-height: 32px;
+  background: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.remove-card:hover { border-color: var(--error); color: var(--error); background: none; filter: none; }
+.remove-card:focus-visible { outline: 2px solid var(--error); outline-offset: 2px; }
 
 /* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card". The last line of
    the row, where it used to be squeezed onto the card's own line to save the row a
@@ -1064,33 +1119,28 @@ button:disabled { opacity: .6; cursor: wait; }
   color: var(--muted);
 }
 
-/* ---- interchangeable cards ---- */
+/* ---- template slots ---- */
 
-/* "+ any of 3" in a combo header: a slot, not a card, so it must not read as
-   one — hence the outline rather than the plain card styling beside it. */
-/* The outline goes on the inner element, never on the flex item. The item carries the "+"
+/* "a Persist Creature" in a combo header: a property, not a card, so it must not read
+   as one — hence the outline rather than the plain card styling beside it.
+
+   The outline goes on the inner element, never on the flex item. The item carries the "+"
    that joins it to the card before it, and a mark drawn on the item lands inside its own
-   outline — which is how the heading came to read "Trudge Garden ( + any of 4 )". */
-.either,
+   outline — which is how a heading came to read "Trudge Garden ( + any of 4 )".
+
+   There was a second pill in this shape, "+ any of 3" on a combo row standing for a
+   family of interchangeable versions. It went with the panel that listed combos row by
+   row: "Combos in your deck" is one row per card now and writes every version out. */
 .slot { font-size: .82rem; white-space: nowrap; }
-.either > .pill,
 .slot > .pill {
   display: inline-block;
   padding: .05rem .45rem;
   border-radius: 999px;
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--muted);
+  font-style: italic;
 }
-.either > .pill { font-weight: 600; }
-.slot > .pill { font-style: italic; }
-.choices { margin: .15rem 0 .1rem; font-size: .9rem; color: var(--muted); }
-.choices .card-name { color: var(--text); }
 
-/* ---- template slots ---- */
-
-/* "a Persist Creature" in a combo header. Same reasoning as .either: it names a
-   property, not a card, and must not be mistaken for one — and the same two-element
-   shape, so its separator sits outside its outline too. Styled with .either above. */
 /* Which card of yours the slot was credited to. A combo that shows up because
    of a slot has to say why, or it looks invented. */
 .fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }
@@ -1477,9 +1527,16 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 /* Green — the combo says it ends the game. Same quiet tint-and-border
-   treatment as the yellow tier; the colour alone carries the meaning. */
+   treatment as the yellow tier; the colour alone carries the meaning.
+
+   The fill is a flat token per theme and not a 10%-alpha tint any more, and that is
+   a contrast fix rather than tidying. A translucent fill composites with whatever is
+   behind it, so the chip's real background depended on where the row landed: on
+   --panel it measured 4.97:1 in the light theme, and on the --panel-2 a combo inside
+   a card's disclosure sits on, 4.19:1 — a fail, on the only surface these chips are
+   now drawn on. An opaque fill is the same colour wherever the chip goes. */
 .result.tier-win {
-  background: rgba(123, 194, 117, .10);
+  background: var(--win-fill);
   color: var(--ok);
   box-shadow: inset 0 0 0 1px rgba(123, 194, 117, .30);
   cursor: help;
@@ -1489,8 +1546,10 @@ button:disabled { opacity: .6; cursor: wait; }
    mana, storm count, tokens, counters, draw, life, damage, mill, turns.
    Muted rather than gold, so it sits between the green and the grey instead
    of competing with the win. Hover says what it still needs. */
+/* Opaque for the same reason the green above is: 4.48:1 on --panel-2 in the light
+   theme, which is a fail by two hundredths and invisible in a screenshot. */
 .result.tier-decisive {
-  background: rgba(203, 191, 138, .10);
+  background: var(--decisive-fill);
   color: var(--decisive);
   box-shadow: inset 0 0 0 1px rgba(203, 191, 138, .30);
   cursor: help;

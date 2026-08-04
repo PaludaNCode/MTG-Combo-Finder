@@ -527,3 +527,86 @@ test('a Moxfield text export dropped as a file parses like a paste', () => {
   assert.deepStrictEqual(parsed.commanders.map((c) => c.card), ['Kinnan, Bonder Prodigy']);
   assert.strictEqual(parsed.main.length, 3);
 });
+
+// ---- taking a card back out --------------------------------------------------
+//
+// "− Remove" on a row of "Combos in your deck". The row is there because the card
+// carries combos, so the promise is that pressing it takes those combos with it —
+// which means the line has to actually leave the deck, and the sideboard line naming
+// the same card has to stay where it is.
+const { removeDeckCard } = require('../parser.js');
+
+// The page's rule, passed in rather than defaulted: the name on the button is
+// Commander Spellbook's spelling and the line is whatever was pasted. This is
+// DeckCombos.nameKey, required so the two can never drift apart unnoticed.
+const { nameKey } = require('../combos.js');
+const removed = (text, name) => removeDeckCard(text, name, nameKey);
+
+test('remove: the line goes, quantity and all', () => {
+  const out = removed('1 Sol Ring\n2 Basalt Monolith\n1 Island', 'Basalt Monolith');
+  assert.strictEqual(out.removed, 1);
+  assert.deepStrictEqual(mainNames(out.text), ['Sol Ring', 'Island']);
+});
+
+// Set codes, collector numbers and foil markers are what a real export carries, and
+// none of them are part of the name — so a button that only matched a bare line would
+// do nothing on every Moxfield paste.
+test('remove: an annotated export line matches too', () => {
+  const out = removed('1 Sol Ring (C21) 263 *F*\n1 Island', 'Sol Ring');
+  assert.strictEqual(out.removed, 1);
+  assert.deepStrictEqual(mainNames(out.text), ['Island']);
+});
+
+// A commander is a card in the deck and the panel lists it as one, so the button on
+// its row has to be able to reach it.
+test('remove: a card in the command zone comes out', () => {
+  const out = removed('Commander:\n1 Kinnan, Bonder Prodigy\n\nDeck:\n1 Sol Ring', 'Kinnan, Bonder Prodigy');
+  assert.strictEqual(out.removed, 1);
+  const parsed = parseDecklist(out.text);
+  assert.deepStrictEqual(parsed.commanders.map((e) => e.card), []);
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring']);
+});
+
+// The sideboard is not in the deck, so nothing on the page rests on it and removing
+// it would be an edit nobody asked for. Both ways of marking one.
+test('remove: a sideboard copy is left alone', () => {
+  const out = removed('1 Sol Ring\n\nSideboard:\n1 Sol Ring', 'Sol Ring');
+  assert.strictEqual(out.removed, 1);
+  assert.deepStrictEqual(mainNames(out.text), []);
+  assert.ok(/Sideboard:\n1 Sol Ring/.test(out.text), 'the sideboard line survived');
+});
+
+test('remove: an MTGO SB: line is left alone as well', () => {
+  const out = removed('1 Sol Ring\nSB: 1 Sol Ring', 'Sol Ring');
+  assert.strictEqual(out.removed, 1);
+  assert.ok(/SB: 1 Sol Ring/.test(out.text));
+});
+
+// Nothing matched is a real answer and the caller shows it as one, so it must be
+// distinguishable from a removal — a silent 0 would read as "done".
+test('remove: a card that is not there removes nothing and says so', () => {
+  const out = removed('1 Sol Ring', 'Walking Ballista');
+  assert.strictEqual(out.removed, 0);
+  assert.strictEqual(out.text, '1 Sol Ring');
+});
+
+// Every copy, not the first one: a list with a duplicated line would otherwise keep
+// the card in the deck while the row disappeared from the panel.
+test('remove: every copy of the line goes', () => {
+  const out = removed('1 Sol Ring\n1 Island\n1 Sol Ring', 'Sol Ring');
+  assert.strictEqual(out.removed, 2);
+  assert.deepStrictEqual(mainNames(out.text), ['Island']);
+});
+
+// The headings and the blank lines that shape someone's list are theirs, and a button
+// that tidied them would be editing more than it said.
+test('remove: the list keeps its shape', () => {
+  const out = removed('Commander:\n1 Kinnan, Bonder Prodigy\n\nDeck:\n1 Sol Ring\n1 Island', 'Sol Ring');
+  assert.strictEqual(out.text, 'Commander:\n1 Kinnan, Bonder Prodigy\n\nDeck:\n1 Island');
+});
+
+// The rule is required, not defaulted: a second copy of nameKey living in parser.js is
+// how the two silently stop agreeing, and the failure is a button that removes nothing.
+test('remove: the name-matching rule has to be given', () => {
+  assert.throws(() => removeDeckCard('1 Sol Ring', 'Sol Ring'), /name-matching rule/);
+});

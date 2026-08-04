@@ -245,6 +245,63 @@
     return lines.slice(0, at).concat(line, lines.slice(at)).join('\n');
   }
 
+  // The decklist someone is holding, with a card taken out of it. The counterpart to
+  // addMainDeckCard(), and the same walk: headings switch the board, and only lines
+  // read as the deck or the command zone are candidates. A sideboard line naming the
+  // same card is left where it is — it is not in the deck, so removing it would be an
+  // edit nobody asked for, and no combo on the page rests on it.
+  //
+  // The whole line goes, quantity and all. "Remove from deck" on a card carrying five
+  // combos promises those five combos will be gone; decrementing "2 Sol Ring" to 1
+  // would leave every one of them exactly where it was.
+  //
+  // `key` is how two spellings are decided to be the same card, and it is required
+  // rather than defaulted on purpose. The page passes DeckCombos.nameKey, because the
+  // name on the button comes from Commander Spellbook and the line comes from whatever
+  // the reader pasted — a split card, an accent, a different set annotation. A default
+  // here would be that rule written out a second time in the one file that must not
+  // depend on combos.js, and the failure of the two drifting apart is a button that
+  // silently removes nothing.
+  function removeDeckCard(text, name, key) {
+    if (typeof key !== 'function') {
+      throw new TypeError('removeDeckCard needs the name-matching rule (DeckCombos.nameKey)');
+    }
+    const wanted = key(name);
+    const lines = String(text || '').split(/\r?\n/);
+    const kept = [];
+    let removed = 0;
+    let target = 'main';
+
+    for (const raw of lines) {
+      const trimmed = raw.trim();
+      if (!trimmed) { kept.push(raw); continue; }
+
+      const heading = normalizeHeading(trimmed);
+      if (Object.prototype.hasOwnProperty.call(SECTION_TARGET, heading)) {
+        target = SECTION_TARGET[heading];
+        kept.push(raw);
+        continue;
+      }
+      if (/side\s*board|maybe\s*board/i.test(trimmed) && !/^\d/.test(trimmed)) {
+        target = 'ignore';
+        kept.push(raw);
+        continue;
+      }
+      if (target === 'ignore' || isCategoryHeading(trimmed)) { kept.push(raw); continue; }
+
+      const parsed = parseLine(raw);
+      // An MTGO per-line sideboard marker is not in the deck either, so it is kept for
+      // the same reason a sideboard section is.
+      if (!parsed || parsed.sideboardPrefix || key(parsed.name) !== wanted) {
+        kept.push(raw);
+        continue;
+      }
+      removed += 1;
+    }
+
+    return { text: kept.join('\n'), removed };
+  }
+
   // Parses a full decklist text blob into { commanders, main, skipped } where
   // each card entry is { card, quantity } (the shape Commander Spellbook's
   // find-my-combos endpoint expects) and `skipped` lists what was dropped and
@@ -507,7 +564,7 @@
     parseDecklist, parseLine, fromMoxfield, fromArchidekt,
     parseDeckUrl, describeLoadFailure, SITES,
     normalizeHeading, isCategoryHeading, API_LIMITS,
-    mainDeckInsertIndex, addMainDeckCard,
+    mainDeckInsertIndex, addMainDeckCard, removeDeckCard,
     acceptDeckFile, looksLikeText, MAX_DECK_FILE_BYTES, DECK_FILE_EXTENSIONS,
   };
 

@@ -114,6 +114,10 @@
   // screen for about as long as it took to read the first word — the note has to
   // survive into that line instead of being replaced by it.
   let addedNote = null;
+  // The same thing for a cut. Two variables and not one with a verb in it, because the
+  // two notes are read into one sentence and "Added X" where a card was removed is the
+  // worst thing this line could say.
+  let removedNote = null;
 
   function addCardToDeck(name) {
     const box = $('decklist');
@@ -157,6 +161,54 @@
     button.title = spoken;
     button.setAttribute('aria-label', spoken);
     button.addEventListener('click', () => addCardToDeck(name));
+    return button;
+  }
+
+  // The other direction, and the reason it exists on the rows of "Combos in your deck"
+  // rather than beside a suggestion: that panel is ranked by what cutting a card would
+  // cost, so every row is already an argument for or against keeping it. Reading "in 9
+  // combos" and then going to find the line in the box by hand is the step this removes.
+  //
+  // It goes through the same form the add does, for the same reason: the form is what
+  // knows what a search involves, and the proof that the cut landed is the panel coming
+  // back smaller. Both boxes are edited, because a commander is a card in the deck and
+  // the panel lists it as one.
+  function removeCardFromDeck(name) {
+    const box = $('decklist');
+    const zone = $('commanders');
+    // DeckCombos.nameKey is passed rather than left to the parser: the name on this
+    // button is Commander Spellbook's spelling and the line is whatever was pasted.
+    const fromDeck = DeckParser.removeDeckCard(box.value, name, DeckCombos.nameKey);
+    const fromZone = DeckParser.removeDeckCard(zone.value, name, DeckCombos.nameKey);
+    const removed = fromDeck.removed + fromZone.removed;
+
+    // Nothing matched, which is not the same as nothing happening: the row is on screen
+    // because the search found the card, so a line that cannot be found is a mismatch
+    // between the two spellings and worth saying rather than swallowing.
+    if (!removed) {
+      setStatus('Could not find ' + name + ' in the decklist to remove — check how the line is spelled.', true);
+      return;
+    }
+
+    box.value = fromDeck.text;
+    zone.value = fromZone.text;
+    DeckIO.saveDeck();
+    addedNote = null; // this search is about a cut, not about a card somebody added
+    removedNote = name;
+    setStatus('Removed ' + name + ' — searching again…');
+
+    const form = $('deck-form');
+    if (typeof form.requestSubmit === 'function') form.requestSubmit($('find-combos'));
+    else form.dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+
+  function removeButton(name, label) {
+    const button = el('button', 'remove-card', label || '− Remove');
+    button.type = 'button';
+    const spoken = 'Remove ' + name + ' from your decklist and search again';
+    button.title = spoken;
+    button.setAttribute('aria-label', spoken);
+    button.addEventListener('click', () => removeCardFromDeck(name));
     return button;
   }
 
@@ -319,7 +371,14 @@
     return name;
   }
 
-  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, addCardToDeck, addButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, takeAddedNote };
+  // …and the same for a cut, cleared the same way and for the same reason.
+  function takeRemovedNote() {
+    const name = removedNote;
+    removedNote = null;
+    return name;
+  }
+
+  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, addCardToDeck, addButton, removeCardFromDeck, removeButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, takeAddedNote, takeRemovedNote };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

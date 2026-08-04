@@ -50,7 +50,7 @@ const expectClean = async (page, context) => expect(await violations(page, conte
 async function search(page) {
   await page.locator('#decklist').fill(DECKS.marked);
   await page.getByRole('button', { name: 'Find combos' }).click();
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
 }
 
 test('the empty page is clean', async ({ page }) => {
@@ -101,17 +101,18 @@ test('what the page opens on press is clean', async ({ page }) => {
   await page.goto('/index.html');
   await search(page);
 
-  // On a row that stays whole, chosen by that and not by being first: a collapsed row
-  // keeps its versions — and their steps controls — inside a closed disclosure, so the
-  // first .steps-toggle in the panel is not necessarily one a reader can press. Which
-  // row leads is an ordering decision in combos.js, and this test is about what a
-  // disclosure builds when it opens.
+  // A steps control lives on a combo, and a combo lives inside one of your cards, so
+  // getting to a pressable one is two presses: open the card, then open the steps. The
+  // first .steps-toggle on the page is inside a closed disclosure and not something a
+  // reader can reach.
   //
-  // Both halves are scoped to that row. Pressing one row's control and then reading
-  // ".steps in the panel, first" is two rows, and it passed only while they happened to
+  // Both halves are scoped to the one row. Pressing one row's control and then reading
+  // ".steps on the page, first" is two rows, and it passed only while they happened to
   // be the same one — the panel is full of steps panels that belong to rows nobody
   // pressed, every one of them legitimately hidden.
-  const row = page.locator('#included .panel-body > .combo:not(:has(> h3 .either))').first();
+  const card = page.locator('#pieces .panel-body > .combo.suggestion').first();
+  await card.locator('> details > summary').click();
+  const row = card.locator('details > .combo').first();
   await row.locator('.steps-toggle').first().click();
   await expect(row.locator('.steps').first()).toBeVisible();
   await expectClean(page);

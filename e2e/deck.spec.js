@@ -19,7 +19,19 @@ async function search(page) {
   // no timeout guessing, and a search that never finishes fails here rather
   // than three assertions later.
   await expect(page.locator('#results')).toBeVisible();
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
+}
+
+// A combo row lives inside one of your cards now, so getting at one is two steps:
+// find the card that carries the combo, then open it. Returns the row itself.
+async function openCombo(page, hrefFragment) {
+  const card = page.locator('#pieces .panel-body > .combo.suggestion')
+    .filter({ has: page.locator(`a[href*="${hrefFragment}"]`) })
+    .first();
+  await card.locator('> details > summary').click();
+  return card.locator('details > .combo')
+    .filter({ has: page.locator(`a[href*="${hrefFragment}"]`) })
+    .first();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -30,29 +42,31 @@ test('a pasted decklist produces the combos in it', async ({ page }) => {
   await pasteDeck(page);
   await search(page);
 
-  // The panel headings, as a reader would name them.
+  // The panel headings, as a reader would name them. Three, and the first of them is
+  // the answer: "Combos in your deck" is the list of your cards that carry one.
   await expect(page.getByRole('heading', { name: 'Combos in your deck' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'How your combos connect' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Cards carrying your combos' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Suggested additions' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Cards carrying your combos' })).toHaveCount(0);
+
+  // The badge counts combos and the rows are cards, so the panel has to say which is
+  // which — a badge of 10 over 7 rows reads as a miscount otherwise.
+  await expect(page.locator('#pieces .panel-note')).toContainText(/\d+ combos? published by Commander Spellbook/);
+  await expect(page.locator('#pieces .panel-note')).toContainText(/carried by \d+ of your cards/);
 
   // The deck's colours are read off the cards, so they are on screen without a
   // commander having been typed anywhere.
   await expect(page.locator('.identity-line .pip')).toHaveCount(2);
 
-  // A combo row names its cards and links to the combo on Spellbook.
-  //
-  // The link is asserted on a row that stays whole, selected by that rather than by
-  // being first. A collapsed row is one combo with a choice of part, and its Spellbook
-  // links belong to the versions inside its disclosure — there is no single combo for
-  // the row itself to link to. Which row leads the panel is an ordering decision made
-  // in combos.js, and this assertion is not about it: it went red the day that ordering
-  // changed and put a collapsed row on top, on a page where nothing about the links had
-  // moved.
-  const first = page.locator('#included .panel-body > .combo').first();
-  await expect(first.locator('.card-name').first()).not.toBeEmpty();
-  const whole = page.locator('#included .panel-body > .combo:not(:has(> h3 .either))').first();
-  await expect(whole.locator('.combo-link a[href*="commanderspellbook.com"]')).toBeVisible();
+  // A card row names the card and says how many combos hang off it; opening it names
+  // those combos and links each to Spellbook. Asked for by the combo it holds rather
+  // than by being first: which card leads is an ordering decision made in combos.js,
+  // and this assertion is not about it.
+  const first = page.locator('#pieces .panel-body > .combo.suggestion').first();
+  await expect(first.locator('.row-name .card-name').first()).not.toBeEmpty();
+  await expect(first.locator('.row-total')).toContainText(/^\d+$/);
+  const row = await openCombo(page, '/combo/1/');
+  await expect(row.locator('.combo-link a[href*="commanderspellbook.com"]')).toBeVisible();
 });
 
 test('the decklist survives a reload', async ({ page }) => {
@@ -99,7 +113,7 @@ test('taking a suggestion adds the card and searches again', async ({ page }) =>
   await pasteDeck(page);
   await search(page);
 
-  const before = await page.locator('#included .panel-count').textContent();
+  const before = await page.locator('#pieces .panel-count').textContent();
   const suggestion = page.locator('.tab-pane:not([hidden]) .combo.suggestion').first();
   const card = await suggestion.locator('h3 .card-name').first().textContent();
   await suggestion.getByRole('button', { name: /^Add / }).click();
@@ -108,22 +122,48 @@ test('taking a suggestion adds the card and searches again', async ({ page }) =>
   // append that forgot to search again would pass the first of those and fail
   // the second.
   await expect(page.locator('#decklist')).toHaveValue(new RegExp(card.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  await expect(page.locator('#included .panel-count')).not.toHaveText(before);
+  await expect(page.locator('#pieces .panel-count')).not.toHaveText(before);
+});
+
+// The other direction, and the reason it is a button rather than a note: the panel is
+// ranked by what cutting a card would cost, so every row is already an argument about
+// keeping it. Every step here is ours — editing the box, keeping it, searching again —
+// and the proof the cut landed is the deck holding fewer combos than it did.
+test('cutting a card removes it and searches again', async ({ page }) => {
+  await pasteDeck(page);
+  await search(page);
+
+  const before = await page.locator('#pieces .panel-count').textContent();
+  const row = page.locator('#pieces .panel-body > .combo.suggestion').first();
+  const card = await row.locator('.row-name .card-name').textContent();
+  await row.getByRole('button', { name: /^Remove / }).click();
+
+  // Gone from the box, and the search ran again with it gone. A button that edited the
+  // box and forgot to search would pass the first of these and fail the second.
+  await expect(page.locator('#decklist'))
+    .not.toHaveValue(new RegExp(card.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  await expect(page.locator('#status')).toContainText(`Removed ${card}`);
+  await expect(page.locator('#pieces .panel-count')).not.toHaveText(before);
+
+  // …and the cut survives a reload, like every other edit to the list.
+  await page.reload();
+  await expect(page.locator('#decklist'))
+    .not.toHaveValue(new RegExp(card.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });
 
 test('a section stays closed across a search', async ({ page }) => {
   await pasteDeck(page);
   await search(page);
 
-  const head = page.getByRole('button', { name: /Cards carrying your combos/ });
+  const head = page.getByRole('button', { name: /Suggested additions/ });
   await head.click();
   await expect(head).toHaveAttribute('aria-expanded', 'false');
 
   await page.getByRole('button', { name: 'Find combos' }).click();
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
   // Closed sections are remembered, so a new search does not reopen everything
   // the reader just tidied away.
-  await expect(page.getByRole('button', { name: /Cards carrying your combos/ }))
+  await expect(page.getByRole('button', { name: /Suggested additions/ }))
     .toHaveAttribute('aria-expanded', 'false');
 });
 
@@ -170,9 +210,7 @@ test('a combo row fetches and shows how the combo is actually executed', async (
   await pasteDeck(page);
   await search(page);
 
-  const row = page.locator('#included .combo')
-    .filter({ has: page.locator('a[href*="/combo/1/"]') });
-  await expect(row).toHaveCount(1);
+  const row = await openCombo(page, '/combo/1/');
 
   // Nothing is fetched until it is asked for — the entire reason the steps are
   // not in the download.
@@ -213,9 +251,7 @@ test('a combo with no published steps says so and keeps the link', async ({ page
   await pasteDeck(page);
   await search(page);
 
-  const row = page.locator('#included .combo')
-    .filter({ has: page.locator('a[href*="/combo/6/"]') });
-  await expect(row).toHaveCount(1);
+  const row = await openCombo(page, '/combo/6/');
 
   await row.locator('.steps-toggle').click();
   const panel = row.locator('.steps');
@@ -252,7 +288,7 @@ test('choosing a deck file fills the box and says what arrived', async ({ page }
   // And it behaves exactly like a paste from here on — the point of putting the
   // text in the box rather than searching straight off the file.
   await search(page);
-  await expect(page.locator('#included .combo').first()).toBeVisible();
+  await expect(page.locator('#pieces .combo').first()).toBeVisible();
 });
 
 // A .txt extension is a claim; the contents are the evidence. A binary file read

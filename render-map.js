@@ -45,7 +45,7 @@
   // The trap is *when* it is read. Reading any geometry property flushes pending
   // style and layout for the whole document, and renderGraph() runs in the middle
   // of a render that has just rebuilt "Combos in your deck" — so the read laid the
-  // page out, and the pieces and suggestions panels then added ~78,000 more nodes
+  // page out, and the suggestions panel then added ~78,000 more nodes
   // and it was laid out again before paint. Two full layouts, and the first bought
   // nothing but a number. On a 520-combo deck at 390px with the CPU throttled 4x it
   // was 601ms of a 3,620ms search: the single most expensive line on the page.
@@ -477,7 +477,7 @@
       body.appendChild(el('p', 'note',
         'Showing the ' + graph.nodes.length + ' cards in the most combos. '
         + graph.omitted + ' more take part in your combos and are listed under '
-        + '“Cards carrying your combos”.'));
+        + '“Combos in your deck”.'));
     }
   }
 

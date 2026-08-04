@@ -1,10 +1,10 @@
 // The combo map: your deck's combos as a picture rather than a list.
 //
 // A node is one of your cards; a line joins two cards whenever a combo needs
-// both of them. That is the one thing the panels above cannot show — "Combos in
-// your deck" reads a row at a time, and "Cards carrying your combos" counts a
-// card at a time, so neither says that six of your combos all hang off the same
-// two cards, or that the deck holds two clusters that never touch.
+// both of them. That is the one thing the panel above cannot show — "Combos in
+// your deck" counts a card at a time, so it never says that six of your combos
+// all hang off the same two cards, or that the deck holds two clusters that
+// never touch.
 //
 // Nothing here draws anything. This file turns combos into a graph and places
 // that graph on a canvas; app.js renders the result as SVG. The split is so the
@@ -120,7 +120,7 @@
     const comboCards = [];
 
     for (const variant of variants || []) {
-      // The same set "Cards carrying your combos" counts: the cards a combo
+      // The same set "Combos in your deck" counts: the cards a combo
       // names, plus whichever of yours filled each of its template slots. A card
       // holding a combo up through a slot is joined to the rest of it like any
       // other — that is what it is doing.
