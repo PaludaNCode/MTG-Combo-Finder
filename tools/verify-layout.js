@@ -1010,6 +1010,26 @@ function measure(win, doc) {
     title: includedPanel ? includedPanel.querySelector('.panel-title').textContent : null,
     rows: doc.querySelectorAll('#pieces .panel-body > .combo.suggestion').length,
     note: (doc.querySelector('#pieces .panel-note') || {}).textContent || '',
+    // Every panel that opens with a caption, measured as boxes rather than trusted by
+    // class name: two classes can agree in the markup and still lay out differently, and
+    // what matters is whether a reader sees one kind of caption or three. The map's is
+    // the oldest and longest, so it is the shape the others answer to.
+    //
+    // No backticks in this comment or anywhere else in here: the whole function lives
+    // inside the HARNESS template literal, and one in a comment ends it.
+    notes: ['graph', 'pieces', 'unofficial'].map(function (id) {
+      const p = doc.querySelector('#' + id + ' .panel-note');
+      if (!p) return { panel: id, missing: true };
+      const r = p.getBoundingClientRect();
+      const cs = win.getComputedStyle(p);
+      return {
+        panel: id,
+        left: Math.round(r.left),
+        width: Math.round(r.width),
+        size: cs.fontSize,
+        colour: cs.color,
+      };
+    }).filter(function (n) { return !n.missing; }),
     // Every distinct published combo the panel reaches, counted off the hrefs rather
     // than off the rows: a combo appears once under each of its cards, so the rows
     // outnumber the combos and only the set of ids can be compared with the badge. Our
@@ -1622,21 +1642,19 @@ async function runUnofficial(vp) {
         //
         // No backticks in here, deliberately: this whole function is inside the HARNESS
         // template literal, and one in a comment ends it.
-        notes: (() => {
-          const box = (sel) => {
-            const p = doc.querySelector(sel);
-            if (!p) return null;
-            const r = p.getBoundingClientRect();
-            const cs = win.getComputedStyle(p);
-            return {
-              left: Math.round(r.left),
-              width: Math.round(r.width),
-              size: cs.fontSize,
-              colour: cs.color,
-            };
+        notes: ['graph', 'pieces', 'unofficial'].map(function (id) {
+          const p = doc.querySelector('#' + id + ' .panel-note');
+          if (!p) return { panel: id, missing: true };
+          const r = p.getBoundingClientRect();
+          const cs = win.getComputedStyle(p);
+          return {
+            panel: id,
+            left: Math.round(r.left),
+            width: Math.round(r.width),
+            size: cs.fontSize,
+            colour: cs.color,
           };
-          return { pieces: box('#pieces .panel-note'), unofficial: box('#unofficial .panel-note') };
-        })(),
+        }).filter(function (n) { return !n.missing; }),
         overflow: doc.documentElement.scrollWidth > vp.width,
       },
     };
@@ -2294,7 +2312,41 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       continue;
     }
 
-    // The unofficial run is about a claim, not a layout: that the page keeps our
+    // Every panel that opens with a caption has to draw the same kind of caption: same left
+// edge, same measure, same size. Three panels do — the map, "Combos in your deck" and the
+// unofficial rows — and they arrived at different times, so the drift this catches is the
+// realistic one: a rule aimed at one of them that the others never got. The map's caption
+// is the oldest and longest and is therefore the shape the others answer to.
+//
+// A pixel of tolerance on the width rather than equality: these resolve against each
+// panel's own metrics and need only agree to the eye.
+function captionDrift(notes) {
+  const seen = notes || [];
+  if (seen.length < 2) return [];
+  const first = seen[0];
+  const wrong = [];
+  for (const n of seen.slice(1)) {
+    if (n.left !== first.left) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions start at different x `
+        + `(${n.left}px vs ${first.left}px)`);
+    }
+    if (Math.abs(n.width - first.width) > 1) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions are different widths `
+        + `(${n.width}px vs ${first.width}px)`);
+    }
+    if (n.size !== first.size) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions are set at different sizes `
+        + `(${n.size} vs ${first.size})`);
+    }
+    if (n.colour !== first.colour) {
+      wrong.push(`the ${n.panel} and ${first.panel} captions are different colours `
+        + `(${n.colour} vs ${first.colour})`);
+    }
+  }
+  return wrong;
+}
+
+// The unofficial run is about a claim, not a layout: that the page keeps our
     // own combos visibly apart from Commander Spellbook's and shows the working
     // for each. Every assertion here is something that, if it broke, would leave
     // a reader believing Spellbook had published something it had not.
@@ -2309,24 +2361,14 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       if (!u.unofficialIsBelow) wrong.push('the unofficial panel is not below the published one');
       if (u.officialRows) wrong.push(`${u.officialRows} combos leaked into the published panel`);
       if (!u.officialEmpty) wrong.push('the published panel does not say it found nothing');
-      // The two panels' opening sentences, side by side down the page. Same left edge and
-      // same measure, or one of them reads as a different kind of thing than the other.
-      const n = u.notes || {};
-      if (!n.pieces) wrong.push('"Combos in your deck" has no opening sentence');
-      else if (!n.unofficial) wrong.push('the unofficial panel has no opening sentence');
-      else {
-        if (n.pieces.left !== n.unofficial.left) {
-          wrong.push(`the two panel notes start at different x (${n.pieces.left}px vs ${n.unofficial.left}px)`);
-        }
-        // A pixel of tolerance, not equality: 62ch resolves against each panel's own
-        // font metrics and the two need only agree to the eye.
-        if (Math.abs(n.pieces.width - n.unofficial.width) > 1) {
-          wrong.push(`the two panel notes are different widths (${n.pieces.width}px vs ${n.unofficial.width}px)`);
-        }
-        if (n.pieces.size !== n.unofficial.size) {
-          wrong.push(`the two panel notes are set at different sizes (${n.pieces.size} vs ${n.unofficial.size})`);
-        }
+      // Both panels open with a caption here — the map does not draw for this deck, which
+      // has nothing published — and the two have to be the same kind of thing.
+      const notes = u.notes || [];
+      const want = ['pieces', 'unofficial'];
+      for (const id of want) {
+        if (!notes.some((n) => n.panel === id)) wrong.push(`the ${id} panel has no opening caption`);
       }
+      wrong.push(...captionDrift(notes));
       // ...and it has to show its working, or it is just an assertion on screen.
       if (!['verified', 'derived'].includes(u.badge)) wrong.push(`no confidence badge: "${u.badge}"`);
       if (!(u.badgeClass || '').includes(u.badge)) wrong.push('the badge is not styled by its confidence');
@@ -2376,7 +2418,7 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
       } else {
         console.log(`ok   ${v.name} — ${u.rows} row [${u.badge}] ${u.cards.join(' + ')}, `
           + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty, `
-          + `both notes at x=${n.pieces.left}px × ${n.pieces.width}px ${n.pieces.size}`);
+          + `${notes.length} captions at x=${notes[0].left}px × ${notes[0].width}px ${notes[0].size}`);
       }
       continue;
     }
@@ -3040,6 +3082,17 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     if (!inc.note.includes(`carried by ${inc.rows} of your card`)) {
       problems.push(`the panel draws ${inc.rows} cards and its note does not say so: "${inc.note}"`);
     }
+    // All three captions on one page, measured against each other. The map draws here, so
+    // this is the run where the full set is available — see captionDrift().
+    const captions = inc.notes || [];
+    // The two this deck always draws. The unofficial panel is absent for decks with no
+    // rows of ours, so it is not required here — but if it is on the page, captionDrift()
+    // has already measured it with the others.
+    for (const id of ['graph', 'pieces']) {
+      if (!captions.some((n) => n.panel === id)) problems.push(`the ${id} panel has no opening caption`);
+    }
+    problems.push(...captionDrift(captions));
+
     // Ranked by what cutting a card costs, which is the reason these rows are in this
     // order and the only thing on the page that says so is the order itself.
     for (let i = 1; i < inc.ranking.length; i += 1) {
