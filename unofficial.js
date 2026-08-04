@@ -9915,6 +9915,203 @@
         'Infinite sacrifice triggers',
       ],
     },
+
+    // ---- Light of Promise, where the counter only ever had to land on one creature ----
+    //
+    // Asked because a reader looked at a deck holding Archangel of Thune and Heroic Feast
+    // and said Light of Promise should be in more combos than it is. At the database level
+    // that is not true — Spellbook publishes it in 357 combos against Archangel's 347 — but
+    // the two lists are not the same list, and 85 shapes name one of those peers and not the
+    // Aura. These are the fourteen of them where the swap is exact.
+    //
+    // What the three cards actually say, which is the whole of the argument:
+    //
+    //   Archangel of Thune  "Whenever you gain life, put a +1/+1 counter on each creature
+    //                        you control."          one counter, every creature
+    //   Heroic Feast        "Whenever you gain life, choose up to that many target creatures
+    //                        you control. Put a +1/+1 counter on each of them."
+    //                                               one counter each, that many creatures
+    //   Light of Promise    "Enchanted creature has 'Whenever you gain life, put that many
+    //                        +1/+1 counters on this creature.'"
+    //                                               that many counters, one creature
+    //
+    // So the Aura is the narrowest of the three, and these loops never needed the width: a
+    // token enters, the gainer turns that into one life, the life turns into a counter on the
+    // one creature whose counters make the next token. One life, one counter, one creature —
+    // where all three read alike.
+    //
+    // The receivers are the three cards that read "whenever one or more +1/+1 counters are put
+    // on this creature" and answer with a token: Scurry Oak (a 1/1 Squirrel), Herd Baloth (a
+    // 4/4 Beast) and Basking Broodscale (an Eldrazi Spawn, which also taps for mana and is why
+    // those rows produce infinite colourless). The gainers are the five that read "whenever
+    // another creature you control enters, you gain 1 life" — Aunt May, Virulent Emissary,
+    // Guide of Souls, Elas il-Kor and Bogwater Lumaret.
+    //
+    // **The Kitchen Finks family is ruled out, and it is fifteen of the shapes.** There the
+    // counter has to land on a creature that just died and came back under persist, and an
+    // Aura on a creature that dies goes to the graveyard with it — one lap, then nothing. That
+    // is the rule for every one of these: the Aura works exactly as long as its creature stays
+    // on the battlefield. research-log.js records the fifteen by name.
+    //
+    // `derived` rather than `verified` on the rows whose gainer is Aunt May, Virulent Emissary
+    // or Guide of Souls: those three came from Forge's card script rather than Scryfall, which
+    // was refused at CONNECT, so the wording behind them is Forge's. The Cache card text
+    // workflow was triggered for them and had not landed. Everything else here is Scryfall's,
+    // out of card-text.json.
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Aunt May'],
+      confidence: 'derived',
+      from: {
+        id: '2919-4186-6823',
+        cards: ['Archangel of Thune', 'Scurry Oak', 'Aunt May'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Scurry Oak. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Aunt May'],
+      confidence: 'derived',
+      from: {
+        id: '2919-3197-6823',
+        cards: ['Archangel of Thune', 'Herd Baloth', 'Aunt May'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Herd Baloth. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Aunt May'],
+      confidence: 'derived',
+      from: {
+        id: '5641-6823-7743',
+        cards: ['Heroic Feast', 'Basking Broodscale', 'Aunt May'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Virulent Emissary'],
+      confidence: 'derived',
+      from: {
+        id: '4186-7173-7743',
+        cards: ['Heroic Feast', 'Scurry Oak', 'Virulent Emissary'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Virulent Emissary'],
+      confidence: 'derived',
+      from: {
+        id: '3197-7173-7743',
+        cards: ['Heroic Feast', 'Herd Baloth', 'Virulent Emissary'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Guide of Souls'],
+      confidence: 'derived',
+      from: {
+        id: '4186-5870-7743',
+        cards: ['Heroic Feast', 'Scurry Oak', 'Guide of Souls'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite energy counters', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Guide of Souls'],
+      confidence: 'derived',
+      from: {
+        id: '3197-5870-7743',
+        cards: ['Heroic Feast', 'Herd Baloth', 'Guide of Souls'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite energy counters', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Guide of Souls'],
+      confidence: 'derived',
+      from: {
+        id: '2919-5641-5870',
+        cards: ['Archangel of Thune', 'Basking Broodscale', 'Guide of Souls'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Basking Broodscale. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite LTB', 'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana', 'Infinite +1/+1 counters on a creature', 'Infinite energy counters'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-2919-4186',
+        cards: ['Archangel of Thune', 'Scurry Oak', 'Elas il-Kor, Sadistic Pilgrim'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Scurry Oak. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-2919-3197',
+        cards: ['Archangel of Thune', 'Herd Baloth', 'Elas il-Kor, Sadistic Pilgrim'],
+      },
+      swap: { out: 'Archangel of Thune', in: 'Light of Promise', inId: 338 },
+      why: "Archangel spreads one counter over every creature you control; the Aura puts \"that many\" on the one it enchants, and the loop only ever needed the counter on Herd Baloth. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite ETB', 'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite creature tokens', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Elas il-Kor, Sadistic Pilgrim'],
+      confidence: 'verified',
+      from: {
+        id: '2811-5641-7743',
+        cards: ['Heroic Feast', 'Basking Broodscale', 'Elas il-Kor, Sadistic Pilgrim'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite sacrifice triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Scurry Oak', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '4186-7399-7743',
+        cards: ['Heroic Feast', 'Scurry Oak', 'Bogwater Lumaret'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Scurry Oak: the gainer sees a 1/1 Squirrel enter, that life becomes a counter on Scurry Oak, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Herd Baloth', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '3197-7399-7743',
+        cards: ['Heroic Feast', 'Herd Baloth', 'Bogwater Lumaret'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Herd Baloth: the gainer sees a 4/4 Beast enter, that life becomes a counter on Herd Baloth, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers'],
+    },
+    {
+      cards: ['Light of Promise', 'Basking Broodscale', 'Bogwater Lumaret'],
+      confidence: 'verified',
+      from: {
+        id: '5641-7399-7743',
+        cards: ['Heroic Feast', 'Basking Broodscale', 'Bogwater Lumaret'],
+      },
+      swap: { out: 'Heroic Feast', in: 'Light of Promise', inId: 338 },
+      why: "Heroic Feast targets up to that many creatures for one counter each; the Aura puts that many on the one it enchants, which for a one-life trigger is the same counter in the same place. Enchant Basking Broodscale: the gainer sees an Eldrazi Spawn enter, that life becomes a counter on Basking Broodscale, and the counter makes the next token. Nothing in the loop leaves the battlefield, so the Aura stays attached — which is what separates this family from the Kitchen Finks shapes, where it would fall off with the creature.",
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite ETB', 'Infinite LTB', 'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

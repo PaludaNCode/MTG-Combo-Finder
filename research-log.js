@@ -1106,8 +1106,161 @@ const PASSES = [
       + 'not "is there anything here" — the note at the top of this file says the answer is yes '
       + 'or nothing-recorded, and a two-card rule-out is silent about every third card.',
   },
+  {
+    subject: 'Light of Promise, against Archangel of Thune and Heroic Feast',
+    cards: [
+      'Light of Promise',
+      'Archangel of Thune',
+      'Heroic Feast',
+      'Scurry Oak',
+      'Herd Baloth',
+      'Basking Broodscale',
+      'Aunt May',
+      'Virulent Emissary',
+      'Guide of Souls',
+      'Elas il-Kor, Sadistic Pilgrim',
+      'Bogwater Lumaret',
+      'Lunarch Veteran // Luminous Phantom',
+      'Kitchen Finks',
+      'All Will Be One',
+      'Essence Warden',
+      'Soul Warden',
+    ],
+    cardIds: [338, 2919, 7743, 4186, 3197, 5641, 6823, 7173, 5870, 2811, 7399, 1939, 2086, 2390, 2741, 360],
+    date: '2026-08-04',
+    method:
+      'A reader holding Archangel of Thune and Heroic Feast said Light of Promise should be in '
+      + 'more combos than it is, and named those two as the peers to migrate from. THE PREMISE IS '
+      + 'FALSE AT THE DATABASE LEVEL AND THAT GOES FIRST: Spellbook publishes Light of Promise in '
+      + "357 combos against Archangel's 347 and Heroic Feast's 167, so the Aura is the best "
+      + 'covered of the three. What is true is that the lists are not the same list — 65 shapes '
+      + 'name Archangel and not the Aura, 20 name Heroic Feast and not the Aura. This pass took '
+      + 'the 45 of those 85 that are three-card shapes and left the 40 four-card ones.',
+    read: {
+      'Light of Promise':
+        'Enchant creature\n'
+        + 'Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature."',
+      'Archangel of Thune':
+        'Flying\n'
+        + 'Lifelink (Damage dealt by this creature also causes you to gain that much life.)\n'
+        + 'Whenever you gain life, put a +1/+1 counter on each creature you control.',
+      'Heroic Feast':
+        'When this enchantment enters, create a Food token. (It\'s an artifact with "{2}, {T}, '
+        + 'Sacrifice this token: You gain 3 life.")\n'
+        + 'Whenever you gain life, choose up to that many target creatures you control. Put a '
+        + '+1/+1 counter on each of them.',
+      'Scurry Oak':
+        'Evolve (Whenever a creature you control enters, if that creature has greater power or '
+        + 'toughness than this creature, put a +1/+1 counter on this creature.)\n'
+        + 'Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 '
+        + 'green Squirrel creature token.',
+      'Herd Baloth':
+        'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 '
+        + 'green Beast creature token.',
+      'Basking Broodscale':
+        'Devoid (This card has no color.)\n'
+        + '{1}{G}: Adapt 1. (If this creature has no +1/+1 counters on it, put a +1/+1 counter on it.)\n'
+        + 'Whenever one or more +1/+1 counters are put on this creature, you may create a 0/1 '
+        + 'colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}."',
+      'Aunt May':
+        'Whenever another creature you control enters, you gain 1 life. If it\'s a Spider, put '
+        + 'a +1/+1 counter on it.',
+      'Virulent Emissary':
+        'Deathtouch\n'
+        + 'Whenever another creature you control enters, you gain 1 life.',
+      'Guide of Souls':
+        'Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter).\n'
+        + 'Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a '
+        + 'flying counter on target attacking creature. It becomes an Angel in addition to its '
+        + 'other types.',
+      'Elas il-Kor, Sadistic Pilgrim':
+        'Deathtouch\n'
+        + 'Whenever another creature you control enters, you gain 1 life.\n'
+        + 'Whenever another creature you control dies, each opponent loses 1 life.',
+      'Bogwater Lumaret':
+        'Whenever this creature or another creature you control enters, you gain 1 life.',
+      'Lunarch Veteran // Luminous Phantom':
+        'Whenever another creature you control enters, you gain 1 life.\n'
+        + 'Disturb {1}{W} (You may cast this card from your graveyard transformed for its disturb cost.)\n'
+        + '// Luminous Phantom: Flying\n'
+        + 'Whenever another creature you control leaves the battlefield, you gain 1 life.\n'
+        + 'If Luminous Phantom would be put into a graveyard from anywhere, exile it instead.',
+      'Kitchen Finks':
+        'When Kitchen Finks enters, you gain 2 life.\n'
+        + 'Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the '
+        + "battlefield under its owner's control with a -1/-1 counter on it.)",
+      'All Will Be One':
+        'Whenever you put one or more counters on a permanent or player, All Will Be One deals '
+        + 'that much damage to target opponent, creature an opponent controls, or planeswalker '
+        + 'an opponent controls.',
+      'Essence Warden': 'Whenever another creature enters, you gain 1 life.',
+      'Soul Warden': 'Whenever another creature enters, you gain 1 life.',
+    },
+    proposed: 85,
+    examined: 45,
+    kept: 14,
+    ruledOut: [
+      {
+        reason:
+          'THE AURA DIES WITH THE CREATURE, AND PERSIST IS A CREATURE DYING. Fifteen of the '
+          + 'forty-five are Kitchen Finks plus a free sacrifice outlet, and the counter in that '
+          + 'loop has to land on the Finks that just came back: persist returns it with a -1/-1 '
+          + 'counter, and the +1/+1 from the lifegain trigger is what annihilates that counter so '
+          + 'it can persist again. Archangel of Thune and Heroic Feast do that from outside the '
+          + 'creature. Light of Promise is an Aura ON the Finks, so when the Finks dies the Aura '
+          + 'goes to the graveyard with it and the second lap has no engine. One lap is not a '
+          + 'combo. This is the general rule for the card rather than a fact about Kitchen Finks '
+          + '— the Aura works exactly as long as its creature stays on the battlefield, which is '
+          + 'why every one of the fourteen rows kept is a loop where nothing leaves it.',
+        count: 15,
+        sets: [
+        ['Light of Promise', 'Kitchen Finks', 'Umbral Collar Zealot'],
+        ['Light of Promise', 'Kitchen Finks', 'Phantom Train'],
+        ['Light of Promise', 'Kitchen Finks', 'Thermopod'],
+        ['Light of Promise', 'Kitchen Finks', 'Yahenni, Undying Partisan'],
+        ['Light of Promise', 'Kitchen Finks', 'Woe Strider'],
+        ['Light of Promise', 'Kitchen Finks', 'Shilgengar, Sire of Famine'],
+        ['Light of Promise', 'Kitchen Finks', 'Phyrexian Altar'],
+        ['Light of Promise', 'Kitchen Finks', 'Viscera Seer'],
+        ['Light of Promise', 'Kitchen Finks', 'Carrion Feeder'],
+        ['Light of Promise', 'Kitchen Finks', 'Bloodflow Connoisseur'],
+        ['Light of Promise', 'Kitchen Finks', 'Goblin Bombardment'],
+        ['Light of Promise', 'Kitchen Finks', 'Blasting Station'],
+        ['Light of Promise', 'Kitchen Finks', 'Bartolomé del Presidio'],
+        ['Light of Promise', 'Kitchen Finks', "Ashnod's Altar"],
+        ['Light of Promise', 'Kitchen Finks', 'Altar of Dementia'],
+        ],
+      },
+    ],
+    notes:
+      'WHAT WAS KEPT: fourteen rows, all one shape. A receiver that reads "whenever one or more '
+      + '+1/+1 counters are put on this creature" and answers with a token (Scurry Oak, Herd '
+      + 'Baloth, Basking Broodscale), a gainer that reads "whenever another creature you control '
+      + 'enters, you gain 1 life" (Aunt May, Virulent Emissary, Guide of Souls, Elas il-Kor, '
+      + 'Bogwater Lumaret), and the Aura on the receiver. One life, one counter, one creature, '
+      + 'which is where all three peers read alike: Archangel spreads one counter over every '
+      + 'creature, Heroic Feast one counter over that many creatures, the Aura that many counters '
+      + 'over one. The fifteenth pair in the family, Basking Broodscale + Lunarch Veteran, WAS '
+      + 'ALREADY A ROW here — the method landing on a row somebody else had already written is '
+      + 'the closest thing to a control this file has.\n\n'
+      + 'LEFT OPEN, NOT RULED OUT: nine three-card shapes and the forty four-card ones. Eight of '
+      + 'the nine are All Will Be One plus enchantment animation or recursion — Starfield of Nyx, '
+      + 'Opalescence, Saheeli, Radiant Creator, Captain Rex Nebula, Bello, Bard of the Brambles, '
+      + "Relive the Past, Dance of the Manse, Abuelo's Awakening — and the ninth is Pestilence "
+      + "Demon + K'rrik, Son of Yawgmoth. All Will Be One's own text is recorded above and its "
+      + 'damage goes to an opponent rather than to you, so where the lifegain restarts is exactly '
+      + 'the thing that needs reading; the other halves were not read. A shape whose loop nobody '
+      + 'has traced is not a rule-out, and `sets` deliberately does not claim it.\n\n'
+      + 'PROVENANCE, BECAUSE IT DECIDES THE CONFIDENCE ON EIGHT ROWS. Aunt May, Virulent '
+      + 'Emissary, Guide of Souls, Heroic Feast, Kitchen Finks, Lunarch Veteran and All Will Be '
+      + "One came from Forge's card scripts: every Scryfall host is refused at CONNECT from this "
+      + 'sandbox. The Cache card text workflow was dispatched for them and had not landed when '
+      + 'these rows were written, so the eight rows whose gainer is one of the Forge-read three '
+      + 'are `derived` rather than `verified`. Everything the argument turns on for the other six '
+      + 'rows — Light of Promise, Archangel of Thune, Scurry Oak, Herd Baloth, Basking '
+      + "Broodscale, Elas il-Kor, Bogwater Lumaret — is Scryfall's wording out of card-text.json.",
+  },
 ];
-
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
 function sweptCards() {
   const out = new Map();
