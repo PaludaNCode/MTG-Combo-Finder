@@ -36,6 +36,71 @@
     return node;
   }
 
+  // ---- how wide the column is, without asking mid-render -------------------
+  //
+  // The layout needs this column's width — the SVG is scaled into it, so a dot's
+  // size in canvas units depends on it, and it cannot be read off the window
+  // because at 1000px the page is two columns and this is not the wider one.
+  //
+  // The trap is *when* it is read. Reading any geometry property flushes pending
+  // style and layout for the whole document, and renderGraph() runs in the middle
+  // of a render that has just rebuilt "Combos in your deck" — so the read laid the
+  // page out, and the pieces and suggestions panels then added ~78,000 more nodes
+  // and it was laid out again before paint. Two full layouts, and the first bought
+  // nothing but a number. On a 520-combo deck at 390px with the CPU throttled 4x it
+  // was 601ms of a 3,620ms search: the single most expensive line on the page.
+  //
+  // Moving the read earlier does not fix it and was measured doing the opposite —
+  // on a re-search the previous render is still in the document, so an early read
+  // flushes a *larger* tree. The fix is not to read synchronously at all: a
+  // ResizeObserver's callback runs after layout, where the width is already known
+  // and costs nothing, so the render path reads a cached number instead.
+  //
+  // The fallback matters and is not dead code. The first search on a fresh page has
+  // no observation yet — the section was `hidden` until a moment ago, and the
+  // observer has not been called — so that one render reads the width the old way
+  // and pays for it once. It is also what a browser with no ResizeObserver gets.
+  let cachedWidth = 0;
+  let observer = null;
+
+  function watchWidth(node) {
+    if (typeof ResizeObserver !== 'function') return;
+    if (!observer) {
+      observer = new ResizeObserver((entries) => {
+        const entry = entries[entries.length - 1];
+        // The border box, and not `contentRect`, because the number this replaces was
+        // `clientWidth`: .panel-body carries 1rem of side padding, which contentRect
+        // excludes and clientWidth includes, so contentRect would quietly draw every
+        // map 32px narrower than it used to be. The two agree here because .panel-body
+        // has padding and no border — clientWidth is the padding box, and with no
+        // border that is the border box.
+        //
+        // Taken off the entry rather than by reading `target.clientWidth`, which would
+        // also have been correct and free at this point in the frame. The reason is the
+        // check in tools/verify-layout.js: it guards this fix by counting reads of
+        // clientWidth during a search, and an observer that reads it is two counts of
+        // noise in a guard whose whole value is that zero means zero.
+        const box = entry.borderBoxSize && entry.borderBoxSize[0];
+        const w = box ? box.inlineSize : 0;
+        if (w > 0) cachedWidth = w;
+        // No usable entry geometry — leave the cache alone rather than guess. The
+        // render path's own fallback reads the width directly and is still correct.
+      });
+    }
+    // panel() throws the body away and builds a new one on every search, so the
+    // observation has to move with it. The cached number carries over regardless:
+    // it describes the column, which has not changed.
+    observer.disconnect();
+    observer.observe(node);
+  }
+
+  // A width to lay the map out in: the cached one when there is one, else the
+  // reader's own — which is the read this exists to avoid, taken deliberately.
+  function columnWidth(body) {
+    watchWidth(body);
+    return cachedWidth > 0 ? cachedWidth : body.clientWidth;
+  }
+
   // What the lines mean, in the lines themselves. Two kinds of relation on one
   // picture is one more than a reader can be expected to infer, and the dashes
   // are the half that is not guessable: a dashed line between two cards that are
@@ -140,7 +205,11 @@
     // The canvas grows with the deck — 28 cards in the box that suits 8 is a knot
     // — and turns portrait on a phone, where a landscape one wastes the screen
     // twice over.
-    ComboGraph.layout(graph, ComboGraph.sizeFor(graph.nodes.length, body.clientWidth));
+    //
+    // columnWidth() rather than body.clientWidth: same number, but taken from a
+    // ResizeObserver instead of forcing a layout in the middle of the render. See
+    // the note above it — this one property read was 601ms of a 3,620ms search.
+    ComboGraph.layout(graph, ComboGraph.sizeFor(graph.nodes.length, columnWidth(body)));
     // The layout hands back the box it actually used, which is the one to draw
     // in: the canvas it was given is working space, and whatever it did not need
     // would otherwise be empty screen around the picture.

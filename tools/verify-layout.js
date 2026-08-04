@@ -1545,6 +1545,25 @@ function runOne(vp) {
           // worse than no picture — it says the added card is in no combos.
           mapBefore: before.map ? before.map.dots.length : 0,
         };
+        // The map's column width used to be read as body.clientWidth in the middle of
+        // the render. Reading a geometry property flushes style and layout for the whole
+        // document, and this one ran after "Combos in your deck" had been rebuilt and
+        // before the pieces and suggestions panels went in — so the page was laid out
+        // twice per search, and the first one bought nothing but a number. On a
+        // 520-combo deck at 390px with the CPU throttled 4x it was 601ms of a 3,620ms
+        // search. It comes off a ResizeObserver now, where layout is already settled.
+        //
+        // A count and not a duration, because a regression here is invisible twice over:
+        // the page draws exactly the same map, and a timing threshold on a shared runner
+        // is a flake. render-map.js:columnWidth() holds the only synchronous read of this
+        // property in the shipped page, and on a re-search it must not be reached at all
+        // — the cache is warm by now, and the fallback is for the first search only.
+        const widthDesc = Object.getOwnPropertyDescriptor(win.Element.prototype, 'clientWidth');
+        let widthReads = 0;
+        Object.defineProperty(win.Element.prototype, 'clientWidth', {
+          configurable: true,
+          get: function () { widthReads += 1; return widthDesc.get.call(this); },
+        });
         if (addBtn) {
           addBtn.click();
           // Wait for the count to move rather than for a guessed interval: the whole
@@ -1560,6 +1579,10 @@ function runOne(vp) {
             await new Promise((r) => setTimeout(r, 50));
           }
           await new Promise((r) => setTimeout(r, 120));
+          // Read before measure(), which reads geometry everywhere by design and would
+          // swamp the count. renderResults() is synchronous, so by the time the badge
+          // above was seen to move the whole re-search has already been drawn.
+          afterAdd.widthReads = widthReads;
           const now = measure(win, doc);
           // The escape is doubled because this whole harness is a template literal
           // in tools/verify-layout.js: a lone \\n would become a real newline here
@@ -1585,6 +1608,8 @@ function runOne(vp) {
           const kept = win.localStorage.getItem('mtg-combo-finder.deck');
           afterAdd.kept = kept ? JSON.parse(kept).decklist : '';
         }
+        // Put the real accessor back before anything else measures the page.
+        Object.defineProperty(win.Element.prototype, 'clientWidth', widthDesc);
 
         // The decklist is kept between visits, so a search has to have stored
         // it — and Clear has to actually empty it, list and copy both.
@@ -2726,6 +2751,15 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
           + `${added.mapAfter} after — it was not rebuilt`);
       }
       if (!added.mapHasCard) problems.push(`${added.card} was added but is not on the map`);
+      // …and it was redrawn without forcing a layout to find out how wide to draw.
+      // See the note beside widthReads in the harness: the old read cost 601ms of a
+      // 3,620ms search on a phone, and nothing about the picture says whether it is
+      // back. Any number above zero here means a synchronous geometry read has
+      // returned to the render path.
+      if (added.widthReads !== 0) {
+        problems.push(`redrawing the map read clientWidth ${added.widthReads} time(s) during the `
+          + 'search — that flushes layout for the whole document; see columnWidth() in render-map.js');
+      }
     }
 
     // The decklist is the whole input; losing it on reload is the one thing a

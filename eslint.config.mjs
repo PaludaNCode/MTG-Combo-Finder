@@ -36,6 +36,10 @@ const BROWSER = {
   TextEncoder: 'readonly',
   TextDecoder: 'readonly',
   Event: 'readonly',
+  // How render-map.js learns the map column's width without forcing a layout in
+  // the middle of a render. Guarded at the call site, so a browser without one
+  // falls back to reading the width directly.
+  ResizeObserver: 'readonly',
   setTimeout: 'readonly',
   clearTimeout: 'readonly',
   atob: 'readonly',
