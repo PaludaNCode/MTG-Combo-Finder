@@ -46,6 +46,13 @@ npx serve .                                      # any static file server works
 - **`npm run verify` is not optional after a UI change.** It renders the real page at
   390/768/1440/1920px and catches what a screenshot cannot: a map with every node at one point is
   valid SVG and an empty panel.
+- **Skip `verify` when the diff is docs only** — it costs ~2 minutes and it launches a browser to
+  re-measure a page the diff cannot have touched. "Docs only" means every changed path is `*.md`:
+  one `.js`, `.css`, `.html`, `.yml` or fixture in the diff and it is not docs only, including a
+  comment-only change to one. `git diff --name-only origin/main... | grep -v '\.md$'` empty is the
+  test. CI runs it regardless, so this is about not paying twice, and if in doubt run it.
+- **Don't sleep waiting for CI.** Runs here take 102–112s; sleeping 190–240s wasted 12.4 minutes
+  across six PRs. Poll at ~110s.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   `check:readme` anchors on the README so nothing watched it →
   `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
@@ -375,6 +382,29 @@ on something too loose.
 - **Outstanding work is a GitHub issue and nothing else.** No backlog file, on purpose: a document
   that reads as a queue and is not one costs more than it says. Reasoning behind what shipped lives
   in the README section that owns it.
+
+### Reporting what you did
+
+**Check it yourself, then say what you checked.** A claim with a command behind it beats a
+confident sentence, and most rules in this file exist because something untested read as fine.
+
+**Never confirm a deploy from the Actions API.** `actions_list` returns ~395 KB a call here —
+five of them to read ten lines — and a green deploy job still does not prove the CDN is serving
+the new bytes. **The footer does**, on both pages: `Build <sha> · deployed <YYYY-MM-DD HH:MM:SS
+UTC>`. So name the SHA that went out and point at the footer. Deploys are asynchronous and do not
+need waiting on: the reader compares seven characters on the page they already have open,
+whenever it lands. README § *The footer says which build it is and when that build arrived*.
+
+**A closing report, in order:**
+
+1. What changed, and where the reasoning lives — a `README §`, an issue number.
+2. What was run and what it said, in real numbers rather than "tests pass".
+3. What was *proved* rather than assumed: which check you broke on purpose to watch it fail. A
+   check nobody has seen fail is a check nobody has seen work.
+4. What to look at — the SHA pushed, and the footer to compare it against.
+5. What you skipped or left out, and why. **A check not run is not a check passed**, and
+   "CI is green" cannot stand in for a check CI does not run: `checks` never runs the deploy
+   workflow, so nothing verifies it until a push to `main`.
 
 ### Merging back into `main`
 
