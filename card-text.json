@@ -1,6 +1,6 @@
 {
  "generated": "2026-08-04",
- "count": 220,
+ "count": 248,
  "cards": {
   "Abby, Merciless Soldier": {
    "fetched": "2026-08-03",
@@ -177,6 +177,20 @@
     }
    ]
   },
+  "Aunt May": {
+   "fetched": "2026-08-04",
+   "name": "Aunt May",
+   "mana": "{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Citizen",
+     "oracle": "Whenever another creature you control enters, you gain 1 life. If it's a Spider, put a +1/+1 counter on it.",
+     "pt": "0/2"
+    }
+   ]
+  },
   "Barbarian Class": {
    "fetched": "2026-08-03",
    "name": "Barbarian Class",
@@ -301,6 +315,20 @@
      "types": "Creature — Vampire",
      "oracle": "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.",
      "pt": "0/1"
+    }
+   ]
+  },
+  "Blood Pet": {
+   "fetched": "2026-08-04",
+   "name": "Blood Pet",
+   "mana": "{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Thrull",
+     "oracle": "Sacrifice this creature: Add {B}.",
+     "pt": "1/1"
     }
    ]
   },
@@ -470,7 +498,7 @@
    ]
   },
   "Cleric Class": {
-   "fetched": "2026-08-03",
+   "fetched": "2026-08-04",
    "name": "Cleric Class",
    "mana": "{W}",
    "identity": "W",
@@ -533,6 +561,34 @@
     {
      "types": "World Enchantment",
      "oracle": "All creatures have haste."
+    }
+   ]
+  },
+  "Council of Reeds": {
+   "fetched": "2026-08-04",
+   "name": "Council of Reeds",
+   "mana": "{2}{U}",
+   "identity": "U",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Scientist Hero",
+     "oracle": "The \"legend rule\" doesn't apply to creatures you control.\nAt the beginning of combat on your turn, if you've cast a noncreature spell this turn, create a token that's a copy of Council of Reeds.",
+     "pt": "2/2"
+    }
+   ]
+  },
+  "Cryptic Trilobite": {
+   "fetched": "2026-08-04",
+   "name": "Cryptic Trilobite",
+   "mana": "{X}{X}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Trilobite",
+     "oracle": "This creature enters with X +1/+1 counters on it.\nRemove a +1/+1 counter from this creature: Add {C}{C}. Spend this mana only to activate abilities.\n{1}, {T}: Put a +1/+1 counter on this creature.",
+     "pt": "0/0"
     }
    ]
   },
@@ -849,6 +905,19 @@
     }
    ]
   },
+  "Enduring Renewal": {
+   "fetched": "2026-08-04",
+   "name": "Enduring Renewal",
+   "mana": "{2}{W}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Play with your hand revealed.\nIf you would draw a card, reveal the top card of your library instead. If it's a creature card, put it into your graveyard. Otherwise, draw a card.\nWhenever a creature is put into your graveyard from the battlefield, return it to your hand."
+    }
+   ]
+  },
   "Essence Warden": {
    "fetched": "2026-08-03",
    "name": "Essence Warden",
@@ -874,6 +943,20 @@
      "types": "Legendary Creature — Vampire Soldier",
      "oracle": "Flying\nSacrifice another creature or artifact: Put a +1/+1 counter on Evereth. If the sacrificed permanent was a Treasure, Evereth gains lifelink until end of turn. Activate only as a sorcery.\nWhen Evereth dies, you may pay {1}{B/R}. When you do, Evereth deals damage equal to its power to each opponent.",
      "pt": "2/2"
+    }
+   ]
+  },
+  "Evolution Witness": {
+   "fetched": "2026-08-04",
+   "name": "Evolution Witness",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Elf Shaman Mutant",
+     "oracle": "{1}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.)\nWhenever one or more +1/+1 counters are put on this creature, return target permanent card from your graveyard to your hand.",
+     "pt": "2/1"
     }
    ]
   },
@@ -1069,6 +1152,20 @@
     }
    ]
   },
+  "Good-Fortune Unicorn": {
+   "fetched": "2026-08-04",
+   "name": "Good-Fortune Unicorn",
+   "mana": "{1}{G}{W}",
+   "identity": "GW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Unicorn",
+     "oracle": "Whenever another creature you control enters, put a +1/+1 counter on that creature.",
+     "pt": "2/2"
+    }
+   ]
+  },
   "Grinding Station": {
    "fetched": "2026-08-04",
    "name": "Grinding Station",
@@ -1079,6 +1176,20 @@
     {
      "types": "Artifact",
      "oracle": "{T}, Sacrifice an artifact: Target player mills three cards.\nWhenever an artifact enters, you may untap this artifact."
+    }
+   ]
+  },
+  "Guide of Souls": {
+   "fetched": "2026-08-04",
+   "name": "Guide of Souls",
+   "mana": "{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Cleric",
+     "oracle": "Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter).\nWhenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a flying counter on target attacking creature. It becomes an Angel in addition to its other types.",
+     "pt": "1/2"
     }
    ]
   },
@@ -1190,6 +1301,19 @@
      "types": "Creature — Beast",
      "oracle": "Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 green Beast creature token.",
      "pt": "4/4"
+    }
+   ]
+  },
+  "Heroic Feast": {
+   "fetched": "2026-08-04",
+   "name": "Heroic Feast",
+   "mana": "{2}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "When this enchantment enters, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nWhenever you gain life, choose up to that many target creatures you control. Put a +1/+1 counter on each of them."
     }
    ]
   },
@@ -1363,6 +1487,34 @@
     }
    ]
   },
+  "Kirol, Attentive First-Year": {
+   "fetched": "2026-08-04",
+   "name": "Kirol, Attentive First-Year",
+   "mana": "{1}{R/W}{R/W}",
+   "identity": "RW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Vampire Cleric",
+     "oracle": "Tap two untapped creatures you control: Copy target triggered ability you control. You may choose new targets for the copy. Activate only once each turn.",
+     "pt": "3/3"
+    }
+   ]
+  },
+  "Kitchen Finks": {
+   "fetched": "2026-08-04",
+   "name": "Kitchen Finks",
+   "mana": "{1}{G/W}{G/W}",
+   "identity": "GW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Ouphe",
+     "oracle": "When this creature enters, you gain 2 life.\nPersist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+     "pt": "3/2"
+    }
+   ]
+  },
   "Kor Celebrant": {
    "fetched": "2026-08-03",
    "name": "Kor Celebrant",
@@ -1527,6 +1679,20 @@
     }
    ]
   },
+  "Marath, Will of the Wild": {
+   "fetched": "2026-08-04",
+   "name": "Marath, Will of the Wild",
+   "mana": "{R}{G}{W}",
+   "identity": "GRW",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Elemental Beast",
+     "oracle": "Marath enters with a number of +1/+1 counters on it equal to the amount of mana spent to cast it.\n{X}, Remove X +1/+1 counters from Marath: Choose one —\n• Put X +1/+1 counters on target creature. X can't be 0.\n• Marath deals X damage to any target. X can't be 0.\n• Create an X/X green Elemental creature token. X can't be 0.",
+     "pt": "0/0"
+    }
+   ]
+  },
   "Marionette Master": {
    "fetched": "2026-08-03",
    "name": "Marionette Master",
@@ -1654,6 +1820,32 @@
     }
    ]
   },
+  "Molten Echoes": {
+   "fetched": "2026-08-04",
+   "name": "Molten Echoes",
+   "mana": "{2}{R}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters, create a token that's a copy of that creature. That token gains haste. Exile it at the beginning of the next end step."
+    }
+   ]
+  },
+  "Mortuary": {
+   "fetched": "2026-08-04",
+   "name": "Mortuary",
+   "mana": "{3}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Whenever a creature is put into your graveyard from the battlefield, put that card on top of your library."
+    }
+   ]
+  },
   "Moss-Pit Skeleton": {
    "fetched": "2026-08-03",
    "name": "Moss-Pit Skeleton",
@@ -1721,6 +1913,19 @@
      "types": "Creature — Ooze",
      "oracle": "At the beginning of your upkeep, put a +1/+1 counter on this creature.\nAt the beginning of your end step, destroy each creature with mana value equal to the number of +1/+1 counters on this creature.\nDredge 2 (If you would draw a card, you may mill two cards instead. If you do, return this card from your graveyard to your hand.)",
      "pt": "1/1"
+    }
+   ]
+  },
+  "Necrosynthesis": {
+   "fetched": "2026-08-04",
+   "name": "Necrosynthesis",
+   "mana": "{1}{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment — Aura",
+     "oracle": "Enchant creature\nEnchanted creature has \"Whenever another creature dies, put a +1/+1 counter on this creature.\"\nWhen enchanted creature dies, look at the top X cards of your library, where X is its power. Put one of those cards into your hand and the rest on the bottom of your library in a random order."
     }
    ]
   },
@@ -1822,6 +2027,19 @@
      "types": "Creature — Goblin Artificer",
      "oracle": "Sacrifice an artifact: This creature gains haste until end of turn.",
      "pt": "2/1"
+    }
+   ]
+  },
+  "Pandemonium": {
+   "fetched": "2026-08-04",
+   "name": "Pandemonium",
+   "mana": "{3}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice."
     }
    ]
   },
@@ -2060,6 +2278,20 @@
     }
    ]
   },
+  "Reckless Barbarian": {
+   "fetched": "2026-08-04",
+   "name": "Reckless Barbarian",
+   "mana": "{1}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Dragon Barbarian",
+     "oracle": "Sacrifice this creature: Add {R}{R}.",
+     "pt": "2/2"
+    }
+   ]
+  },
   "Reveillark": {
    "fetched": "2026-08-03",
    "name": "Reveillark",
@@ -2114,6 +2346,20 @@
     }
    ]
   },
+  "Rosie Cotton of South Lane": {
+   "fetched": "2026-08-04",
+   "name": "Rosie Cotton of South Lane",
+   "mana": "{2}{W}",
+   "identity": "W",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Halfling Peasant",
+     "oracle": "When Rosie Cotton enters, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nWhenever you create a token, put a +1/+1 counter on target creature you control other than Rosie Cotton.",
+     "pt": "1/1"
+    }
+   ]
+  },
   "Runaway Steam-Kin": {
    "fetched": "2026-08-03",
    "name": "Runaway Steam-Kin",
@@ -2139,6 +2385,19 @@
      "types": "Artifact Creature — Phyrexian Horror",
      "oracle": "Sacrifice an artifact: Regenerate this creature.",
      "pt": "4/1"
+    }
+   ]
+  },
+  "Sadistic Glee": {
+   "fetched": "2026-08-04",
+   "name": "Sadistic Glee",
+   "mana": "{B}",
+   "identity": "B",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment — Aura",
+     "oracle": "Enchant creature\nWhenever a creature dies, put a +1/+1 counter on enchanted creature."
     }
    ]
   },
@@ -2195,6 +2454,19 @@
      "types": "Creature — Vampire Cleric",
      "oracle": "Flying\nWhenever you gain life, put a +1/+1 counter on this creature.",
      "pt": "3/3"
+    }
+   ]
+  },
+  "Sculpting Steel": {
+   "fetched": "2026-08-04",
+   "name": "Sculpting Steel",
+   "mana": "{3}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact",
+     "oracle": "You may have this artifact enter as a copy of any artifact on the battlefield."
     }
    ]
   },
@@ -2394,6 +2666,20 @@
     }
    ]
   },
+  "Spike Feeder": {
+   "fetched": "2026-08-04",
+   "name": "Spike Feeder",
+   "mana": "{1}{G}{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Spike",
+     "oracle": "This creature enters with two +1/+1 counters on it.\n{2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature.\nRemove a +1/+1 counter from this creature: You gain 2 life.",
+     "pt": "0/0"
+    }
+   ]
+  },
   "Spiteful Squad": {
    "fetched": "2026-08-03",
    "name": "Spiteful Squad",
@@ -2448,6 +2734,19 @@
     }
    ]
   },
+  "Stimulus Package": {
+   "fetched": "2026-08-04",
+   "name": "Stimulus Package",
+   "mana": "{2}{R}{G}",
+   "identity": "GR",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "When this enchantment enters, create two Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")\nSacrifice a Treasure: Create a 1/1 green and white Citizen creature token."
+    }
+   ]
+  },
   "Stormfront Riders": {
    "fetched": "2026-08-03",
    "name": "Stormfront Riders",
@@ -2477,7 +2776,7 @@
    ]
   },
   "Sunbond": {
-   "fetched": "2026-08-03",
+   "fetched": "2026-08-04",
    "name": "Sunbond",
    "mana": "{3}{W}",
    "identity": "W",
@@ -2486,6 +2785,20 @@
     {
      "types": "Enchantment — Aura",
      "oracle": "Enchant creature\nEnchanted creature has \"Whenever you gain life, put that many +1/+1 counters on this creature.\""
+    }
+   ]
+  },
+  "Survey Mechan": {
+   "fetched": "2026-08-04",
+   "name": "Survey Mechan",
+   "mana": "{4}",
+   "identity": "",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Artifact Creature — Robot",
+     "oracle": "Flying\nHexproof (This creature can't be the target of spells or abilities your opponents control.)\n{10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where X is the number of differently named lands you control.",
+     "pt": "1/3"
     }
    ]
   },
@@ -2514,6 +2827,20 @@
      "types": "Legendary Creature — Kavu Pilot",
      "oracle": "Other creatures you control have haste.\nArtifact cards and red creature cards in your hand have warp {2}{R}. (You may cast a card from your hand for its warp cost. Exile that permanent at the beginning of the next end step, then you may cast it from exile on a later turn.)",
      "pt": "3/5"
+    }
+   ]
+  },
+  "Terror of the Peaks": {
+   "fetched": "2026-08-04",
+   "name": "Terror of the Peaks",
+   "mana": "{3}{R}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Dragon",
+     "oracle": "Flying\nSpells your opponents cast that target this creature cost an additional 3 life to cast.\nWhenever another creature you control enters, this creature deals damage equal to that creature's power to any target.",
+     "pt": "5/4"
     }
    ]
   },
@@ -2839,6 +3166,20 @@
     }
    ]
   },
+  "Virulent Emissary": {
+   "fetched": "2026-08-04",
+   "name": "Virulent Emissary",
+   "mana": "{G}",
+   "identity": "G",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Elf Assassin",
+     "oracle": "Deathtouch\nWhenever another creature you control enters, you gain 1 life.",
+     "pt": "1/1"
+    }
+   ]
+  },
   "Viscera Seer": {
    "fetched": "2026-08-04",
    "name": "Viscera Seer",
@@ -2864,6 +3205,19 @@
      "types": "Creature — Zombie Goblin Wizard",
      "oracle": "Pay 1 life, Sacrifice another creature: Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
      "pt": "3/3"
+    }
+   ]
+  },
+  "Warstorm Surge": {
+   "fetched": "2026-08-04",
+   "name": "Warstorm Surge",
+   "mana": "{5}{R}",
+   "identity": "R",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Enchantment",
+     "oracle": "Whenever a creature you control enters, it deals damage equal to its power to any target."
     }
    ]
   },
@@ -2922,6 +3276,20 @@
     }
    ]
   },
+  "Wild Cantor": {
+   "fetched": "2026-08-04",
+   "name": "Wild Cantor",
+   "mana": "{R/G}",
+   "identity": "GR",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Creature — Human Druid",
+     "oracle": "({R/G} can be paid with either {R} or {G}.)\nSacrifice this creature: Add one mana of any color.",
+     "pt": "1/1"
+    }
+   ]
+  },
   "Wildwood Mentor": {
    "fetched": "2026-08-03",
    "name": "Wildwood Mentor",
@@ -2961,6 +3329,20 @@
      "types": "Creature — Horror",
      "oracle": "When this creature enters, create a 0/1 white Goat creature token.\nSacrifice another creature: Scry 1.\nEscape—{3}{B}{B}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)\nThis creature escapes with two +1/+1 counters on it.",
      "pt": "3/2"
+    }
+   ]
+  },
+  "Xavier Sal, Infested Captain": {
+   "fetched": "2026-08-04",
+   "name": "Xavier Sal, Infested Captain",
+   "mana": "{B}{G}{U}",
+   "identity": "BGU",
+   "commanderLegal": true,
+   "faces": [
+    {
+     "types": "Legendary Creature — Human Fungus Pirate",
+     "oracle": "{T}, Remove a counter from another permanent you control: Populate. Activate only as a sorcery. (Create a token that's a copy of a creature token you control.)\n{T}, Sacrifice another creature: Proliferate. Activate only as a sorcery. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+     "pt": "3/3"
     }
    ]
   },
