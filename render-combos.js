@@ -258,74 +258,21 @@
     return card;
   }
 
-  // A combo you can already assemble, with the parts that are interchangeable
-  // shown as a choice rather than as separate combos. The variants are real and
-  // still reachable — each keeps its own link to Spellbook.
-  // `trails` is the panel's answer to "what does this row differ from its neighbours
-  // by", from DeckCombos.interchangeableIn() over every combo in the panel. A row this
-  // function collapses has a better answer of its own — its group's choices, which is
-  // the set the heading is counting — so the lookup is only consulted for the rows that
-  // stay whole. Those sit between collapsed rows that do line up, and reading
-  // alphabetically while their neighbours read shared-then-different was the one place
-  // this panel still moved the difference around.
-  function comboGroupCard(group, trails) {
-    if (group.choices.length < 2) {
-      const only = group.variants[0];
-      return comboCard(only, null, null, trails && trails.get(only), { steps: true });
-    }
-
-    const card = el('article', 'combo');
-
-    const header = el('h3');
-    // From DeckCombos.comboRowNames(), which is also what the panel's rows were sorted
-    // on. Not RenderRows.alphabetical(group.shared), which gives the same answer today:
-    // the point is that it cannot stop giving the same answer, because a sort comparing
-    // a string the heading does not draw is a sort nobody can see is wrong.
-    DeckCombos.comboRowNames(group).forEach((name, i) => {
-      if (i > 0) header.appendChild(el('span', 'plus', ' + '));
-      header.appendChild(el('span', 'card-name', name));
-    });
-    header.appendChild(el('span', 'plus', ' + '));
-    header.appendChild(el('span', 'either', 'any of ' + group.choices.length));
-    card.appendChild(header);
-
-    const choices = el('p', 'choices');
-    RenderRows.alphabetical(group.choices).forEach((name, i) => {
-      if (i > 0) choices.appendChild(document.createTextNode(' · '));
-      choices.appendChild(el('span', 'card-name', name));
-    });
-    card.appendChild(choices);
-
-    // Same order as the rows above: what it needs, then what it does.
-    // The same one-press look at the cards the other rows get. A collapsed row asks
-    // for its shared cards plus one of the interchangeable ones, so the comparison
-    // covers the whole set — that is what the reader is choosing between.
-    const groupCards = RenderRows.alphabetical(group.shared).concat(RenderRows.alphabetical(group.choices));
-    const groupCompare = RenderRows.cardsOnScryfall(
-      groupCards,
-      `See all ${groupCards.length} cards`,
-      `Open all ${groupCards.length} cards this row involves on Scryfall`
-    );
-    if (groupCompare) {
-      const p = el('p', 'combo-link');
-      p.appendChild(groupCompare);
-      card.appendChild(p);
-    }
-
-    card.appendChild(RenderRows.resultChips(group.variants[0]));
-
-    const details = el('details');
-    details.appendChild(el('summary', null, `All ${group.variants.length} versions`));
-    // The interchangeable cards go last in every version, so each row reads in the
-    // same shape as the heading above them — the shared cards, then the one that
-    // makes this version this version.
-    group.variants.forEach((v) => details.appendChild(comboCard(v, null, null, group.choices, { steps: true })));
-    card.appendChild(details);
-
-    return card;
+  // A combo you can already assemble, as a row of "Combos in your deck".
+  //
+  // One row per combo, including the versions of a combo that differ in a single
+  // interchangeable card. Those used to fold into one "any of N" row from four versions up,
+  // with the versions behind an "All N versions" disclosure — see the note above
+  // byDrawnRow() in combos.js for why they no longer do. `trail` is what this row differs
+  // from its neighbours by, from DeckCombos.interchangeableIn() over every combo in the
+  // panel, and it is now the whole of how a family stays legible: it sends the card that
+  // changes last on every row, so the difference sits in one column and byDrawnRow() keeps
+  // the rows together.
+  function includedComboCard(variant, trails) {
+    return comboCard(variant, null, null, trails && trails.get(variant), { steps: true });
   }
 
-  const api = { stepsList, stepsDisclosure, comboCard, comboGroupCard };
+  const api = { stepsList, stepsDisclosure, comboCard, includedComboCard };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

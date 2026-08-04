@@ -87,7 +87,7 @@
   const alphabetical = (names) => names.slice().sort((a, b) => a.localeCompare(b));
 
   // `lead` puts the card the reader is already looking at first; `trail` sends the
-  // interchangeable cards of a collapsed group last. The rule itself lives in
+  // cards that vary across a row's siblings last. The rule itself lives in
   // combos.js beside the data it orders, where it can be tested without a browser —
   // see orderComboNames() there for why each exists.
   function comboCardNames(variant, lead, trail) {

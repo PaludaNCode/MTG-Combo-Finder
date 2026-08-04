@@ -311,25 +311,19 @@
     renderLegality($('legality'), results.legality);
 
     const included = results.included;
-    // What each row differs from the rest of the panel by, so an uncollapsed row
-    // sends that card last like the collapsed ones do. Read across the whole panel
-    // rather than per group: these rows are read down one column, and a family that
-    // grouping split — two combos one card apart that do different things — is still
-    // two rows side by side to the reader.
+    // What each row differs from the rest of the panel by, so every row of a family
+    // sends that card last. Read across the whole panel rather than per family: these
+    // rows are read down one column, and two combos one card apart that do different
+    // things are still two rows side by side to the reader.
     const trails = DeckCombos.interchangeableIn(included);
-    // Grouped, so "Scurry Oak + Archangel of Thune + Soul Warden" and the same
-    // combo with Essence Warden in that slot are one row rather than three — then
-    // ordered the way every other list of combos is ordered: size, then the biggest
-    // block of versions, then what the row draws. Grouping deliberately does not
-    // reorder, so the two steps stay separable.
-    const groups = DeckCombos.byDrawnRow(DeckCombos.groupVariants(included), trails);
-    // The count is every combo, not every row. Collapsing "Scurry Oak + Sadistic
-    // Glee + Carrion Feeder" and its Viscera Seer version into one row makes the
-    // list readable, but they are still two combos, and a deck with 34 of them
-    // should not be told it has 23. Each row says how many versions it holds.
+    // One row per combo — "Scurry Oak + Archangel of Thune + Soul Warden" and the same
+    // combo with Essence Warden in that slot are two rows, each with its own Spellbook
+    // link and "How it works" — ordered the way every other list of combos is ordered:
+    // size, then the biggest block of versions, then what the row draws.
+    const rows = DeckCombos.byDrawnRow(included, trails);
     const includedBody = panel($('included'), 'included', 'Combos in your deck', included.length || null);
-    if (groups.length) {
-      groups.forEach((g) => includedBody.appendChild(RenderCombos.comboGroupCard(g, trails)));
+    if (rows.length) {
+      rows.forEach((v) => includedBody.appendChild(RenderCombos.includedComboCard(v, trails)));
     } else {
       includedBody.appendChild(el('p', 'empty', 'No known combos found in this deck.'));
     }
