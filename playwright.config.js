@@ -32,8 +32,19 @@ module.exports = defineConfig({
   retries: 0,
   // Every test opens its own page and types its own deck, so they do not share
   // state — but they do share the one server, and the deck search is CPU-bound
-  // parsing. Two at a time on a laptop, and CI decides for itself.
-  workers: process.env.CI ? 2 : undefined,
+  // parsing.
+  //
+  // 4 on CI, not 2, because 2 was leaving half of a GitHub-hosted Linux runner idle:
+  // the standard image has 4 vCPU and this was the longest step in the workflow at 41s.
+  // Measured on a 4-core box, 80 tests: 2 workers 44.4s, 4 workers 34.3s, 6 workers
+  // 32.1s — so 4 buys 23% and 6 buys almost nothing beyond it, which is what you would
+  // expect once every core is busy. Three consecutive 4-worker runs came in at 34.2s,
+  // 37.7s and 35.2s, all 80 passing, which is the part that mattered: `retries: 0` above
+  // means a worker-contention flake is a red build, not a retry.
+  //
+  // Left as `undefined` off CI so a laptop with a different core count decides for
+  // itself rather than being told 4.
+  workers: process.env.CI ? 4 : undefined,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   // A search that has not finished in 15s has not failed slowly, it has failed.
   expect: { timeout: 10_000 },
