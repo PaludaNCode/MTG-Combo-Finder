@@ -1,43 +1,26 @@
 name: CI
 
-# Three jobs, and the split is about wall-clock rather than tidiness.
-#
-# Measured over six recent runs of the single job this replaces (median step times,
-# 96s of steps in a 106s job): browser tests 41s, installing Chromium 22s, the layout
-# smoke test 20s, lint 5s, and 8s for checkout, setup-node, the syntax pass, the unit
-# tests and the README numbers together. So 83 of 96 step-seconds were three browser
-# steps running one after another, and two of the three need nothing from each other:
-# `verify` drives the runner's pre-installed google-chrome, `test:ui` drives
-# Playwright's own Chromium. Running them side by side makes the job the longer of the
-# two rather than their sum.
+# Three jobs, and the split is about wall-clock rather than tidiness: 83 of the 96
+# step-seconds in the single 106s job this replaces were three browser steps running one
+# after another, and two of the three need nothing from each other — `verify` drives the
+# runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
 #
 # `checks` at the bottom is the one name the `main` ruleset requires, and it exists so
-# that this restructuring did not have to touch the ruleset. Splitting a required check
-# into two new names is the kind of change that reads as fine and silently stops gating
-# anything, because a required check that no longer reports is a required check nobody
-# notices the absence of.
+# this restructuring did not have to touch the ruleset. Splitting a required check into
+# two new names is the kind of change that reads as fine and silently stops gating
+# anything, because a required check that no longer reports is one nobody notices the
+# absence of. README § *What the release pipeline costs* has the rest.
 
 on:
-  # No `push: branches: [main]`, and that is a deliberate removal rather than an
-  # oversight. It was 39% of this repository's Actions minutes — 51.9 of 133.7 runner
-  # minutes over two days — re-testing a tree that had already been tested:
-  # `actions/checkout` on a pull_request event checks out the MERGE of the head into
-  # the base, and in 36 of the last 39 merges the merge commit's tree was
-  # byte-identical to the branch tip, meaning `main` never moved while the pull
-  # request was open. The other 3 were real merges where it did.
+  # No `push: branches: [main]`, deliberately. It was 39% of this repository's Actions
+  # minutes re-testing a tree already tested — `actions/checkout` on a pull_request
+  # event checks out the MERGE of head into base, byte-identical to the branch tip in
+  # 36 of the last 39 merges — and it could not protect the deploy anyway, since
+  # deploy.yml fires on the same push with no `needs`.
   #
-  # It could not protect the deploy either, which is the part worth being clear about:
-  # deploy.yml triggers on the same push with no `needs` and no `workflow_run`, so both
-  # started together and a bad merge was live in ~27s whatever this workflow said
-  # afterwards. Gating the deploy on it instead was the alternative, and it was
-  # rejected: it would have added ~106s to every merge→live, taking it from 27s to
-  # over two minutes, to cover a case that happens 3 times in 39.
-  #
-  # What makes the removal safe is "Require branches to be up to date before merging"
-  # on the `main` ruleset. With that on, the tree this workflow tests is provably the
-  # tree that lands — 39 in 39 rather than 36 in 39. Without it, those 3-in-39 merges
-  # land a tree no run has seen. If that setting is ever turned off, this trigger
-  # belongs back.
+  # What makes that safe is "Require branches to be up to date before merging" on the
+  # `main` ruleset, which turns those 36 into 39. **If that setting is ever turned off,
+  # this trigger belongs back.**
   pull_request:
   # So a run can be re-triggered by hand when GitHub misses a pull_request event.
   workflow_dispatch:
@@ -55,12 +38,11 @@ on:
         type: boolean
         default: false
 
-# One pin, used by both the install command and the cache key below. It was two
-# before — the version in the install command and the version in package.json's
-# `test:ui` — and a cache key made that worse, because a key naming the wrong version
-# restores the wrong browser build. They are still two files, so
-# test/workflow-pins.test.js asserts they agree in milliseconds rather than leaving it
-# to a confusing "Executable doesn't exist" in CI.
+# One pin, used by the install commands and the cache key below. The cache key is why
+# it matters: a key naming the wrong version restores the wrong browser build, which
+# surfaces as "Executable doesn't exist" and reads as a broken cache rather than a stale
+# one. package.json's `test:ui` holds the same number, so
+# test/workflow-pins.test.js asserts the two agree.
 env:
   PLAYWRIGHT_VERSION: 1.56.1
 
@@ -134,19 +116,15 @@ jobs:
         with:
           node-version: 22
 
-      # Chromium is ~150MB fetched fresh every run, inside a step that measured 22s.
-      # How much of that 22s is the download and how much is the apt half of
-      # `--with-deps` was never measured — the job log redirects to a blob host that a
-      # sandboxed session cannot reach — so treat the saving here as "somewhere
-      # between nothing and 22s" until a cache-hit run says otherwise. The key names
-      # the version because a cache keyed on anything looser serves the browser build
-      # a different Playwright expects, which fails as "Executable doesn't exist" and
-      # reads as a broken cache rather than a stale one.
+      # Chromium was fetched fresh every run, in a step that measured 22s. **How much
+      # this saves is unmeasured**: that 22s was never split between the download and
+      # the apt half of `--with-deps`, because the job log redirects to a blob host a
+      # sandboxed session cannot reach. Treat it as "between nothing and 22s" until a
+      # cache-hit run says otherwise.
       #
-      # v4 is the major this was written against. It was not checked against the
-      # action's latest major, because that means reading a repository outside this
-      # session's scope — if a Node-20-runtime deprecation warning shows up on this
-      # step, that is what it is and it wants the next major.
+      # v4 is the major this was written against and was not checked against the
+      # action's latest — that means reading a repository outside a session's scope. A
+      # Node-20-runtime deprecation warning on this step is that, wanting the next major.
       - name: Cache the Playwright browser download
         id: playwright-cache
         uses: actions/cache@v4
@@ -204,18 +182,16 @@ jobs:
           retention-days: 7
 
   # The gate, and the only check name the `main` ruleset knows about. Two jobs became
-  # three so that this name could stay exactly what it was.
+  # three so that name could stay exactly what it was.
   #
-  # `if: always()` is load-bearing and the trap is worth naming: without it this job is
-  # SKIPPED when a dependency fails, and GitHub reports a skipped required check as a
-  # neutral conclusion rather than a failure — which is the well-known path to a merge
-  # gate that waves everything through. So it always runs, and the decision about
-  # whether it passed lives in the `if:` expression rather than in shell, because shell
-  # inside a `run:` block is the one thing in this repository nothing can test.
+  # `if: always()` is load-bearing: without it this job is SKIPPED when a dependency
+  # fails, and GitHub reports a skipped required check as neutral rather than failed —
+  # the well-known path to a merge gate that waves everything through. The pass/fail
+  # decision then lives in the `if:` expression rather than in shell, because shell in a
+  # `run:` block is the one thing here nothing can test.
   #
-  # 'skipped' is deliberately not in the list. Neither job above carries an `if:`, so
-  # neither can skip; if one ever does, that is a deliberate act and should not fail
-  # the gate.
+  # 'skipped' is deliberately absent from the list: neither job above carries an `if:`,
+  # so if one ever skips that is a deliberate act and should not fail the gate.
   checks:
     runs-on: ubuntu-latest
     if: always()

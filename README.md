@@ -1390,18 +1390,16 @@ for f in $(git ls-files '*.js'); do node --check "$f"; done   # same as CI
 npx serve .                                                   # any static server works
 ```
 
-- **CI**: two jobs in parallel behind one required check. `static` is syntax → lint → `test:coverage`
-  → `check:readme` → `verify`; `browser` is the Chromium download → `test:ui`. **`checks` is a third job
-  that needs both**, and it exists so the name the `main` ruleset requires never had to change — see
-  *What the release pipeline costs* below.
+- **CI**: two parallel jobs behind one required check — `static` (syntax → lint → `test:coverage` →
+  `check:readme` → `verify`) and `browser` (Chromium → `test:ui`), with **`checks` needing both** so the
+  name the ruleset requires never had to change. See *What the release pipeline costs*.
 - **Coverage floors** sit under what the suite manages (94% lines / 90% branches / 95% functions), so
   they catch a module arriving untested rather than bickering over a line. Only files the tests load are
   measured; `theme.js` is excluded by name because its DOM half cannot run in node.
 - **`verify` is not optional after a UI change.** **Skip it when the diff is docs only** — every changed
   path `*.md`; one `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and should now finish in ~50–65s;
-  poll at ~60s. The old figure is what sleeping 190–240s was measured against — that wasted 12.4
-  minutes over six PRs, and a shorter run makes over-sleeping worse, not better.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and should now finish in ~50–65s; poll at
+  ~60s. Sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
 - **`HARNESS` in `verify-layout.js` is a template literal**, so a regex loses its backslashes —
   `/\d+ combos/` becomes `/d+ combos/` and matches nothing, which passes. Write `\\d`, and note that
   **a backtick anywhere in it, comments included, ends the literal**.
@@ -1459,37 +1457,21 @@ already uses, and **any required-approval count above zero** makes every PR unme
 `data` branch is not covered, and if it ever is, **it must not block force-pushes**: `update-data.yml`
 force-pushes an orphan commit there nightly.
 
-> **That paragraph was false for an unknown length of time, and this is the check that catches it.**
-> On 5 Aug 2026 the ruleset did not exist. Not misconfigured — absent: `/rulesets` and
-> `/rules/branches/main` both answered `[]`, `/branches/main` reported `protected: false` with
-> `enforcement_level: "off"`, and the Settings UI said *"Classic branch protections have not been
-> configured"* with nothing under *Rulesets* either. So `main` was force-pushable, deletable, and
-> merged nothing through a green `checks`, while three files asserted otherwise and work was reasoned
-> from the assertion.
->
-> **A configured gate is invisible when it is missing, which is the whole problem.** It looks exactly
-> like a gate that is working: PRs still get merged, CI still goes green, nothing on screen says the
-> green was advisory. And no test in this repository can see it — the token a session gets is
-> `metadata=read`, so `/branches/main/protection` is 403 and `checks` cannot assert its own
-> requiredness.
->
-> **So it is verified by hand, and the way to verify it is to watch it refuse something:**
-> `git push --force origin main` from a scratch clone should be rejected, and a PR whose base has moved
-> should show *This branch is out-of-date with the base branch*. Prose saying it is configured is worth
-> nothing — that is what was here before.
+**That paragraph was false until 5 Aug 2026, when the ruleset turned out not to exist at all** — and it
+read exactly like one that worked, because PRs still merged and CI still went green with nothing saying the
+green was advisory. **Nothing here can check it**: a session's token is `metadata=read`, so
+`/branches/main/protection` is 403 and `checks` cannot assert its own requiredness. `/rules/branches/main`
+lists the effective rules and needs only read access — that, or watching a `--force` push to `main` be
+refused, is the answer. Prose asserting it is configured is worth nothing.
 
-**Up to date is load-bearing, not hygiene.** It is the only thing making CI's run on the pull request a
-statement about the tree that lands, which is what lets `ci.yml` skip pushes to `main` entirely — see
-*What the release pipeline costs*. Its cost is that **auto-merge does not update a stale branch for you**:
-a PR whose base moved sits blocked until somebody presses **Update branch**, which re-runs CI. That is
-rare here by construction (36 of the last 39 merges never went stale) and it is the direct price of short
-branches staying short.
+**Up to date is load-bearing** — see *What the release pipeline costs* for what rests on it. Its price:
+**auto-merge does not update a stale branch**, so a PR whose base moved waits for somebody to press
+**Update branch**, which re-runs CI.
 
-**`checks` is a job that runs no checks.** It needs `static` and `browser` and fails if either did, so the
-one required name survives the workflow being split. It carries `if: always()` for a reason worth knowing
-before touching it: a `needs:` job with no `always()` is **skipped** when a dependency fails, and GitHub
-reports a skipped required check as neutral rather than failed — a merge gate that waves everything
-through, with nothing on screen saying so. `test/workflow-pins.test.js` holds that shape.
+**`checks` is a job that runs no checks** — it needs `static` and `browser`, so the one required name
+survived the workflow being split. `if: always()` is load-bearing: a `needs:` job without it is **skipped**
+when a dependency fails, and GitHub reads a skipped required check as neutral rather than failed →
+`test/workflow-pins.test.js`.
 
 **Push protection is on.** A push carrying anything credential-shaped is rejected outright — if it fails
 on a fixture or test where you were only quoting a token *shape*, that is why.
@@ -1528,44 +1510,24 @@ synchronously, so every line is latency on every session.
 
 ### What the release pipeline costs
 
-Measured over 100 completed runs (3–5 Aug 2026) and the step times of six recent jobs. Queue time is 0s
-everywhere, so none of this is contention.
+PR opened → live is **~2.9m** median: CI 1.9m, auto-merge 0.5m, merge → live 27s. Queue time is 0s
+everywhere, so none of it is contention.
 
-| stage | median | p90 |
-| --- | --- | --- |
-| PR opened → CI green | 1.9m | 2.0m |
-| CI green → merged (auto-merge) | 0.5m | 3.4m |
-| merged → live on the CDN | 27s | 40s |
-| **PR opened → live** | **~2.9m** | **~8m** |
+**Nearly all of it is CI, and nearly all of CI is browsers** — as one job, **83 of 96 step-seconds were
+three browser steps in a row.** Two of the three share nothing, so they are now two parallel jobs:
+`verify` drives the runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
+Playwright also gets 4 workers rather than 2, because a GitHub-hosted runner has 4 vCPU. **What the
+Chromium cache saves is unmeasured**: its 22s step was never split between the download and the apt half
+of `--with-deps`, because the job log redirects to a host a sandboxed session cannot reach.
 
-**Nearly all of it was CI, and nearly all of CI was browsers.** As one job: browser tests 41s, Chromium
-download 22s, layout smoke test 20s, lint 5s, everything else 8s — so **83 of 96 step-seconds were three
-browser steps in a row.** Two of the three share nothing (`verify` drives the runner's pre-installed
-google-chrome, `test:ui` drives Playwright's own Chromium), which is why they are now separate jobs.
+**CI does not run on pushes to `main`.** It was 39% of all Actions minutes re-testing a tree already
+tested — `actions/checkout` on a `pull_request` event checks out the *merge* of head into base,
+byte-identical to the branch tip in **36 of the last 39 merges** — and it never protected the deploy, which
+fires on the same push with no `needs`. **What makes those 36 into 39 is *Require branches to be up to
+date*; turn that off and the `push` trigger belongs back in `ci.yml`.** Gating the deploy on CI was the
+rejected alternative: merge → live would go from 27s to over two minutes.
 
-Three changes came out of that measurement, and the numbers behind each are in the file that made it:
-
-- **Playwright workers 2 → 4** on CI. A GitHub-hosted Linux runner has 4 vCPU and 2 was leaving half of
-  it idle. On a 4-core box, 80 tests: 2 workers 44.4s, 4 workers 34.3s, 6 workers 32.1s. `retries: 0`
-  means a contention flake would be a red build, so 4 was run three times over before it was believed.
-- **The Chromium download is cached** on `~/.cache/ms-playwright`, keyed by version. **How much that
-  saves is unmeasured** — the 22s step was never split between the download and the apt half of
-  `--with-deps`, because the job log redirects to a host a sandboxed session cannot reach.
-- **CI no longer runs on push to `main`.** It was **39% of all Actions minutes** — 51.9 of 133.7 runner
-  minutes over two days — re-testing a tree that had already been tested, because `actions/checkout` on a
-  `pull_request` event checks out the *merge* of head into base, and **in 36 of the last 39 merges the
-  merge commit's tree was byte-identical to the branch tip.** It never protected the deploy either:
-  `deploy.yml` fires on the same push with no `needs`, so a bad merge was live in ~27s regardless.
-
-**That last one rests on "Require branches to be up to date before merging".** With it on, the tree CI
-tests is provably the tree that lands — 39 in 39 rather than 36 in 39. **Without it, those 3-in-39 merges
-land a tree no run has seen**, and the `push` trigger belongs back in `ci.yml`. Gating the deploy on CI
-instead was the rejected alternative: it would take merge→live from 27s to over two minutes to cover a
-case that happens three times in 39.
-
-**Two things were measured and left alone.** `concurrency: cancel-in-progress` would save nothing — 0 of
-35 PR runs were still in flight when a newer push arrived. And unifying the two Playwright npm fetches
-(`playwright` for the install, `@playwright/test` for the run) is worth 0.3s and 8MB on a cold cache.
+Every figure above, and the two changes measured and rejected, is in the commit that made them.
 
 ## Deploying
 

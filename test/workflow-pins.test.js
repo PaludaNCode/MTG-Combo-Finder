@@ -1,19 +1,16 @@
 'use strict';
 // The Playwright version is pinned in two files and they have to agree.
 //
-// package.json's `test:ui` fetches `@playwright/test@X` to run the suite; ci.yml's
-// PLAYWRIGHT_VERSION fetches `playwright@Y` to download the browser AND names the
-// version in the cache key. Those are three uses of one number across two files, and
-// the cache key is what makes a mismatch worth a test: a key naming Y restores the
-// browser build Y wants, and then X launches and cannot find the build IT wants. The
-// failure surfaces as "Executable doesn't exist at /home/runner/.cache/ms-playwright/…",
-// on the browser tests, which reads as a broken cache rather than as two numbers that
-// no longer match — and the natural fix for a broken cache is to bump the key, which
-// does nothing at all here.
+// package.json's `test:ui` fetches `@playwright/test@X`; ci.yml's PLAYWRIGHT_VERSION
+// fetches `playwright@Y` for the browser AND names the version in the cache key. The
+// cache key is what makes a mismatch worth a test: a key naming Y restores the build Y
+// wants, then X launches and cannot find the build IT wants. That surfaces as
+// "Executable doesn't exist at …/ms-playwright/…" and reads as a broken cache rather
+// than as two numbers that stopped matching — and the natural fix for a broken cache is
+// to bump the key, which does nothing at all here.
 //
-// So it is checked in milliseconds instead. There is no way to single-source it: a
-// workflow cannot read package.json to build a step's `uses`/`run` string before the
-// checkout, and the npx pin has to be a literal.
+// There is no way to single-source it: a workflow cannot read package.json to build a
+// step's `run` string before the checkout, and the npx pin has to be a literal.
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
@@ -23,10 +20,9 @@ const root = path.join(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
 
-// Exported so a reader can see what shape each side is expected to be in. Both are
-// deliberately anchored on the surrounding syntax rather than on a bare version
-// number: a regex loose enough to match "1.56.1" anywhere would match the axe-core
-// pin, or a version inside a comment, and then agree with itself about nothing.
+// Both anchored on the surrounding syntax rather than a bare version number: a regex
+// loose enough to match "1.56.1" anywhere would also match the axe-core pin, or a
+// version inside a comment, and then agree with itself about nothing.
 function playwrightPinInPackage(scripts = pkg.scripts) {
   const m = /@playwright\/test@(\d+\.\d+\.\d+)/.exec(scripts['test:ui'] || '');
   return m && m[1];

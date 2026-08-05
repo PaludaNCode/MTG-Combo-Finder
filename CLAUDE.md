@@ -46,23 +46,22 @@ npx serve .                                       # any static file server works
 ```
 
 - CI: two parallel jobs — `static` (syntax → lint → `test:coverage` → `check:readme` → `verify`) and
-  `browser` (Chromium download → `test:ui`) — plus **`checks`, a third job that runs nothing and needs
-  both**, so the one name the ruleset requires survived the split. It carries `if: always()`: without it a
-  failed dependency **skips** it, and GitHub reads a skipped required check as neutral, not failed →
-  `test/workflow-pins.test.js`. README § *What the release pipeline costs*.
-- **CI does not run on push to `main`, and that rests on a ruleset setting.** "Require branches to be up
-  to date before merging" is what makes the pull-request run a statement about the tree that lands —
-  `actions/checkout` on a `pull_request` event checks out the *merge*, identical to the branch tip in 36
-  of the last 39 merges. Turn that setting off and the `push` trigger belongs back in `ci.yml`.
+  `browser` (Chromium → `test:ui`) — plus **`checks`, which runs nothing and needs both**, so the one name
+  the ruleset requires survived the split. Its `if: always()` is load-bearing: without it a failed
+  dependency **skips** it and GitHub reads a skipped required check as neutral, not failed →
+  `test/workflow-pins.test.js`.
+- **CI does not run on push to `main`, and that rests on "Require branches to be up to date".** That
+  setting is what makes the pull-request run a statement about the tree that lands — `checkout` on a
+  `pull_request` event takes the *merge*, identical to the branch tip in 36 of the last 39 merges. **Turn
+  it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
 - **`verify` is not optional after a UI change** — it renders the real page at 390/768/1440/1920px
   and catches what a screenshot cannot: a map with every node at one point is valid SVG and an
   empty panel.
 - **Skip `verify` when the diff is docs only.** "Docs only" = every changed path is `*.md`; one
   `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not. Test:
   `git diff --name-only origin/main... | grep -v '\.md$'` is empty. If in doubt, run it.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and should now finish in ~50–65s;
-  sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes over-sleeping worse.
-  Poll at ~60s.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and should now finish in ~50–65s; sleeping
+  190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse. Poll at ~60s.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   nothing watched it → `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
 
@@ -124,9 +123,8 @@ logic is unit-testable without a DOM.
 >    *Cache card text* workflow. No request, so it works here. **If your cards are missing, run
 >    that workflow first** — semicolons between names, and **it commits to the branch you
 >    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
->    the PR link, because `main` is meant to refuse direct pushes — the redirect is unconditional in
->    `tools/cache-target-branch.js`, so it holds whether or not the ruleset is actually in force, which
->    on 5 Aug 2026 it was not. It used to *refuse* that dispatch, and
+>    the PR link, because `main` refuses direct pushes (the redirect is unconditional in
+>    `tools/cache-target-branch.js`, so it holds either way). It used to *refuse* that dispatch, and
 >    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
 >    the workflow does, or it becomes the unverified recollection this rule exists to stop,
 >    wearing authority.
@@ -365,17 +363,13 @@ loosely.
   would forbid the merge commits `main` already uses, and any required-approval count above zero makes
   every PR unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
   `update-data.yml` force-pushes it nightly.
-- **Never assume that ruleset is actually in force. On 5 Aug 2026 it did not exist at all** — `/rulesets`
-  and `/rules/branches/main` both `[]`, `/branches/main` `protected: false`, and the Settings UI empty
-  under both headings — while this file, the README and a session's reasoning all said it did. **A
-  missing gate is indistinguishable from a working one**: PRs merge, CI is green, and nothing says the
-  green was advisory. No test here can reach it either (a session's token is `metadata=read`, so
-  `/branches/main/protection` is 403). **Verify by watching it refuse something** — a `--force` push to
-  `main` from a scratch clone, or the *out-of-date with the base branch* notice on a stale PR.
-  README § *Branching strategy*.
-- **Up to date costs one click when it bites.** Auto-merge does not update a stale branch — a PR whose
-  base moved sits blocked until somebody presses **Update branch**, which re-runs CI. 36 of the last 39
-  merges never went stale, so this is the price of short branches staying short.
+- **Never assume that ruleset is in force. On 5 Aug 2026 it did not exist at all**, while this file, the
+  README and a session's reasoning all said it did — and **a missing gate is indistinguishable from a
+  working one**, since PRs merge and CI goes green either way. No test here can reach it
+  (`metadata=read` → `/branches/main/protection` is 403). `curl /rules/branches/main` needs only read
+  access and lists what actually applies.
+- **Up to date costs a click when it bites**: auto-merge does not update a stale branch, so a PR whose base
+  moved waits for **Update branch**, which re-runs CI.
 - **Push protection is on.** A push carrying anything credential-shaped is rejected outright — if
   it fails on a fixture, comment or test where you were only quoting a token *shape*, that is why.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
