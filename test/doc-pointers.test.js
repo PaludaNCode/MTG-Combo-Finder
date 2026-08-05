@@ -1,5 +1,10 @@
 'use strict';
-// Every "README § X" and 'CLAUDE.md, "X"' points at a heading that exists.
+// Every `README § …` and `CLAUDE.md, "…"` pointer names a heading that exists.
+//
+// The notation is written in backticks here on purpose, and this line is the reason: the first
+// version spelled it out in plain prose, so this file's own header parsed as a pointer at a heading
+// called `X" and 'CLAUDE` and the check failed on itself. Describing the notation and using it have
+// to look different, which is what `withoutCode()` below relies on.
 //
 // These two files are wired together by name. CLAUDE.md is the index and says `README § X` when the
 // reasoning lives over there; the README and the tools point back at CLAUDE.md sections the same way.
