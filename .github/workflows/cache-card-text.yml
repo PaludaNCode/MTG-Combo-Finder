@@ -15,27 +15,34 @@ name: Cache card text
 # research queue was never finding candidates, it was that reading each one is expensive.
 # This makes it cheap, and permanently: a card read once is a card read.
 #
-# Manual, and now weekly as well. The line this replaces said nothing nightly should depend on
-# Scryfall's uptime to learn that a card still says what it said, and that was right while the
-# cache held a few hundred cards somebody had asked for by name: re-reading them answered a
-# question nobody had.
+# **Manual. A weekly schedule was added, found to be useless, and removed — do not re-add cron
+# without solving the landing problem first.**
 #
-# It holds every card now, and that changes the question. It is no longer "does this card still
-# say that" but **"did the wording move under anything this repository cites"** — an errata on a
-# card a row in unofficial.js or a rule-out in research-log.js was reasoned from, which is a
-# failure nothing else here can see. The row keeps matching, the tests keep passing, and the
-# reasoning underneath is wrong. Nobody would ever ask that by hand.
+# The case for scheduling is real and stands: now that the cache holds every card, the question
+# is no longer "does this card still say that" but "did the wording move under anything this
+# repository cites", and nobody would ever ask that by hand. An errata under a row in
+# unofficial.js is a failure nothing else here can see.
 #
-# Weekly rather than nightly, because oracle text is errata'd rarely and one request a week is
-# a courteous load on a free service. And **nothing depends on it succeeding**: a failed sweep
-# writes nothing at all, so the cache is exactly as good as it was and the research path is
-# untouched. Scryfall being down makes one weekly job red and costs this repository nothing.
+# What killed it is where a scheduled run can commit. A schedule executes on the default branch,
+# `main` refuses direct pushes, so `tools/cache-target-branch.js` sends the commit to
+# card-text/run-<n> and prints a PR link — **and nothing opens that PR.** The errata alarm would
+# have fired every Monday while the cache it alarmed about never moved, and a slightly stale
+# cache answers every lookup perfectly well, so that would have gone unnoticed for weeks.
+#
+# Neither obvious fix is free, and both were reached for before being checked:
+#
+#   - **GitHub Actions cannot be a ruleset bypass actor.** The bypass list offers Deploy keys,
+#     Repository admin, Maintain, Write and the installed Apps — there is no entry for
+#     `github-actions[bot]`, so "just let the workflow push to main" is not available.
+#   - **A pull request opened with GITHUB_TOKEN does not trigger workflows.** So an auto-opened
+#     weekly PR never runs `checks`, and since `checks` is required the PR is unmergeable rather
+#     than auto-merging.
+#
+# So an unattended sweep needs a stored credential — a write deploy key, or a PAT to open the PR
+# as a real user. That is a deliberate decision about a long-lived secret, not a cron line, and
+# it was not worth making while guessing. Dispatch it by hand from a branch; that path is proven.
 
 on:
-  # Monday morning UTC. Offset off the hour like update-data.yml, because GitHub's scheduler is
-  # best-effort and everything asking for :00 is what it is worst at.
-  schedule:
-    - cron: '23 5 * * 1'
   workflow_dispatch:
     inputs:
       cards:
@@ -116,7 +123,6 @@ jobs:
         env:
           CARDS: ${{ inputs.cards }}
           SWEEP: ${{ inputs.sweep }}
-          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -o pipefail
           node tools/cache-card-text.js | tee -a "$GITHUB_STEP_SUMMARY"
@@ -192,7 +198,7 @@ jobs:
   impact:
     needs: cache
     # Nothing to compare when nothing was committed, and `false` is the ordinary result of a
-    # weekly sweep against a Scryfall that has not moved.
+    # re-sweep against a Scryfall that has not moved.
     if: ${{ needs.cache.outputs.committed == 'true' }}
     runs-on: ubuntu-latest
     permissions:

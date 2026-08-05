@@ -190,12 +190,11 @@ test('a sweep reports a renamed card as a rename, not as an add plus a disappear
   });
 });
 
-// A scheduled run has no name list to give, so it is always a sweep — decided here rather
-// than in a YAML expression, which nothing could test.
-test('a scheduled run is a sweep whatever the sweep box says', () => {
-  assert.ok(sweepRequested({ EVENT_NAME: 'schedule' }));
-  assert.ok(sweepRequested({ EVENT_NAME: 'schedule', SWEEP: 'false' }));
-  // And a hand dispatch is still governed by the box alone.
-  assert.ok(!sweepRequested({ EVENT_NAME: 'workflow_dispatch', SWEEP: 'false' }));
-  assert.ok(sweepRequested({ EVENT_NAME: 'workflow_dispatch', SWEEP: 'true' }));
+// There is no scheduled run any more, so nothing but the box decides. Pinned because the clause
+// that read EVENT_NAME was removed with the cron, and a leftover would silently turn a
+// dispatch-only workflow back into one that sweeps on an event it no longer receives.
+test('nothing but the sweep box asks for a sweep', () => {
+  assert.ok(!sweepRequested({ EVENT_NAME: 'schedule' }));
+  assert.ok(!sweepRequested({ EVENT_NAME: 'schedule', SWEEP: 'false' }));
+  assert.ok(sweepRequested({ EVENT_NAME: 'schedule', SWEEP: 'true' }), 'the box still works');
 });
