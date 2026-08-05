@@ -31,13 +31,22 @@ worth reading by hand — it is the case `unofficial.js` exists for.
 
 ## 2. Sweep each subject
 
-Per `CLAUDE.md`, in this order — it is ordered to avoid wasted reading:
+**Reading a card costs nothing now.** `card-text.json` holds every card, so
+`node tools/lookup-card.js "Name"` answers from disk with no request and no workflow
+dispatch — there is no reason left to ration lookups, and a pass that guesses at a card
+to save a round trip is saving nothing. A name that misses is a card published since the
+last sweep; re-sweep from a branch rather than reaching for the network.
+
+Per `CLAUDE.md`, in this order. It was ordered to avoid wasted *reading* and survives for
+a different reason: **reading is the cheap half, deciding what to read is the expensive
+one.**
 
 1. **Peers from card text, not from a score.** This is the step that costs most when
    skipped. Stridehangar Automaton scored as Chatterfang's closest peer and is not one
    — it reads only *artifact* tokens — and that one fact ruled out 1,197 of 1,202
-   candidates. Fetch the oracle text and read it. Say what the peer relationship *is*
-   before using it.
+   candidates. Read the oracle text — `node tools/lookup-card.js "Name"` — and say what
+   the peer relationship *is* before using it. No amount of free lookups substitutes for
+   getting this judgement right.
 2. Every shape a peer is published in and the subject is not.
 3. **Drop the subsumed** — if the subject already has a combo whose cards are a subset,
    the candidate is a strict superset and Spellbook does not publish those.

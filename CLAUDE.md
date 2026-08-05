@@ -124,19 +124,21 @@ logic is unit-testable without a DOM.
 >
 > **Sources, in order** — `tools/lookup-card.js` walks all three and says which answered:
 >
-> 1. **`card-text.json`**, the committed cache of Scryfall's wording, filled on a runner by the
->    *Cache card text* workflow. No request, so it works here. **If your cards are missing, tick
->    `sweep` on that workflow** — one request to Scryfall's bulk data for *every* card, rather than
->    one request per name, which is ~40 minutes and dies against the timeout. Names are still the
->    right input for two or three cards. Either way **it commits to the branch you
->    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
->    the PR link, because `main` refuses direct pushes (the redirect is unconditional in
->    `tools/cache-target-branch.js`, so it holds either way). **A dispatch that changes anything
->    also reports which cited cards moved** → `tools/sweep-impact.js`. It used to *refuse* a
->    dispatch from `main`, and
->    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
->    the workflow does, or it becomes the unverified recollection this rule exists to stop,
->    wearing authority.
+> 1. **`card-text.json`** answers, and in practice that is the end of it. It holds **every** card
+>    — `c.count` is the live number — so 2 and 3 below are the exception now rather than the
+>    fallback, and **a pass should expect to read its cards with no network at all.** Check
+>    coverage before assuming otherwise: `node -e "console.log(require('./card-text.json').count)"`.
+>    **Never hand-write into it** — only the workflow does, or it becomes the unverified
+>    recollection this rule exists to stop, wearing authority.
+>
+>    A miss means a card published since the last sweep, not a reason to reach for the network.
+>    Re-sweep: dispatch *Cache card text* **from a branch** with `sweep` ticked — one request for
+>    every card, ~4 seconds. Names are still right for two or three cards; the per-name path is
+>    ~40 minutes across the whole space and dies against the timeout. **It commits to the branch
+>    you dispatch it on**, and dispatched on `main` it commits to `card-text/run-<n>` and prints a
+>    PR link — which nothing opens, so dispatch from a branch. It used to *refuse* a dispatch from
+>    `main` and two hours went on reading a red X as a broken workflow. A dispatch that changes
+>    anything also reports which cited cards moved → `tools/sweep-impact.js`.
 > 2. **Scryfall live** — 403s at CONNECT here; fine on a runner.
 > 3. **Forge card scripts** on `raw.githubusercontent.com`, banner-marked as Forge's wording, not
 >    Scryfall's: no colour identity, legalities or printings. **Cross-check anything the reasoning
@@ -177,6 +179,13 @@ node tools/deck-cards.js deck.txt --unswept # the same question asked of one dec
 
 **The pass, ordered to avoid wasted reading.** `/deck-deep-dive` runs it against `deck-cards.js`,
 which ranks a deck's cards by how many published combos name them — what substitution consumes.
+
+**The ordering survives the cache, for a different reason than it was written for.** It existed
+because every card read cost a workflow round trip, and that cost is gone — the cache holds all of
+them and `lookup-card.js` needs no network. What has not changed is that **reading is the cheap half
+and deciding what to read is the expensive one**: step 1 ruled out 1,197 of 1,202 candidates, and no
+amount of free lookups substitutes for getting that judgement right. Read more freely now; do not
+skip the narrowing.
 
 1. **Find the true peers from card text, not from a score.** Peers do the same job in a loop; a
    high score only says they fill the same slot *somewhere*. Stridehangar Automaton scored as
