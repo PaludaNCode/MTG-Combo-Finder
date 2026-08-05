@@ -1463,8 +1463,9 @@ npx serve .                                                   # any static serve
   measured; `theme.js` is excluded by name because its DOM half cannot run in node.
 - **`verify` is not optional after a UI change.** **Skip it when the diff is docs only** — every changed
   path `*.md`; one `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **78s** with a warm
-  Chromium cache; poll at ~80s. Sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **77s** with a warm
+  Chromium cache and **90s without**; the cache is warmed on `main` by `warm-cache.yml`, and only a
+  default-branch cache is visible to a feature branch. Poll at ~80s. Sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run
   makes that worse.
 - **`HARNESS` in `verify-layout.js` is a template literal**, so a regex loses its backslashes —
   `/\d+ combos/` becomes `/d+ combos/` and matches nothing, which passes. Write `\\d`, and note that
@@ -1582,7 +1583,8 @@ everywhere, so none of it is contention.
 **Nearly all of it is CI, and nearly all of CI is browsers** — as one job, **83 of 96 step-seconds were
 three browser steps in a row.** Two of the three share nothing, so they are now two parallel jobs:
 `verify` drives the runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
-**Measured on the runner: 106s → 78s**, `static` 39s alongside `browser` 68s, plus 4s for the gate. The
+**Measured on the runner: 106s → 77s warm, 90s cold**, `static` 39s alongside `browser` 68–76s, plus
+3–4s for the gate. `browser` is the whole critical path now; `static` finishes 37s early and waits. The
 old 22s Chromium step splits into ~13s of download, which the cache removes, and **14s of `install-deps`
 apt, which it cannot** — so a cache hit saves ~13s and the first run on a new version costs 4s to save it.
 

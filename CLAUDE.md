@@ -56,14 +56,19 @@ npx serve .                                       # any static file server works
   setting is what makes the pull-request run a statement about the tree that lands — `checkout` on a
   `pull_request` event takes the *merge*, identical to the branch tip in 36 of the last 39 merges. **Turn
   it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
+- **The Chromium cache is warmed on `main` by `warm-cache.yml`, and that is the only place it
+  works.** A cache written on a branch is restorable by that branch alone and dies when the branch is
+  deleted on merge — measured: a second run of the same branch hits (install-deps only, 14s), a fresh
+  branch misses (full install, 21–27s). CI is **77s warm, 90s cold** → `test/workflow-pins.test.js`
+  pins the two workflows to one key, because a mismatched key just misses and both stay green.
 - **`verify` is not optional after a UI change** — it renders the real page at 390/768/1440/1920px
   and catches what a screenshot cannot: a map with every node at one point is valid SVG and an
   empty panel.
 - **Skip `verify` when the diff is docs only.** "Docs only" = every changed path is `*.md`; one
   `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not. Test:
   `git diff --name-only origin/main... | grep -v '\.md$'` is empty. If in doubt, run it.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **78s** with a warm
-  Chromium cache; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **77s** warm / **90s**
+  cold; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
   Poll at ~80s.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   nothing watched it → `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
@@ -502,6 +507,11 @@ leaves the stale remote-tracking ref behind and nothing clears it, so the local 
 still points at commits that are already in `main`. Two checks settle it before any force:
 `git log --oneline HEAD..origin/<branch>` empty, and `git branch -r --contains origin/<branch>`
 naming `origin/main`. `fatal: couldn't find remote ref` means it is already gone — prune and push.
+
+**`.githooks/pre-push` refuses that force-push now**, because the rule above was written into this
+file and broken an hour later with the text in context. `core.hooksPath` is set by
+`.claude/hooks/session-start.sh`. **Prose is not a check** — every rule here that stuck has a `→`
+after it, and the ones that did not are the ones that got broken.
 
 **Never `git stash` to run a check while work is staged.** `--keep-index` stashes the working tree,
 and the `pop` then conflicts with the index copy and leaves conflict markers inside the files that
