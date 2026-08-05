@@ -1066,10 +1066,11 @@ same body. Spellbook publishes **1,674** combos naming Bartolomé and none namin
 is what earns its keep: Hammerhead is mono-black where Bartolomé is white-black, so every one of those
 lines is an Orzhov combo a Golgari deck can actually run.
 
-### One card, 1,889 combos: why this one is a rule and not rows
+### One card, 1,893 combos: why this one is a rule and not rows
 
-Four rows can be written by hand; nearly nineteen hundred cannot, and a file with 1,889 copies of a
-published combo with one word changed is not evidence anybody can check. So `unofficial.js` has a second
+Four rows can be written by hand; nearly nineteen hundred cannot, and a file with 1,893 copies of a
+published combo with one word changed is not evidence anybody can check. (That is Spellbook's data on
+the morning it was read — `npm run verify:unofficial` is the live figure, and it moves.) So `unofficial.js` has a second
 export, `STAND_INS` — a `card`, a `confidence`, and a `for` list of the cards it stands in for with a `why`
 on each. `standInRows()` in `combos.js` works the rows out against live data, so the evidence is *looked
 up* rather than typed and cannot cite a retired combo. Order in `for` is preference, not membership, and
@@ -1145,7 +1146,8 @@ COMBOS  │ EDHREC · Scryfall · − Remove
 
 **A column and not a badge after the card name**: a badge lands wherever the name ends, so eighty totals
 sat at eighty offsets. The gutter is one fixed `calc(3.8rem - 2px)`, sized against the worst real split
-(`0+1889`), which `npm run verify` builds rather than hoping the fixture contains it. It also **sizes
+(`0+1889`), which `npm run verify` builds as a **fixed four-digit probe** rather than hoping the fixture
+contains it — so it stays put while Hammerhead's own count drifts with the snapshot. It also **sizes
 nothing** — while it shared a grid row with the card's name, a row carrying a split pushed everything below
 it down. **Absolute divider positions are deliberately not written down here**; `npm run verify` prints
 them per viewport on every run.
