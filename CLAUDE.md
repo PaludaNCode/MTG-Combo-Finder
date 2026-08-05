@@ -62,7 +62,9 @@ npx serve .                                       # any static file server works
   a *fresh* branch misses (full install, 21–27s), so a new branch name always starts cold no matter how
   long branches live. **Worth ~6s against a ±12s run-to-run spread**, which is why it took three
   attempts to measure honestly → `test/workflow-pins.test.js` pins the two workflows to one key,
-  because a mismatched key just misses and both stay green.
+  because a mismatched key just misses and both stay green. **It also runs weekly**, because the push
+  trigger watches three rarely-edited paths and so has no way back from a cache that has stopped
+  existing — a leak nobody notices, since CI stays green and only gets slower.
 - **`verify` is not optional after a UI change** — it renders the real page at 390/768/1440/1920px
   and catches what a screenshot cannot: a map with every node at one point is valid SVG and an
   empty panel.
@@ -512,17 +514,22 @@ rather than stacking on merged history:
 git fetch origin main && git checkout -B <branch> origin/main && git push -u origin <branch>
 ```
 
-**That is a fast-forward, so no force and no prune.** The remote branch still points at the PR head,
-`main`'s merge commit has that head as a parent, so the restarted local branch is a *descendant* of
-what the remote has and pushes cleanly. **The exception is a squash merge**, which produces no such
-parent — then the branch has genuinely diverged and wants `--force-with-lease`, which now works
-because the ref it leases against exists.
+**That is a fast-forward, so no force and no prune** — and it has no exception, because **squash and
+rebase merging are both off**. `main`'s merge commit always has the PR head as a parent, so a branch
+restarted from `main` is always a *descendant* of what the remote has and always pushes cleanly. Six of
+the last six merges check out that way.
+
+Squash merging is what would break it: it produces no such parent, so the branch genuinely diverges and
+needs a force-push. That was a documented exception until the setting was turned off, and turning it off
+is what deleted the exception. **Two settings now carry this whole section** — keep merge commits, keep
+branches.
 
 **Why this used to be three paragraphs.** With auto-delete on, a merged PR left the name free and the
 remote ref gone, so `--force-with-lease` failed `! [rejected] … (stale info)` — a lease against a ref
 that no longer exists, which reads as a protection working and is nothing of the kind. The fix was
-`fetch --prune` then a plain push, and the ritual had to be remembered on every follow-up. Turning one
-setting off deleted the whole class of mistake. **Reach for a setting before reaching for a rule.**
+`fetch --prune` then a plain push, and the ritual had to be remembered on every follow-up. Two
+checkboxes deleted the whole class of mistake and an exception with it. **Reach for a setting before
+reaching for a rule** — a rule needs remembering, a setting does not.
 
 **`.githooks/pre-push` still refuses that force-push**, and is kept rather than retired: the case is
 rarer now (a genuinely new branch pushed with `--force`) but it costs nothing and it is the only rule

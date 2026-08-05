@@ -98,9 +98,22 @@ test('the warmer and the reader use a byte-identical cache key', () => {
   assert.strictEqual(b, a, 'a different key means a different cache, and the warmer does nothing');
 });
 
+// The push trigger alone cannot recover from a cache that has stopped existing: the three paths it
+// watches change rarely, so every PR until one of them is edited pays the cold path. That is a leak
+// nobody notices — CI stays green and just gets slower — so the schedule is the fix and this stops it
+// being removed quietly.
+test('the warmer also runs on a schedule, so a missing cache heals itself', () => {
+  const triggers = warm.slice(0, warm.indexOf('jobs:'));
+  assert.match(triggers, /^\s*schedule:\s*$/m, 'warm-cache.yml must keep its schedule');
+  assert.match(triggers, /cron:/, 'the schedule must name a cron');
+  // Path filters do not apply to a schedule event, which is the whole point — a scheduled run fires
+  // whether or not those three files moved.
+  assert.match(triggers, /^\s*paths:\s*$/m, 'the push trigger should still be path-filtered');
+});
+
 test('the warmer runs on the default branch, which is the only place a shared cache can be written', () => {
-  // The entire reason this file exists. A cache written on a feature branch is restorable by
-  // that branch alone, and the branch is deleted when its pull request merges.
+  // The entire reason this file exists. A cache written on a feature branch is restorable by that
+  // branch alone and is never visible to a sibling, so a new branch name always starts cold.
   assert.match(warm, /^\s*branches: \[main\]\s*$/m, 'warm-cache.yml must trigger on main');
   // And ci.yml must NOT have regained a push trigger to do this job — that would make its own
   // documented rule false.
