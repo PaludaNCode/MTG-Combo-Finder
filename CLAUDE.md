@@ -57,8 +57,8 @@ npx serve .                                       # any static file server works
   `pull_request` event takes the *merge*, identical to the branch tip in 36 of the last 39 merges. **Turn
   it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
 - **The Chromium cache is warmed on `main` by `warm-cache.yml`, and that is the only place it
-  works.** A cache written on a branch is restorable by that branch alone and dies when the branch is
-  never visible to a sibling — measured: a second run of the same branch hits (install-deps only, 14s),
+  works.** A cache written on a branch is restorable by that branch alone and is never visible to a
+  sibling — measured: a second run of the same branch hits (install-deps only, 14s),
   a *fresh* branch misses (full install, 21–27s), so a new branch name always starts cold no matter how
   long branches live. **Worth ~6s against a ±12s run-to-run spread**, which is why it took three
   attempts to measure honestly → `test/workflow-pins.test.js` pins the two workflows to one key,
@@ -69,9 +69,10 @@ npx serve .                                       # any static file server works
 - **Skip `verify` when the diff is docs only.** "Docs only" = every changed path is `*.md`; one
   `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not. Test:
   `git diff --name-only origin/main... | grep -v '\.md$'` is empty. If in doubt, run it.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **77s** warm / **90s**
-  cold; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
-  Poll at ~80s.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **84s** median
+  (78–87s); sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
+  Poll at ~80s. **Time it from the jobs, not the run** — a run's `updated_at` moves after its jobs
+  finish, and read a flat 121s for three PRs whose jobs took 78/84/87s.
 - **A `README §` or `CLAUDE.md, "…"` pointer must name a heading that exists** →
   `test/doc-pointers.test.js`. Renaming a section leaves every pointer at it reading as authoritative
   and going nowhere, which nothing looks wrong about — it happened inside `.githooks/pre-push`'s error
