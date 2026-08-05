@@ -1590,8 +1590,11 @@ three browser steps in a row.** Two of the three share nothing, so they are now 
 `verify` drives the runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
 **Measured on the runner: 106s → 77s warm, 90s cold**, `static` 39s alongside `browser` 68–76s, plus
 3–4s for the gate. `browser` is the whole critical path now; `static` finishes 37s early and waits. The
-old 22s Chromium step splits into ~13s of download, which the cache removes, and **14s of `install-deps`
-apt, which it cannot** — so a cache hit saves ~13s and the first run on a new version costs 4s to save it.
+old 22s Chromium step splits into a download the cache removes and an `install-deps` apt step it cannot,
+and **apt is the larger half** — so the cache is worth about **6s**, not the 13s first claimed: cold runs
+measured 21/24/27s against warm runs of 17/18/24s. Those ranges overlap, and the browser-tests step alone
+swings 35–47s between runs, so **a single before/after comparison of CI wall-clock cannot detect this** —
+which is exactly how it got measured wrong twice.
 
 **Raising Playwright's worker count is the trap here.** On a 4-core box 4 workers were a clear win —
 44.4s → 34.3s over three repeated runs — and **on the runner they bought nothing: 41s at 2, 43s at 4**,
