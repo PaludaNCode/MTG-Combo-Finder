@@ -124,7 +124,9 @@ logic is unit-testable without a DOM.
 >    *Cache card text* workflow. No request, so it works here. **If your cards are missing, run
 >    that workflow first** — semicolons between names, and **it commits to the branch you
 >    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
->    the PR link, because `main` refuses direct pushes. It used to *refuse* that dispatch, and
+>    the PR link, because `main` is meant to refuse direct pushes — the redirect is unconditional in
+>    `tools/cache-target-branch.js`, so it holds whether or not the ruleset is actually in force, which
+>    on 5 Aug 2026 it was not. It used to *refuse* that dispatch, and
 >    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
 >    the workflow does, or it becomes the unverified recollection this rule exists to stop,
 >    wearing authority.
@@ -363,6 +365,14 @@ loosely.
   would forbid the merge commits `main` already uses, and any required-approval count above zero makes
   every PR unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
   `update-data.yml` force-pushes it nightly.
+- **Never assume that ruleset is actually in force. On 5 Aug 2026 it did not exist at all** — `/rulesets`
+  and `/rules/branches/main` both `[]`, `/branches/main` `protected: false`, and the Settings UI empty
+  under both headings — while this file, the README and a session's reasoning all said it did. **A
+  missing gate is indistinguishable from a working one**: PRs merge, CI is green, and nothing says the
+  green was advisory. No test here can reach it either (a session's token is `metadata=read`, so
+  `/branches/main/protection` is 403). **Verify by watching it refuse something** — a `--force` push to
+  `main` from a scratch clone, or the *out-of-date with the base branch* notice on a stale PR.
+  README § *Branching strategy*.
 - **Up to date costs one click when it bites.** Auto-merge does not update a stale branch — a PR whose
   base moved sits blocked until somebody presses **Update branch**, which re-runs CI. 36 of the last 39
   merges never went stale, so this is the price of short branches staying short.

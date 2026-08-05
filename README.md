@@ -1459,6 +1459,25 @@ already uses, and **any required-approval count above zero** makes every PR unme
 `data` branch is not covered, and if it ever is, **it must not block force-pushes**: `update-data.yml`
 force-pushes an orphan commit there nightly.
 
+> **That paragraph was false for an unknown length of time, and this is the check that catches it.**
+> On 5 Aug 2026 the ruleset did not exist. Not misconfigured — absent: `/rulesets` and
+> `/rules/branches/main` both answered `[]`, `/branches/main` reported `protected: false` with
+> `enforcement_level: "off"`, and the Settings UI said *"Classic branch protections have not been
+> configured"* with nothing under *Rulesets* either. So `main` was force-pushable, deletable, and
+> merged nothing through a green `checks`, while three files asserted otherwise and work was reasoned
+> from the assertion.
+>
+> **A configured gate is invisible when it is missing, which is the whole problem.** It looks exactly
+> like a gate that is working: PRs still get merged, CI still goes green, nothing on screen says the
+> green was advisory. And no test in this repository can see it — the token a session gets is
+> `metadata=read`, so `/branches/main/protection` is 403 and `checks` cannot assert its own
+> requiredness.
+>
+> **So it is verified by hand, and the way to verify it is to watch it refuse something:**
+> `git push --force origin main` from a scratch clone should be rejected, and a PR whose base has moved
+> should show *This branch is out-of-date with the base branch*. Prose saying it is configured is worth
+> nothing — that is what was here before.
+
 **Up to date is load-bearing, not hygiene.** It is the only thing making CI's run on the pull request a
 statement about the tree that lands, which is what lets `ci.yml` skip pushes to `main` entirely — see
 *What the release pipeline costs*. Its cost is that **auto-merge does not update a stale branch for you**:
