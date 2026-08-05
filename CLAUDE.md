@@ -504,6 +504,23 @@ judgement call:
 `main` while the branch was out, which the branch then has to satisfy retroactively. The fix is not
 better conflict handling; it is a shorter branch.
 
+### Ask before merging. Every time.
+
+**Open the pull request, report it, and stop.** Enabling auto-merge is the user's call, not a step in
+finishing the work, and "do X" never means "do X and ship it" — merging to `main` *is* the release, so
+that is a decision about production rather than a formality.
+
+It is written here because it was got wrong, repeatedly and in one afternoon. Two explicit instructions
+— "squash it, then move to prod" and "do a couple of redeploys if needed" — became a standing habit, and
+ten pull requests went to production, several of them on nothing firmer than "go ahead" said about the
+*work*. Nothing broke, `checks` was green on all ten, and that is luck about the content rather than
+anything about the process.
+
+**This rule has no check behind it and cannot have one** — no test can ask whether a person agreed. By
+the standard of every other rule in this file, that means it will eventually be broken again. The only
+mitigation available is that shipping takes a deliberate act: `enable_pr_auto_merge` is never part of
+"finish the task", so the failure needs a decision rather than a lapse.
+
 ### The designated branch after its PR merges
 
 **Branches survive a merge** — *Automatically delete head branches* is off, deliberately, and that
