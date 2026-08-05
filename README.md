@@ -1398,8 +1398,9 @@ npx serve .                                                   # any static serve
   measured; `theme.js` is excluded by name because its DOM half cannot run in node.
 - **`verify` is not optional after a UI change.** **Skip it when the diff is docs only** — every changed
   path `*.md`; one `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and should now finish in ~50–65s; poll at
-  ~60s. Sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **78s** with a warm
+  Chromium cache; poll at ~80s. Sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run
+  makes that worse.
 - **`HARNESS` in `verify-layout.js` is a template literal**, so a regex loses its backslashes —
   `/\d+ combos/` becomes `/d+ combos/` and matches nothing, which passes. Write `\\d`, and note that
   **a backtick anywhere in it, comments included, ends the literal**.
@@ -1516,9 +1517,14 @@ everywhere, so none of it is contention.
 **Nearly all of it is CI, and nearly all of CI is browsers** — as one job, **83 of 96 step-seconds were
 three browser steps in a row.** Two of the three share nothing, so they are now two parallel jobs:
 `verify` drives the runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
-Playwright also gets 4 workers rather than 2, because a GitHub-hosted runner has 4 vCPU. **What the
-Chromium cache saves is unmeasured**: its 22s step was never split between the download and the apt half
-of `--with-deps`, because the job log redirects to a host a sandboxed session cannot reach.
+**Measured on the runner: 106s → 78s**, `static` 39s alongside `browser` 68s, plus 4s for the gate. The
+old 22s Chromium step splits into ~13s of download, which the cache removes, and **14s of `install-deps`
+apt, which it cannot** — so a cache hit saves ~13s and the first run on a new version costs 4s to save it.
+
+**Raising Playwright's worker count is the trap here.** On a 4-core box 4 workers were a clear win —
+44.4s → 34.3s over three repeated runs — and **on the runner they bought nothing: 41s at 2, 43s at 4**,
+inside a 41/43/47s spread across three runs. See the comment in `playwright.config.js`; the number is a
+property of the machine, and the machine is the runner.
 
 **CI does not run on pushes to `main`.** It was 39% of all Actions minutes re-testing a tree already
 tested — `actions/checkout` on a `pull_request` event checks out the *merge* of head into base,

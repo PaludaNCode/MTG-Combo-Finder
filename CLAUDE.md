@@ -60,8 +60,9 @@ npx serve .                                       # any static file server works
 - **Skip `verify` when the diff is docs only.** "Docs only" = every changed path is `*.md`; one
   `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not. Test:
   `git diff --name-only origin/main... | grep -v '\.md$'` is empty. If in doubt, run it.
-- **Don't sleep waiting for CI.** Runs took 102–112s as one job and should now finish in ~50–65s; sleeping
-  190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse. Poll at ~60s.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **78s** with a warm
+  Chromium cache; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
+  Poll at ~80s.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   nothing watched it → `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
 
