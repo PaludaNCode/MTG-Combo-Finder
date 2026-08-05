@@ -72,6 +72,10 @@ npx serve .                                       # any static file server works
 - **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **77s** warm / **90s**
   cold; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
   Poll at ~80s.
+- **A `README §` or `CLAUDE.md, "…"` pointer must name a heading that exists** →
+  `test/doc-pointers.test.js`. Renaming a section leaves every pointer at it reading as authoritative
+  and going nowhere, which nothing looks wrong about — it happened inside `.githooks/pre-push`'s error
+  message, the one moment somebody is actually following the pointer.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   nothing watched it → `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
 

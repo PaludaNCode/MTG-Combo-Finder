@@ -57,7 +57,7 @@ pre-push: refusing a force-push to '$branch' on '$remote', which does not have t
       git fetch $remote --prune
       git push -u $remote $branch
 
-  See CLAUDE.md, "The designated branch after its PR merges: prune, never force".
+  See CLAUDE.md, "The designated branch after its PR merges".
 
 MSG
   status=1
