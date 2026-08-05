@@ -72,6 +72,14 @@ npx serve .                                       # any static file server works
 - **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **77s** warm / **90s**
   cold; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
   Poll at ~80s.
+- **A `README §` or `CLAUDE.md, "…"` pointer must name a heading that exists** →
+  `test/doc-pointers.test.js`. Renaming a section leaves every pointer at it reading as authoritative
+  and going nowhere, which nothing looks wrong about — it happened inside `.githooks/pre-push`'s error
+  message, the one moment somebody is actually following the pointer.
+- **Read a test summary from the END of the output, never the start.** `node --test` emits a TAP block
+  per file *and* one for the run, so `grep '^# pass' | head` can report a passing *file* while the run
+  failed. That is how a red commit was pushed with a passing count in its message — CI caught it, the
+  local check did not. `tail -4`, or just trust the exit code.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   nothing watched it → `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
 
