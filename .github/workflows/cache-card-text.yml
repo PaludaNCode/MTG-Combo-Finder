@@ -15,17 +15,42 @@ name: Cache card text
 # research queue was never finding candidates, it was that reading each one is expensive.
 # This makes it cheap, and permanently: a card read once is a card read.
 #
-# Manual, like every other workflow here that asks a third party a question. Nothing
-# nightly should depend on Scryfall's uptime to learn that a card still says what it said.
+# Manual, and now weekly as well. The line this replaces said nothing nightly should depend on
+# Scryfall's uptime to learn that a card still says what it said, and that was right while the
+# cache held a few hundred cards somebody had asked for by name: re-reading them answered a
+# question nobody had.
+#
+# It holds every card now, and that changes the question. It is no longer "does this card still
+# say that" but **"did the wording move under anything this repository cites"** — an errata on a
+# card a row in unofficial.js or a rule-out in research-log.js was reasoned from, which is a
+# failure nothing else here can see. The row keeps matching, the tests keep passing, and the
+# reasoning underneath is wrong. Nobody would ever ask that by hand.
+#
+# Weekly rather than nightly, because oracle text is errata'd rarely and one request a week is
+# a courteous load on a free service. And **nothing depends on it succeeding**: a failed sweep
+# writes nothing at all, so the cache is exactly as good as it was and the research path is
+# untouched. Scryfall being down makes one weekly job red and costs this repository nothing.
 
 on:
+  # Monday morning UTC. Offset off the hour like update-data.yml, because GitHub's scheduler is
+  # best-effort and everything asking for :00 is what it is worst at.
+  schedule:
+    - cron: '23 5 * * 1'
   workflow_dispatch:
     inputs:
       cards:
         # Semicolons, not commas: "Camellia, the Seedmiser" is one card.
-        description: 'Card names, separated by a semicolon'
-        required: true
+        description: 'Card names, separated by a semicolon (ignored when "sweep" is ticked)'
+        required: false
         default: 'Bartolomé del Presidio; Woe Strider; Bloodflow Connoisseur'
+      # The sweep is the path that scales and the name list is the exception now. Off by
+      # default all the same: a dispatch for one card should stay a dispatch for one card,
+      # and this asks Scryfall for its whole bulk file.
+      sweep:
+        description: 'Sweep EVERY card from Scryfall bulk data instead of the names above'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -33,7 +58,14 @@ permissions:
 jobs:
   cache:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Read by the `impact` job below, which must not run when there is nothing to compare.
+    outputs:
+      branch: ${{ steps.target.outputs.branch }}
+      committed: ${{ steps.commit.outputs.committed }}
+    # 30, not 15. The name path never came close, but a sweep downloads Scryfall's bulk
+    # file, reads every object in it and writes a much larger card-text.json, and a timeout
+    # mid-write is the one failure that could commit a half-swept cache.
+    timeout-minutes: 30
     steps:
       # Never onto main: this repo's rule is branch -> PR -> checks -> merge, and a
       # workflow with a write token is not an excuse to skip it. Same rule as
@@ -76,9 +108,15 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # No `if` here, deliberately. The tool reads SWEEP and decides, because shell inside a
+      # workflow is the one kind of code in this repository nothing can test, and a wrong
+      # branch here is a 40-minute doomed run or a silently ignored name list.
+      # test/cache-card-text.test.js covers both modes in milliseconds.
       - name: Fetch the card text
         env:
           CARDS: ${{ inputs.cards }}
+          SWEEP: ${{ inputs.sweep }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -o pipefail
           node tools/cache-card-text.js | tee -a "$GITHUB_STEP_SUMMARY"
@@ -103,6 +141,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit the result
+        id: commit
         run: |
           set -euo pipefail
           # `git status --porcelain`, not `git diff`. This is the line that made the first
@@ -114,13 +153,17 @@ jobs:
           if [ -z "$(git status --porcelain -- card-text.json)" ]; then
             echo 'Nothing changed — every card asked for was already cached with the same text.' \
               >> "$GITHUB_STEP_SUMMARY"
+            echo 'committed=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add card-text.json
-          git commit -m "Cache oracle text for: ${CARDS}"
+          # Asked for rather than composed here, same reason as the step above: a sweep's
+          # subject cannot be its card list and that choice is a decision.
+          git commit -m "$(node tools/cache-card-text.js --subject)"
           git push origin "HEAD:${BRANCH}"
+          echo 'committed=true' >> "$GITHUB_OUTPUT"
           # Where it went and how to land it. A commit on a branch nobody is told about is
           # the same as no commit, which is the other half of the failure this step's
           # sibling above fixes.
@@ -132,4 +175,95 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           CARDS: ${{ inputs.cards }}
+          SWEEP: ${{ inputs.sweep }}
           BRANCH: ${{ steps.target.outputs.branch }}
+
+  # Did any of that move the ground under something this repository has already reasoned from?
+  #
+  # A sweep of every card reports every wording that moved, and at 34,422 cards that is a
+  # firehose: almost all of it belongs to cards nothing here has ever cited. The subset worth a
+  # person is the cards `unofficial.js` and `research-log.js` name, because that is the failure
+  # nothing else catches — a row citing "sacrifice a Food" against a card that stopped saying
+  # it. The row keeps matching, `checks` stays green, and the reasoning underneath is wrong.
+  #
+  # Separate job, and the split is about blast radius rather than tidiness — the same reason
+  # update-data.yml keeps `graduated` apart from `fetch`. The job above has `contents: write`
+  # and pushes a 14MB data file; this one can open an issue and cannot touch the cache.
+  impact:
+    needs: cache
+    # Nothing to compare when nothing was committed, and `false` is the ordinary result of a
+    # weekly sweep against a Scryfall that has not moved.
+    if: ${{ needs.cache.outputs.committed == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      # depth 2, because the whole comparison is this commit against the one before it. The
+      # branch is whatever the job above pushed to — its own name on a dispatch, or
+      # card-text/run-<n> when it was dispatched somewhere that refuses direct pushes.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.cache.outputs.branch }}
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Compared against what actually landed, not against a report the sweep wrote about
+      # itself. A process auditing its own output is something a reader has to take on trust,
+      # and two committed revisions cannot be wrong about what they contain.
+      - name: What moved, and which of it is cited
+        id: impact
+        run: |
+          set -euo pipefail
+          git show HEAD~1:card-text.json > "$RUNNER_TEMP/before.json"
+          node tools/sweep-impact.js "$RUNNER_TEMP/before.json" card-text.json \
+            --json "$RUNNER_TEMP/impact.json"
+          node tools/sweep-impact.js "$RUNNER_TEMP/before.json" card-text.json \
+            > "$RUNNER_TEMP/body.md"
+          # jq reads a value the tool decided. The decision is in sweep-impact.js, where
+          # test/sweep-impact.test.js can reach it — shell in a run block cannot be tested.
+          needed=$(jq -r '.needsAttention' "$RUNNER_TEMP/impact.json")
+          echo "needed=$needed" >> "$GITHUB_OUTPUT"
+          jq -r '"\(.totals.changed) changed, \(.totals.renamed) renamed, \(.totals.added) added, \(.totals.gone) no longer listed."' \
+            "$RUNNER_TEMP/impact.json" >> "$GITHUB_STEP_SUMMARY"
+
+      # One issue, matched on the exact title because --search is fuzzy and would happily return
+      # an issue that merely mentions the words.
+      #
+      # **It is never closed by this job, and that is the difference from update-data.yml's
+      # graduation issue.** That one tracks a *state* — rows Spellbook currently publishes — so an
+      # empty list means the work is done and closing is correct. This one records *events*: a
+      # card's wording moved on a particular day and somebody has to read what cited it. A later
+      # sweep finding no NEW cited change says nothing about whether that reading happened, so
+      # auto-closing would silently mark unfinished work done. The first version of this step did
+      # exactly that.
+      #
+      # So events accumulate as comments rather than rewriting the body, and a person closes it.
+      - name: Record any cited change on the standing issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: Oracle text moved under cards this repo cites
+          NEEDED: ${{ steps.impact.outputs.needed }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --state open --limit 100 --json number,title \
+            --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
+
+          if [ "$NEEDED" != "true" ]; then
+            # Deliberately nothing. An open issue stays open: this job cannot know whether the
+            # reading it asked for has been done.
+            echo 'No cited card changed.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file "$RUNNER_TEMP/body.md"
+            echo "Commented on issue #${number}." >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh issue create --title "$TITLE" --body-file "$RUNNER_TEMP/body.md" \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi

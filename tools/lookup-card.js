@@ -170,13 +170,25 @@ async function fromScryfall(name) {
 // must never read as Scryfall's word, and a name that failed because the network
 // was refused must never be reported as a misspelling. Both of those are wrong in
 // the direction a reader cannot detect.
-function verdict(scry, faceList, cached) {
+function verdict(scry, faceList, cached, generated) {
   // The cache first, and it outranks a live fetch rather than backing it up. What is in
   // it *is* Scryfall's wording — a runner read it and committed it — so asking again buys
   // a fresher date and nothing else, at the cost of a request that this sandbox cannot
   // make anyway. The age is printed instead, which is the honest version of the same
   // information.
-  if (cached) return { source: 'cache', age: CardText.ageNote(cached.fetched) };
+  //
+  // **Two dates, because they answer different questions.** `age` says when this card's
+  // wording last changed, which is reassurance when it is old. `confirmed` says when a
+  // sweep last checked anything against Scryfall, which is the one that carries risk when
+  // it is old. Reporting only the first would put the warning on the most stable cards and
+  // stay silent about a cache nobody had swept in two years.
+  if (cached) {
+    return {
+      source: 'cache',
+      age: CardText.ageNote(cached.fetched),
+      confirmed: CardText.confirmedNote(generated),
+    };
+  }
   if (scry.card) return { source: 'scryfall' };
   if (faceList) {
     return {
@@ -233,11 +245,14 @@ function sayForge(faceList, why) {
 // Scryfall's fields and no banner — the only difference is a line saying when it was read.
 // Deliberately not shaped like forgeBanner(): a warning that appears on every card is a
 // warning nobody reads, and this one is only ever a prompt to re-fetch.
-function sayCached(entry, age) {
+function sayCached(entry, age, confirmed) {
   say(`### ${entry.name}`);
   say();
-  if (age) say(`_${age}_`);
-  if (age) say();
+  // Both dates when both have something to say, joined rather than stacked: "unchanged
+  // since X" alone reads as the freshness claim it is not, and the sweep date alone loses
+  // the reassurance that the wording has been still for years.
+  const dates = [age, confirmed].filter(Boolean).join(' · ');
+  if (dates) { say(`_${dates}_`); say(); }
   say(`- mana cost: \`${entry.mana || '—'}\``);
   say(`- colour identity: \`${entry.identity || 'colourless'}\``);
   say(`- commander legal: ${entry.commanderLegal ? 'yes' : 'no'}`);
@@ -260,7 +275,7 @@ async function lookup(name, cache) {
   // pass reading forty cards makes no network calls, and works in a sandbox where every
   // Scryfall host is refused at CONNECT.
   if (cached) {
-    sayCached(cached, CardText.ageNote(cached.fetched));
+    sayCached(cached, CardText.ageNote(cached.fetched), CardText.confirmedNote(cache.generated));
     return;
   }
   const scry = await fromScryfall(name);
