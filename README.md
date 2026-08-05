@@ -1513,12 +1513,26 @@ a wrong one is the sweep going to the wrong card.
 
 ## Branching strategy
 
-Trunk-based, short-lived branches. **Short-lived is load-bearing.** Branch off `main` as `feat/…` or
-`fix/…`, push, open a PR, and hit **Enable auto-merge** — **merging to `main` is the release**.
+Trunk-based. Branch off `main`, push, open a PR, and hit **Enable auto-merge** — **merging to `main`
+is the release**. **What is load-bearing is restarting a branch from `main`, not giving it a new
+name**: branches here are harness-assigned and reused, and one of them carried 11 pull requests in an
+afternoon while each pull request lived about two minutes. The rule this replaces asked for `feat/…`
+or `fix/…` and no branch had ever used either.
+
+**One pull request per piece of work, not per commit.** Every merge is a release, and the release is
+not free: 5 Aug 2026 spent 22 CI runs, 34.6 minutes of runner time and 14 deploys on 19 merges, one
+of which was 17 lines of a markdown file. With required approvals at zero the pull request reviews
+nothing — it is the only way through the ruleset — so splitting a session's edits across four of them
+buys four CI runs and four deploys and no information. Split only what you would want to revert on
+its own.
 
 **Merge commits only, and merged branches are kept.** Squash and rebase merging are off, and so is
 *Automatically delete head branches* — three checkboxes that between them make a follow-up push on a
-reused branch name an ordinary fast-forward with no exception.
+reused branch name an ordinary fast-forward with no exception. **All three are repository settings,
+and the ruleset backs up none of them** — it still lists squash and rebase as allowed merge methods,
+so what actually applies is the intersection and a single checkbox is holding the invariant the next
+two paragraphs rest on. `node tools/check-branch-rules.js` reports that as FRAGILE rather than
+passing it.
 
 Neither is untidiness. Deleting branches made every follow-up a remembered ritual (`fetch --prune`,
 never `--force-with-lease`, because the lease named a ref that no longer existed and failed in a way
@@ -1535,10 +1549,17 @@ force-pushes an orphan commit there nightly.
 
 **That paragraph was false until 5 Aug 2026, when the ruleset turned out not to exist at all** — and it
 read exactly like one that worked, because PRs still merged and CI still went green with nothing saying the
-green was advisory. **Nothing here can check it**: a session's token is `metadata=read`, so
-`/branches/main/protection` is 403 and `checks` cannot assert its own requiredness. `/rules/branches/main`
-lists the effective rules and needs only read access — that, or watching a `--force` push to `main` be
-refused, is the answer. Prose asserting it is configured is worth nothing.
+green was advisory. Pull requests #1–#160 all merged through a gate that was not there. It was recreated
+at 15:34 UTC that day, and the sentence above is now true for the first time.
+
+**Nothing in the test suite can check it**: a session's token is `metadata=read`, so
+`/branches/main/protection` is 403 and `checks` cannot assert its own requiredness. But
+`/rules/branches/main` lists the effective rules anonymously, so the claims are a command instead —
+`node tools/check-branch-rules.js` checks every one of them against what GitHub reports, and
+distinguishes a false claim from one that merely has nothing watching it. It runs on a runner
+(*Check the branch rules are real*) because `api.github.com` is off this sandbox's proxy allowlist.
+Prose asserting the repository is configured is still worth nothing; the difference is that there is
+now something else to read.
 
 **Up to date is load-bearing** — see *What the release pipeline costs* for what rests on it. Its price:
 **auto-merge does not update a stale branch**, so a PR whose base moved waits for somebody to press

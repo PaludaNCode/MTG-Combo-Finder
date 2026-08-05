@@ -1,0 +1,52 @@
+name: Check the branch rules are real
+
+# Does GitHub actually enforce what CLAUDE.md and the README say about `main`?
+#
+# On 5 Aug 2026 the answer was no: both files described a ruleset that did not exist,
+# and 160 pull requests had merged through it. Nothing looked wrong, because a missing
+# gate and a working one are indistinguishable from the outside — PRs merge and CI goes
+# green either way. So the claims are a command now, and this is where it runs live.
+#
+# On a runner because the sandbox this repository is usually edited from cannot reach
+# `api.github.com`: it is off the agent proxy's allowlist, and Node's fetch() does not
+# route through the proxy in any case. Same reason probe-cors.yml exists.
+#
+# On demand only, and deliberately NOT part of `checks`. Two reasons, and the second is
+# the one that matters: it asks a live third party, so it would go red during somebody
+# else's outage; and what it measures lives in a GitHub settings page, so a red run is
+# something to go and change rather than something to fix in the tree. A required check
+# that can only be fixed outside the tree blocks every unrelated pull request.
+#
+# Read it before trusting any sentence in either file about branch protection, and after
+# changing anything in Settings → Rules.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # Into the step summary as well as the log: this is a result somebody reads once
+      # and acts on, and a summary outlives log expiry. The tool exits non-zero only
+      # when a documented claim is false — FRAGILE and UNKNOWN lines are reported and
+      # do not fail the run, because neither is a thing the tree can fix.
+      #
+      # GITHUB_TOKEN buys the 5,000/hour rate-limit bucket and nothing else; every
+      # endpoint the tool reads is readable anonymously, which is what makes a run
+      # without one exactly as trustworthy.
+      - name: Ask GitHub what applies to main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          node tools/check-branch-rules.js | tee -a "$GITHUB_STEP_SUMMARY"
