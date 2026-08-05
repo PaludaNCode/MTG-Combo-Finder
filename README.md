@@ -1199,8 +1199,8 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 451 hand-written rows cite a published combo. 426 of them and the three stand-in rules are
-`verified`; the other 25 are `derived`. **Use `derived` rather than reading loosely and claiming
+All 451 hand-written rows cite a published combo. 438 of them and the three stand-in rules are
+`verified`; the other 13 are `derived`. **Use `derived` rather than reading loosely and claiming
 `verified`.**
 
 `test/unofficial.test.js` enforces the shape of both halves — every row cites a real combo id, every swap
@@ -1291,7 +1291,7 @@ is a ratio. *Read the pair count, not the score, for a card this widely publishe
 **Which makes the log a record of the cards somebody asked about, and nothing wider.**
 `tools/substitution-scope.js` points the same method at every card: at the strict bar, **1,779
 interchangeable pairs implying 4,835 combos Spellbook has not published**. Those are candidates, not owed
-rows. **981 candidates have been read.**
+rows. **993 candidates have been read.**
 
 **A rule-out can also be written as cards, and then a tool can act on it** — a rule-out may carry `sets`,
 the exact combinations it killed, which `tools/deck-gaps.js` drops and prints. **`sets` is always a

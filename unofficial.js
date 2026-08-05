@@ -1828,7 +1828,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Animation Module', 'Ashnod\'s Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2034-2082-3490',
         cards: ['Sadistic Glee', 'Animation Module', 'Ashnod\'s Altar'],
@@ -1846,7 +1846,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Ghave, Guru of Spores', 'Utopia Mycon'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-4214-5189',
         cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Utopia Mycon'],
@@ -1862,7 +1862,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Animation Module', 'Phyrexian Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-3490-4050',
         cards: ['Sadistic Glee', 'Animation Module', 'Phyrexian Altar'],
@@ -1879,7 +1879,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Ghave, Guru of Spores', 'Phyrexian Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-4050-5189',
         cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Phyrexian Altar'],
@@ -1982,7 +1982,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Evolution Witness', 'Blood Pet'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-3944-5660',
         cards: ['Evolution Witness', 'Sadistic Glee', 'Blood Pet'],
@@ -2034,7 +2034,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Animation Module', 'Krark-Clan Ironworks'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-3490-4659',
         cards: ['Sadistic Glee', 'Animation Module', 'Krark-Clan Ironworks'],
@@ -2087,7 +2087,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Evolution Witness', 'Wild Cantor'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '1497-2082-5660',
         cards: ['Evolution Witness', 'Sadistic Glee', 'Wild Cantor'],
@@ -2105,7 +2105,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Ulasht, the Hate Seed', 'Utopia Mycon'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-3192-4214',
         cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Utopia Mycon'],
@@ -2121,7 +2121,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Ulasht, the Hate Seed', 'Phyrexian Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-3192-4050',
         cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Phyrexian Altar'],
@@ -2137,7 +2137,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Evolution Witness', 'Reckless Barbarian'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '1947-2082-5660',
         cards: ['Evolution Witness', 'Sadistic Glee', 'Reckless Barbarian'],
@@ -2191,7 +2191,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Ulasht, the Hate Seed', 'Thermopod'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-3192-5231',
         cards: ['Ulasht, the Hate Seed', 'Sadistic Glee', 'Thermopod'],
@@ -2207,7 +2207,7 @@
     },
     {
       cards: ['Necrosynthesis', 'Ghave, Guru of Spores', 'Thermopod'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2082-5189-5231',
         cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Thermopod'],

@@ -1431,6 +1431,118 @@ const PASSES = [
       + 'the text is in hand, since the only per-shape question left is whether a creature in the '
       + 'loop belongs to somebody else.',
   },
+  {
+    subject: 'Sadistic Glee against Necrosynthesis: twelve rows read rather than reasoned',
+    cards: [
+      'Sadistic Glee',
+      'Necrosynthesis',
+      'Animation Module',
+      'Ghave, Guru of Spores',
+      'Ulasht, the Hate Seed',
+      'Utopia Mycon',
+      'Thermopod',
+      "Ashnod's Altar",
+      'Phyrexian Altar',
+      'Krark-Clan Ironworks',
+      'Evolution Witness',
+      'Blood Pet',
+      'Wild Cantor',
+      'Reckless Barbarian',
+    ],
+    cardIds: [2082, 1628, 3490, 5189, 3192, 4214, 5231, 2034, 4050, 4659, 5660, 3944, 1497, 1947],
+    date: '2026-08-05',
+    method:
+      'NOT A SWEEP. Twelve rows already in unofficial.js carried `derived` — both halves '
+      + 'published, the pairing reasoned, nobody had read it against the cards — and this pass '
+      + 'is the reading. It was cheap because the whole difference between the two Auras is one '
+      + 'word, and the loops turn on whether that word is ever reached.',
+    read: {
+      'Sadistic Glee':
+        'Enchant creature\n'
+        + 'Whenever a creature dies, put a +1/+1 counter on enchanted creature.',
+      'Necrosynthesis':
+        'Enchant creature\n'
+        + 'Enchanted creature has "Whenever another creature dies, put a +1/+1 counter on this creature."\n'
+        + 'When enchanted creature dies, look at the top X cards of your library, where X is its '
+        + 'power. Put one of those cards into your hand and the rest on the bottom of your library '
+        + 'in a random order.',
+      'Animation Module':
+        'Whenever one or more +1/+1 counters are put on a permanent you control, you may pay {1}. '
+        + 'If you do, create a 1/1 colorless Servo artifact creature token.\n'
+        + '{3}, {T}: Choose a counter on target permanent or player. Give that permanent or player '
+        + 'another counter of that kind.',
+      'Ghave, Guru of Spores':
+        'Ghave enters with five +1/+1 counters on it.\n'
+        + '{1}, Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling '
+        + 'creature token.\n'
+        + '{1}, Sacrifice a creature: Put a +1/+1 counter on target creature.',
+      'Ulasht, the Hate Seed':
+        'Ulasht enters with a +1/+1 counter on it for each other red creature you control and a '
+        + '+1/+1 counter on it for each other green creature you control.\n'
+        + '{1}, Remove a +1/+1 counter from Ulasht: Choose one —\n'
+        + '• Ulasht deals 1 damage to target creature.\n'
+        + '• Create a 1/1 green Saproling creature token.',
+      'Utopia Mycon':
+        'At the beginning of your upkeep, put a spore counter on this creature.\n'
+        + 'Remove three spore counters from this creature: Create a 1/1 green Saproling creature token.\n'
+        + 'Sacrifice a Saproling: Add one mana of any color.',
+      'Thermopod':
+        '{S}: This creature gains haste until end of turn. ({S} can be paid with one mana from a '
+        + 'snow source.)\n'
+        + 'Sacrifice a creature: Add {R}.',
+      "Ashnod's Altar": 'Sacrifice a creature: Add {C}{C}.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}.',
+      'Evolution Witness':
+        '{1}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.)\n'
+        + 'Whenever one or more +1/+1 counters are put on this creature, return target permanent '
+        + 'card from your graveyard to your hand.',
+      'Blood Pet': 'Sacrifice this creature: Add {B}.',
+      'Wild Cantor':
+        '({R/G} can be paid with either {R} or {G}.)\n'
+        + 'Sacrifice this creature: Add one mana of any color.',
+      'Reckless Barbarian': 'Sacrifice this creature: Add {R}{R}.',
+    },
+    proposed: 12,
+    examined: 12,
+    kept: 0,
+    ruledOut: [],
+    notes:
+      'THE WHOLE DIFFERENCE IS WHERE THE TRIGGER LIVES. Sadistic Glee keeps the ability on the '
+      + 'Aura — "whenever A creature dies, put a +1/+1 counter on enchanted creature" — and '
+      + 'Necrosynthesis grants it to the creature — "whenever ANOTHER creature dies, put a +1/+1 '
+      + 'counter on this creature". They diverge on exactly one event: the enchanted creature\'s '
+      + 'own death, where Glee triggers and Necrosynthesis does not. A counter on a creature that '
+      + 'has just died does nothing, so the divergence is worth nothing either, and in all twelve '
+      + 'loops the body that dies is a token or a recast one-shot rather than the enchanted '
+      + 'creature. Necrosynthesis also throws in a card off the enchanted creature\'s death, which '
+      + 'no loop here uses and none is harmed by.\n\n'
+      + 'THE FOUR FAMILIES, each traced rather than assumed:\n'
+      + '  - Animation Module + a sacrifice outlet (Ashnod\'s Altar, Phyrexian Altar, Krark-Clan '
+      + 'Ironworks). A Servo dies to the outlet, the Aura answers with a counter, the Module sees '
+      + 'a counter put on a permanent and pays {1} for the next Servo. Ashnod\'s pays {C}{C} for '
+      + 'a {1} Servo, so the mana is where the loop profits. Ironworks eats an artifact, and a '
+      + 'Servo is an artifact creature, so its sacrifice is still a creature dying.\n'
+      + '  - Ghave, Guru of Spores + Utopia Mycon or Thermopod. Remove a counter for a Saproling, '
+      + 'sacrifice the Saproling for the mana that paid for it, and the Aura hands the counter '
+      + 'back. Nothing accumulates; the death, ETB and sacrifice triggers do, which is what those '
+      + 'rows claim.\n'
+      + '  - Ulasht, the Hate Seed + the same two outlets, on the same shape: its second mode is '
+      + '"remove a +1/+1 counter: create a Saproling".\n'
+      + '  - Evolution Witness + a one-shot mana body (Blood Pet, Wild Cantor, Reckless Barbarian). '
+      + 'Sacrifice the body for mana, the Aura puts a counter on the Witness, the Witness returns '
+      + 'the body from the graveyard to hand, the mana recasts it. The Aura is on the Witness, '
+      + 'which never dies — the case where the two Auras would differ, avoided by construction '
+      + 'rather than by luck.\n\n'
+      + 'kept is 0 because this pass wrote no rows. It moved twelve from `derived` to `verified`, '
+      + 'which is the other thing a reading can buy and the reason the two confidences exist. '
+      + 'Eighteen more rows with the same swap were already `verified`, so all thirty now agree; a '
+      + 'file where the same swap carried two confidences was itself the tell.\n\n'
+      + 'ALL FOURTEEN CARDS OUT OF card-text.json, which is Scryfall\'s wording. Nothing here rests '
+      + 'on Forge or on a paste, and that is new: the workflow dispatch that cached the last 40 '
+      + 'landed first, so this is the first pass in this file that had the whole board in the cache '
+      + 'before it started.'
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
