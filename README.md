@@ -1020,7 +1020,8 @@ work to Spellbook.
 1. **`card-text.json`**, the committed cache of Scryfall's wording, filled on a runner by the *Cache card
    text* workflow. No request, so it works from a sandboxed session. **Never hand-write into it** — only
    the workflow does, or it becomes the unverified recollection this rule exists to stop, wearing
-   authority.
+   authority. Tick **`sweep`** on that workflow to fill it from Scryfall's bulk data in one request;
+   pass names for two or three cards. See *Sweeping every card* below.
 2. **Scryfall live** — 403s at CONNECT from an agent sandbox; fine on a runner.
 3. **Forge card scripts** on `raw.githubusercontent.com`, banner-marked as Forge's wording: no colour
    identity, legalities or printings. **Cross-check anything the reasoning turns on against
@@ -1048,6 +1049,62 @@ distinct card name in **72 seconds at twelve concurrent requests**. Given every 
 *enumerated* rather than sampled, because Forge's cost line is structured. **The filter proposes; it does
 not decide** — two of the eight that pass turned up died on reading, both in the *effect* column where no
 cost filter can see.
+
+### Sweeping every card, and why a sweep can run twice
+
+`tools/cache-card-text.js --all`, or the `sweep` box on the *Cache card text* workflow.
+
+**One request per card does not reach the whole card space.** At 120ms a request that is ~40 minutes
+against a workflow that times out at 15 — it would die a third of the way through and look like it had
+worked. So a sweep asks `/bulk-data` once and streams the download it names. `tools/scryfall-bulk.js`
+owns that half and does not touch the cache.
+
+**A sweep writes only what moved, and that is what makes it repeatable rather than a thing done once.**
+Every entry used to carry the date it was last *fetched*, so a second sweep rewrote all ~30,000 of them
+and landed as a diff in which every line changed — destroying the property the entries are normalised to
+~300 bytes to protect. Split in two: the per-entry date says when that **wording last changed**, the
+file-level `generated` says when **everything was last confirmed**. A re-sweep then diffs to the header
+plus exactly the cards whose text moved.
+
+**That diff is the errata report.** A card listed in it may sit under a row in `unofficial.js` or a
+rule-out in `research-log.js`, and until now nothing in this repository would have noticed. The reader
+splits the same way: an old *wording* is reassurance, an old *sweep* is the risk, so the staleness warning
+belongs to `confirmedNote()` rather than to the entry — where it used to fire loudest on the most stable
+cards and stay silent about a cache nobody had swept in two years.
+
+**Three guards, each against a failure that would otherwise exit 0.** A sweep returning fewer than
+`SWEEP_FLOOR` cards writes nothing and fails, because a truncated download or a moved field looks exactly
+like a small cache. Cards a sweep does not see are **kept and reported, never deleted** — a rename is the
+ordinary cause and it wants a person, not a silent withdrawal of whatever cited them. And the gzip is
+detected from the payload's **magic bytes rather than its file extension**, since the same URL may arrive
+compressed or already inflated by `fetch`, and inflating twice fails obscurely.
+
+**A rename is caught by identity, not by name.** Entries carry Scryfall's `oracle_id`, so a renamed card
+is reported as a rename with its date intact rather than as an addition plus a disappearance — the same
+shape as a new card plus a retired one, which left every citation of the old spelling pointing at a card
+the cache no longer answered for. `sameReading()` compares **wording only**; whether two entries are the
+same card belongs to `merge()`, which has already decided by the time it asks.
+
+**A weekly sweep raises an issue only when a card this repository cites moves.** At 34,422 cards every
+sweep reports changes, and almost all of them belong to cards nothing here has reasoned about — a firehose
+is the same as silence. `tools/sweep-impact.js` intersects the diff with the ~178 names in `unofficial.js`
+and `research-log.js`, and that subset is the failure nothing else catches: a row citing *sacrifice a
+Food* against a card that stopped saying it keeps matching, keeps `checks` green, and is wrong. It compares
+two committed revisions rather than a report the sweep wrote about itself, and it maintains one standing
+issue the way the graduation job does. Uncited changes stay a total in the step summary.
+
+**It was written blind and then run for real.** Every Scryfall host — API, CDN and docs — answers 403 at
+CONNECT from a sandboxed session, so the bulk module is written to survive being wrong about the shape:
+`pickBulk()` throws listing the types actually offered, `downloadUrl()` throws listing the entry's keys.
+The first live dispatch took **4 seconds** to fetch and read the whole file and produced **34,422 cards,
+13.9 MB (2.1 MB gzipped)**.
+
+**That run is also the proof the date split works.** All 288 entries the cache already held kept their
+exact dates — nothing changed, nothing respelled, nothing absent — so a re-sweep really does diff to the
+header alone when Scryfall has not moved. And **every one of the 178 cards named across `unofficial.js`
+and `research-log.js` now resolves from the cache**, which is what takes the workflow round trip out of a
+research pass. That is a test, not a note → `test/card-text-merge.test.js`, and it strengthens as rows are
+added.
 
 ### What this cannot find: a card Spellbook has never used
 

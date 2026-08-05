@@ -36,8 +36,13 @@ const SCRY = {
 
 test('normalize keeps what the reader prints and nothing else', () => {
   const entry = CardText.normalize(SCRY);
+  // `oracleId` is identity rather than something the reader prints, and it is here anyway:
+  // a rename is otherwise invisible, and every citation of the old name goes on pointing at
+  // a card the cache no longer answers for. It is the one field in this list a reader never
+  // sees. Held to the same standard as the rest — the assertion is exhaustive, so a field
+  // arriving without a reason reddens this.
   assert.deepStrictEqual(Object.keys(entry).sort(),
-    ['commanderLegal', 'faces', 'fetched', 'identity', 'mana', 'name']);
+    ['commanderLegal', 'faces', 'fetched', 'identity', 'mana', 'name', 'oracleId']);
   assert.strictEqual(entry.mana, '{3}');
   assert.strictEqual(entry.identity, '');
   assert.strictEqual(entry.commanderLegal, true);
@@ -92,19 +97,39 @@ test('a reading from today says nothing — chrome on every card is chrome nobod
 });
 
 test('a reading from this month says how many days ago', () => {
-  assert.match(CardText.ageNote('2026-07-20', on('2026-08-03')), /read from Scryfall 14 days ago/);
+  assert.match(CardText.ageNote('2026-07-20', on('2026-08-03')), /unchanged since 2026-07-20, 14 days ago/);
 });
 
 test('an older reading switches to months, because 400 days is not a useful number', () => {
   assert.match(CardText.ageNote('2026-02-03', on('2026-08-03')), /6 months ago/);
 });
 
-// Shown, not refused. A year-old oracle text is right for all but a handful of cards, and
-// refusing it would send somebody to Forge's wording instead — strictly worse.
-test('past a year it says so and names the fix, rather than withholding the text', () => {
+// The staleness warning is asked of the whole cache, not of an entry, and this is the pair
+// of tests that pins why. An entry's date says when its wording last *changed*, so a long
+// age there is reassurance — the warning used to fire on exactly the most stable cards
+// while a cache nobody had swept in two years said nothing at all.
+test('an old wording is not a warning — a text that has not moved in years is the trustworthy kind', () => {
   const note = CardText.ageNote('2025-01-01', on('2026-08-03'));
+  assert.match(note, /unchanged since 2025-01-01/);
+  assert.doesNotMatch(note, /errata/);
+});
+
+// Shown, not refused. A year-old confirmation is right for all but a handful of cards, and
+// refusing it would send somebody to Forge's wording instead — strictly worse.
+test('past a year since the last sweep it says so and names the fix', () => {
+  const note = CardText.confirmedNote('2025-01-01', on('2026-08-03'));
   assert.match(note, /errata are worth ruling out/);
   assert.match(note, /Cache card text/);
+});
+
+test('a recent sweep says when, and a sweep today says nothing at all', () => {
+  assert.match(CardText.confirmedNote('2026-07-20', on('2026-08-03')), /last confirmed against Scryfall 14 days ago/);
+  assert.strictEqual(CardText.confirmedNote('2026-08-03', on('2026-08-03')), null);
+});
+
+// The shape a hand-edited or pre-sweep file has. It must not read as confirmed.
+test('a cache with no sweep date is unknown, never fresh', () => {
+  assert.match(CardText.confirmedNote(undefined), /no sweep date/);
 });
 
 // An entry with no date is the shape a hand-edited file would have. It must not read as

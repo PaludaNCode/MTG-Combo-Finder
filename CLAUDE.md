@@ -38,6 +38,8 @@ node tools/combos-with.js "Card A" "Card B"        # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
 node tools/lookup-card.js "Card name"             # oracle text: cache → Scryfall → Forge
 node tools/cache-card-text.js "Card name"         # runner only; "Cache card text" workflow
+node tools/cache-card-text.js --all               # ditto; EVERY card, from Scryfall bulk data
+node tools/sweep-impact.js old.json new.json      # which cited cards a sweep moved
 node tools/substitution-scope.js                  # how much of the space is unread
 node tools/deck-cards.js [deck.txt] --unswept     # which cards carry a deck's combos
 node tools/deck-gaps.js [deck.txt]                # which gaps THIS deck exposes
@@ -93,6 +95,8 @@ logic is unit-testable without a DOM.
 | `sw.js` | `ServiceWorkerShell` | network-first HTML, cache-first for stamped URLs only |
 | `tiers-page.js` | — | the DOM of `tiers.html` |
 | `research-log.js` | — | **not page data.** Swept cards, what each pass found, the text it read |
+| `tools/scryfall-bulk.js` | — | picking a bulk file and streaming cards out of it — no cache logic |
+| `tools/sweep-impact.js` | — | which of a sweep's changes land on a card this repo cites |
 
 - `research-log.js` breaks that shape — never loaded by a browser, so plain CommonJS, linted with
   the tools → `test/lint-config.test.js` fails if a script matches no lint block.
@@ -121,11 +125,15 @@ logic is unit-testable without a DOM.
 > **Sources, in order** — `tools/lookup-card.js` walks all three and says which answered:
 >
 > 1. **`card-text.json`**, the committed cache of Scryfall's wording, filled on a runner by the
->    *Cache card text* workflow. No request, so it works here. **If your cards are missing, run
->    that workflow first** — semicolons between names, and **it commits to the branch you
+>    *Cache card text* workflow. No request, so it works here. **If your cards are missing, tick
+>    `sweep` on that workflow** — one request to Scryfall's bulk data for *every* card, rather than
+>    one request per name, which is ~40 minutes and dies against the timeout. Names are still the
+>    right input for two or three cards. Either way **it commits to the branch you
 >    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
 >    the PR link, because `main` refuses direct pushes (the redirect is unconditional in
->    `tools/cache-target-branch.js`, so it holds either way). It used to *refuse* that dispatch, and
+>    `tools/cache-target-branch.js`, so it holds either way). **It also sweeps itself weekly and
+>    raises an issue when wording moves under a card something here cites** →
+>    `tools/sweep-impact.js`. It used to *refuse* a dispatch from `main`, and
 >    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
 >    the workflow does, or it becomes the unverified recollection this rule exists to stop,
 >    wearing authority.
@@ -136,6 +144,26 @@ logic is unit-testable without a DOM.
 >
 > WebSearch and a card the user pastes are fine. Published Spellbook steps corroborate what a loop
 > *does* but are not oracle text and do not satisfy this rule.
+
+- **A sweep only writes what moved, and that is load-bearing.** The per-entry date in
+  `card-text.json` says when a wording last *changed*; the file-level `generated` says when
+  everything was last confirmed. Conflate them and a re-sweep rewrites all ~30,000 dates as one
+  unreadable diff, which is the property the file's normalisation exists to protect. So **a sweep's
+  diff is the errata report** — a card listed there may sit under a row in `unofficial.js` or a
+  rule-out in `research-log.js`, and nothing else here would notice. → `test/card-text-merge.test.js`.
+- **The cache covers every card, and a pass should never need the network.** 34,422 cards, 13.9 MB, swept
+  in 4s. All 178 names across `unofficial.js` and `research-log.js` resolve from it →
+  `test/card-text-merge.test.js` fails if one does not, and the fix is a sweep rather than an exception.
+- **A card is found by `oracleId`, then by name.** Names are not stable identifiers and every
+  citation is a name, so a rename used to land as an add plus an `absent` — the same shape as a new
+  card plus a retired one — leaving the citations pointing at a name the cache no longer answered
+  for. It is reported as a rename now. `sameReading()` compares **wording only**: date, name and id
+  are all stripped, because whether two entries are the same *card* is `merge()`'s business and it
+  has already decided before asking.
+- **A short sweep fails rather than shrinking the cache** (`SWEEP_FLOOR`). A truncated download or a
+  moved field otherwise exits 0 having thrown the file away, and "it worked, 40 cards" reads exactly
+  like "it worked". Cards a sweep does not see are **kept and reported, never deleted** — a rename
+  wants a person.
 
 `research-log.js` is the index of what has been swept. **Read it before a deep dive, add to it
 after.** A pass not in it did not happen as far as anyone can tell — "nothing remains open" was
@@ -442,6 +470,28 @@ judgement call:
 **A long-lived branch pays both twice, plus a cost no conflict marker shows:** a rule added to
 `main` while the branch was out, which the branch then has to satisfy retroactively. The fix is not
 better conflict handling; it is a shorter branch.
+
+### The designated branch after its PR merges: prune, never force
+
+**The branch is deleted on merge**, so a merged PR leaves the name free and the remote ref gone.
+Follow-up work restarts it from the default branch rather than stacking on merged history:
+`git fetch origin main && git checkout -B <branch> origin/main`.
+
+**That push is a new branch, not a force-push**, and reaching for `--force-with-lease` is the
+mistake rather than the safety. It fails `! [rejected] … (stale info)` because the lease names a
+remote ref that no longer exists — which reads as a protection working and is nothing of the kind.
+`git fetch origin --prune` then a plain `git push -u origin <branch>`.
+
+**`.claude/hooks/session-start.sh` prunes, but only at session start.** A branch merged *mid*-session
+leaves the stale remote-tracking ref behind and nothing clears it, so the local `origin/<branch>`
+still points at commits that are already in `main`. Two checks settle it before any force:
+`git log --oneline HEAD..origin/<branch>` empty, and `git branch -r --contains origin/<branch>`
+naming `origin/main`. `fatal: couldn't find remote ref` means it is already gone — prune and push.
+
+**Never `git stash` to run a check while work is staged.** `--keep-index` stashes the working tree,
+and the `pop` then conflicts with the index copy and leaves conflict markers inside the files that
+were about to be committed — recovering means reading each one back out of `stash@{0}`. Copy to the
+scratchpad instead; there is never a reason to move the work to look at it.
 
 ### Writing an issue here: point, do not restate
 

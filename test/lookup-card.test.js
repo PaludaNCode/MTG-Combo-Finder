@@ -4,6 +4,9 @@ const assert = require('node:assert');
 const {
   forgeSlug, forgePaths, forgeMana, parseForge, fromForge, verdict, forgeBanner,
 } = require('../tools/lookup-card.js');
+// For today()'s exact shape, so the "a recent sweep says nothing" assertion below is not a
+// literal date that starts failing tomorrow.
+const CardText = require('../tools/card-text.js');
 
 // The Forge fallback exists because Scryfall is not always reachable — an agent
 // sandbox whose proxy allowlists raw.githubusercontent.com refuses every Scryfall
@@ -297,10 +300,20 @@ test('verdict: the cache answers even when Scryfall is refused and Forge has the
 });
 
 test('verdict: a cached entry carries its age, so a stale reading cannot pass as fresh', () => {
-  const old = verdict({ blocked: 'HTTP 403' }, null, { fetched: '2024-01-01' });
+  // Both dates, and the warning belongs to the sweep rather than to the wording. An old
+  // wording that a recent sweep confirmed is the trustworthy case; an old *sweep* is the
+  // risky one, and the note has to land on the second.
+  const old = verdict({ blocked: 'HTTP 403' }, null, { fetched: '2024-01-01' }, '2024-01-02');
   assert.strictEqual(old.source, 'cache');
-  assert.match(old.age, /read from Scryfall/);
-  assert.match(old.age, /errata/);
+  assert.match(old.age, /unchanged since 2024-01-01/);
+  assert.match(old.confirmed, /errata/);
+});
+
+test('verdict: a wording that has not moved in years is not flagged when the sweep is recent', () => {
+  const stable = verdict({ blocked: 'HTTP 403' }, null, { fetched: '2020-05-01' }, CardText.today());
+  assert.match(stable.age, /unchanged since 2020-05-01/);
+  assert.doesNotMatch(stable.age, /errata/);
+  assert.strictEqual(stable.confirmed, null);
 });
 
 test('verdict: nothing cached falls through to the behaviour that was already pinned', () => {
