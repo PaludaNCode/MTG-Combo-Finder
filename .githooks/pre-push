@@ -2,11 +2,11 @@
 #
 # Refuse a force-push whose lease cannot mean anything.
 #
-# This hook exists because a documented rule was not enough. CLAUDE.md says, in its own
-# section, that a merged designated branch is deleted on the remote and that the follow-up push
-# is therefore a NEW branch rather than a force-push. That rule was written into the file and
-# then broken about an hour later in the same session, with the text sitting in the author's
-# own context: `git push --force-with-lease` returned
+# This hook exists because a documented rule was not enough. CLAUDE.md had a section saying a
+# merged designated branch is deleted on the remote and that the follow-up push is therefore a NEW
+# branch rather than a force-push. That rule was written into the file and then broken about an
+# hour later in the same session, with the text sitting in the author's own context:
+# `git push --force-with-lease` returned
 #
 #     ! [rejected]  <branch> (stale info)
 #
@@ -16,6 +16,11 @@
 #
 # Every other rule in CLAUDE.md that stuck has a check behind it. This is that check. It is
 # not advice about force-pushing; it fires only in the one case where the flag is meaningless.
+#
+# The case is rarer since *Automatically delete head branches* was turned off — a merged branch now
+# keeps its remote ref, so the follow-up push is a plain fast-forward. Kept anyway: it costs nothing,
+# it still catches a brand-new branch pushed with --force, and the setting can be turned back on by
+# anyone who does not know what it used to cost.
 set -uo pipefail
 
 remote="${1:-origin}"
@@ -45,7 +50,7 @@ pre-push: refusing a force-push to '$branch' on '$remote', which does not have t
 
   A lease against a ref the remote does not have can never be satisfied, so this would fail
   with "! [rejected] (stale info)" — which looks like a protection working and is not one.
-  The branch was almost certainly deleted when its pull request merged.
+  Either this branch has never been pushed, or it was deleted on the remote.
 
   There is nothing to protect and nothing to force:
 
