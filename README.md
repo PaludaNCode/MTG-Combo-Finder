@@ -1085,13 +1085,21 @@ shape as a new card plus a retired one, which left every citation of the old spe
 the cache no longer answered for. `sameReading()` compares **wording only**; whether two entries are the
 same card belongs to `merge()`, which has already decided by the time it asks.
 
-**A weekly sweep raises an issue only when a card this repository cites moves.** At 34,422 cards every
+**A sweep raises an issue only when a card this repository cites moves.** At 34,422 cards every
 sweep reports changes, and almost all of them belong to cards nothing here has reasoned about — a firehose
 is the same as silence. `tools/sweep-impact.js` intersects the diff with the ~178 names in `unofficial.js`
 and `research-log.js`, and that subset is the failure nothing else catches: a row citing *sacrifice a
 Food* against a card that stopped saying it keeps matching, keeps `checks` green, and is wrong. It compares
 two committed revisions rather than a report the sweep wrote about itself, and it maintains one standing
 issue the way the graduation job does. Uncited changes stay a total in the step summary.
+
+**It is dispatched by hand, and a weekly cron was tried and removed.** A schedule runs on the default
+branch, `main` refuses direct pushes, so the commit landed on `card-text/run-<n>` behind a PR link nothing
+opened — the alarm would have fired every Monday while the cache it alarmed about never moved. Neither
+obvious fix is free: **GitHub Actions is not an available ruleset bypass actor**, and **a PR opened with
+`GITHUB_TOKEN` does not trigger workflows**, so it would never run `checks` and could not merge. An
+unattended sweep needs a stored credential, which is a deliberate decision about a long-lived secret.
+Until somebody makes it, dispatch it — the workflow header has the detail.
 
 **It was written blind and then run for real.** Every Scryfall host — API, CDN and docs — answers 403 at
 CONNECT from a sandboxed session, so the bulk module is written to survive being wrong about the shape:

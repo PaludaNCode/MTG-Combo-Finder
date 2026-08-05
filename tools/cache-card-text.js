@@ -194,16 +194,14 @@ async function sweep(deps = {}) {
 //
 // So the workflow calls `node tools/cache-card-text.js` unconditionally and this decides,
 // and asks `--subject` for the commit line rather than composing one in bash.
-// A scheduled run is always a sweep. There is no name list to give it, and the question a
-// schedule asks is not "does this card still say that" — it is "did anything this repository
-// cites change", which nobody would ever ask by hand.
+// Only the exact string. A GitHub boolean input arrives as the *string* "false", which is
+// truthy in JS, so `Boolean(env.SWEEP)` would turn every one-card dispatch into a full sweep and
+// still look like it worked.
 //
-// In the workflow expression rather than here, this would be
-// `${{ inputs.sweep || github.event_name == 'schedule' }}`, which is a decision in YAML that
-// nothing can test. The GitHub boolean arrives as the *string* "false", truthy in JS, so the
-// obvious version of that expression turns every one-card dispatch into a full sweep.
-const sweepRequested = (env = process.env) => String(env.SWEEP || '').trim() === 'true'
-  || String(env.EVENT_NAME || '').trim() === 'schedule';
+// There was an `EVENT_NAME === 'schedule'` clause here for a weekly cron. The cron is gone — see
+// the header of .github/workflows/cache-card-text.yml for why — and the clause went with it
+// rather than being left as a branch nothing reaches.
+const sweepRequested = (env = process.env) => String(env.SWEEP || '').trim() === 'true';
 
 function commitSubject(env = process.env) {
   if (sweepRequested(env)) return "Sweep oracle text from Scryfall's bulk data";

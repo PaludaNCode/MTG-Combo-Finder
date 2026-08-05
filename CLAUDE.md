@@ -131,9 +131,9 @@ logic is unit-testable without a DOM.
 >    right input for two or three cards. Either way **it commits to the branch you
 >    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
 >    the PR link, because `main` refuses direct pushes (the redirect is unconditional in
->    `tools/cache-target-branch.js`, so it holds either way). **It also sweeps itself weekly and
->    raises an issue when wording moves under a card something here cites** →
->    `tools/sweep-impact.js`. It used to *refuse* a dispatch from `main`, and
+>    `tools/cache-target-branch.js`, so it holds either way). **A dispatch that changes anything
+>    also reports which cited cards moved** → `tools/sweep-impact.js`. It used to *refuse* a
+>    dispatch from `main`, and
 >    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
 >    the workflow does, or it becomes the unverified recollection this rule exists to stop,
 >    wearing authority.
@@ -388,7 +388,13 @@ loosely.
 - Trunk-based: short-lived `feat/…` / `fix/…` off `main`, PR, auto-merge when green. Merging to
   `main` *is* the release. **Short-lived is load-bearing** — see below.
 - **A ruleset refuses direct pushes to `main`**: PR required, `checks` green, **branches up to date**,
-  no force-push, no deletion. Two omissions are deliberate and read as oversights — linear history
+  no force-push, no deletion. **Nothing automated can land on `main`, and the bypass list cannot fix
+  that: GitHub Actions is not an available bypass actor** — the list offers Deploy keys, Repository
+  admin, Maintain, Write and installed Apps, nothing for `github-actions[bot]`. And **a PR opened with
+  `GITHUB_TOKEN` does not trigger workflows**, so an auto-opened PR never runs `checks` and is
+  unmergeable rather than auto-merging. An unattended job that wants to land on `main` therefore needs
+  a stored credential — a write deploy key or a PAT — which is a decision about a long-lived secret,
+  not a config line. A weekly card-text sweep was tried and removed over exactly this. Two omissions are deliberate and read as oversights — linear history
   would forbid the merge commits `main` already uses, and any required-approval count above zero makes
   every PR unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
   `update-data.yml` force-pushes it nightly.
