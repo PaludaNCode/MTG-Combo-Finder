@@ -70,6 +70,8 @@
 // answer. A partial index read as a complete one is worse than no index.
 'use strict';
 
+const { nameKey } = require('./combos.js');
+
 const PASSES = [
   {
     subject: 'The first substitution sweep',
@@ -1436,7 +1438,14 @@ function sweptCards() {
   const out = new Map();
   for (const pass of PASSES) {
     (pass.cards || []).forEach((name, i) => {
-      const key = String(name || '').split('/')[0].trim().toLowerCase();
+      // DeckCombos.nameKey, not a copy of it. This file used to spell the rule out again,
+      // and the two drifted the moment nameKey learned that a curly apostrophe is an
+      // apostrophe: six cards here are written "Ashnod’s Altar" and Spellbook writes
+      // "Ashnod's Altar", so every lookup for them answered NOT SWEPT — which is the one
+      // answer this index must never give wrongly, since the tools built on it report
+      // exactly that. Same reasoning as variantCardNames(): fix the contract, never the
+      // call site.
+      const key = nameKey(name);
       if (!out.has(key)) out.set(key, { name, id: (pass.cardIds || [])[i], passes: [] });
       out.get(key).passes.push(pass.subject);
     });

@@ -11,8 +11,18 @@
   // modal double-faced card as "Sorin of House Markov / Sorin, Ravenous Neonate",
   // and that spelling matched nothing at all. No card name contains a slash, so
   // splitting on a single one is safe.
+  //
+  // …and an apostrophe is an apostrophe however it was typed. Spellbook and Scryfall
+  // spell card names with an ASCII quote — "Ashnod's Altar" — but a curly one arrives
+  // constantly: it is what Scryfall's own oracle *text* uses, what a word processor
+  // substitutes, and what comes back from copying a decklist out of an article. Keyed
+  // literally the two are different cards, so a deck holding Ashnod's Altar found none
+  // of its combos and the page called the card unrecognized — visible, and wrong, and
+  // silent about the combos it cost. The whole apostrophe family folds to the plain one.
+  const APOSTROPHES = /[‘’‚‛ʼ´`]/g;
+
   function nameKey(name) {
-    return String(name || '').split('/')[0].trim().toLowerCase();
+    return String(name || '').split('/')[0].replace(APOSTROPHES, "'").trim().toLowerCase();
   }
 
   function deckNameSet(entries) {
