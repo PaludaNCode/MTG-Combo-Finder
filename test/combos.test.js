@@ -52,6 +52,28 @@ test('nameKey: case-insensitive, front face only', () => {
   assert.strictEqual(nameKey('SOL RING'), 'sol ring');
 });
 
+// An apostrophe is an apostrophe however it was typed, and this one reached users.
+// Spellbook and Scryfall spell names with an ASCII quote; a curly one arrives from a word
+// processor, from copying a list out of an article, and from Scryfall's own oracle text.
+// Keyed literally they are different cards, so a deck holding Ashnod's Altar found none of
+// its combos and the page called the card unrecognized.
+test('nameKey: a curly apostrophe is the same card as a straight one', () => {
+  assert.strictEqual(nameKey('Ashnod\u2019s Altar'), nameKey("Ashnod's Altar"));
+  assert.strictEqual(nameKey('Ashnod\u2019s Altar'), "ashnod's altar");
+  // The whole family, because exports do not agree on which one they use.
+  for (const mark of ['\u2018', '\u2019', '\u201A', '\u201B', '\u02BC', '\u00B4', '`']) {
+    assert.strictEqual(nameKey('Ashnod' + mark + 's Altar'), "ashnod's altar", 'mark ' + escape(mark));
+  }
+});
+
+// The end of that: a pasted decklist matches the published combo either way. This is the
+// assertion that would have caught it — nameKey alone looks fine in isolation.
+test('nameKey: a decklist typed with curly apostrophes still matches the data', () => {
+  const deck = deckNameSet([{ card: 'Ashnod\u2019s Altar' }, { card: 'Yawgmoth\u2019s Will' }]);
+  assert.ok(deck.has(nameKey("Ashnod's Altar")), 'the deck holds the card Spellbook published');
+  assert.ok(deck.has(nameKey("Yawgmoth's Will")));
+});
+
 test('edhrecSlug: strips punctuation and accents', () => {
   assert.strictEqual(edhrecSlug('Kinnan, Bonder Prodigy'), 'kinnan-bonder-prodigy');
   assert.strictEqual(edhrecSlug("Jötun Grunt"), 'jotun-grunt');

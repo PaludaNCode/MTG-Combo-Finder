@@ -165,3 +165,29 @@ test('research log: the totals are the sum of the passes, and nothing more', () 
   assert.ok(sum.examined <= sum.proposed,
     'more candidates were read than were ever proposed');
 });
+
+// The index answers "has anybody read this card?", and it is asked with names from three
+// places that do not agree on how to type an apostrophe: Spellbook's data, a pasted deck,
+// and this file. It used to spell the key rule out for itself rather than using
+// DeckCombos.nameKey — which is the drift: the moment nameKey learned that a curly
+// apostrophe is an apostrophe, the copy here did not, and every query in the other spelling
+// answered NOT SWEPT. The tools built on this index report exactly that answer, which is
+// what makes it worth a test.
+//
+// Asked as "either spelling of the query finds it", because that is the direction the data
+// actually exercises: the names in `cards` are straight, the queries are not always. An
+// earlier version of this test looked for curly names IN the log, found none, and said so
+// rather than passing — which is the only reason this one asks the right question.
+test('research log: a swept card is found whichever apostrophe the query uses', () => {
+  const swept = sweptCards();
+  const withApostrophe = [];
+  PASSES.forEach((pass) => (pass.cards || []).forEach((name) => {
+    if (name.includes("'")) withApostrophe.push(name);
+  }));
+  assert.ok(withApostrophe.length, 'no swept card has an apostrophe, so this proves nothing');
+  withApostrophe.forEach((name) => {
+    assert.ok(swept.has(nameKey(name)), name + ' is not in its own index');
+    assert.ok(swept.has(nameKey(name.replace(/'/g, '\u2019'))),
+      name + ' cannot be asked for with the apostrophe a word processor types');
+  });
+});
