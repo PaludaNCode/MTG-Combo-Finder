@@ -39,6 +39,14 @@ on:
 permissions:
   contents: read
 
+# Two merges close together would otherwise race to save the same key. Harmless — one wins and the
+# other's save is rejected — but it spends a runner to lose, and the newer merge is the one whose
+# Playwright version is current. `cancel-in-progress` rather than queueing, because a warm-up made
+# obsolete by a later merge is work nobody wants finished.
+concurrency:
+  group: warm-playwright-cache
+  cancel-in-progress: true
+
 # The version lives in one place per workflow and test/workflow-pins.test.js asserts this one
 # agrees with ci.yml's and package.json's. It has to: the cache key names the version, and a key
 # that disagrees restores the browser build the other half does not want — which surfaces as
