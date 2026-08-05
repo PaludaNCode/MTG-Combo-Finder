@@ -1582,14 +1582,19 @@ synchronously, so every line is latency on every session.
 
 ### What the release pipeline costs
 
-PR opened → live is **~2.9m** median: CI 1.9m, auto-merge 0.5m, merge → live 27s. Queue time is 0s
-everywhere, so none of it is contention.
+PR opened → live is **~1.9m** median, from **2.9m**: CI 84s, auto-merge immediate, merge → live 25s.
+Queue time is 0s everywhere, so none of it is contention.
+
+**Measure CI from the job timestamps, not the run's.** A run's `updated_at` moves again after its jobs
+finish — check-suite finalisation, the auto-merge — so the run-level figure read a steady 121s for three
+PRs whose jobs took 78s, 84s and 87s. Identical numbers across different work is the tell.
 
 **Nearly all of it is CI, and nearly all of CI is browsers** — as one job, **83 of 96 step-seconds were
 three browser steps in a row.** Two of the three share nothing, so they are now two parallel jobs:
 `verify` drives the runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
-**Measured on the runner: 106s → 77s warm, 90s cold**, `static` 39s alongside `browser` 68–76s, plus
-3–4s for the gate. `browser` is the whole critical path now; `static` finishes 37s early and waits. The
+**Measured on the runner: 106s → 84s median** (78/84/87s across three warm runs), `static` 29–38s
+alongside `browser` 65–75s, plus 3s for the gate. **`browser` is the whole critical path**; `static`
+finishes ~35s early and waits, so nothing in it is worth optimising until `browser` moves. The
 old 22s Chromium step splits into a download the cache removes and an `install-deps` apt step it cannot,
 and **apt is the larger half** — so the cache is worth about **6s**, not the 13s first claimed: cold runs
 measured 21/24/27s against warm runs of 17/18/24s. Those ranges overlap, and the browser-tests step alone
