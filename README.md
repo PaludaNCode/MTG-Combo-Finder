@@ -1516,11 +1516,15 @@ a wrong one is the sweep going to the wrong card.
 Trunk-based, short-lived branches. **Short-lived is load-bearing.** Branch off `main` as `feat/…` or
 `fix/…`, push, open a PR, and hit **Enable auto-merge** — **merging to `main` is the release**.
 
-**Merged branches are kept**, because *Automatically delete head branches* is off. That is not
-untidiness: deleting them made every follow-up push on a reused branch name a remembered ritual
-(`fetch --prune`, never `--force-with-lease`, because the lease named a ref that no longer existed and
-failed in a way that reads like a protection working). Keeping them makes the follow-up push an
-ordinary fast-forward. See CLAUDE.md § *The designated branch after its PR merges*.
+**Merge commits only, and merged branches are kept.** Squash and rebase merging are off, and so is
+*Automatically delete head branches* — three checkboxes that between them make a follow-up push on a
+reused branch name an ordinary fast-forward with no exception.
+
+Neither is untidiness. Deleting branches made every follow-up a remembered ritual (`fetch --prune`,
+never `--force-with-lease`, because the lease named a ref that no longer existed and failed in a way
+that reads like a protection working). Allowing squash merges meant `main`'s tip was not always a
+descendant of the PR head, so the fast-forward held *usually* — the worst kind of rule. See
+CLAUDE.md § *The designated branch after its PR merges*.
 
 **`main` is protected** by a branch ruleset: a PR is required, `checks` has to be green, **branches have to
 be up to date before merging**, and force-pushes and deletion are blocked. Two rules are deliberately

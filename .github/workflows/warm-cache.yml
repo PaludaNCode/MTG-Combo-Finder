@@ -34,6 +34,22 @@ on:
       - '.github/workflows/ci.yml'
       - '.github/workflows/warm-cache.yml'
       - 'package.json'
+
+  # **Because the push trigger alone has no way back from a missing cache.** Those three paths change
+  # rarely, so if the cache ever stops existing — evicted, deleted, or a key that no longer matches —
+  # nothing re-warms it until one of them happens to be edited, and every pull request until then pays
+  # the cold path. That is a slow leak nobody would notice: CI stays green and just gets slower.
+  #
+  # This is the case where a schedule genuinely works, unlike the card-text sweep that was tried and
+  # removed. That one had to commit, which meant landing on a protected branch; this writes a cache and
+  # nothing else, so it needs no push, no credential and no ruleset bypass. On a hit the whole job is
+  # the restore step and costs a few seconds.
+  #
+  # Monday, offset off the hour like update-data.yml — GitHub's scheduler is best-effort and :00 is
+  # what it is worst at.
+  schedule:
+    - cron: '41 6 * * 1'
+
   workflow_dispatch:
 
 permissions:
