@@ -7,9 +7,14 @@
 // 403s at CONNECT, so every card comes through Forge under a banner, and
 // "cross-check against XMage" becomes a manual step per card.
 //
-// So the binding constraint on the research queue is not finding candidates —
-// `tools/substitution-scope.js` prints thousands on demand — it is that reading each one
-// is expensive. A runner can reach Scryfall. This is where what it read gets kept.
+// So the binding constraint on the research queue was not finding candidates —
+// `tools/substitution-scope.js` prints thousands on demand — it was that reading each one cost a
+// workflow round trip. A runner can reach Scryfall. This is where what it read gets kept.
+//
+// **That constraint is gone, and this file is why.** It holds every card, so a pass reads its
+// candidates locally at no cost and the ordering below has nothing left to economise on: reading
+// is now the cheap half and choosing what to read is the expensive one. If a name here ever
+// misses, that is a card published since the last sweep, not a reason to go back to the network.
 //
 // **Normalised, not raw.** A Scryfall card object is 3-5 KB of prices, images, printings
 // and rulings; what this tool prints is about 300 bytes of it. Storing the raw object
