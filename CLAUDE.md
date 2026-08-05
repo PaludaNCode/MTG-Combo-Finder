@@ -58,9 +58,11 @@ npx serve .                                       # any static file server works
   it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
 - **The Chromium cache is warmed on `main` by `warm-cache.yml`, and that is the only place it
   works.** A cache written on a branch is restorable by that branch alone and dies when the branch is
-  deleted on merge — measured: a second run of the same branch hits (install-deps only, 14s), a fresh
-  branch misses (full install, 21–27s). CI is **77s warm, 90s cold** → `test/workflow-pins.test.js`
-  pins the two workflows to one key, because a mismatched key just misses and both stay green.
+  never visible to a sibling — measured: a second run of the same branch hits (install-deps only, 14s),
+  a *fresh* branch misses (full install, 21–27s), so a new branch name always starts cold no matter how
+  long branches live. **Worth ~6s against a ±12s run-to-run spread**, which is why it took three
+  attempts to measure honestly → `test/workflow-pins.test.js` pins the two workflows to one key,
+  because a mismatched key just misses and both stay green.
 - **`verify` is not optional after a UI change** — it renders the real page at 390/768/1440/1920px
   and catches what a screenshot cannot: a map with every node at one point is valid SVG and an
   empty panel.
@@ -491,27 +493,34 @@ judgement call:
 `main` while the branch was out, which the branch then has to satisfy retroactively. The fix is not
 better conflict handling; it is a shorter branch.
 
-### The designated branch after its PR merges: prune, never force
+### The designated branch after its PR merges
 
-**The branch is deleted on merge**, so a merged PR leaves the name free and the remote ref gone.
-Follow-up work restarts it from the default branch rather than stacking on merged history:
-`git fetch origin main && git checkout -B <branch> origin/main`.
+**Branches survive a merge** — *Automatically delete head branches* is off, deliberately, and that
+setting is what makes this section short. Follow-up work restarts the branch from the default branch
+rather than stacking on merged history:
 
-**That push is a new branch, not a force-push**, and reaching for `--force-with-lease` is the
-mistake rather than the safety. It fails `! [rejected] … (stale info)` because the lease names a
-remote ref that no longer exists — which reads as a protection working and is nothing of the kind.
-`git fetch origin --prune` then a plain `git push -u origin <branch>`.
+```bash
+git fetch origin main && git checkout -B <branch> origin/main && git push -u origin <branch>
+```
 
-**`.claude/hooks/session-start.sh` prunes, but only at session start.** A branch merged *mid*-session
-leaves the stale remote-tracking ref behind and nothing clears it, so the local `origin/<branch>`
-still points at commits that are already in `main`. Two checks settle it before any force:
-`git log --oneline HEAD..origin/<branch>` empty, and `git branch -r --contains origin/<branch>`
-naming `origin/main`. `fatal: couldn't find remote ref` means it is already gone — prune and push.
+**That is a fast-forward, so no force and no prune.** The remote branch still points at the PR head,
+`main`'s merge commit has that head as a parent, so the restarted local branch is a *descendant* of
+what the remote has and pushes cleanly. **The exception is a squash merge**, which produces no such
+parent — then the branch has genuinely diverged and wants `--force-with-lease`, which now works
+because the ref it leases against exists.
 
-**`.githooks/pre-push` refuses that force-push now**, because the rule above was written into this
-file and broken an hour later with the text in context. `core.hooksPath` is set by
-`.claude/hooks/session-start.sh`. **Prose is not a check** — every rule here that stuck has a `→`
-after it, and the ones that did not are the ones that got broken.
+**Why this used to be three paragraphs.** With auto-delete on, a merged PR left the name free and the
+remote ref gone, so `--force-with-lease` failed `! [rejected] … (stale info)` — a lease against a ref
+that no longer exists, which reads as a protection working and is nothing of the kind. The fix was
+`fetch --prune` then a plain push, and the ritual had to be remembered on every follow-up. Turning one
+setting off deleted the whole class of mistake. **Reach for a setting before reaching for a rule.**
+
+**`.githooks/pre-push` still refuses that force-push**, and is kept rather than retired: the case is
+rarer now (a genuinely new branch pushed with `--force`) but it costs nothing and it is the only rule
+in this file I could not break. It was written because the paragraph above was written and then broken
+an hour later with the text in context. `core.hooksPath` is set by `.claude/hooks/session-start.sh`.
+**Prose is not a check** — every rule here that stuck has a `→` after it, and the ones that did not are
+the ones that got broken.
 
 **Never `git stash` to run a check while work is staged.** `--keep-index` stashes the working tree,
 and the `pop` then conflicts with the index copy and leaves conflict markers inside the files that

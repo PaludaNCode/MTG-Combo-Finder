@@ -1514,8 +1514,13 @@ a wrong one is the sweep going to the wrong card.
 ## Branching strategy
 
 Trunk-based, short-lived branches. **Short-lived is load-bearing.** Branch off `main` as `feat/…` or
-`fix/…`, push, open a PR, and hit **Enable auto-merge** — **merging to `main` is the release**, and the
-branch is deleted on merge.
+`fix/…`, push, open a PR, and hit **Enable auto-merge** — **merging to `main` is the release**.
+
+**Merged branches are kept**, because *Automatically delete head branches* is off. That is not
+untidiness: deleting them made every follow-up push on a reused branch name a remembered ritual
+(`fetch --prune`, never `--force-with-lease`, because the lease named a ref that no longer existed and
+failed in a way that reads like a protection working). Keeping them makes the follow-up push an
+ordinary fast-forward. See CLAUDE.md § *The designated branch after its PR merges*.
 
 **`main` is protected** by a branch ruleset: a PR is required, `checks` has to be green, **branches have to
 be up to date before merging**, and force-pushes and deletion are blocked. Two rules are deliberately
