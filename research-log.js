@@ -1543,6 +1543,131 @@ const PASSES = [
       + 'landed first, so this is the first pass in this file that had the whole board in the cache '
       + 'before it started.'
   },
+  {
+    subject: 'the last thirteen derived rows: Rosie Cotton of South Lane, and Chatterfang for Quina',
+    cards: [
+      'Rosie Cotton of South Lane',
+      'Ivy Lane Denizen',
+      'Cathars\' Crusade',
+      'Good-Fortune Unicorn',
+      'Chatterfang, Squirrel General',
+      'Quina, Qu Gourmet',
+      'Ghave, Guru of Spores',
+      'Ulasht, the Hate Seed',
+      'Marath, Will of the Wild',
+      'Xavier Sal, Infested Captain',
+      'Animation Module',
+      'Cryptic Trilobite',
+      'Utopia Mycon',
+      'Earthcraft',
+      'Ashnod\'s Altar',
+      'Phyrexian Altar',
+      'Mana Echoes',
+      'Intruder Alarm',
+      'Kirol, Attentive First-Year',
+      'Molten Echoes',
+      'Council of Reeds',
+      'Survey Mechan',
+      'Mortuary',
+      'Chalk Outline',
+    ],
+    cardIds: [2433, 2850, 2744, 4535, 3000, 6705, 5189, 3192, 1335, 3143, 3490, 4929, 4214, 2757, 2034, 4050, 2440, 1636, 7150, 2506, 7752, 6961, 5220, 5632],
+    read: {
+      'Rosie Cotton of South Lane':
+        'When Rosie Cotton enters, create a Food token. (It\'s an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")\nWhenever you create a token, put a +1/+1 counter on target creature you control other than Rosie Cotton.',
+      'Ivy Lane Denizen':
+        'Whenever another green creature you control enters, put a +1/+1 counter on target creature.',
+      'Cathars\' Crusade':
+        'Whenever a creature you control enters, put a +1/+1 counter on each creature you control.',
+      'Good-Fortune Unicorn':
+        'Whenever another creature you control enters, put a +1/+1 counter on that creature.',
+      'Chatterfang, Squirrel General':
+        'Forestwalk (This creature can\'t be blocked as long as defending player controls a Forest.)\nIf one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead.\n{B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn.',
+      'Quina, Qu Gourmet':
+        'If one or more tokens would be created under your control, those tokens plus a 1/1 green Frog creature token are created instead.\n{2}, Sacrifice a Frog: Put a +1/+1 counter on Quina.',
+      'Ghave, Guru of Spores':
+        'Ghave enters with five +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling creature token.\n{1}, Sacrifice a creature: Put a +1/+1 counter on target creature.',
+      'Ulasht, the Hate Seed':
+        'Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control.\n{1}, Remove a +1/+1 counter from Ulasht: Choose one —\n• Ulasht deals 1 damage to target creature.\n• Create a 1/1 green Saproling creature token.',
+      'Marath, Will of the Wild':
+        'Marath enters with a number of +1/+1 counters on it equal to the amount of mana spent to cast it.\n{X}, Remove X +1/+1 counters from Marath: Choose one —\n• Put X +1/+1 counters on target creature. X can\'t be 0.\n• Marath deals X damage to any target. X can\'t be 0.\n• Create an X/X green Elemental creature token. X can\'t be 0.',
+      'Xavier Sal, Infested Captain':
+        '{T}, Remove a counter from another permanent you control: Populate. Activate only as a sorcery. (Create a token that\'s a copy of a creature token you control.)\n{T}, Sacrifice another creature: Proliferate. Activate only as a sorcery. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)',
+      'Animation Module':
+        'Whenever one or more +1/+1 counters are put on a permanent you control, you may pay {1}. If you do, create a 1/1 colorless Servo artifact creature token.\n{3}, {T}: Choose a counter on target permanent or player. Give that permanent or player another counter of that kind.',
+      'Cryptic Trilobite':
+        'This creature enters with X +1/+1 counters on it.\nRemove a +1/+1 counter from this creature: Add {C}{C}. Spend this mana only to activate abilities.\n{1}, {T}: Put a +1/+1 counter on this creature.',
+      'Utopia Mycon':
+        'At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.\nSacrifice a Saproling: Add one mana of any color.',
+      'Earthcraft':
+        'Tap an untapped creature you control: Untap target basic land.',
+      'Ashnod\'s Altar':
+        'Sacrifice a creature: Add {C}{C}.',
+      'Phyrexian Altar':
+        'Sacrifice a creature: Add one mana of any color.',
+      'Mana Echoes':
+        'Whenever a creature enters, you may add an amount of {C} equal to the number of creatures you control that share a creature type with it.',
+      'Intruder Alarm':
+        'Creatures don\'t untap during their controllers\' untap steps.\nWhenever a creature enters, untap all creatures.',
+      'Kirol, Attentive First-Year':
+        'Tap two untapped creatures you control: Copy target triggered ability you control. You may choose new targets for the copy. Activate only once each turn.',
+      'Molten Echoes':
+        'As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters, create a token that\'s a copy of that creature. That token gains haste. Exile it at the beginning of the next end step.',
+      'Council of Reeds':
+        'The "legend rule" doesn\'t apply to creatures you control.\nAt the beginning of combat on your turn, if you\'ve cast a noncreature spell this turn, create a token that\'s a copy of Council of Reeds.',
+      'Survey Mechan':
+        'Flying\nHexproof (This creature can\'t be the target of spells or abilities your opponents control.)\n{10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where X is the number of differently named lands you control.',
+      'Mortuary':
+        'Whenever a creature is put into your graveyard from the battlefield, put that card on top of your library.',
+      'Chalk Outline':
+        'Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. (Create a Clue token. It\'s an artifact with "{2}, Sacrifice this token: Draw a card.")',
+    },
+    date: '2026-08-05',
+    method:
+      'Not a sweep for new rows — a reading of the thirteen rows still marked `derived`, which '
+      + 'is the state that means the pairing was reasoned and never read. Every card in them was '
+      + 'already in card-text.json by this point, so the only thing missing was the reading, and '
+      + 'three of the loops would not follow from the cards alone. THOSE THREE WERE SETTLED FROM '
+      + "SPELLBOOK'S OWN PUBLISHED STEPS, fetched from the data branch — steps/<bucket>/<id>.json, "
+      + 'the same tree the page reads, and raw.githubusercontent.com is the one host this sandbox '
+      + 'is allowed. A published step list is the best evidence there is for what a loop does, and '
+      + 'it is cheaper than deducing it: the Animation Module row turned on a prerequisite '
+      + '("creatures you control can tap to produce at least {1}") that no card in the row states.',
+    proposed: 13,
+    examined: 13,
+    kept: 13,
+    ruledOut: [],
+    notes:
+      'ALL THIRTEEN HOLD, ON ONE PROPERTY. Rosie Cotton is the narrower card of the four: her '
+      + 'peers trigger on a creature ENTERING — Ivy Lane Denizen on another green one, '
+      + "Cathars' Crusade on any, Good-Fortune Unicorn on any — and she triggers on a TOKEN being "
+      + 'CREATED. That is a real narrowing, and it costs nothing here because in every one of the '
+      + 'thirteen loops the creature that enters IS a token: a Saproling off Ghave, Ulasht or '
+      + 'Utopia Mycon, an Elemental off Marath, a Servo off Animation Module, a populate copy off '
+      + 'Xavier Sal. A loop that entered a nontoken creature would break, and none of these does.\n\n'
+      + 'THE SECOND CONSTRAINT IS HER TARGET: "target creature you control other than Rosie '
+      + 'Cotton". Every loop wants the counter on its engine rather than on the trigger source, so '
+      + 'the restriction is free — except at the start of the Animation Module loop, where Rosie '
+      + 'needs one other creature on the battlefield to have a legal target at all. Her own ETB '
+      + 'Food token primes it and the first Servo sustains it, but it is a prerequisite the '
+      + "Cathars' Crusade version does not have, and it is why that row is the one to check first "
+      + 'if any of this is ever disputed.\n\n'
+      + 'AND WHERE SHE IS BROADER, WHICH IS WORTH SAYING TOO: Ivy Lane Denizen only sees a GREEN '
+      + "creature enter and Cathars' Crusade spreads a counter over EVERY creature. Rosie sees any "
+      + 'token and places one counter. None of the thirteen needed the colour and none needed the '
+      + 'spread — they all need exactly one counter, on the engine, once per token.\n\n'
+      + 'CHATTERFANG FOR QUINA, the two long rows: Quina adds one 1/1 Frog per token-creation '
+      + 'event, Chatterfang adds a 1/1 Squirrel FOR EACH token created. Where one token is created '
+      + 'at a time the two are the same card, which is the case in both loops — the published steps '
+      + 'want exactly one extra body, to tap alongside a Kirol token in one and to feed '
+      + "Ashnod's Altar for {C}{C}{C}{C} in the other. Chatterfang is never worse and is better on "
+      + 'Chalk Outline, whose investigate makes a Clue as well: a second token creation, so a '
+      + "second Squirrel, where Quina's Frog comes once. Quina's other ability ({2}, sacrifice a "
+      + 'Frog: put a counter on Quina) is unused by both published loops.\n\n'
+      + 'SO unofficial.js NOW HAS NO `derived` ROWS — 451 of them, every one read against the '
+      + 'cards. That is not a milestone to defend: the next sweep will add `derived` rows the '
+      + 'moment somebody reasons faster than they read, and the label exists so they can.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
