@@ -1,27 +1,56 @@
 name: CI
 
+# Three jobs, and the split is about wall-clock rather than tidiness: 83 of the 96
+# step-seconds in the single 106s job this replaces were three browser steps running one
+# after another, and two of the three need nothing from each other — `verify` drives the
+# runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
+#
+# `checks` at the bottom is the one name the `main` ruleset requires, and it exists so
+# this restructuring did not have to touch the ruleset. Splitting a required check into
+# two new names is the kind of change that reads as fine and silently stops gating
+# anything, because a required check that no longer reports is one nobody notices the
+# absence of. README § *What the release pipeline costs* has the rest.
+
 on:
-  push:
-    branches: [main]
+  # No `push: branches: [main]`, deliberately. It was 39% of this repository's Actions
+  # minutes re-testing a tree already tested — `actions/checkout` on a pull_request
+  # event checks out the MERGE of head into base, byte-identical to the branch tip in
+  # 36 of the last 39 merges — and it could not protect the deploy anyway, since
+  # deploy.yml fires on the same push with no `needs`.
+  #
+  # What makes that safe is "Require branches to be up to date before merging" on the
+  # `main` ruleset, which turns those 36 into 39. **If that setting is ever turned off,
+  # this trigger belongs back.**
   pull_request:
   # So a run can be re-triggered by hand when GitHub misses a pull_request event.
   workflow_dispatch:
     inputs:
-      # The upload step at the bottom of this job sits behind `if: failure()`, so a
-      # green run never reaches it and a bump to that action is proved only by the
+      # The upload step at the bottom of the browser job sits behind `if: failure()`,
+      # so a green run never reaches it and a bump to that action is proved only by the
       # next run that goes red — which is the worst moment to discover the report no
       # longer uploads, because it is the moment somebody needs to read it.
       #
       # This makes it provable on demand instead of retroactively. Default off: a
-      # normal push or pull request still only uploads on failure, and this adds a
-      # way to check rather than a new behaviour.
+      # normal pull request still only uploads on failure, and this adds a way to check
+      # rather than a new behaviour.
       prove_upload:
         description: 'Upload the Playwright report even if everything passed (proves the upload step still works)'
         type: boolean
         default: false
 
+# One pin, used by the install commands and the cache key below. The cache key is why
+# it matters: a key naming the wrong version restores the wrong browser build, which
+# surfaces as "Executable doesn't exist" and reads as a broken cache rather than a stale
+# one. package.json's `test:ui` holds the same number, so
+# test/workflow-pins.test.js asserts the two agree.
+env:
+  PLAYWRIGHT_VERSION: 1.56.1
+
 jobs:
-  checks:
+  # Everything that needs no browser download. Ends with the layout smoke test, which
+  # uses the google-chrome already on the runner image — that is why this job can start
+  # measuring the page while the other one is still fetching Chromium.
+  static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -65,23 +94,55 @@ jobs:
         env:
           CHROME_PATH: /usr/bin/google-chrome
 
-      # The same pages, driven rather than measured: a real pointer, real key
-      # presses, a real touchscreen, a reload, a shared link opened in a second
-      # tab. See "Two browser test suites" in the README for which check belongs
-      # in which of the two.
+  # The same pages, driven rather than measured: a real pointer, real key presses, a
+  # real touchscreen, a reload, a shared link opened in a second tab. See "Two browser
+  # test suites" in the README for which check belongs in which of the two.
+  #
+  # e2e/a11y.spec.js runs in here too, on the same browsers, because it needs exactly
+  # what this job already pays for: a real engine computing real colours over a page
+  # that has actually been searched. It fetches axe-core alongside Playwright —
+  # pinned, like everything else fetched per run.
+  #
+  # Only Chromium is installed. Three engines would triple the longest step in this
+  # workflow, and nothing here is engine-specific — the page is plain DOM and
+  # hand-written SVG. A Firefox or WebKit bug would be found by someone using the
+  # site, which is the honest trade and worth writing down rather than implying
+  # otherwise by not naming the browser.
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Chromium was fetched fresh every run, in a step that measured 22s. **How much
+      # this saves is unmeasured**: that 22s was never split between the download and
+      # the apt half of `--with-deps`, because the job log redirects to a blob host a
+      # sandboxed session cannot reach. Treat it as "between nothing and 22s" until a
+      # cache-hit run says otherwise.
       #
-      # e2e/a11y.spec.js runs in here too, on the same browsers, because it needs
-      # exactly what this step already pays for: a real engine computing real
-      # colours over a page that has actually been searched. It fetches axe-core
-      # alongside Playwright — pinned, like everything else fetched per run.
-      #
-      # Only Chromium is installed. Three engines would triple a step that is
-      # already the longest in this job, and nothing here is engine-specific —
-      # the page is plain DOM and hand-written SVG. A Firefox or WebKit bug would
-      # be found by someone using the site, which is the honest trade and worth
-      # writing down rather than implying otherwise by not naming the browser.
+      # v4 is the major this was written against and was not checked against the
+      # action's latest — that means reading a repository outside a session's scope. A
+      # Node-20-runtime deprecation warning on this step is that, wanting the next major.
+      - name: Cache the Playwright browser download
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}-chromium
+
+      # Two steps rather than one `--with-deps`, because the cache only holds the
+      # browser: the system libraries it links against live in the runner image and
+      # have to be asked for again on a cache hit. `install-deps` is the apt half on
+      # its own.
       - name: Install Chromium for the browser tests
-        run: npx --yes playwright@1.56.1 install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx --yes playwright@${{ env.PLAYWRIGHT_VERSION }} install --with-deps chromium
+
+      - name: Install Chromium's system libraries (the browser itself was cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx --yes playwright@${{ env.PLAYWRIGHT_VERSION }} install-deps chromium
 
       - name: Browser tests
         run: npm run test:ui
@@ -110,8 +171,8 @@ jobs:
       # No `always()` wrapper, deliberately: an `if` that already names a status check
       # function does not get the implicit `success()` gate, so `failure() ||` is
       # enough and `always() &&` would only be noise that reads as necessary. On a
-      # pull_request or push there is no `inputs` context, which evaluates falsey —
-      # so the ordinary path really is unchanged.
+      # pull_request there is no `inputs` context, which evaluates falsey — so the
+      # ordinary path really is unchanged.
       - name: Keep the report from a failing run
         if: ${{ failure() || inputs.prove_upload }}
         uses: actions/upload-artifact@v7
@@ -119,3 +180,23 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # The gate, and the only check name the `main` ruleset knows about. Two jobs became
+  # three so that name could stay exactly what it was.
+  #
+  # `if: always()` is load-bearing: without it this job is SKIPPED when a dependency
+  # fails, and GitHub reports a skipped required check as neutral rather than failed —
+  # the well-known path to a merge gate that waves everything through. The pass/fail
+  # decision then lives in the `if:` expression rather than in shell, because shell in a
+  # `run:` block is the one thing here nothing can test.
+  #
+  # 'skipped' is deliberately absent from the list: neither job above carries an `if:`,
+  # so if one ever skips that is a deliberate act and should not fail the gate.
+  checks:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [static, browser]
+    steps:
+      - name: Fail if any job above did not succeed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

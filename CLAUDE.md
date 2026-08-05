@@ -45,15 +45,24 @@ node tools/probe-cors.js [site]                   # can a browser read a deck fr
 npx serve .                                       # any static file server works
 ```
 
-- CI (`checks`): syntax → lint → `test:coverage` → `check:readme` → `verify` → `test:ui`.
+- CI: two parallel jobs — `static` (syntax → lint → `test:coverage` → `check:readme` → `verify`) and
+  `browser` (Chromium → `test:ui`) — plus **`checks`, which runs nothing and needs both**, so the one name
+  the ruleset requires survived the split. Its `if: always()` is load-bearing: without it a failed
+  dependency **skips** it and GitHub reads a skipped required check as neutral, not failed →
+  `test/workflow-pins.test.js`.
+- **CI does not run on push to `main`, and that rests on "Require branches to be up to date".** That
+  setting is what makes the pull-request run a statement about the tree that lands — `checkout` on a
+  `pull_request` event takes the *merge*, identical to the branch tip in 36 of the last 39 merges. **Turn
+  it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
 - **`verify` is not optional after a UI change** — it renders the real page at 390/768/1440/1920px
   and catches what a screenshot cannot: a map with every node at one point is valid SVG and an
   empty panel.
 - **Skip `verify` when the diff is docs only.** "Docs only" = every changed path is `*.md`; one
   `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not. Test:
   `git diff --name-only origin/main... | grep -v '\.md$'` is empty. If in doubt, run it.
-- **Don't sleep waiting for CI.** Runs take 102–112s; sleeping 190–240s wasted 12.4 minutes over
-  six PRs. Poll at ~110s.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **78s** with a warm
+  Chromium cache; sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run makes that worse.
+  Poll at ~80s.
 - **Never state a suite count in this file** — one was, wrong by 17 inside a fortnight, and
   nothing watched it → `test/check-readme-numbers.test.js` rejects a bare `<number> tests` here.
 
@@ -115,7 +124,8 @@ logic is unit-testable without a DOM.
 >    *Cache card text* workflow. No request, so it works here. **If your cards are missing, run
 >    that workflow first** — semicolons between names, and **it commits to the branch you
 >    dispatch it on**; dispatched on `main` it commits to `card-text/run-<n>` instead and prints
->    the PR link, because `main` refuses direct pushes. It used to *refuse* that dispatch, and
+>    the PR link, because `main` refuses direct pushes (the redirect is unconditional in
+>    `tools/cache-target-branch.js`, so it holds either way). It used to *refuse* that dispatch, and
 >    two hours went on reading a red X as a broken workflow. **Never hand-write into it** — only
 >    the workflow does, or it becomes the unverified recollection this rule exists to stop,
 >    wearing authority.
@@ -349,11 +359,18 @@ loosely.
   the first. No style rules in the lint config either — match the surrounding code.
 - Trunk-based: short-lived `feat/…` / `fix/…` off `main`, PR, auto-merge when green. Merging to
   `main` *is* the release. **Short-lived is load-bearing** — see below.
-- **A ruleset refuses direct pushes to `main`**: PR required, `checks` green, no force-push, no
-  deletion. Two omissions are deliberate and read as oversights — linear history would forbid the
-  merge commits `main` already uses, and any required-approval count above zero makes every PR
-  unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
+- **A ruleset refuses direct pushes to `main`**: PR required, `checks` green, **branches up to date**,
+  no force-push, no deletion. Two omissions are deliberate and read as oversights — linear history
+  would forbid the merge commits `main` already uses, and any required-approval count above zero makes
+  every PR unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
   `update-data.yml` force-pushes it nightly.
+- **Never assume that ruleset is in force. On 5 Aug 2026 it did not exist at all**, while this file, the
+  README and a session's reasoning all said it did — and **a missing gate is indistinguishable from a
+  working one**, since PRs merge and CI goes green either way. No test here can reach it
+  (`metadata=read` → `/branches/main/protection` is 403). `curl /rules/branches/main` needs only read
+  access and lists what actually applies.
+- **Up to date costs a click when it bites**: auto-merge does not update a stale branch, so a PR whose base
+  moved waits for **Update branch**, which re-runs CI.
 - **Push protection is on.** A push carrying anything credential-shaped is rejected outright — if
   it fails on a fixture, comment or test where you were only quoting a token *shape*, that is why.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.

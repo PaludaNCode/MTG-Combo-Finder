@@ -32,7 +32,23 @@ module.exports = defineConfig({
   retries: 0,
   // Every test opens its own page and types its own deck, so they do not share
   // state — but they do share the one server, and the deck search is CPU-bound
-  // parsing. Two at a time on a laptop, and CI decides for itself.
+  // parsing.
+  //
+  // 2 on CI, and 4 was tried and reverted — **do not raise this on a local measurement.**
+  //
+  // A GitHub-hosted Linux runner has 4 vCPU (this repo is public), and on a 4-core box
+  // here 4 workers were a clear win: 80 tests in 44.4s at 2, 34.3s at 4, 32.1s at 6, the
+  // shape you expect once every core is busy. It was run three times before being
+  // believed. On the runner it bought nothing at all — **41s at 2 workers, 43s at 4** —
+  // so the bottleneck there is not idle cores. The single `webServer` process every
+  // worker shares is the likeliest candidate and was not proved; the runner's job log
+  // redirects to a host a sandboxed session cannot reach.
+  //
+  // What generalises is the method, not the number: a browser suite's worker count is a
+  // property of the machine it runs on, and this repository's machine is the runner. Two
+  // cores' worth of local headroom said nothing about it.
+  //
+  // Left `undefined` off CI so a laptop decides for itself, where 4 genuinely does help.
   workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   // A search that has not finished in 15s has not failed slowly, it has failed.

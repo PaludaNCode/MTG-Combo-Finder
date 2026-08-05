@@ -1390,13 +1390,17 @@ for f in $(git ls-files '*.js'); do node --check "$f"; done   # same as CI
 npx serve .                                                   # any static server works
 ```
 
-- **CI (`checks`)**: syntax → lint → `test:coverage` → `check:readme` → `verify` → `test:ui`.
+- **CI**: two parallel jobs behind one required check — `static` (syntax → lint → `test:coverage` →
+  `check:readme` → `verify`) and `browser` (Chromium → `test:ui`), with **`checks` needing both** so the
+  name the ruleset requires never had to change. See *What the release pipeline costs*.
 - **Coverage floors** sit under what the suite manages (94% lines / 90% branches / 95% functions), so
   they catch a module arriving untested rather than bickering over a line. Only files the tests load are
   measured; `theme.js` is excluded by name because its DOM half cannot run in node.
 - **`verify` is not optional after a UI change.** **Skip it when the diff is docs only** — every changed
   path `*.md`; one `.js`, `.css`, `.html`, `.yml` or fixture, comment-only included, and it is not.
-- **Don't sleep waiting for CI.** Runs take 102–112s; poll at ~110s.
+- **Don't sleep waiting for CI.** Runs took 102–112s as one job and now land at **78s** with a warm
+  Chromium cache; poll at ~80s. Sleeping 190–240s wasted 12.4 minutes over six PRs, and a shorter run
+  makes that worse.
 - **`HARNESS` in `verify-layout.js` is a template literal**, so a regex loses its backslashes —
   `/\d+ combos/` becomes `/d+ combos/` and matches nothing, which passes. Write `\\d`, and note that
   **a backtick anywhere in it, comments included, ends the literal**.
@@ -1447,11 +1451,28 @@ Trunk-based, short-lived branches. **Short-lived is load-bearing.** Branch off `
 `fix/…`, push, open a PR, and hit **Enable auto-merge** — **merging to `main` is the release**, and the
 branch is deleted on merge.
 
-**`main` is protected** by a branch ruleset: a PR is required, `checks` has to be green, and force-pushes
-and deletion are blocked. Two rules are deliberately **not** part of it and both look like oversights —
-**linear history** would forbid the merge commits `main` already uses, and **any required-approval count
-above zero** makes every PR unmergeable on a solo repo. The `data` branch is not covered, and if it ever
-is, **it must not block force-pushes**: `update-data.yml` force-pushes an orphan commit there nightly.
+**`main` is protected** by a branch ruleset: a PR is required, `checks` has to be green, **branches have to
+be up to date before merging**, and force-pushes and deletion are blocked. Two rules are deliberately
+**not** part of it and both look like oversights — **linear history** would forbid the merge commits `main`
+already uses, and **any required-approval count above zero** makes every PR unmergeable on a solo repo. The
+`data` branch is not covered, and if it ever is, **it must not block force-pushes**: `update-data.yml`
+force-pushes an orphan commit there nightly.
+
+**That paragraph was false until 5 Aug 2026, when the ruleset turned out not to exist at all** — and it
+read exactly like one that worked, because PRs still merged and CI still went green with nothing saying the
+green was advisory. **Nothing here can check it**: a session's token is `metadata=read`, so
+`/branches/main/protection` is 403 and `checks` cannot assert its own requiredness. `/rules/branches/main`
+lists the effective rules and needs only read access — that, or watching a `--force` push to `main` be
+refused, is the answer. Prose asserting it is configured is worth nothing.
+
+**Up to date is load-bearing** — see *What the release pipeline costs* for what rests on it. Its price:
+**auto-merge does not update a stale branch**, so a PR whose base moved waits for somebody to press
+**Update branch**, which re-runs CI.
+
+**`checks` is a job that runs no checks** — it needs `static` and `browser`, so the one required name
+survived the workflow being split. `if: always()` is load-bearing: a `needs:` job without it is **skipped**
+when a dependency fails, and GitHub reads a skipped required check as neutral rather than failed →
+`test/workflow-pins.test.js`.
 
 **Push protection is on.** A push carrying anything credential-shaped is rejected outright — if it fails
 on a fixture or test where you were only quoting a token *shape*, that is why.
@@ -1487,6 +1508,32 @@ remote session, when `origin` is unreachable, when `main` is checked out, or whe
 Because it skips silently in those cases the rule still stands; if you meet the fossil,
 `git reset --hard origin/main`. **Nothing is installed there, and nothing should be** — it runs
 synchronously, so every line is latency on every session.
+
+### What the release pipeline costs
+
+PR opened → live is **~2.9m** median: CI 1.9m, auto-merge 0.5m, merge → live 27s. Queue time is 0s
+everywhere, so none of it is contention.
+
+**Nearly all of it is CI, and nearly all of CI is browsers** — as one job, **83 of 96 step-seconds were
+three browser steps in a row.** Two of the three share nothing, so they are now two parallel jobs:
+`verify` drives the runner's pre-installed google-chrome, `test:ui` drives Playwright's own Chromium.
+**Measured on the runner: 106s → 78s**, `static` 39s alongside `browser` 68s, plus 4s for the gate. The
+old 22s Chromium step splits into ~13s of download, which the cache removes, and **14s of `install-deps`
+apt, which it cannot** — so a cache hit saves ~13s and the first run on a new version costs 4s to save it.
+
+**Raising Playwright's worker count is the trap here.** On a 4-core box 4 workers were a clear win —
+44.4s → 34.3s over three repeated runs — and **on the runner they bought nothing: 41s at 2, 43s at 4**,
+inside a 41/43/47s spread across three runs. See the comment in `playwright.config.js`; the number is a
+property of the machine, and the machine is the runner.
+
+**CI does not run on pushes to `main`.** It was 39% of all Actions minutes re-testing a tree already
+tested — `actions/checkout` on a `pull_request` event checks out the *merge* of head into base,
+byte-identical to the branch tip in **36 of the last 39 merges** — and it never protected the deploy, which
+fires on the same push with no `needs`. **What makes those 36 into 39 is *Require branches to be up to
+date*; turn that off and the `push` trigger belongs back in `ci.yml`.** Gating the deploy on CI was the
+rejected alternative: merge → live would go from 27s to over two minutes.
+
+Every figure above, and the two changes measured and rejected, is in the commit that made them.
 
 ## Deploying
 
