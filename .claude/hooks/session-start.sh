@@ -26,6 +26,19 @@
 # on a machine somebody is working on is a worse trade than the problem it solves.
 set -euo pipefail
 
+# Point git at the tracked hooks before anything else, and do it on every machine rather than
+# only a remote session. `.githooks/pre-push` catches a force-push whose lease names a ref the
+# remote does not have — the mistake this file's own CLAUDE.md section documents and which was
+# then made anyway, an hour after being written down. A check that only runs in a container is
+# a check that does not run where the rule is broken.
+#
+# core.hooksPath, not a copy into .git/hooks: the hook stays reviewable in the repository and
+# there is no installed copy to drift from it.
+if [ -d .githooks ] && [ "$(git config --get core.hooksPath || true)" != '.githooks' ]; then
+  git config core.hooksPath .githooks
+  echo 'session-start: git hooks now come from .githooks'
+fi
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi

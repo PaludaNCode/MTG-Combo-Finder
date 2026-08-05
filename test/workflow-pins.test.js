@@ -19,6 +19,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
+const warm = fs.readFileSync(path.join(root, '.github', 'workflows', 'warm-cache.yml'), 'utf8');
 
 // Both anchored on the surrounding syntax rather than a bare version number: a regex
 // loose enough to match "1.56.1" anywhere would also match the axe-core pin, or a
@@ -70,6 +71,41 @@ test('the checks gate runs even when a job it needs has failed', () => {
   assert.match(gate, /needs: \[static, browser\]/, 'the checks job must wait for both working jobs');
   assert.match(gate, /contains\(needs\.\*\.result, 'failure'\)/, 'the gate must fail on a failed dependency');
   assert.match(gate, /contains\(needs\.\*\.result, 'cancelled'\)/, 'the gate must fail on a cancelled dependency');
+});
+
+// ---- the cache warmer has to agree with the cache reader ----------------------
+
+// warm-cache.yml writes the cache on the default branch; ci.yml restores it on every branch.
+// **They agree by string equality on the key or they do not share a cache at all** — and the
+// failure is silent in the direction that matters: a mismatched key simply misses, ci.yml takes
+// the cold path, and the whole point of the warmer is lost while both workflows stay green.
+// That is exactly how the cache in #161 came to be believed for a day without working.
+test('the warmer and the reader name the same version', () => {
+  const inWarm = /^\s*PLAYWRIGHT_VERSION:\s*(\d+\.\d+\.\d+)\s*$/m.exec(warm);
+  assert.ok(inWarm, 'warm-cache.yml should set PLAYWRIGHT_VERSION');
+  assert.strictEqual(inWarm[1], playwrightPinInWorkflow(), 'warm-cache.yml and ci.yml must agree');
+  assert.strictEqual(inWarm[1], playwrightPinInPackage(), 'and both must agree with package.json');
+});
+
+test('the warmer and the reader use a byte-identical cache key', () => {
+  const keyOf = (yaml) => {
+    const m = /^\s*key:\s*(\S.*?)\s*$/m.exec(yaml);
+    return m && m[1];
+  };
+  const a = keyOf(ci);
+  const b = keyOf(warm);
+  assert.ok(a, 'ci.yml should declare a cache key');
+  assert.strictEqual(b, a, 'a different key means a different cache, and the warmer does nothing');
+});
+
+test('the warmer runs on the default branch, which is the only place a shared cache can be written', () => {
+  // The entire reason this file exists. A cache written on a feature branch is restorable by
+  // that branch alone, and the branch is deleted when its pull request merges.
+  assert.match(warm, /^\s*branches: \[main\]\s*$/m, 'warm-cache.yml must trigger on main');
+  // And ci.yml must NOT have regained a push trigger to do this job — that would make its own
+  // documented rule false.
+  const ciTriggers = ci.slice(0, ci.indexOf('jobs:'));
+  assert.doesNotMatch(ciTriggers, /^\s*push:/m, 'ci.yml must not run on push; warm-cache.yml does that');
 });
 
 module.exports = { playwrightPinInPackage, playwrightPinInWorkflow };

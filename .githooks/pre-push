@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Refuse a force-push whose lease cannot mean anything.
+#
+# This hook exists because a documented rule was not enough. CLAUDE.md says, in its own
+# section, that a merged designated branch is deleted on the remote and that the follow-up push
+# is therefore a NEW branch rather than a force-push. That rule was written into the file and
+# then broken about an hour later in the same session, with the text sitting in the author's
+# own context: `git push --force-with-lease` returned
+#
+#     ! [rejected]  <branch> (stale info)
+#
+# which reads exactly like a safety mechanism doing its job and is nothing of the kind. The
+# lease names a remote ref that no longer exists, so it can never be satisfied — no amount of
+# fetching fixes it, and the fix is `git fetch --prune` then a plain push.
+#
+# Every other rule in CLAUDE.md that stuck has a check behind it. This is that check. It is
+# not advice about force-pushing; it fires only in the one case where the flag is meaningless.
+set -uo pipefail
+
+remote="${1:-origin}"
+
+# Only interested in a force. Git does not pass the flags, so they are read from the command
+# line of the git process that invoked this hook. Best-effort by design: if this cannot be
+# read the hook stays silent rather than blocking an ordinary push.
+parent_cmd="$(tr '\0' ' ' < "/proc/$PPID/cmdline" 2>/dev/null || true)"
+case "$parent_cmd" in
+  *--force-with-lease*|*--force*|*' -f '*) ;;
+  *) exit 0 ;;
+esac
+
+# stdin is "<local ref> <local sha> <remote ref> <remote sha>" per ref being pushed. A remote
+# sha of all zeros means the remote does not have that ref — which is exactly the deleted-branch
+# case, and the case where --force-with-lease is guaranteed to fail.
+status=0
+while read -r _local_ref _local_sha remote_ref remote_sha; do
+  [ -n "${remote_ref:-}" ] || continue
+  case "$remote_sha" in
+    *[!0]*) continue ;;   # remote has it: a real force-push, and that is the caller's business
+  esac
+  branch="${remote_ref#refs/heads/}"
+  cat >&2 <<MSG
+
+pre-push: refusing a force-push to '$branch' on '$remote', which does not have that ref.
+
+  A lease against a ref the remote does not have can never be satisfied, so this would fail
+  with "! [rejected] (stale info)" — which looks like a protection working and is not one.
+  The branch was almost certainly deleted when its pull request merged.
+
+  There is nothing to protect and nothing to force:
+
+      git fetch $remote --prune
+      git push -u $remote $branch
+
+  See CLAUDE.md, "The designated branch after its PR merges: prune, never force".
+
+MSG
+  status=1
+done
+
+exit $status

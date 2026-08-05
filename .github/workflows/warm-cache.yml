@@ -1,0 +1,83 @@
+name: Warm the Playwright cache
+
+# Put Chromium in a cache that every branch can restore, which is the only place it does any
+# good.
+#
+# **This exists because the cache added in #161 was measured wrong and did not work.** The claim
+# was that caching `~/.cache/ms-playwright` saves ~13s off CI. The measurement behind it was a
+# *second run of the same branch*, which hits; three consecutive runs on fresh branches all
+# missed, taking the cold path at 21-27s. Measured per run:
+#
+#   second run, same branch    install-deps only, 14-15s   restore 3s   HIT
+#   first run, fresh branch    full install,      21-27s   restore 0-1s MISS
+#
+# The cause is GitHub's cache scoping, not the key. A cache written on a branch is restorable by
+# that branch and by pull requests targeting it; only a cache written on the **default branch**
+# is restorable by all of them. Every cache this repository wrote was on a feature branch, and
+# branches are deleted when their pull request merges, so the cache died with them. CI was
+# warming a cache for a branch that was about to cease existing.
+#
+# And nothing was writing a default-branch cache because of the *other* change in #161: `ci.yml`
+# no longer runs on push to `main`. The two optimisations quietly cancelled each other out.
+#
+# So: a job that runs on `main`, warms the cache, and does nothing else. It is deliberately not
+# a `push: main` trigger added back to `ci.yml` — that file's rule is that CI does not run on
+# `main`, which is what lets the pull-request run stand for the tree that lands, and re-adding a
+# trigger there would make the rule false to save writing this file.
+
+on:
+  push:
+    branches: [main]
+    # Nothing else can change what Chromium is needed, so nothing else should spend a runner.
+    # A docs-only merge — most of them — does not reach this at all.
+    paths:
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/warm-cache.yml'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The version lives in one place per workflow and test/workflow-pins.test.js asserts this one
+# agrees with ci.yml's and package.json's. It has to: the cache key names the version, and a key
+# that disagrees restores the browser build the other half does not want — which surfaces as
+# "Executable doesn't exist" on the browser tests and reads as a broken cache rather than as two
+# numbers that stopped matching.
+env:
+  PLAYWRIGHT_VERSION: 1.56.1
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # The same key ci.yml restores. On a hit this step is the whole job and it costs a few
+      # seconds; the install below is skipped and nothing is re-saved.
+      - name: Cache the Playwright browser download
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}-chromium
+
+      # Browser only. `--with-deps` would install system libraries into a runner that is about
+      # to be destroyed, and they are not what the cache holds — ci.yml asks for those itself on
+      # every run, which is the 14s no cache can remove.
+      - name: Download Chromium so the cache has something to save
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx --yes playwright@${{ env.PLAYWRIGHT_VERSION }} install chromium
+
+      - name: Say what the cache now holds
+        run: |
+          if [ '${{ steps.playwright-cache.outputs.cache-hit }}' = 'true' ]; then
+            echo 'Cache already warm for Playwright ${{ env.PLAYWRIGHT_VERSION }} — nothing downloaded.' \
+              >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Downloaded Chromium for Playwright ${{ env.PLAYWRIGHT_VERSION }}; every branch can restore it now.' \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
