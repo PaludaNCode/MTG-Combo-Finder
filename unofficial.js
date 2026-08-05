@@ -1647,7 +1647,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ghave, Guru of Spores', 'Utopia Mycon'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '4214-4535-5189',
         cards: ['Ghave, Guru of Spores', 'Utopia Mycon', 'Good-Fortune Unicorn'],
@@ -1663,7 +1663,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ghave, Guru of Spores', 'Cryptic Trilobite'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '4535-4929-5189',
         cards: ['Ghave, Guru of Spores', 'Cryptic Trilobite', 'Good-Fortune Unicorn'],
@@ -1679,7 +1679,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ghave, Guru of Spores', 'Earthcraft'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2757-2850-5189',
         cards: ['Ghave, Guru of Spores', 'Earthcraft', 'Ivy Lane Denizen'],
@@ -1695,7 +1695,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Marath, Will of the Wild', 'Ashnod\'s Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '1335-2034-2850',
         cards: ['Marath, Will of the Wild', 'Ivy Lane Denizen', 'Ashnod\'s Altar'],
@@ -1713,7 +1713,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Marath, Will of the Wild', 'Mana Echoes'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '1335-2440-2850',
         cards: ['Marath, Will of the Wild', 'Mana Echoes', 'Ivy Lane Denizen'],
@@ -1728,7 +1728,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Utopia Mycon'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2744-3192-4214',
         cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Utopia Mycon'],
@@ -1745,7 +1745,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Ashnod\'s Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2034-2850-3192',
         cards: ['Ulasht, the Hate Seed', 'Ivy Lane Denizen', 'Ashnod\'s Altar'],
@@ -1762,7 +1762,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Mana Echoes'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2440-2850-3192',
         cards: ['Ulasht, the Hate Seed', 'Ivy Lane Denizen', 'Mana Echoes'],
@@ -1777,7 +1777,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Ulasht, the Hate Seed', 'Phyrexian Altar'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2744-3192-4050',
         cards: ['Ulasht, the Hate Seed', 'Cathars\' Crusade', 'Phyrexian Altar'],
@@ -1794,7 +1794,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Xavier Sal, Infested Captain', 'Intruder Alarm'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '1636-2850-3143',
         cards: ['Xavier Sal, Infested Captain', 'Intruder Alarm', 'Ivy Lane Denizen'],
@@ -1811,7 +1811,7 @@
     },
     {
       cards: ['Rosie Cotton of South Lane', 'Animation Module', 'Intruder Alarm'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '1636-2744-3490',
         cards: ['Animation Module', 'Intruder Alarm', 'Cathars\' Crusade'],
@@ -2313,7 +2313,7 @@
     },
     {
       cards: ['Chatterfang, Squirrel General', 'Kirol, Attentive First-Year', 'Molten Echoes', 'Council of Reeds'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2506-6705-7150-7752',
         cards: ['Kirol, Attentive First-Year', 'Molten Echoes', 'Quina, Qu Gourmet', 'Council of Reeds'],
@@ -2328,7 +2328,7 @@
     },
     {
       cards: ['Chatterfang, Squirrel General', 'Survey Mechan', 'Mortuary', 'Ashnod\'s Altar', 'Chalk Outline'],
-      confidence: 'derived',
+      confidence: 'verified',
       from: {
         id: '2034-5220-5632-6705-6961',
         cards: ['Survey Mechan', 'Mortuary', 'Ashnod\'s Altar', 'Chalk Outline', 'Quina, Qu Gourmet'],
