@@ -67,6 +67,10 @@ const COUNTS = [
   // here is a rule that stopped matching rather than a card being retired — and what it
   // costs is the "(16 basic · 20 nonbasic)" aside, silently.
   { key: 'basicLands', of: (d) => (d.basicLands || []).length, what: 'basic lands' },
+  // The spells with a land on the back. Losing it costs the aside that explains why the
+  // page's land count is lower than the reader's deck site's, which is a difference they
+  // would otherwise have to work out.
+  { key: 'landBacks', of: (d) => (d.landBacks || []).length, what: 'cards with a land back' },
   { key: 'templateCards', of: (d) => Object.keys(d.templateCards || {}).length, what: 'template cards' },
   // The string tables. A table shrinking without the combo count shrinking means
   // rows are pointing somewhere new, which is a shape change wearing a normal

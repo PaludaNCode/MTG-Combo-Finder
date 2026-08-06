@@ -3242,11 +3242,17 @@ function captionDrift(notes) {
     // viewport: the misspelled deck adds two cards the fixture map has never heard of, and
     // those must leave the lands and spells alone and turn up as their own quiet number.
     const strip = v.deckCounts;
-    const extra = { misspelled: 2, illegal: 2, illegalNoCommander: 2 }[v.deck] || 0;
+    // The misspelled deck carries three cards the tuning deck does not: two the fixture
+    // map has never heard of, and Bala Ged Recovery, which is a spell with a land on the
+    // back. So it is the run that exercises every reading the strip has.
+    const extra = { misspelled: 3, illegal: 2, illegalNoCommander: 2 }[v.deck] || 0;
     const unread = v.deck === 'misspelled' ? 2 : 0;
     const spells = 7 + (extra - unread);
     const want = [`${17 + extra} cards`, `${spells} spells`, '10 lands']
       .concat(unread ? [`${unread} cards unread`] : []);
+    // In DOM order, which is the order they are read in: the aside on the spells, then
+    // the one on the lands.
+    const wantSubs = (v.deck === 'misspelled' ? ['1 with a land back'] : []).concat('10 basic');
     if (!strip.shown) {
       problems.push('no deck-counts strip after a search');
     } else {
@@ -3254,10 +3260,11 @@ function captionDrift(notes) {
       if (JSON.stringify(strip.parts) !== JSON.stringify(want)) {
         problems.push(`the strip reads ${JSON.stringify(strip.parts)}, expected ${JSON.stringify(want)}`);
       }
-      // All ten lands are Islands, so there is nothing to say about nonbasics — and the
-      // aside must not invent "0 nonbasic" to say it with.
-      if (JSON.stringify(strip.subs) !== JSON.stringify(['10 basic'])) {
-        problems.push(`the land aside reads ${JSON.stringify(strip.subs)}, expected ["10 basic"]`);
+      // All ten lands are Islands, so there is nothing to say about nonbasics -- and the
+      // aside must not invent "0 nonbasic" to say it with. The land back is an aside on
+      // the *spells*, because that is where such a card is counted.
+      if (JSON.stringify(strip.subs) !== JSON.stringify(wantSubs)) {
+        problems.push(`the asides read ${JSON.stringify(strip.subs)}, expected ${JSON.stringify(wantSubs)}`);
       }
       // One line on anything but a phone, and never more than two.
       //

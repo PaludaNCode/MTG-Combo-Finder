@@ -423,7 +423,15 @@
     const typed = Number(counts.mapped) > 0 && !tooMuchOfTheDeck(unread, cards);
 
     if (typed) {
-      parts.push({ text: `${Number(counts.spells) || 0} spells` });
+      const spells = { text: `${Number(counts.spells) || 0} spells` };
+      // The modal double-faced cards, said where they are counted. They are in the
+      // spells because the front face is what you cast — which is also what the reader's
+      // deck site shows — but a deck runs them partly as lands, so a land count that
+      // never mentions them answers a slightly different question than the one asked.
+      if (counts.landBacksKnown && Number(counts.landBacks)) {
+        spells.sub = `${counts.landBacks} with a land back`;
+      }
+      parts.push(spells);
       // The one sub-number a deckbuilder acts on, and only when both halves of it are
       // real. Written as the strip's own aside rather than a second line: it qualifies
       // the land count and means nothing away from it.

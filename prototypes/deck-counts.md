@@ -47,7 +47,9 @@ give:
   below is why the other 82 are not in it.
 - Plus **13 basic-land names**, 204 bytes, 119 gzipped — the second list the
   `(16 basic · 20 nonbasic)` aside needs.
-- The payload is 1.72 MB on the wire, so the pair is **+0.5%**, and it is read by
+- Plus the **82 cards that are a land on the back only**, 3.4 KB, 1.7 KB gzipped, for the
+  `62 spells (3 with a land back)` aside. Not a subset of the lands but the complement of them.
+- The payload is 1.72 MB on the wire, so the three together are **+0.6%**, and they are read by
   `search-worker.js`, not the main thread.
 
 A `lands` array is the cheap shape and the right one: the page needs one boolean per card, not a
@@ -68,7 +70,9 @@ question nobody is asking yet.
 2. **Modal double-faced cards.** 82 of the 1,273 are land on the back face only — Agadeem's
    Awakening, Turntimber Symbiosis. Front face wins here, so they count as spells, which is what
    Moxfield and Archidekt do and therefore what a reader is comparing against. Worth being a
-   named decision rather than a fall-out of reading `faces[0]`.
+   named decision rather than a fall-out of reading `faces[0]` — and, as shipped, worth saying out
+   loud: they are counted a second time as `62 spells (3 with a land back)`, so a deck site showing
+   39 lands against this page's 36 explains itself.
 3. **Three cards are Land Creature** (Dryad Arbor and two more). They are lands. This only bites
    if the strip ever grows a creature count, at which point the two overlap and something has to
    say so.

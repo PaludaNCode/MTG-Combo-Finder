@@ -723,11 +723,13 @@
     const byKey = identityIndex(dataset && dataset.cardIdentity);
     const landKeys = landIndex(dataset && dataset.lands);
     const basicKeys = landIndex(dataset && dataset.basicLands);
+    const backKeys = landIndex(dataset && dataset.landBacks);
 
     let cards = 0;
     let lands = 0;
     let basic = 0;
     let spells = 0;
+    let landBacks = 0;
     let unread = 0;
 
     for (const entry of deckEntries || []) {
@@ -745,6 +747,11 @@
         if (basicKeys && basicKeys.has(key)) basic += quantity;
       } else {
         spells += quantity;
+        // A spell with a land on the back, counted inside the spells rather than beside
+        // them: the front face is what you cast, and a deck runs these partly as lands.
+        // Kept as its own number so the strip can say why its land count is lower than
+        // the one the reader's deck site shows.
+        if (backKeys && backKeys.has(key)) landBacks += quantity;
       }
     }
 
@@ -754,6 +761,7 @@
       spells,
       basic,
       nonbasic: lands - basic,
+      landBacks,
       unread,
       // How big the two lists were, so the page can tell "no lands in this deck"
       // from "no land list in this payload". `basicsKnown` is separate because a
@@ -761,6 +769,9 @@
       // basic: 0, and only one of them is a number worth printing.
       mapped: landKeys ? landKeys.size : 0,
       basicsKnown: !!(basicKeys && basicKeys.size),
+      // Separate from the count for the same reason `basicsKnown` is: a deck with no
+      // double-faced lands and a payload with no list of them both come out as 0.
+      landBacksKnown: !!(backKeys && backKeys.size),
     };
   }
 

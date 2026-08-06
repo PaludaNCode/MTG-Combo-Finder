@@ -22,6 +22,7 @@ const FIXTURE = {
     'Sword of the Meek': '', 'Bloom Tender': 'G', 'Devoted Druid': 'G',
     'The Destined White Mage': 'G',
     'Murderous Redcap': 'BR',
+    'Bala Ged Recovery // Bala Ged Sanctuary': 'G',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
   // Wizards' Game Changer list, as the fetcher publishes it. Which real cards are
@@ -45,6 +46,11 @@ const FIXTURE = {
   // A count of lines would say 7.
   lands: ['Island', 'Ancient Tomb'],
   basicLands: ['Island'],
+  // A spell with a land on the back. Not a subset of the lands above — the opposite:
+  // it is counted as a spell, and this is the list that lets the strip say so. It is
+  // in the misspelled deck rather than in the tuning deck because that deck is what
+  // every other assertion here is calibrated against.
+  landBacks: ['Bala Ged Recovery // Bala Ged Sanctuary'],
   // A combo slot that names a property rather than a card, and the deck's
   // Walking Ballista filling it. The rendered row has to say so — a combo that
   // appears because of a slot but cannot show which card filled it reads as
@@ -190,8 +196,18 @@ const DECKS = {
   // `cardIdentity`, so the unknown fraction stays low enough for the page to speak;
   // that is the point of the deck, and `marked` is the other branch of the same
   // rule, where nothing is unknown and nothing is said.
+  // Bala Ged Recovery is here and not in the tuning deck for the same reason the
+  // misspelling is: it exercises one reading of the deck-counts strip — a spell with a
+  // land on the back — and every other assertion in the layout test is calibrated
+  // against the tuning deck as it stands. It is in no combo, so it changes nothing but
+  // the counts.
+  //
+  // Green, and that is the whole of why it is this card: the commander is {G}{U}, so a
+  // black double-faced land here would add a third mana pip to the header and put an
+  // off-identity line under a deck this run needs to be legal. Two assertions went red
+  // saying exactly that, which is the header and legality checks working.
   misspelled: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
-    .concat(REST, ['1 Sol Rimg', '1 Treasure']).join('\n'),
+    .concat(REST, ['1 Sol Rimg', '1 Treasure', '1 Bala Ged Recovery']).join('\n'),
   // The tuning deck made illegal two different ways, which is one deck because the
   // two findings have to be shown together to be shown apart: Heliod is white and
   // the commander is {G}{U}, so it is off-identity, and Murderous Redcap is on this

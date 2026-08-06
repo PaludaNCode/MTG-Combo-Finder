@@ -505,7 +505,10 @@ test('unrecognizedNote: the claim is about the snapshot, not about the card', ()
 // type split read off a map too thin to answer.
 
 const counted = (over) => Object.assign(
-  { cards: 98, spells: 62, lands: 36, basic: 16, nonbasic: 20, unread: 0, mapped: 1191, basicsKnown: true },
+  {
+    cards: 98, spells: 62, lands: 36, basic: 16, nonbasic: 20, unread: 0,
+    landBacks: 0, landBacksKnown: true, mapped: 1191, basicsKnown: true,
+  },
   over
 );
 const said = (note) => note.parts.map((p) => p.text + (p.sub ? ' (' + p.sub + ')' : '')).join(' · ');
@@ -575,6 +578,26 @@ test('deckCountsNote: a deck the data cannot read says only how big it is', () =
   // unrecognized box is pinned to above.
   assert.ok(View.deckCountsNote(counted({ cards: 84, spells: 42, lands: 0, unread: 42 })).typed);
   assert.equal(View.deckCountsNote(counted({ cards: 84, spells: 41, lands: 0, unread: 43 })).typed, false);
+});
+
+// Said beside the spells, because that is where they are counted — the front face is
+// what you cast. A reader whose deck site shows 39 lands to this page's 36 has the
+// difference in front of them rather than a discrepancy to work out.
+test('deckCountsNote: the double-faced cards are named among the spells', () => {
+  assert.equal(said(View.deckCountsNote(counted({ landBacks: 3 }))),
+    '98 cards · 62 spells (3 with a land back) · 36 lands (16 basic · 20 nonbasic)');
+});
+
+test('deckCountsNote: no double-faced cards is not worth a zero', () => {
+  assert.equal(said(View.deckCountsNote(counted())),
+    '98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)');
+});
+
+// A payload with no list of them cannot tell a deck that has none from one it cannot
+// see, so it says nothing rather than 0 — the same rule as the basics.
+test('deckCountsNote: no land-back list drops the aside', () => {
+  assert.equal(said(View.deckCountsNote(counted({ landBacks: 3, landBacksKnown: false }))),
+    '98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)');
 });
 
 test('deckCountsNote: no deck says nothing at all', () => {

@@ -484,9 +484,13 @@ test('unrecognizedCards: an empty deck reports nothing', () => {
 // as happily when wrong, and the strip invites being checked against a deck site.
 
 const COUNTED = {
-  cardIdentity: { 'Sol Ring': '', 'Forest': 'G', 'Ancient Tomb': '', 'Vindicate': 'BW' },
+  cardIdentity: {
+    'Sol Ring': '', 'Forest': 'G', 'Ancient Tomb': '', 'Vindicate': 'BW',
+    'Bala Ged Recovery // Bala Ged Sanctuary': 'G',
+  },
   lands: ['Forest', 'Ancient Tomb'],
   basicLands: ['Forest'],
+  landBacks: ['Bala Ged Recovery // Bala Ged Sanctuary'],
 };
 
 test('deckCounts: counts cards by quantity, not by line', () => {
@@ -555,6 +559,29 @@ test('deckCounts: case and a split card are matched', () => {
   );
   assert.equal(counts.lands, 1);
   assert.equal(counts.unread, 0);
+});
+
+// A modal double-faced card is a spell, and counted again as one of the spells with a
+// land on the back. It must not be both a spell and a land: the sum would stop adding up,
+// and the land count would go above what the reader's deck site shows for the same list.
+test('deckCounts: a spell with a land back is a spell, and is also counted as one', () => {
+  const counts = deckCounts(COUNTED, [
+    { card: 'Bala Ged Recovery', quantity: 1 },
+    { card: 'Sol Ring', quantity: 1 },
+    { card: 'Forest', quantity: 8 },
+  ]);
+  assert.equal(counts.spells, 2);
+  assert.equal(counts.landBacks, 1);
+  assert.equal(counts.lands, 8);
+  assert.equal(counts.lands + counts.spells + counts.unread, counts.cards);
+  assert.equal(counts.landBacksKnown, true);
+});
+
+test('deckCounts: no land-back list is not a deck without them', () => {
+  const counts = deckCounts({ cardIdentity: COUNTED.cardIdentity, lands: COUNTED.lands },
+    [{ card: 'Bala Ged Recovery', quantity: 1 }]);
+  assert.equal(counts.landBacks, 0);
+  assert.equal(counts.landBacksKnown, false);
 });
 
 test('deckCounts: an empty deck counts nothing', () => {
