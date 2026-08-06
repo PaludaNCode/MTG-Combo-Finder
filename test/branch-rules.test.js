@@ -169,6 +169,50 @@ test('losing auto-merge is BROKEN', () => {
   assert.deepStrictEqual(levelsFor(o, 'auto-merge is available'), ['BROKEN']);
 });
 
+// The response an authenticated `contents: read` workflow token actually got, which is
+// the narrower one: GitHub omits the repository fields the token has no visibility for
+// instead of refusing the request. Reconstructed from run 31064133085.
+const narrowed = () => {
+  const o = recorded();
+  for (const f of ['allow_merge_commit', 'allow_squash_merge', 'allow_rebase_merge',
+    'allow_auto_merge', 'delete_branch_on_merge', 'allow_update_branch']) {
+    delete o.repo[f];
+  }
+  return o;
+};
+
+test('a narrowed repository response is UNKNOWN on every setting, never BROKEN', () => {
+  // The tool's first live run reported three of this repository's documented claims as
+  // FALSE — including auto-merge being off, four minutes after auto-merge had merged
+  // the pull request that added the tool. Every one of them was an absent field
+  // compared against `=== false` or `=== true`. "The docs are wrong" and "I could not
+  // look" must never produce the same output.
+  const got = checkClaims(narrowed());
+  assert.deepStrictEqual(got.broken, [], 'absent fields must not manufacture false findings');
+  const unknown = got.unknown.map((f) => f.claim).sort();
+  assert.deepStrictEqual(unknown, [
+    'auto-merge is available',
+    'merged branches are kept',
+    'nothing can bypass the ruleset',
+    MERGE_CLAIM,
+  ].sort());
+  // And it has to say why, or the reader treats a narrowed run as a clean one.
+  assert.match(got.unknown[0].then, /re-run without a token/);
+});
+
+test('the merge-commit setting is read from allow_merge_commit', () => {
+  // Not `allow_merge_merge`. The three field names share no pattern, so building them
+  // from the method name reads undefined for the one that decides the invariant — and
+  // undefined is `!== false`, so the first version put 'merge' in the allowed list by
+  // accident and every test here still passed. This is the case that would have caught
+  // it: merge commits genuinely off, which must read as BROKEN rather than as fine.
+  const o = recorded();
+  o.repo.allow_merge_commit = false;
+  assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), ['BROKEN']);
+  const shown = checkClaims(o).broken[0].saw;
+  assert.match(shown, /repo allows \[none\]/, `read the wrong field: ${shown}`);
+});
+
 test('a missing observation is not read as a passing one', () => {
   // An empty object is what a failed fetch or a truncated fixture looks like. It must
   // not come back clean — "0 rules apply" and "I could not ask" are the same bytes

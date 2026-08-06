@@ -16,9 +16,10 @@
 // Three unauthenticated GETs, and no admin scope anywhere: a session's token is
 // `metadata=read`, so `/branches/main/protection` answers 403 and cannot be used,
 // while `/rules/branches/<branch>` lists the rules that *effectively apply* and needs
-// no auth at all. Unauthenticated GitHub allows 60 requests an hour per IP; this
-// spends three, and sends `GITHUB_TOKEN` if one happens to be in the environment
-// purely to buy the 5,000/hour bucket — nothing here needs the permissions.
+// no auth at all. Unauthenticated GitHub allows 60 requests an hour per IP and this
+// spends three, so **it never sends a token** — a `contents: read` workflow token
+// gets *fewer* repository fields than an anonymous caller, which cost three false
+// findings on the first live run. See narrowedResponse().
 //
 // **It cannot run live from the sandbox this repository is usually edited from.**
 // `api.github.com` is not on the agent proxy's allowlist and Node's `fetch()` does not
@@ -178,8 +179,17 @@ const CLAIMS = [
     check: (o) => {
       const pr = rule(o, 'pull_request');
       const fromRuleset = (pr && pr.parameters.allowed_merge_methods) || null;
-      const fromRepo = ['merge', 'squash', 'rebase']
-        .filter((m) => o.repo[`allow_${m}_merge`] !== false);
+      // The merge-commit setting is `allow_merge_commit`, NOT `allow_merge_merge` —
+      // the three field names do not share a pattern, and building them from the
+      // method name silently reads `undefined` for the one that matters. The first
+      // version of this did exactly that and passed every test, because `undefined`
+      // is `!== false` and so 'merge' landed in the allowed list by accident. Spelling
+      // them out is the fix; narrowedResponse() is what made the bug visible.
+      const FIELD = { merge: 'allow_merge_commit', squash: 'allow_squash_merge', rebase: 'allow_rebase_merge' };
+      const methods = ['merge', 'squash', 'rebase'];
+      const narrow = narrowedResponse(methods.map((m) => FIELD[m]), o);
+      if (narrow) return narrow;
+      const fromRepo = methods.filter((m) => o.repo[FIELD[m]]);
       const effective = fromRuleset
         ? fromRepo.filter((m) => fromRuleset.includes(m))
         : fromRepo;
@@ -212,24 +222,26 @@ const CLAIMS = [
   {
     claim: 'merged branches are kept',
     where: 'CLAUDE.md § The designated branch after its PR merges.',
-    check: (o) => o.repo.delete_branch_on_merge === false ? null : {
-      level: 'BROKEN',
-      saw: 'delete_branch_on_merge is on',
+    check: (o) => narrowedResponse(['delete_branch_on_merge'], o)
+      || (o.repo.delete_branch_on_merge === false ? null : {
+        level: 'BROKEN',
+        saw: 'delete_branch_on_merge is on',
       then: 'a merged branch loses its remote ref, so the follow-up push is a new '
         + 'branch and `--force-with-lease` fails with "(stale info)" — a rejection '
         + 'that reads like a protection working and is nothing of the kind. This is '
-        + 'exactly what .githooks/pre-push was written for; that hook is the fallback, '
-        + 'not the fix.',
-    },
+          + 'exactly what .githooks/pre-push was written for; that hook is the fallback, '
+          + 'not the fix.',
+      }),
   },
   {
     claim: 'auto-merge is available',
     where: 'README § Branching strategy. The Enable auto-merge step.',
-    check: (o) => o.repo.allow_auto_merge === true ? null : {
-      level: 'BROKEN',
-      saw: 'allow_auto_merge is off',
-      then: 'every merge now needs somebody watching CI finish.',
-    },
+    check: (o) => narrowedResponse(['allow_auto_merge'], o)
+      || (o.repo.allow_auto_merge === true ? null : {
+        level: 'BROKEN',
+        saw: 'allow_auto_merge is off',
+        then: 'every merge now needs somebody watching CI finish.',
+      }),
   },
   {
     // Not a rule to add — a rule to keep absent. update-data.yml force-pushes an
@@ -264,6 +276,37 @@ const CLAIMS = [
   },
 ];
 
+// A repository setting that is not in the response is UNKNOWN, never a broken claim.
+//
+// **This function exists because its absence shipped, and the tool reported three false
+// findings on its first live run.** `/repos/{owner}/{repo}` answered without
+// `allow_squash_merge`, `delete_branch_on_merge` or `allow_auto_merge`, and each check
+// compared the missing value against the state it wanted — `=== false`, `=== true` —
+// so absent read as "the documented claim is false". The run said auto-merge was off
+// four minutes after auto-merge had merged the pull request that added the tool.
+//
+// The cause was the tool's own doing: it sent `GITHUB_TOKEN` to buy the 5,000/hour
+// rate-limit bucket, and a workflow token scoped to `contents: read` gets a NARROWER
+// repository object than an anonymous caller does — GitHub omits the fields the token
+// has no visibility for rather than refusing the request. So the optimisation cost
+// exactly the data the tool was written to read. It no longer sends a token at all.
+//
+// The general rule was already applied to `bypass_actors` and not to anything else,
+// which is the whole lesson: **absent is not empty, and it is not false either.** A
+// check that cannot see a setting has to say so, because "the docs are wrong" and "I
+// could not look" are the same bytes and only one of them is worth acting on.
+function narrowedResponse(fields, observation) {
+  const missing = fields.filter((f) => observation.repo[f] === undefined);
+  if (!missing.length) return null;
+  return {
+    level: 'UNKNOWN',
+    saw: `the repository response carried no ${missing.join(', ')}`,
+    then: 'the response was narrowed, so this claim was not checked — it is not a '
+      + 'finding. An authenticated GITHUB_TOKEN scoped to contents:read gets fewer '
+      + 'fields here than an anonymous request does; re-run without a token.',
+  };
+}
+
 // A rule by type, from the effective list. `/rules/branches/<b>` flattens every
 // ruleset that reaches the branch, so this answers "does this apply" without caring
 // which ruleset supplied it — which is the question, on a repo with one.
@@ -296,13 +339,13 @@ function checkClaims(observation) {
 }
 
 async function getJson(url) {
-  const headers = { accept: 'application/vnd.github+json' };
-  // Only for the rate-limit bucket. Every endpoint here is readable anonymously, so a
-  // run without a token is exactly as trustworthy — which matters, because a check on
-  // whether the gates are real should not itself depend on a credential.
-  const token = process.env.GITHUB_TOKEN;
-  if (token && token !== 'proxy-injected') headers.authorization = `Bearer ${token}`;
-  const res = await fetch(url, { headers });
+  // **Anonymous on purpose, and never send a token.** A workflow `GITHUB_TOKEN` scoped
+  // to `contents: read` gets a narrower `/repos/{owner}/{repo}` object than an
+  // anonymous caller — the merge-method and auto-merge fields are simply absent — so
+  // authenticating to buy the 5,000/hour rate-limit bucket cost the tool the settings
+  // it exists to read, and three claims came back FALSE on the first live run. Three
+  // requests do not need a bigger bucket. See narrowedResponse() above.
+  const res = await fetch(url, { headers: { accept: 'application/vnd.github+json' } });
   if (!res.ok) {
     // 403 here is the rate limit or a blocked host, never a permissions problem — say
     // so, because "403" alone sends people looking for a token scope that would not

@@ -41,12 +41,15 @@ jobs:
       # when a documented claim is false — FRAGILE and UNKNOWN lines are reported and
       # do not fail the run, because neither is a thing the tree can fix.
       #
-      # GITHUB_TOKEN buys the 5,000/hour rate-limit bucket and nothing else; every
-      # endpoint the tool reads is readable anonymously, which is what makes a run
-      # without one exactly as trustworthy.
+      # **No GITHUB_TOKEN, deliberately.** The first version of this step passed
+      # `${{ github.token }}` to buy the 5,000/hour rate-limit bucket, and the run
+      # reported three of the repository's documented claims as FALSE: a workflow token
+      # scoped to `contents: read` gets a NARROWER /repos/{owner}/{repo} object than an
+      # anonymous caller, so allow_squash_merge, allow_auto_merge and
+      # delete_branch_on_merge were simply absent and every check read absent as
+      # "false". It said auto-merge was off four minutes after auto-merge merged the
+      # pull request that added this file. Three requests do not need a bigger bucket.
       - name: Ask GitHub what applies to main
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
           node tools/check-branch-rules.js | tee -a "$GITHUB_STEP_SUMMARY"
