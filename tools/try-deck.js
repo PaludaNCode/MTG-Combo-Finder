@@ -83,7 +83,14 @@ async function main() {
 
   say(`# ${path.basename(file)}`);
   say();
-  say(`${main_.length} cards parsed`
+  // Lines and cards, because they are not the same number and this said "85 cards
+  // parsed" about a deck of 98 for as long as nothing on the page disagreed with it.
+  // The page's own strip counts quantities, so a tool printing the line count under
+  // the same word is the trap CLAUDE.md describes under "What a tool says about
+  // itself is not exempt" — believed once, and wrong by thirteen.
+  const cardCount = main_.concat(typedCommanders)
+    .reduce((n, e) => n + (Number(e && e.quantity) || 1), 0);
+  say(`${main_.length} line(s) parsed, ${cardCount} cards`
     + (parsed.skipped && parsed.skipped.length ? `, ${parsed.skipped.length} line(s) not understood` : '')
     + (typedCommanders.length ? `, ${typedCommanders.length} marked as commander` : ''));
   if (parsed.skipped && parsed.skipped.length) {

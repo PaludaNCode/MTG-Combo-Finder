@@ -395,6 +395,60 @@
     };
   }
 
+  // ---- how many cards, and how many of them are lands ------------------------
+
+  // What the strip above the results says, or null for nothing at all.
+  //
+  // The card count is the one number here that never depends on the data: it is a sum
+  // over the decklist somebody pasted, so it survives a payload with no card lists in
+  // it at all. Everything else is a claim about card types, and each has its own
+  // reason to be dropped rather than guessed:
+  //
+  //   - no land list (`mapped` 0) means the payload cannot answer. An empty list is
+  //     what a broken publish looks like, and reading it as "this deck plays no
+  //     lands" would put a confident 0 on screen for every deck at once.
+  //   - too much of the deck unread means the *data* is thin rather than the deck
+  //     odd, which is the rule unrecognizedNote() and legalityProse() already share.
+  //   - the basic/nonbasic split needs the basic list, because a deck with no basics
+  //     and a payload with no basic list both arrive as 0.
+  //
+  // Spells before lands, and both after the total: the deck's body is what somebody
+  // reads first, and the land count is the number they came to check.
+  function deckCountsNote(counts) {
+    const cards = Number(counts && counts.cards) || 0;
+    if (!cards) return null;
+
+    const parts = [{ text: plural(cards, 'card') }];
+    const unread = Number(counts.unread) || 0;
+    const typed = Number(counts.mapped) > 0 && !tooMuchOfTheDeck(unread, cards);
+
+    if (typed) {
+      parts.push({ text: `${Number(counts.spells) || 0} spells` });
+      // The one sub-number a deckbuilder acts on, and only when both halves of it are
+      // real. Written as the strip's own aside rather than a second line: it qualifies
+      // the land count and means nothing away from it.
+      const count = Number(counts.lands) || 0;
+      const lands = { text: `${count} lands` };
+      // Only the halves that are there. "10 basic · 0 nonbasic" is a zero nobody asked
+      // about, and a deck of nothing but duals reads better as "36 nonbasic" than as an
+      // apology for having no Forests.
+      if (counts.basicsKnown && count) {
+        lands.sub = [
+          Number(counts.basic) ? `${counts.basic} basic` : '',
+          Number(counts.nonbasic) ? `${counts.nonbasic} nonbasic` : '',
+        ].filter(Boolean).join(' · ');
+        if (!lands.sub) delete lands.sub;
+      }
+      parts.push(lands);
+      // Says why the three numbers do not add up, in the one case where they don't.
+      // Quiet, because it is a note about the data and not a finding about the deck —
+      // the unrecognized-cards box above is where those names are named.
+      if (unread) parts.push({ text: `${plural(unread, 'card')} unread`, quiet: true });
+    }
+
+    return { label: 'Deck', parts, typed };
+  }
+
   // ---- whether the decklist is allowed ---------------------------------------
 
   // The colours a card carries that its commander does not, as mana symbols read the
@@ -483,6 +537,7 @@
   const api = {
     pickedSentence,
     unrecognizedNote,
+    deckCountsNote,
     legalityProse,
     UNKNOWN_NAMED,
     UNKNOWN_LIMIT,

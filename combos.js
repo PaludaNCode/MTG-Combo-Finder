@@ -681,6 +681,89 @@
     return { names, checked, mapped: Object.keys(byKey).length };
   }
 
+  // ---- how many cards, and how many of them are lands ------------------------
+  //
+  // The strip above the results: "98 cards · 62 spells · 36 lands". Worked out here
+  // rather than in the page for the same reason the bracket and the legality line
+  // are — the lists it reads are part of the dataset and the dataset stays in the
+  // worker.
+  //
+  // Facts only. Whether any of this is worth saying is DeckView's decision, and it
+  // has to be a decision: an empty `lands` list would otherwise make every card in
+  // the deck a spell, which is the shape a broken publish takes and reads as an
+  // ordinary landless deck.
+  //
+  // Kept on the array in a WeakMap exactly as identityIndex() is, and for the same
+  // reason: the dataset is parsed once per worker and never mutated, so the keys are
+  // the same on every search.
+  const landIndexes = new WeakMap();
+
+  function landIndex(lands) {
+    if (!Array.isArray(lands)) return null;
+    const held = landIndexes.get(lands);
+    if (held) return held;
+    const set = new Set();
+    for (const name of lands) {
+      const key = nameKey(name);
+      if (key) set.add(key);
+    }
+    landIndexes.set(lands, set);
+    return set;
+  }
+
+  // Counted by *quantity*, never by line. The tuning deck is 85 lines and 98 cards
+  // because sixteen of its lands arrive as "10 Forest", and the number a reader is
+  // checking against their deck site is 98. tools/try-deck.js prints the other one.
+  //
+  // A card the identity map has never heard of is neither land nor spell — it has no
+  // type line to read — so it is counted apart rather than folded into either half.
+  // Lands + spells + unread is the card count, and the strip shows enough of that
+  // sum for a reader to check it.
+  function deckCounts(dataset, deckEntries) {
+    const byKey = identityIndex(dataset && dataset.cardIdentity);
+    const landKeys = landIndex(dataset && dataset.lands);
+    const basicKeys = landIndex(dataset && dataset.basicLands);
+
+    let cards = 0;
+    let lands = 0;
+    let basic = 0;
+    let spells = 0;
+    let unread = 0;
+
+    for (const entry of deckEntries || []) {
+      const quantity = Math.max(0, Number(entry && entry.quantity) || 0);
+      if (!quantity) continue;
+      cards += quantity;
+      const key = nameKey((entry && entry.card) || '');
+      // The identity map decides whether the card is *known at all*, because the land
+      // list only holds lands: "absent from the lands" and "absent from the data" are
+      // the same absence there, and reading it as the first would call a misspelling a
+      // spell.
+      if (!key || byKey[key] === undefined) { unread += quantity; continue; }
+      if (landKeys && landKeys.has(key)) {
+        lands += quantity;
+        if (basicKeys && basicKeys.has(key)) basic += quantity;
+      } else {
+        spells += quantity;
+      }
+    }
+
+    return {
+      cards,
+      lands,
+      spells,
+      basic,
+      nonbasic: lands - basic,
+      unread,
+      // How big the two lists were, so the page can tell "no lands in this deck"
+      // from "no land list in this payload". `basicsKnown` is separate because a
+      // deck with no basics in it and a payload with no basic list both come out as
+      // basic: 0, and only one of them is a number worth printing.
+      mapped: landKeys ? landKeys.size : 0,
+      basicsKnown: !!(basicKeys && basicKeys.size),
+    };
+  }
+
   function withinIdentity(combo, identity) {
     if (!identity) return true; // no colour data -> don't split by colour
     for (const c of String(combo.i || '')) {
@@ -1693,7 +1776,8 @@
     computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
     matchDeck, matchUnofficial, standInRows, identityString,
-    deckIdentity, withinIdentity, unrecognizedCards, expand, summarizeResults, comboPieces, comboCardIndex,
+    deckIdentity, withinIdentity, unrecognizedCards, deckCounts,
+    expand, summarizeResults, comboPieces, comboCardIndex,
     splitResults,
     groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn,
     variantSignature,

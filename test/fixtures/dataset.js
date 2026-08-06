@@ -36,6 +36,15 @@ const FIXTURE = {
   // in Commander; it is a card this fixture already knows, off the tuning deck's
   // colours, which is what makes it usable for both halves of the legality check.
   banned: ['Murderous Redcap'],
+  // The lands, and the basics among them, as the fetcher publishes them: names over
+  // every card Scryfall knows rather than only the ones in combos, so a name missing
+  // here is a card with no type line rather than a card that is not a land.
+  //
+  // Island is the tuning deck's only land and it arrives as "10 Island", which is the
+  // case the strip exists to get right: 17 cards, 7 spells, 10 lands, all 10 basic.
+  // A count of lines would say 7.
+  lands: ['Island', 'Ancient Tomb'],
+  basicLands: ['Island'],
   // A combo slot that names a property rather than a card, and the deck's
   // Walking Ballista filling it. The rendered row has to say so — a combo that
   // appears because of a slot but cannot show which card filled it reads as

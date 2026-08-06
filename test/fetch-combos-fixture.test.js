@@ -219,6 +219,17 @@ test('fixture: the ban list comes through as its own field', () => {
   assert.match(log, /banned/i);
 });
 
+// The two land lists travel the same path, and the page reads a missing one as "cannot
+// say" rather than as a deck with no lands in it. Two lists rather than a flag per card
+// because a deck with no basics and a payload with no basic list both come out as 0,
+// and the strip has to be able to tell them apart — so the fixture holds a land that is
+// not a basic, which one list could never express.
+test('fixture: the land lists come through as their own fields', () => {
+  assert.deepStrictEqual(published.lands, ['Island', 'Snow-Covered Island']);
+  assert.deepStrictEqual(published.basicLands, ['Island']);
+  assert.match(log, /2 lands \(1 basic\)/);
+});
+
 test('fixture: a result missing from the tier inventory is reported, not hidden', () => {
   assert.match(log, /result\(s\) are not in result-tiers\.js/);
 });

@@ -129,6 +129,33 @@
     container.appendChild(box);
   }
 
+  // "Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)" — what the list
+  // in the box is, before anything about what is in it. Every decision about which of
+  // those numbers can be said is DeckView's; this walks what it was handed.
+  function renderDeckCounts(container, counts) {
+    container.textContent = '';
+    const note = DeckView.deckCountsNote(counts);
+    if (!note) return;
+
+    const line = el('p', 'deck-counts');
+    line.appendChild(el('span', 'deck-counts-label', note.label));
+    note.parts.forEach((part, at) => {
+      // A middot between the numbers, and only between them. It is dropped by a
+      // container query once the strip is narrow enough to wrap — a wrapped line
+      // otherwise ends on the separator. See style.css.
+      if (at) line.appendChild(el('span', 'deck-sep', '·'));
+      const span = el('span', 'deck-count' + (part.quiet ? ' is-quiet' : ''));
+      // The number in its own element so it can carry the weight without bolding the
+      // noun with it: "**36** lands" reads as a figure, "**36 lands**" as a heading.
+      const [count, ...rest] = part.text.split(' ');
+      span.appendChild(el('b', null, count));
+      span.appendChild(document.createTextNode(' ' + rest.join(' ')));
+      if (part.sub) span.appendChild(el('span', 'deck-sub', ' (' + part.sub + ')'));
+      line.appendChild(span);
+    });
+    container.appendChild(line);
+  }
+
   function renderBracket(container, bracket) {
     container.textContent = '';
     // No published list means the question cannot be asked at all. Half a bracket
@@ -310,6 +337,7 @@
     const token = ++renderToken;
 
     renderUnrecognized($('unrecognized'), results.unrecognized);
+    renderDeckCounts($('deck-counts'), results.deckCounts);
     renderIdentity($('identity'), results.identity);
     renderBracket($('bracket'), results.bracket);
     renderLegality($('legality'), results.legality);

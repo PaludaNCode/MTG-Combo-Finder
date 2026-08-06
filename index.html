@@ -102,6 +102,15 @@
              above the answer, because it says the answer is smaller than the deck
              deserves. Absent entirely when there are none. -->
         <div id="unrecognized"></div>
+        <!-- What the pasted list *is*: how many cards, how many of those are lands.
+             Above everything about what is in it, beside the colour identity it
+             reads like — both describe the decklist rather than the search.
+
+             It is its own element because it is a container query context: the
+             separators between the numbers are dropped once the strip is too narrow
+             to hold them on one line, and that has to be answered by the width of
+             the strip rather than of the window. -->
+        <div id="deck-counts"></div>
         <div id="identity"></div>
         <!-- Which Commander bracket the list is still eligible for. Two of the
              bracket criteria are readable off a decklist; the rest are judgement

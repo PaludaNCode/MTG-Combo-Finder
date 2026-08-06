@@ -497,6 +497,92 @@ test('unrecognizedNote: the claim is about the snapshot, not about the card', ()
   assert.match(note.why, /since the snapshot/);
 });
 
+// ---- how many cards, and how many of them are lands -------------------------
+//
+// Which of the numbers can be said at all is the decision here, and each of the three
+// silences below is a number that would have been confidently wrong: a landless deck
+// invented out of an empty list, a basic count invented out of a missing one, and a
+// type split read off a map too thin to answer.
+
+const counted = (over) => Object.assign(
+  { cards: 98, spells: 62, lands: 36, basic: 16, nonbasic: 20, unread: 0, mapped: 1191, basicsKnown: true },
+  over
+);
+const said = (note) => note.parts.map((p) => p.text + (p.sub ? ' (' + p.sub + ')' : '')).join(' · ');
+
+// The order is the design: the total, then the deck's body, then the number somebody
+// came to check.
+test('deckCountsNote: the total, then spells, then lands', () => {
+  assert.equal(said(View.deckCountsNote(counted())),
+    '98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)');
+});
+
+test('deckCountsNote: one card is not one cards', () => {
+  const note = View.deckCountsNote(counted({ cards: 1, spells: 1, lands: 0, basic: 0, nonbasic: 0 }));
+  assert.match(note.parts[0].text, /^1 card$/);
+});
+
+// The unread bucket is what keeps the sum checkable, so it is said whenever it is not
+// zero — quietly, because the names are named in the box above and this is a note about
+// the data rather than a finding about the deck.
+test('deckCountsNote: cards with no type line are said, and said quietly', () => {
+  const note = View.deckCountsNote(counted({ spells: 58, unread: 4 }));
+  assert.equal(said(note), '98 cards · 58 spells · 36 lands (16 basic · 20 nonbasic) · 4 cards unread');
+  assert.equal(note.parts[3].quiet, true);
+});
+
+test('deckCountsNote: nothing unread is not mentioned', () => {
+  assert.equal(View.deckCountsNote(counted()).parts.length, 3);
+});
+
+// An empty land list is what a broken publish looks like, and reading it as "this deck
+// plays no lands" would put a confident 0 on screen for every deck at once. The card
+// count survives it, because it never depended on the data.
+test('deckCountsNote: no land list drops the types and keeps the count', () => {
+  const note = View.deckCountsNote(counted({ mapped: 0, lands: 0, spells: 0, unread: 98 }));
+  assert.equal(said(note), '98 cards');
+  assert.equal(note.typed, false);
+});
+
+test('deckCountsNote: no basic list drops the split, not the land count', () => {
+  const note = View.deckCountsNote(counted({ basicsKnown: false, basic: 0, nonbasic: 36 }));
+  assert.equal(said(note), '98 cards · 62 spells · 36 lands');
+});
+
+// A zero half is not information. "10 basic · 0 nonbasic" is a number nobody asked
+// about, and a deck of nothing but duals reads better as "36 nonbasic" than as an
+// apology for having no Forests. The fixture deck is the first of these: 10 Island.
+test('deckCountsNote: the aside names only the halves that are there', () => {
+  assert.equal(said(View.deckCountsNote(counted({ cards: 17, spells: 7, lands: 10, basic: 10, nonbasic: 0 }))),
+    '17 cards · 7 spells · 10 lands (10 basic)');
+  assert.equal(said(View.deckCountsNote(counted({ basic: 0, nonbasic: 36 }))),
+    '98 cards · 62 spells · 36 lands (36 nonbasic)');
+});
+
+// No lands at all is a real answer — the data said so — but it has nothing to break down.
+test('deckCountsNote: a landless deck gets no aside', () => {
+  assert.equal(said(View.deckCountsNote(counted({ spells: 98, lands: 0, basic: 0, nonbasic: 0 }))),
+    '98 cards · 98 spells · 0 lands');
+});
+
+// The rule shared with unrecognizedNote() and legalityProse(): past half the deck, the
+// answer is about the data. The fixtures live in exactly that state — 14 identities
+// against a deck of 85 — so without this the strip would report a deck of spells.
+test('deckCountsNote: a deck the data cannot read says only how big it is', () => {
+  const note = View.deckCountsNote(counted({ cards: 85, spells: 14, lands: 0, unread: 71 }));
+  assert.equal(said(note), '85 cards');
+  // Half is the line, and being at it is not being over it — the same boundary the
+  // unrecognized box is pinned to above.
+  assert.ok(View.deckCountsNote(counted({ cards: 84, spells: 42, lands: 0, unread: 42 })).typed);
+  assert.equal(View.deckCountsNote(counted({ cards: 84, spells: 41, lands: 0, unread: 43 })).typed, false);
+});
+
+test('deckCountsNote: no deck says nothing at all', () => {
+  assert.equal(View.deckCountsNote(null), null);
+  assert.equal(View.deckCountsNote({}), null);
+  assert.equal(View.deckCountsNote(counted({ cards: 0 })), null);
+});
+
 // ---- whether the decklist is allowed ---------------------------------------
 //
 // Two accusations that must stay apart, a claim that must not become a green tick,

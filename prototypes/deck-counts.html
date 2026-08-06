@@ -4,10 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prototype — how many cards, how many lands</title>
-  <!-- A layout prototype, not a page the site serves. It is here rather than in a
-       screenshot because the numbers have to be measured against the real
-       stylesheet: every one of the three variants below fits on one line at 1440px
-       and none of them does at 390px, which is the whole question.
+  <!-- The layout prototype the shipped strip was chosen from, kept as the record of
+       that choice. It is a page and not a screenshot because the numbers had to be
+       measured against the real stylesheet — see the note on `.count` below, which is
+       the kind of thing only a browser says out loud.
+
+       WHAT SHIPPED IS VARIANT A+, with the spells before the lands. The other three
+       are kept because the reasons they lost are reasons somebody may want to revisit:
+       B costs height directly above the answer, C spends a whole panel on one line, and
+       A alone drops the sub-number a deckbuilder acts on. The live version is in
+       style.css under "how many cards, how many lands"; this file is not wired to it,
+       so a change there does not show up here.
 
        Nothing references it, so tools/prune-artifact.js deletes the directory out of
        the Pages artifact — see its header. It loads the real theme.js and the real
@@ -53,7 +60,7 @@
     /* The separator is a character rather than a border, so it moves with the text
        it sits between instead of leaving a rule hanging in the gap. It is dropped
        once the strip is narrow enough to wrap, because a wrapped line ends on the
-       dot — measured, at 390px: "98 cards ·" then "36 lands · 62 spells". The
+       dot — measured, at 390px: "98 cards ·" then "62 spells · 36 lands". The
        precedent is style.css's `.combo-link > .sep`, hidden narrow and shown wide
        for exactly this.
 
@@ -131,7 +138,7 @@
       </button>
     </div>
     <p class="tagline">Real numbers, from <code>test/fixtures/deck.txt</code>: 85 lines, 98 cards,
-      36 lands (16 basic), 62 spells.</p>
+      62 spells, 36 lands (16 basic).</p>
   </header>
 
   <main class="proto-frame">
@@ -143,25 +150,27 @@
       <span class="deck-counts-label">Deck</span>
       <span class="deck-count"><b>98</b> cards</span>
       <span class="deck-sep">·</span>
-      <span class="deck-count"><b>36</b> lands</span>
-      <span class="deck-sep">·</span>
       <span class="deck-count"><b>62</b> spells</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>36</b> lands</span>
     </p>
     <p class="identity-line">
       <span class="identity-label">Colour identity</span>
       <span class="mana"><span class="pip pip-W">W</span><span class="pip pip-B">B</span><span class="pip pip-G">G</span></span>
     </p>
 
-    <p class="proto-note"><b>Variant A+</b> — the same line carrying the basic/nonbasic split,
-      which is the one sub-number a deckbuilder acts on.</p>
+    <p class="proto-note"><b>Variant A+ — this is what shipped.</b> The same line carrying the
+      basic/nonbasic split, which is the one sub-number a deckbuilder acts on. Spells before
+      lands: the deck's body is what somebody reads first, and the land count is the number
+      they came to check, so it goes last where the eye stops.</p>
 
     <p class="deck-counts">
       <span class="deck-counts-label">Deck</span>
       <span class="deck-count"><b>98</b> cards</span>
       <span class="deck-sep">·</span>
-      <span class="deck-count"><b>36</b> lands <span class="deck-sub">(16 basic · 20 nonbasic)</span></span>
-      <span class="deck-sep">·</span>
       <span class="deck-count"><b>62</b> spells</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>36</b> lands <span class="deck-sub">(16 basic · 20 nonbasic)</span></span>
     </p>
 
     <p class="proto-note"><b>Variant B</b> — tiles. Reads fastest, costs the most height, and
@@ -169,8 +178,8 @@
 
     <div class="deck-tiles">
       <div class="deck-tile"><span class="deck-n">98</span><span class="deck-k">Cards</span></div>
-      <div class="deck-tile"><span class="deck-n">36</span><span class="deck-k">Lands</span><span class="deck-sub">16 basic · 20 nonbasic</span></div>
       <div class="deck-tile"><span class="deck-n">62</span><span class="deck-k">Spells</span></div>
+      <div class="deck-tile"><span class="deck-n">36</span><span class="deck-k">Lands</span><span class="deck-sub">16 basic · 20 nonbasic</span></div>
     </div>
 
     <p class="proto-note"><b>Variant C</b> — in the chrome <code>.legality</code> already owns,
@@ -179,7 +188,7 @@
     <div class="legality">
       <p class="legality-line">
         <span class="legality-label">Deck</span>
-        <span class="legality-claim"><b>98</b> cards, <b>36</b> of them lands.</span>
+        <span class="legality-claim"><b>98</b> cards, <b>62</b> spells, <b>36</b> lands.</span>
       </p>
       <p class="legality-note">16 basic, 20 nonbasic. Counted off the list as pasted —
         a sideboard is not included.</p>
@@ -194,9 +203,9 @@
       <span class="deck-counts-label">Deck</span>
       <span class="deck-count"><b>98</b> cards</span>
       <span class="deck-sep">·</span>
-      <span class="deck-count"><b>36</b> lands</span>
-      <span class="deck-sep">·</span>
       <span class="deck-count"><b>58</b> spells</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>36</b> lands</span>
       <span class="deck-sep">·</span>
       <span class="deck-count deck-sub">4 cards unread</span>
     </p>
@@ -210,22 +219,25 @@
       <span class="deck-count"><b>98</b> cards</span>
     </p>
 
-    <p class="proto-note"><b>At 390px</b>, which is where every variant has to survive. Variant A
-      wraps to two lines; the tiles fall to a 2 + 1 grid.</p>
+    <p class="proto-note"><b>At 390px</b>, which is where every variant has to survive — and where
+      the shipped one takes two lines: measured on the real page, "98 cards · 62 spells · 36 lands
+      (16 basic · 20 nonbasic)" does not fit 358px of column. Two lines rather than dropping the
+      aside, which is the number a phone would most want. The separators go, though: a wrapped
+      line otherwise ends on a middot.</p>
 
     <div class="proto-narrow">
       <p class="deck-counts">
         <span class="deck-counts-label">Deck</span>
         <span class="deck-count"><b>98</b> cards</span>
         <span class="deck-sep">·</span>
-        <span class="deck-count"><b>36</b> lands <span class="deck-sub">(16 basic · 20 nonbasic)</span></span>
-        <span class="deck-sep">·</span>
         <span class="deck-count"><b>62</b> spells</span>
+        <span class="deck-sep">·</span>
+        <span class="deck-count"><b>36</b> lands <span class="deck-sub">(16 basic · 20 nonbasic)</span></span>
       </p>
       <div class="deck-tiles">
         <div class="deck-tile"><span class="deck-n">98</span><span class="deck-k">Cards</span></div>
-        <div class="deck-tile"><span class="deck-n">36</span><span class="deck-k">Lands</span></div>
         <div class="deck-tile"><span class="deck-n">62</span><span class="deck-k">Spells</span></div>
+        <div class="deck-tile"><span class="deck-n">36</span><span class="deck-k">Lands</span></div>
       </div>
     </div>
 

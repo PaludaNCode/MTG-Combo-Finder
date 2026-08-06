@@ -350,6 +350,8 @@ function readFixture(file) {
       // assert an order the real thing does not produce.
       gameChangers: (doc.gameChangers || []).slice().sort((a, b) => a.localeCompare(b)),
       banned: (doc.banned || []).slice().sort((a, b) => a.localeCompare(b)),
+      lands: (doc.lands || []).slice().sort((a, b) => a.localeCompare(b)),
+      basicLands: (doc.basicLands || []).slice().sort((a, b) => a.localeCompare(b)),
     },
   };
 }
@@ -373,6 +375,22 @@ async function fetchCardIdentities() {
   // it, and a copy in this repository would go stale in silence — the page would go
   // on calling a banned deck legal, which is worse than saying nothing.
   const banned = [];
+  // Which cards are lands, for the "98 cards · 62 spells · 36 lands" strip. A name
+  // list rather than a type line per card, because the page asks one question of it
+  // and a boolean is the whole answer: 1,191 of 34,422 cards are lands by the rule
+  // below, 9.1 KB gzipped, against the 282 KB every card's types would cost — 31×
+  // for a question nobody is asking yet. Measured off card-text.json, which holds
+  // the same wording Scryfall would send.
+  //
+  // Read here rather than derived in the page from card-text.json, which has
+  // `faces[].types` for every card and is 16.5 MB that tools/prune-artifact.js
+  // deletes out of the artifact: that file is the research cache, not page data.
+  const lands = [];
+  // The basics among them, so the strip can say "16 basic · 20 nonbasic" — the one
+  // sub-number a deckbuilder acts on. A second list rather than a flag per card
+  // because there are 13 of them, 204 bytes: Scryfall types the five, Wastes, the six
+  // Snow-Covered printings, and one un-card.
+  const basicLands = [];
   let cards = 0;
   const collect = (card) => {
     cards += 1;
@@ -388,6 +406,20 @@ async function fetchCardIdentities() {
     // reporting those as illegal would flag a lot of paper decks that are fine.
     const legalities = card.legalities || {};
     if (legalities.commander === 'banned') banned.push(card.name);
+    // The FRONT face decides. `type_line` on a modal double-faced card is the whole
+    // thing — "Sorcery // Land" for Agadeem's Awakening — and 82 of the 1,273 are
+    // land on the back face only. Counting those as lands would put the deck's land
+    // count above what Moxfield and Archidekt show for the same list, which is what
+    // a reader is checking this number against. So the face before the `//`, and
+    // `\bLand\b` rather than `includes`: "Landwalk" is not a type and "Legendary
+    // Land Creature" is one (Dryad Arbor and two others, all lands).
+    const front = String(card.type_line || '').split('//')[0];
+    if (/\bLand\b/.test(front)) {
+      lands.push(card.name);
+      // "Basic Land — Forest", and "Basic Snow Land — Forest" for the snow printings,
+      // so the word is not always in front of "Land".
+      if (/\bBasic\b/.test(front)) basicLands.push(card.name);
+    }
   };
 
   if (meta.jsonl_download_uri) {
@@ -400,11 +432,14 @@ async function fetchCardIdentities() {
     throw new Error('Scryfall index had no download URL; keys were: ' + Object.keys(meta).join(', '));
   }
 
-  console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity`);
+  console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity, `
+    + `${lands.length} lands (${basicLands.length} basic)`);
   return {
     identities,
     gameChangers: gameChangers.sort((a, b) => a.localeCompare(b)),
     banned: banned.sort((a, b) => a.localeCompare(b)),
+    lands: lands.sort((a, b) => a.localeCompare(b)),
+    basicLands: basicLands.sort((a, b) => a.localeCompare(b)),
   };
 }
 
@@ -798,7 +833,7 @@ async function main() {
   if (!combos.length) throw new Error('No combos parsed — refusing to write an empty file');
   if (STEPS_DIR) steps.report(combos.length);
 
-  const { identities: cardIdentity, gameChangers, banned } = fixture
+  const { identities: cardIdentity, gameChangers, banned, lands, basicLands } = fixture
     ? fixture.cardData
     : await fetchCardIdentities();
   // An empty map silently disables colour filtering in the page, which is how
@@ -853,6 +888,15 @@ async function main() {
     // treats a missing list as "cannot say" and shows nothing, and a page that
     // cannot say so is better than one that quietly calls a banned deck legal.
     banned,
+    // The lands, for the deck-counts strip. Empty is published as empty for the same
+    // reason the two lists above are, and it lands in the same place: the page shows
+    // the card count either way and drops the lands half rather than guessing it.
+    lands,
+    // A subset of the list above. Published separately rather than as a flag because
+    // a deck with no basics in it and a payload with no basic list both come out as
+    // "0 basic", and only one of those is a number worth printing — so the page needs
+    // to be able to tell them apart. 13 names.
+    basicLands,
     templates,
     // The 29 templates Spellbook gives no Scryfall query for, by name only.
     // There is no card list to match against and there never will be, so these
@@ -877,7 +921,8 @@ async function main() {
   const mb = (fs.statSync(OUT).size / 1024 / 1024).toFixed(2);
   console.log(`Wrote ${OUT}: ${combos.length} combos, ${Object.keys(cardIdentity).length} cards, `
     + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, `
-    + `${gameChangers.length} Game Changers, ${banned.length} banned, ${mb} MB`);
+    + `${gameChangers.length} Game Changers, ${banned.length} banned, `
+    + `${lands.length} lands (${basicLands.length} basic), ${mb} MB`);
   console.log(`  interned ${names.length} card names and ${results.length} results`);
   const unsolved = cardIds.filter((id) => id === null).length;
   console.log(`  derived ${names.length - unsolved} card ids; ${keptIds} combo(s) kept a literal id`

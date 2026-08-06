@@ -24,6 +24,7 @@ branch.
 | [Features](#features) · [Results and ranking](#results-and-ranking) | what the page does; tiers, row order, size breakdowns, collapsing, template slots |
 | [How a combo is executed](#how-a-combo-is-executed) · [The combo map](#the-combo-map) | the steps disclosure and how steps are published; the picture under *Combos in your deck* |
 | [Rendering order](#rendering-order-the-combos-come-first) · [Adding a card](#adding-a-card-and-searching-again) · [Bracket and legality](#classifying-the-decklist-which-bracket-is-it) | why the page yields after the combos; `+ Add to deck`; the five pips, colour identity, bans |
+| [Cards and lands](#how-many-cards-and-how-many-of-them-are-lands) | the strip above the results, and the three things it stays silent about |
 | [Layout and the test suites](#layout-and-the-test-suites) · [How it works](#how-it-works) | themes, `verify` vs `test:ui`, what each proves; every file and what it owns |
 | [The published data](#why-the-data-is-published-not-queried-live) | the payload, the worker, caching, the publish gate |
 | [Unofficial combos](#unofficial-combos-the-pages-own-second-opinion) · [Deck import](#deck-import) | `unofficial.js` and the rules behind it; URLs, file drop, what a browser may read |
@@ -41,6 +42,10 @@ branch.
   ranked ("add Rings of Brighthearth → unlocks 4 combos"), ties broken on popularity. **+ Add to deck**
   appends the card and re-runs the search against the database already in memory.
 - **Size breakdowns** everywhere a count appears: a `+3` reads *1 × 2-card · 1 × 3-card · 1 × 4-card*.
+- **What you pasted, before anything about it** — `Deck  98 cards · 62 spells · 36 lands (16 basic ·
+  20 nonbasic)`, counted by quantity so `10 Forest` is ten cards. A card the snapshot has no type line
+  for is counted apart rather than called a spell, and with no land list in the payload the strip says
+  only how many cards there are.
 - **Which bracket the list is in** — five pips under the colour identity. A floor, never a verdict, with
   the reasoning and the unchecked criteria one hover away. Beside it, **whether the list is *allowed***:
   off-identity cards and Commander bans, and nothing at all when there is neither.
@@ -1013,6 +1018,50 @@ with one typo is 33% unknown and deserves to be told.
 
 `combos.js` returns facts only; `view-model.js` decides whether any of it is worth saying and how it is
 phrased; `app.js` draws it.
+
+### How many cards, and how many of them are lands
+
+The strip above the results — `Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)` — is the
+page describing the decklist rather than the search, which is why it sits beside the colour identity and
+above the bracket.
+
+**The card count is a sum over the pasted list and needs no data at all.** `parseDecklist()` already
+applies every rule about what is *in* the deck — a `Sideboard:` heading, an `SB:` prefix, a `*CMDR*`
+marker — and carries a quantity per line. Lines and cards are not the same number: the tuning deck is
+**85 lines and 98 cards**, because sixteen of its lands arrive as `10 Forest`. `tools/try-deck.js` printed
+the line count under the word "cards" until this feature disagreed with it.
+
+**The land count needed one field in the snapshot.** Nothing served to the browser knew a card's types:
+`cardIdentity` is colour only, and `card-text.json` — which has `faces[].types` for every card — is
+16.5 MB that `prune-artifact.js` deletes out of the artifact, because it is the research cache and not
+page data. So `fetch-combos.js` reads `type_line` in the pass it already makes over Scryfall's
+oracle-cards bulk file for colour identity, Game Changers and the ban list, and publishes two name
+lists: **1,191 lands and 13 basics** of 34,422 cards, **9.1 KB gzipped against a 1.72 MB payload** (6 Aug
+2026). A boolean per card is the whole question the page asks, and every card's type line would have been
+282 KB for it.
+
+**Three claims, three ways to be silent rather than wrong**, all of them the rule
+[the unrecognized-cards box](#telling-the-reader-which-cards-were-not-recognised) already follows:
+
+| what is missing | what the strip says |
+| --- | --- |
+| the land list, or an empty one | the card count alone — an empty list is a broken publish, and reading it as a landless deck would put a confident `0 lands` under every deck at once |
+| more than half the deck unread | the card count alone, because the answer is then about the data |
+| the basic list | the land count without its aside, since a deck with no basics and a payload with no basic list both arrive as `0 basic` |
+
+**A card the data has no type line for is neither a land nor a spell**, so it is counted apart and named:
+`19 cards · 7 spells · 10 lands · 2 cards unread`. Lands plus spells plus unread is the card count, which
+is the property that makes the strip checkable against a deck site, and it is what stops the unread bucket
+being quietly folded into either half.
+
+**Modal double-faced cards count by their front face.** 1,273 cards have a land face somewhere and 82 of
+them are land only on the back — Agadeem's Awakening, Turntimber Symbiosis — so the published list holds
+1,191. Counting the other 82 would put the number above what Moxfield and Archidekt show for the same
+list, which is what a reader is checking it against.
+
+`prototypes/deck-counts.md` records the four layout variants this was chosen from and what the prototype
+caught: `.count` was already a class in `style.css`, and reusing it rendered the strip as `98cards ·
+36lands` with the space present in the DOM.
 
 ### Known gaps in the published data
 
