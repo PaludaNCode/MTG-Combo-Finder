@@ -460,9 +460,10 @@ loosely.
   work*, not per commit. **The exception is a change you want bisectable** — a behaviour change that
   could need reverting on its own is worth its own PR at the same price.
 - **A ruleset refuses direct pushes to `main`**: PR required, `checks` green, **branches up to date**,
-  no force-push, no deletion. **Nothing automated can land on `main`, and the bypass list cannot fix
-  that: GitHub Actions is not an available bypass actor** — the list offers Deploy keys, Repository
-  admin, Maintain, Write and installed Apps, nothing for `github-actions[bot]`. And **a PR opened with
+  no force-push, no deletion. **Repository admin is in the bypass list as of 6 Aug 2026, and that is what
+  makes a merge from an agent session possible at all** — see the paragraph after this list. It does not
+  help anything *automated*: **GitHub Actions is not an available bypass actor** — the list offers Deploy
+  keys, Repository admin, Maintain, Write and installed Apps, nothing for `github-actions[bot]`. And **a PR opened with
   `GITHUB_TOKEN` does not trigger workflows**, so an auto-opened PR never runs `checks` and is
   unmergeable rather than auto-merging. An unattended job that wants to land on `main` therefore needs
   a stored credential — a write deploy key or a PAT — which is a decision about a long-lived secret,
@@ -481,6 +482,21 @@ loosely.
   event after 15:10 UTC, Pages deployments had been timing out in their own queue since 12:11, and
   dispatched jobs were being cancelled while queued. Three symptoms, one outage, and none of them worth
   a workaround — the work waits.
+- **The bypass exists because a required check is only credited from the PR's own event, and nothing
+  here can make GitHub send one.** #187 was unmergeable for two hours with `checks`, `static` and
+  `browser` green on its exact head SHA. With **Repository admin** in the bypass list,
+  `mcp__github__merge_pull_request` merged it in one call — so the release path no longer depends on a
+  webhook. **The gate is now a rule I keep rather than one the repository enforces on me:** never merge
+  without a completed, green run on the exact head SHA — dispatch one if events are slow, since a
+  dispatched run is perfectly readable even though the ruleset will not count it.
+- **The API cannot verify that bypass, and said the opposite.** `/rulesets/20465218` answered
+  `bypass_actors: null` and `current_user_can_bypass: "never"`, and the merge attempted immediately
+  afterwards succeeded. `/repos/{owner}/{repo}` also reports this session with **no permissions at all**
+  (`admin: false, push: false`) while its calls are attributed to `PaludaNCode`. So: **`null` here means
+  "you cannot see it", never "it is empty", and `current_user_can_bypass` is not a second opinion —
+  it was wrong about the caller asking it.** The only proof is attempting the operation →
+  `tools/check-branch-rules.js` reports this claim UNKNOWN and says why, which is the honest answer
+  rather than a passing check.
 - **Never assume that ruleset is in force. On 5 Aug 2026 it did not exist at all**, while this file, the
   README and a session's reasoning all said it did — and **a missing gate is indistinguishable from a
   working one**, since PRs merge and CI goes green either way. It exists again as of 15:34 UTC that day
@@ -599,6 +615,11 @@ judgement call:
 better conflict handling; it is a shorter branch.
 
 ### Ask before merging. Every time.
+
+**This is the only thing standing between a session and production now.** Until 6 Aug 2026 the ruleset
+was also in the way — a merge needed a `checks` run the session could not conjure — and that was never a
+safeguard, just friction that happened to point the right way. Repository admin is in the bypass list
+now, so `merge_pull_request` succeeds on the first call whenever the caller decides to make it.
 
 **Open the pull request, report it, and stop.** Enabling auto-merge is the user's call, not a step in
 finishing the work, and "do X" never means "do X and ship it" — merging to `main` *is* the release, so

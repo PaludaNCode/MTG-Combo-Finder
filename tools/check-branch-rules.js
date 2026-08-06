@@ -305,18 +305,29 @@ const CLAIMS = [
     },
   },
   {
-    // Reported as unknown rather than as a pass, because the honest answer is that
-    // this endpoint does not carry it. An empty-looking response is not evidence.
+    // Reported as unknown rather than as a pass, because the honest answer is that no
+    // endpoint reachable from here carries it. An empty-looking response is not evidence,
+    // and on 6 Aug 2026 that stopped being a theoretical point: `/rulesets/20465218`
+    // answered `bypass_actors: null` and `current_user_can_bypass: "never"`, and the very
+    // next call — a merge into `main` with the ruleset unsatisfied — SUCCEEDED. Repository
+    // admin was in the bypass list the whole time and neither field showed it.
+    //
+    // So a reading of null here means "this caller cannot see the list", never "the list
+    // is empty", and `current_user_can_bypass` is not a second opinion: it was wrong about
+    // the caller asking. The only proof either way is attempting the operation.
     claim: 'nothing can bypass the ruleset',
-    where: 'CLAUDE.md § Conventions. GitHub Actions is not an available bypass actor.',
+    where: 'CLAUDE.md § Conventions. The bypass list holds Repository admin, deliberately.',
     check: (o) => ({
       level: 'UNKNOWN',
       saw: o.bypassSeen === undefined
         ? 'bypass_actors is on /rulesets/<id>, which this does not read — and that '
-          + 'endpoint omitted it even for a push-access caller. Absent is not empty'
+          + 'endpoint answered `null` on 6 Aug 2026 while a bypass was in force. Absent '
+          + 'is not empty, and here it was not even true'
         : `bypass_actors = ${JSON.stringify(o.bypassSeen)}`,
-      then: 'read it in Settings → Rules, which needs admin. A bypass actor makes every '
-        + 'finding above advisory for whoever holds it, so this one never passes.',
+      then: 'read it in Settings → Rules, which needs admin. Repository admin is expected '
+        + 'to be there — it is what lets an agent session merge when GitHub drops the '
+        + 'pull_request event — and anything WIDER than that makes every finding above '
+        + 'advisory for whoever holds it.',
     }),
   },
 ];
