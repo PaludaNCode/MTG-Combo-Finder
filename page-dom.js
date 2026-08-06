@@ -26,6 +26,18 @@
     return node;
   }
 
+  // An SVG element, since createElement() makes an HTMLUnknownElement for these and it
+  // renders as nothing at all. render-map.js has its own copy of this, deliberately left
+  // there: it builds one whole picture and its helper carries map-specific defaults.
+  // This one exists for the mana pips, which are inline glyphs on a page of HTML.
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function svg(tag, attrs) {
+    const node = document.createElementNS(SVG_NS, tag);
+    for (const [name, value] of Object.entries(attrs || {})) node.setAttribute(name, value);
+    return node;
+  }
+
   function link(href, text) {
     const a = el('a', null, text);
     a.href = href;
@@ -107,7 +119,7 @@
     return body;
   }
 
-  const api = { $, el, link, panel, setStatus, readCollapsed, writeCollapsed, COLLAPSE_KEY };
+  const api = { $, el, svg, link, panel, setStatus, readCollapsed, writeCollapsed, COLLAPSE_KEY };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

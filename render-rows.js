@@ -15,7 +15,7 @@
   'use strict';
 
   const Dom = global.PageDom || (typeof require === 'function' ? require('./page-dom.js') : null);
-  const { $, el, link, setStatus } = Dom;
+  const { $, el, svg, link, setStatus } = Dom;
 
   // Where a combo's own page lives. Here rather than in app.js because both renderers
   // link to it and neither should carry its own copy of the URL.
@@ -26,18 +26,56 @@
   const WUBRG = ['W', 'U', 'B', 'R', 'G'];
   const COLOUR_NAMES = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless' };
 
+  // The glyph inside each pip: a sun, a drop, a skull, a fireball, a tree, and a diamond
+  // for colourless. Drawn here rather than fetched, which is the same call the theme
+  // icons make and for the same three reasons — the CSP allows no remote images or
+  // fonts, the page works offline, and a symbol font is one more thing to fail.
+  //
+  // THESE ARE OUR OWN DRAWINGS OF THE FIVE SYMBOLS, not Wizards' artwork. The official
+  // symbols are theirs; what is copied here is which shape means which colour, because
+  // that is what a Magic player reads. Anyone wanting the exact printed symbols has to
+  // decide about someone else's assets first — see README § *Colours come from the cards*.
+  //
+  // Every path is drawn on a 24×24 box and filled with currentColor, so the pip's own
+  // ink colour carries them and a theme change needs nothing here.
+  const GLYPHS = {
+    // A disc with eight rays.
+    W: ['M12 5.6a6.4 6.4 0 1 0 0 12.8 6.4 6.4 0 0 0 0-12.8zm0 2.2a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4z',
+      'M11 .8h2v3.4h-2zM11 19.8h2v3.4h-2zM.8 11h3.4v2H.8zM19.8 11h3.4v2h-3.4z',
+      'M3.6 5l1.4-1.4 2.4 2.4L6 7.4zM16.6 18l1.4-1.4 2.4 2.4-1.4 1.4zM19 3.6L20.4 5 18 7.4 16.6 6zM6 16.6L7.4 18 5 20.4 3.6 19z'],
+    // A teardrop: two curves off a point at the top, closing on a round bottom.
+    U: ['M12 2.4c3.6 4.7 7 8.3 7 11.8a7 7 0 0 1-14 0c0-3.5 3.4-7.1 7-11.8z'],
+    // A skull: dome, two eyes cut out of it, and a jaw.
+    B: ['M12 3a7.5 7.5 0 0 0-7.5 7.5c0 2.5 1.2 4 2.6 5v2.2c0 .7.6 1.3 1.3 1.3h7.2c.7 0 1.3-.6 1.3-1.3v-2.2c1.4-1 2.6-2.5 2.6-5A7.5 7.5 0 0 0 12 3zm-3.2 6.2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6.4 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 16.4h4v2.2h-4z'],
+    // A flame: a tall lick with a curl at its base.
+    R: ['M13.4 2.2c.5 3-1 4.6-2.6 6.2-1.8 1.8-3.8 3.7-3.8 7a7 7 0 0 0 14 0c0-2.4-1-4-2-5.4-.2 1.3-.9 2.2-1.8 2.6.5-3.6-1.3-8.2-3.8-10.4z'],
+    // A tree: a broad canopy over a trunk that flares into roots. The first draft was a
+    // circle on a stick and read as a balloon at pip size — the canopy has to be wider
+    // than it is tall, and the trunk wide enough to see, or the silhouette says nothing.
+    G: ['M12 2.4c-4.7 0-8.5 3.3-8.5 7.4 0 3.4 2.6 6.3 6.2 7.1l-.5 2.2c-.8.3-1.6.9-2.2 1.6h10c-.6-.7-1.4-1.3-2.2-1.6l-.5-2.2c3.6-.8 6.2-3.7 6.2-7.1 0-4.1-3.8-7.4-8.5-7.4z'],
+    // Colourless: a cut diamond.
+    C: ['M12 3l6.5 6.5L12 21 5.5 9.5z'],
+  };
+
   function manaPips(colours) {
     const set = colours instanceof Set ? colours : new Set(String(colours || ''));
     const wrap = el('span', 'mana');
     const order = WUBRG.filter((c) => set.has(c));
     // No colours at all is colourless, not "nothing" — {C} is a real identity.
     for (const c of order.length ? order : ['C']) {
-      const pip = el('span', 'pip pip-' + c, c);
-      // The letter is decoration for anyone who can see the colour; a screen
-      // reader should hear "green", not "G".
+      const pip = el('span', 'pip pip-' + c);
+      // The letter is gone from the markup and the colour is not: every check that used
+      // to read `pip.textContent` reads this instead, and so does anything else that
+      // needs to know which pip this is without inspecting a path.
+      pip.setAttribute('data-colour', c);
+      // The glyph is decoration for anyone who can see it; a screen reader should hear
+      // "green", not "G" and certainly not a path.
       pip.setAttribute('role', 'img');
       pip.setAttribute('aria-label', COLOUR_NAMES[c]);
       pip.title = COLOUR_NAMES[c];
+      const art = svg('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false', class: 'pip-art' });
+      GLYPHS[c].forEach((d) => art.appendChild(svg('path', { d, fill: 'currentColor' })));
+      pip.appendChild(art);
       wrap.appendChild(pip);
     }
     return wrap;

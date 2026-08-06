@@ -976,12 +976,12 @@ function measure(win, doc) {
       // elements, because these are drawn now rather than written -- this same reader used
       // to collect the text "{W}", which is what the page was wrongly printing.
       colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
-        .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.textContent).join('')),
+        .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.getAttribute('data-colour')).join('')),
       identityClaim: (doc.querySelector('#legality .is-off-identity .legality-claim') || {}).textContent || '',
       // The commander's own identity, inside that sentence, as pips rather than the
       // braces it used to print.
       identityClaimPips: [...doc.querySelectorAll('#legality .is-off-identity .legality-claim .pip')]
-        .map((pip) => pip.textContent).join(''),
+        .map((pip) => pip.getAttribute('data-colour')).join(''),
       notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
       // Beside the bracket, which means under it and above the combos.
       belowBracket: (() => {
@@ -1353,9 +1353,22 @@ function measure(win, doc) {
   })) : [];
   const header = {
     pips: [...doc.querySelectorAll('.identity-line .pip')].map((p) => ({
-      letter: p.textContent,
+      // The pip holds a drawn glyph now, so its letter lives in an attribute. Reading
+      // textContent here would return the empty string for every colour and compare
+      // clean against another empty string.
+      letter: p.getAttribute('data-colour'),
       label: p.getAttribute('aria-label'),
       background: win.getComputedStyle(p).backgroundColor,
+      // The drawn glyph inside the disc — a sun, a drop, a skull, a fireball, a tree.
+      // Measured rather than counted: display:none on it leaves the element in the DOM
+      // and every other assertion here passing, which is what happened when this was
+      // checked by hand and the whole suite stayed green over five blank circles.
+      art: (() => {
+        const art = p.querySelector('.pip-art');
+        if (!art) return 0;
+        const box = art.getBoundingClientRect();
+        return Math.round(Math.min(box.width, box.height));
+      })(),
       round: win.getComputedStyle(p).borderRadius,
       size: Math.round(p.offsetWidth),
     })),
@@ -1608,7 +1621,7 @@ async function runLegality(vp) {
       .map((e) => e.textContent);
     const claim = (sel) => (doc.querySelector(sel + ' .legality-claim') || {}).textContent || '';
     const claimPips = (sel) => [...doc.querySelectorAll(sel + ' .legality-claim .pip')]
-      .map((pip) => pip.textContent).join('');
+      .map((pip) => pip.getAttribute('data-colour')).join('');
     const bracket = doc.querySelector('#bracket .bracket-line');
     const firstPanel = doc.querySelector('#results .panel');
     return {
@@ -1622,7 +1635,7 @@ async function runLegality(vp) {
         bannedClaim: claim('#legality .is-banned'),
         offIdentity: cardsIn('#legality .is-off-identity'),
         colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
-          .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.textContent).join('')),
+          .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.getAttribute('data-colour')).join('')),
         identityClaim: claim('#legality .is-off-identity'),
         identityClaimPips: claimPips('#legality .is-off-identity'),
         notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
@@ -2935,6 +2948,11 @@ function captionDrift(notes) {
       if (h.pips.some((p) => !/^(blue|green)$/.test(p.label))) problems.push('a pip has no colour name for screen readers');
       if (new Set(h.pips.map((p) => p.background)).size !== 2) problems.push('both mana pips rendered the same colour');
       if (h.pips.some((p) => !/50%|9999px|^\d+px$/.test(p.round) || p.size < 12)) problems.push('mana pips did not render as filled circles');
+      // And each one has its symbol drawn in it. The glyphs replaced the letters, so a
+      // pip that draws nothing is a coloured dot that says which colour only to somebody
+      // who already knows the palette.
+      const blank = h.pips.filter((p) => p.art < 8).map((p) => p.letter);
+      if (blank.length) problems.push(`mana pips with no symbol drawn: ${JSON.stringify(blank)}`);
     }
     if (h.commanderLines) problems.push(`${h.commanderLines} commander line(s) rendered; colours come from the cards now`);
     if (h.pickers) problems.push(`${h.pickers} commander picker(s) rendered; the shortlist was removed`);
