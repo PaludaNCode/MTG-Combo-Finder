@@ -89,7 +89,45 @@ function restatements(readme, match) {
   return out;
 }
 
+// The tool list in *Answering questions from the data*, and which of those tools a
+// runner can also be asked to run.
+//
+// These two exist because the sentence above that list read "Seven read-only tools, each
+// also a manual workflow" while the list held **nine** and **six** of them had a
+// workflow. Both halves were wrong, and neither could have been noticed by reading: the
+// count sits directly above the thing it counts, which makes it feel checked, and the
+// workflow claim is about a directory nobody looks at while reading prose.
+//
+// The list in the README is the definition of "read-only tool" — `tools/` also holds
+// publishers and cache writers, and nothing on disk distinguishes them — so the count is
+// measured against the list. The workflow half is measured against
+// `.github/workflows/`, which is the stronger of the two and the reason this is worth a
+// check rather than a correction.
+function toolsListed(readme) {
+  const from = readme.indexOf('### Answering questions from the data');
+  if (from < 0) return [];
+  // To the next heading, so a tool named later in the README is not counted here.
+  const rest = readme.slice(from + 1);
+  const to = rest.indexOf('\n### ');
+  const block = to < 0 ? rest : rest.slice(0, to);
+  return [...new Set([...block.matchAll(/^node (tools\/[a-z-]+\.js)/gm)].map((m) => m[1]))];
+}
+
+function toolsWithWorkflow(tools) {
+  const dir = path.join(ROOT, '.github', 'workflows');
+  const runs = fs.readdirSync(dir)
+    .filter((f) => f.endsWith('.yml'))
+    .map((f) => fs.readFileSync(path.join(dir, f), 'utf8'))
+    .join('\n');
+  return tools.filter((t) => runs.includes(`node ${t}`));
+}
+
 function claims() {
+  // The README is read here as well as in main(): two of the claims below are about the
+  // README's own internal consistency — a count beside the list it counts — rather than
+  // about a data file.
+  const readme = fs.readFileSync(README, 'utf8');
+  const listed = toolsListed(readme);
   const unofficial = require('../unofficial.js');
   const tiers = require('../result-tiers.js');
   const research = require('../research-log.js');
@@ -164,6 +202,20 @@ function claims() {
       find: /([\d,]+) query-less templates are recorded/g,
       source: 'templates.json unresolvable',
     },
+    {
+      what: 'read-only tools listed for answering questions',
+      is: listed.length,
+      // "**10 read-only tools** for the questions that keep coming up."
+      find: /\*\*([\d,]+) read-only tools\*\*/g,
+      source: 'the list under that heading',
+    },
+    {
+      what: 'of those tools that also have a manual workflow',
+      is: toolsWithWorkflow(listed).length,
+      // "**7 have a manual workflow**, and the split is about network …"
+      find: /\*\*([\d,]+) have a manual workflow\*\*/g,
+      source: '.github/workflows/',
+    },
   ];
 }
 
@@ -218,4 +270,4 @@ function main() {
 
 if (require.main === module) process.exit(main());
 
-module.exports = { check, claims, parse, main, sentenceAround, restatements };
+module.exports = { check, claims, parse, main, sentenceAround, restatements, toolsListed, toolsWithWorkflow };
