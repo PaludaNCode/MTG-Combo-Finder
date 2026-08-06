@@ -74,7 +74,7 @@ combo does something it does not.
 | 🟨 Greyish-yellow | `decisive` | Real value that something else still has to convert |
 | ⬜ Grey | `other` | The plumbing a loop runs on — relevant, but not a way to win |
 
-**Which outcome sits in which tier is written down, not worked out.** `result-tiers.js` lists all 1,079
+**Which outcome sits in which tier is written down, not worked out.** `result-tiers.js` lists all 1,080
 results Commander Spellbook publishes, by exact name, so moving one outcome between tiers means moving one
 string between lists. That replaced pattern matching, which needed an exception list for every rule
 (`Infinite turns` is a win; `Infinite turns for each opponent` is the opposite of one). Two consequences,
@@ -669,7 +669,7 @@ section about unchecked numbers, and it had already drifted once.
 
 | claim | counted from |
 | --- | --- |
-| `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
+| `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
 | `All 463 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
