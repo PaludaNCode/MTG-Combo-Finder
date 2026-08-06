@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — a row per number</title>
+  <!-- Three ways to give each number its own row, drawn against the real stylesheet so
+       the tokens, the panel chrome and both themes are the shipped ones. Nothing here is
+       wired to the page: the numbers are the tuning deck's, typed.
+
+       The shipped strip is one line and stays that way until one of these is chosen —
+       see prototypes/deck-counts.md for how that line earns each piece back as the
+       column widens. What a row-per-number buys is that nothing is ever hidden; what it
+       costs is height, directly above the answer the page is for.
+
+       Every class is prefixed `proto-`, because `.count`, `.row` and `.name` are all
+       taken in style.css and one of them already cost an afternoon. -->
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* ---- A. Label / value rows -------------------------------------------
+     *
+     * The shape a spec sheet uses: the noun on the left in the label's own colour, the
+     * number on the right, one per line. Reads top-to-bottom, nothing hidden, and the
+     * aside sits under the number it qualifies rather than beside it. */
+    .proto-a { margin: 0 0 1rem; font-size: .9rem; }
+    .proto-a-row {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: .3rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .proto-a-row:last-child { border-bottom: 0; }
+    .proto-a-key {
+      flex: 0 0 5.5rem;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .proto-a-n { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .proto-a-sub { color: var(--muted); font-size: .85em; }
+
+    /* ---- B. A number column, right-aligned -------------------------------
+     *
+     * The same rows with the figures in a column of their own, so they line up as
+     * numbers do on a receipt. `tabular-nums` is what makes that hold when one is three
+     * digits and the next is two — the page already relies on it for the chip counts. */
+    .proto-b { margin: 0 0 1rem; font-size: .9rem; display: grid; grid-template-columns: 3.5rem 1fr; gap: .15rem .7rem; }
+    .proto-b-n {
+      text-align: right;
+      color: var(--text);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .proto-b-key { color: var(--text); }
+    .proto-b-sub { color: var(--muted); font-size: .85em; }
+
+    /* ---- C. Rows in the chrome the page already draws --------------------
+     *
+     * `.legality`'s box, which is what the page uses for "talking about your input", with
+     * one line per number inside it. Costs no new container and reads as a panel rather
+     * than as loose text, which is either the point or the objection. */
+    .proto-c-line {
+      display: flex;
+      align-items: baseline;
+      gap: .5rem;
+      margin: .15rem 0;
+      font-size: .9rem;
+    }
+    .proto-c-key {
+      flex: 0 0 4.5rem;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .proto-c-n { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .proto-c-sub { color: var(--muted); font-size: .85em; }
+
+    /* ---- prototype scaffolding, none of it shipping ---------------------- */
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+    .proto-container { container-type: inline-size; }
+    .proto-narrow { max-width: 22rem; border: 1px dashed var(--line); padding: .8rem; border-radius: var(--radius); }
+    .proto-shipped { color: var(--muted); font-size: .85rem; margin: .3rem 0 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1>A row per number — three ways</h1>
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+        <span class="icon icon-moon" aria-hidden="true"></span>
+        <span class="icon icon-sun" aria-hidden="true"></span>
+        <span class="theme-label"></span>
+      </button>
+    </div>
+    <p class="tagline">The tuning deck: 101 cards, 65 spells (3 MDFCs), 36 lands (16 basic · 20 nonbasic).</p>
+  </header>
+
+  <main class="proto-frame">
+
+    <p class="proto-note"><b>What ships today</b>, for comparison — one line, and on a phone it drops the
+      label and the derivable half rather than wrapping.</p>
+
+    <!-- Wrapped in a query container, because the shipped rules resolve against
+         #deck-counts and with no container ancestor none of them ever match — the line
+         would render as its narrowest self at every width and look like a worse design
+         than it is. -->
+    <div class="proto-container">
+    <p class="deck-counts">
+      <span class="deck-counts-label">Deck</span>
+      <span class="deck-count is-cards"><b>101</b> cards</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count is-spells"><b>65</b> spells <span class="deck-sub"> (<span class="deck-sub-main">3 MDFCs</span>)</span></span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count is-lands"><b>36</b> lands <span class="deck-sub"> (<span class="deck-sub-main">16 basic</span><span class="deck-sub-extra"> · 20 nonbasic</span>)</span></span>
+    </p>
+    </div>
+
+    <p class="proto-note"><b>A — label and value.</b> The noun on the left, the number beside it, a hairline
+      between rows. Nothing is ever hidden, at any width, and each aside sits with the number it
+      qualifies.</p>
+
+    <div class="proto-a">
+      <p class="proto-a-row"><span class="proto-a-key">Cards</span><span class="proto-a-n">101</span></p>
+      <p class="proto-a-row"><span class="proto-a-key">Spells</span><span class="proto-a-n">65</span><span class="proto-a-sub">3 MDFCs</span></p>
+      <p class="proto-a-row"><span class="proto-a-key">Lands</span><span class="proto-a-n">36</span><span class="proto-a-sub">16 basic · 20 nonbasic</span></p>
+    </div>
+
+    <p class="proto-note"><b>B — figures in their own column.</b> The same rows with the numbers
+      right-aligned and tabular, so 101 / 65 / 36 line up on the digit rather than on the word. Reads as
+      a small table without drawing one.</p>
+
+    <div class="proto-b">
+      <span class="proto-b-n">101</span><span class="proto-b-key">cards</span>
+      <span class="proto-b-n">65</span><span class="proto-b-key">spells <span class="proto-b-sub">3 MDFCs</span></span>
+      <span class="proto-b-n">36</span><span class="proto-b-key">lands <span class="proto-b-sub">16 basic · 20 nonbasic</span></span>
+    </div>
+
+    <p class="proto-note"><b>C — inside the box the page already has.</b> `.legality`'s chrome, which is
+      what this page uses when it talks about your input rather than about the search. Same rows, but
+      framed.</p>
+
+    <div class="legality">
+      <p class="proto-c-line"><span class="proto-c-key">Cards</span><span class="proto-c-n">101</span></p>
+      <p class="proto-c-line"><span class="proto-c-key">Spells</span><span class="proto-c-n">65</span><span class="proto-c-sub">3 MDFCs</span></p>
+      <p class="proto-c-line"><span class="proto-c-key">Lands</span><span class="proto-c-n">36</span><span class="proto-c-sub">16 basic · 20 nonbasic</span></p>
+    </div>
+
+    <p class="proto-note"><b>The case that decides it,</b> in all three: a card the snapshot has never
+      heard of. On one line this is the fourth number that makes a phone wrap; in rows it is simply
+      another row, and the arithmetic is checkable down the column.</p>
+
+    <div class="proto-a">
+      <p class="proto-a-row"><span class="proto-a-key">Cards</span><span class="proto-a-n">101</span></p>
+      <p class="proto-a-row"><span class="proto-a-key">Spells</span><span class="proto-a-n">63</span><span class="proto-a-sub">3 MDFCs</span></p>
+      <p class="proto-a-row"><span class="proto-a-key">Lands</span><span class="proto-a-n">36</span><span class="proto-a-sub">16 basic · 20 nonbasic</span></p>
+      <p class="proto-a-row"><span class="proto-a-key">Unread</span><span class="proto-a-n">2</span><span class="proto-a-sub">no type line in this snapshot</span></p>
+    </div>
+
+    <p class="proto-note"><b>At 390px</b>, where the shipped line has to drop pieces and none of these
+      do. A, then B, then C.</p>
+
+    <div class="proto-narrow">
+      <div class="proto-a">
+        <p class="proto-a-row"><span class="proto-a-key">Cards</span><span class="proto-a-n">101</span></p>
+        <p class="proto-a-row"><span class="proto-a-key">Spells</span><span class="proto-a-n">65</span><span class="proto-a-sub">3 MDFCs</span></p>
+        <p class="proto-a-row"><span class="proto-a-key">Lands</span><span class="proto-a-n">36</span><span class="proto-a-sub">16 basic · 20 nonbasic</span></p>
+      </div>
+      <div class="proto-b">
+        <span class="proto-b-n">101</span><span class="proto-b-key">cards</span>
+        <span class="proto-b-n">65</span><span class="proto-b-key">spells <span class="proto-b-sub">3 MDFCs</span></span>
+        <span class="proto-b-n">36</span><span class="proto-b-key">lands <span class="proto-b-sub">16 basic · 20 nonbasic</span></span>
+      </div>
+      <div class="legality">
+        <p class="proto-c-line"><span class="proto-c-key">Cards</span><span class="proto-c-n">101</span></p>
+        <p class="proto-c-line"><span class="proto-c-key">Spells</span><span class="proto-c-n">65</span><span class="proto-c-sub">3 MDFCs</span></p>
+        <p class="proto-c-line"><span class="proto-c-key">Lands</span><span class="proto-c-n">36</span><span class="proto-c-sub">16 basic · 20 nonbasic</span></p>
+      </div>
+    </div>
+
+    <p class="proto-note">All three cost height in the same place: directly above <em>Combos in your
+      deck</em>, which is the answer the page exists to give. Measured at 900px, three rows each:
+      <b>A 124px, C 96px, B 70px</b>, against <b>22px</b> for the line that ships today. B is the only one
+      that stays under three times the current cost, and it gets there by dropping the rules between rows
+      and the uppercase keys rather than by saying less.</p>
+
+  </main>
+</body>
+</html>

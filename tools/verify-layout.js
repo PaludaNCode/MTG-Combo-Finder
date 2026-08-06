@@ -1923,6 +1923,12 @@ function runOne(vp) {
           spoken: addBtn ? addBtn.getAttribute('aria-label') : '',
           card: addRow ? addRow.querySelector('h3 .card-name').textContent : '',
           combosBefore: before.included.badge,
+          // The deck-counts strip has to move with the deck, and it is the one thing on
+          // the page that describes the decklist rather than the search — so a render
+          // that rebuilt every panel and left the strip alone would look entirely
+          // correct. It said 101 cards before this check existed and would have gone on
+          // saying 101 after the add.
+          countsBefore: before.deckCounts.parts.join(' · '),
           // The map is drawn from the search's own results, so it has to move
           // with them. A picture that is one search behind the list beside it is
           // worse than no picture — it says the added card is in no combos.
@@ -1981,6 +1987,7 @@ function runOne(vp) {
           afterAdd.sectionLine = lines.findIndex(function (l) { return /^side\\s*board/i.test(l); });
           afterAdd.status = doc.getElementById('status').textContent;
           afterAdd.combosAfter = now.included.badge;
+          afterAdd.countsAfter = now.deckCounts.parts.join(' · ');
           afterAdd.mapAfter = now.map ? now.map.dots.length : 0;
           afterAdd.mapHasCard = now.map
             ? now.map.titled.some(function (t) { return t.indexOf(afterAdd.card) === 0; })
@@ -3451,6 +3458,15 @@ function captionDrift(notes) {
           + `${added.mapAfter} after — it was not rebuilt`);
       }
       if (!added.mapHasCard) problems.push(`${added.card} was added but is not on the map`);
+      // And the strip, which is the one thing on the page describing the decklist rather
+      // than the search — so a render that rebuilt every panel and left it alone would
+      // look entirely correct while telling the reader their deck is a card smaller than
+      // it is. Compared as text rather than parsed: whichever number moved, it has to
+      // have moved.
+      if (added.countsAfter === added.countsBefore) {
+        problems.push(`the deck-counts strip still reads "${added.countsBefore}" after adding `
+          + `${added.card} — it was not recalculated`);
+      }
       // …and it was redrawn without forcing a layout to find out how wide to draw.
       // See the note beside widthReads in the harness: the old read cost 601ms of a
       // 3,620ms search on a phone, and nothing about the picture says whether it is
@@ -3827,7 +3843,8 @@ function captionDrift(notes) {
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
-        + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`;
+        + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`
+        + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`;
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
         + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
