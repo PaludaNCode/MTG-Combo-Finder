@@ -1740,6 +1740,18 @@ failure deletes the assets and then finds nothing missing, because it has stoppe
 stamped-page test in `test/prune-artifact.test.js` is what covers it, verified by breaking the query strip
 and watching 9 of 10 tests stay green.
 
+### The `github-pages` environment has no deployment branch rule, on purpose
+
+It restricted deployments to `main` until 6 Aug 2026, when it was removed while diagnosing the stall
+below — it was the only non-default setting on that environment and therefore the only thing left to
+test. **Removing it did not help**, so if you want it back, put it back; it is recorded here because a
+repository setting changed by hand during an incident is otherwise a thing nobody can explain later.
+
+What it was protecting against is already covered twice over: `deploy.yml` triggers only on push to
+`main` and manual dispatch, and the `main` ruleset refuses direct pushes. The one thing its absence
+does allow is dispatching a deploy from a branch, which publishes that branch's tree to production —
+worth knowing before somebody does it by accident.
+
 ### A failed deploy burns its commit
 
 The Pages deployment id **is** the commit SHA. So when `deploy-pages` gives up — it polls for its own
