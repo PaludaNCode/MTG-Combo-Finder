@@ -129,51 +129,38 @@
     container.appendChild(box);
   }
 
-  // "Deck  98 cards · 62 spells (3 MDFCs) · 36 lands (16 basic · 20 nonbasic)" — what the list
-  // in the box is, before anything about what is in it. Every decision about which of
-  // those numbers can be said is DeckView's; this walks what it was handed.
+  // The rows of the deck summary: one per number, under the colour identity and the
+  // bracket. A row rather than a line because every reading now fits at every width —
+  // the one-line strip had to hide the label and the derivable half on a phone, and a
+  // reader on a phone is exactly who wants to know how many lands they are running.
+  //
+  // Every decision about which of these numbers can be said at all is DeckView's; this
+  // walks what it was handed. The key column is shared with the two rows above it, which
+  // is what makes the box read as one table rather than three unrelated facts.
   function renderDeckCounts(container, counts) {
     container.textContent = '';
     const note = DeckView.deckCountsNote(counts);
     if (!note) return;
 
-    const line = el('p', 'deck-counts');
-    line.appendChild(el('span', 'deck-counts-label', note.label));
-    note.parts.forEach((part, at) => {
-      // A middot between the numbers, and only between them. It is dropped by a
-      // container query once the strip is narrow enough to wrap — a wrapped line
-      // otherwise ends on the separator. See style.css.
-      if (at) line.appendChild(el('span', 'deck-sep', '·'));
-      // `is-<key>` so the stylesheet can name one number rather than count positions.
-      // The land aside is the first thing a narrow column drops, and `.deck-count:last-child
-      // .deck-sub` would have meant something different the day an unread count appeared.
-      const span = el('span', 'deck-count is-' + part.key + (part.quiet ? ' is-quiet' : ''));
-      // The number in its own element so it can carry the weight without bolding the
-      // noun with it: "**36** lands" reads as a figure, "**36 lands**" as a heading.
+    note.parts.forEach((part) => {
+      const row = el('p', 'summary-row is-' + part.key + (part.quiet ? ' is-quiet' : ''));
+      // The noun is the key and the figure is the value, which is the other way round
+      // from how the old line read ("101 cards"). It is what lets three numbers line up
+      // in a column: "cards", "spells", "lands" are the labels, 101/65/36 the data.
       const [count, ...rest] = part.text.split(' ');
-      span.appendChild(el('b', null, count));
-      span.appendChild(document.createTextNode(' ' + rest.join(' ')));
+      row.appendChild(el('span', 'summary-key', rest.join(' ')));
+      row.appendChild(el('span', 'summary-n', count));
       if (part.sub) {
-        // The brackets are in the DOM, not drawn by CSS, so a screen reader gets them —
-        // and they sit outside the two halves, so hiding the second half narrow leaves
-        // "(14 basic)" rather than "(14 basic".
-        const sub = el('span', 'deck-sub');
-        sub.appendChild(document.createTextNode(' ('));
-        sub.appendChild(el('span', 'deck-sub-main', part.sub));
-        // The half a phone does without: nonbasic is the land count minus the basics, so
-        // it is the one number here a reader can recover. See the ladder in style.css.
-        if (part.subExtra) sub.appendChild(el('span', 'deck-sub-extra', ' · ' + part.subExtra));
-        sub.appendChild(document.createTextNode(')'));
+        // Both halves in one span, since nothing hides either of them any more — the
+        // row has the width the line did not.
+        const sub = el('span', 'summary-sub', part.sub + (part.subExtra ? ' · ' + part.subExtra : ''));
         // Only the MDFC aside carries a title: it is the page's one acronym, and a reader
-        // who does not know the word has nowhere else on the page to find out. A title and
-        // not <abbr>, because the parentheses and the count are part of what is being
-        // explained and marking up the four letters alone would explain less.
+        // who does not know the word has nowhere else on the page to find out.
         if (part.subTitle) sub.title = part.subTitle;
-        span.appendChild(sub);
+        row.appendChild(sub);
       }
-      line.appendChild(span);
+      container.appendChild(row);
     });
-    container.appendChild(line);
   }
 
   function renderBracket(container, bracket) {
@@ -357,9 +344,15 @@
     const token = ++renderToken;
 
     renderUnrecognized($('unrecognized'), results.unrecognized);
-    renderDeckCounts($('deck-counts'), results.deckCounts);
+    // Colour identity and the bracket first — what the deck *is* — then its contents.
+    // All three go in one box, which is hidden when every one of them rendered nothing:
+    // an empty frame reads as a panel that failed rather than as a question the data
+    // could not answer.
     renderIdentity($('identity'), results.identity);
     renderBracket($('bracket'), results.bracket);
+    renderDeckCounts($('deck-counts'), results.deckCounts);
+    $('deck-summary').hidden = !['identity', 'bracket', 'deck-counts']
+      .some((id) => $(id).childElementCount);
     renderLegality($('legality'), results.legality);
 
     const included = results.included;
