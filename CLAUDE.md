@@ -307,6 +307,19 @@ loosely.
 - **The steps tree has no manifest, so CI computes one.** The id *is* the URL and a 404 reads as
   "none recorded", which is also why a wrong tree is invisible: the reader is told there are no
   steps and believes it. → `tools/check-snapshot.js --steps`, against `StepsSource.pathFor()`.
+- **The database is indexed, not walked.** `matchDeck()` and `standInRows()` go through
+  `candidateCombos()`, which reads a card → combo-positions index kept on the combos array in a
+  `WeakMap` — `matchDeck` 71.1ms → 5.4ms and `standInRows` 78.4ms → 10.2ms on the standing deck, identical
+  output, verified against the pre-index code over 32 decks. **Four traps, each with a test**: candidates
+  must be re-sorted into **database order** or the stable sorts downstream break ties differently and the
+  page reorders (42% of combos have no `pop`, so ties are the common case); the index stores **one posting
+  per occurrence**, because the old walk counted a *name* it could not find and counting distinct cards is
+  a silent behaviour change; a combo naming ≤1 card can never be reached through a deck card, so the 7 of
+  them are carried separately; and the postings are **one flat `Int32Array`**, because a `Map` of small
+  arrays cost **6.3 MB of worker heap against 2.0 MB** — which is what makes the build read the database
+  **twice**, so the pass counter in `test/unofficial.test.js` says two. Nothing in the *results* says which
+  walk ran → `test/scan-index.test.js` pins the count examined. README § *The database is indexed once,
+  not walked on every search*.
 - **Load order is load-bearing** — `combos.js` reads the tier inventory at load time, `search.js`
   reads `combos.js`. A new script goes into `index.html` **and** `search-worker.js`.
 

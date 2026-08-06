@@ -838,6 +838,49 @@ snapshot. **Never let the permalink path guess:** a broken page announces itself
 and shows a different combo does not. `tools/check-snapshot.js` refuses a row with no `id` and no way
 to rebuild one, calling the page's own `rebuildId()` rather than a copy.
 
+### The database is indexed once, not walked on every search
+
+`matchDeck()` and `standInRows()` both used to iterate all 103,891 combos and call `nameKey()` on each
+combo's cards on the way past — about **343,000 `trim().toLowerCase()` allocations per search**, over a
+dataset that is parsed once per worker and never mutated. The keys are identical every time, so they are
+computed once into a card → combo-positions index, kept on the combos array in a `WeakMap` exactly as
+`identityIndex()` is kept on `cardIdentity`.
+
+Measured on the 6 Aug snapshot, old and new in one process, standing deck: **`matchDeck` 71.1ms → 5.4ms
+and `standInRows` 78.4ms → 10.2ms**; on the tuning deck 63.7ms → 1.3ms and 72.5ms → 4.6ms. Output
+identical on all of it. A first search on a fresh dataset costs 294ms *including* the build; every search
+after that reuses it → `test/unofficial.test.js` counts the passes.
+
+**The candidate set is not small, and a design that assumes it is, is designed against the wrong
+number.** 27,039 of 103,891 combos name at least one of the standing deck's cards — a quarter, not a
+handful. What makes this worth doing is that a posting is an integer with `nameKey()` already applied, so
+even a deck holding **every card in the database**, where nothing is filtered out at all, is 1.5x faster.
+
+**The postings are one flat `Int32Array` with offsets, not 7,370 small arrays.** The obvious shape — a
+`Map` of card key to an array of positions — measured **+6.3 MB of worker heap on a 35.3 MB payload**,
+a fifth of what the string interning bought back for a lookup table. One array plus a `starts` table is
+**2.0 MB for the same answers, and slightly faster** (the 60-busiest-cards deck goes 13.4ms → 9.3ms,
+because `sort()` on a typed array has no comparator to call). It costs a second pass over the database at
+build time — the count has to exist before anything can be placed — which is why the pass counter in
+`test/unofficial.test.js` says two rather than one.
+
+Three more things that are not obvious, each with a test behind it:
+
+- **Candidates are re-sorted into database order, and that sort costs about half of what the index
+  saves.** They come out grouped by the card that found them, and both callers hand their results to a
+  *stable* sort. 42% of combos carry no `pop` for those sorts to separate, so ties are the common case:
+  an unsorted walk returns exactly the same combos and silently reorders the page.
+- **The index stores one posting per occurrence, not per distinct card.** The walk it replaced counted a
+  *name* it could not find, so a combo naming the same card twice would come back one short where the old
+  code called it complete. Both readings are defensible; only one is what the page has always done, and no
+  published combo names a card twice, so nothing else would have noticed the change.
+- **A combo naming one card or none can be one card short while naming nothing the deck holds**, so no
+  deck card can lead the index to it. There are 7; they are carried as a list beside the index.
+
+Nothing about the *results* can tell you which walk ran, so `test/scan-index.test.js` pins the count of
+combos examined — verified by putting the linear walk back and watching it go red. A duration assertion
+would be a CI flake.
+
 ### The shell offline, and why the HTML is the one thing not cached first
 
 A reader who has searched once holds the whole snapshot on the device, and plane mode still failed on

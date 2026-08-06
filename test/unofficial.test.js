@@ -194,25 +194,36 @@ test('stand-in: nothing is generated for a deck without the card', () => {
 
 // The rules are a list somebody will add to, and the combo list is 100,000 long.
 // A per-rule scan would make every new rule cost another sweep of the database on
-// every search anybody runs — so the walk happens once and the rules are indexed
-// by the cards they stand in for. This counts the walks rather than trusting the
-// comment: the dataset hands out a counting iterator.
-test('stand-in: the combo list is walked once, whatever the rules cost', () => {
+// every search anybody runs — so the rules are indexed by the cards they stand in
+// for, and the database itself is walked once **per dataset** rather than once per
+// call: combos.js builds a card -> combo index and keeps it on the combos array.
+//
+// This counts the walks rather than trusting the comment. The list is a real Array
+// so it can be indexed, with a Symbol.iterator that counts each pass over it.
+//
+// **Two passes, not one, and that is the price of the index's shape.** The postings
+// live in one flat Int32Array, so the build counts each card's occurrences before it
+// can know where to place them. Seven thousand small arrays would need one pass and
+// cost 6.3 MB of worker heap instead of 2.0 MB — see comboIndex(). What the number
+// must never become is *per call*, which is what the rest of this test is for.
+test('stand-in: the combo list is walked twice per dataset, whatever the rules cost', () => {
   let passes = 0;
-  const counting = Object.assign({}, OUTLET, {
-    combos: {
-      length: OUTLET.combos.length,
-      [Symbol.iterator]() {
-        passes += 1;
-        return OUTLET.combos[Symbol.iterator]();
-      },
-    },
+  const counted = OUTLET.combos.slice();
+  const plain = counted[Symbol.iterator].bind(counted);
+  Object.defineProperty(counted, Symbol.iterator, {
+    configurable: true,
+    value() { passes += 1; return plain(); },
   });
+  const counting = Object.assign({}, OUTLET, { combos: counted });
   const names = deck('Copycat', 'Understudy', 'Gravecrawler', 'Scurry Oak', 'Sadistic Glee');
 
   standInRows(counting, [RULE], names);
-  assert.strictEqual(passes, 1, 'one rule took more than one pass');
+  assert.strictEqual(passes, 2, 'one rule took ' + passes + ' passes over the combo list');
 
+  // Ten rules, and the same dataset again. Zero now, not one: the index is built
+  // once and kept, so the second search of a session does not walk the database at
+  // all — which is the property the index exists for and the one a rewrite would
+  // quietly lose while still returning the right rows.
   passes = 0;
   const many = [RULE].concat(Array.from({ length: 9 }, (unused, i) => ({
     card: 'Understudy',
@@ -220,7 +231,7 @@ test('stand-in: the combo list is walked once, whatever the rules cost', () => {
     for: [{ card: 'Twin ' + String.fromCharCode(65 + i), why: 'Another rule, for the count.' }],
   })));
   standInRows(counting, many, names);
-  assert.strictEqual(passes, 1, 'ten rules took ' + passes + ' passes over the combo list');
+  assert.strictEqual(passes, 0, 'ten rules took ' + passes + ' more pass(es) over the combo list');
 });
 
 // The suggestions half. A row the deck is one card short of is not a combo it
