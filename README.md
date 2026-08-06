@@ -1751,6 +1751,14 @@ commit on `main` is**, which here means a pull request, so give it something wor
 artifact named `github-pages` into the same workflow run, and `deploy-pages` refuses outright:
 `Multiple artifacts named "github-pages" were unexpectedly found … Artifact count is 2`.
 
+**The prune step was suspected of causing all of this and was cleared by experiment — don't re-suspect
+it.** Six failures in a row, four successes before them, and the only difference between the groups was
+that step: a 6-of-6 correlation with no incident on the status page. It was wrong. One deploy with
+`--apply` removed and nothing else changed — so the whole checkout was uploaded, exactly as on the
+morning's successful runs — stalled identically. The correlation was with *time*. **Changing one
+variable and looking is what answered it**; neither reasoning about GitHub's internals nor counting
+failures did, and both were tried first.
+
 **And a run stuck in `deployment_queued` is GitHub's queue, not this repository.** Read the poll lines
 rather than the job's conclusion before changing anything here: every step before `deploy-pages`
 succeeds, the artifact is accepted, and the deployment is created — it simply never advances. On
