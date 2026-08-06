@@ -10574,6 +10574,366 @@
       why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
       produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
     },
+
+    // ---- the token slot of the Cauldron Familiar + Peregrin Took loop ---------
+    //
+    // Spellbook enumerates this engine exhaustively: 175 combos naming both the Cat
+    // and Peregrin Took, and every one of them is the same four-part shape —
+    //
+    //   Cauldron Familiar    sacrifice a FOOD from the graveyard, come back, drain 1
+    //   a free outlet        eat the Cat so it can come back again (15 named cards)
+    //   something that       because the Cat spends a Food every lap and Took only
+    //     creates a token    replaces a Food when a token is CREATED
+    //   Peregrin Took        any token creation, plus an additional Food
+    //
+    // The token slot is filled by thirteen cards and twelve of them read "whenever
+    // one or more cards leave your graveyard" — the Cat leaving is the event. The
+    // odd one out is Pitiless Plunderer, which reads the Cat dying instead. Nothing
+    // in the published list reads the *cost*, and that is the hole: the Food being
+    // sacrificed is the same lap seen one step earlier, and three cards trigger on
+    // it. All three make a token.
+    //
+    //   Camellia, the Seedmiser     whenever you sacrifice ONE OR MORE Foods → Squirrel
+    //   Experimental Confectioner   whenever you sacrifice A Food → Rat
+    //   Nuka-Cola Vending Machine   whenever you sacrifice a Food → tapped Treasure
+    //
+    // Only Camellia produces a row, and the reason is the batching that ruled her
+    // out of Took's own draw loop. `Peregrin Took + Experimental Confectioner` and
+    // `Peregrin Took + Nuka-Cola Vending Machine` are both published TWO-card
+    // combos — Took sacrifices three Foods at once, each of those two answers per
+    // Food, three tokens come back as three Foods and the draw is free. So every
+    // set containing Took and either of them is a strict superset of a published
+    // two-card combo, and Spellbook does not publish those. Camellia reads "one or
+    // more" and answers once however many were spent, so three Foods buy one
+    // Squirrel and she is not a combo with Took alone. The Cat spends exactly one
+    // Food a lap, which is the one rate she keeps up with.
+    //
+    // Four of the fifteen outlets are dropped because Spellbook publishes them as
+    // three-card combos with Camellia and Took already (Ashnod's Altar, Umbral
+    // Collar Zealot, Bartolomé del Presidio, Phantom Train), and Shilgengar is
+    // dropped because `Shilgengar + Cauldron Familiar + Peregrin Took` is published
+    // — he makes his own Blood token, so he fills both slots at once. Eleven left.
+    //
+    // Each row cites the Desecrated Tomb version of its own outlet rather than the
+    // more popular Insidious Roots one: the Tomb creates one creature token and
+    // does nothing else, which is Camellia's sentence, where Insidious Roots also
+    // hands every token a mana ability and counters the Plants.
+    //
+    // The rows claim two results FEWER than the combos they cite. Spellbook lists
+    // "Infinite card draw" and "Infinite draw triggers" on the Desecrated Tomb
+    // family and the published step list does not support it: the loop is
+    // Food-neutral, holding one Food at every point, and Took's draw ability wants
+    // three off a single sacrifice. Dropped rather than copied.
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Viscera Seer'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-2292-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Viscera Seer', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Viscera Seer eats the Cat '
+        + 'for free and scries on the way.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-2438-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Desecrated Tomb', 'Carrion Feeder'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Carrion Feeder eats the '
+        + 'Cat for free and grows by a counter each lap.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-4050-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Phyrexian Altar', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Phyrexian Altar eats the '
+        + 'Cat for free and pays for itself in coloured mana.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite colored mana',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Altar of Dementia'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-4321-5256',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Altar of Dementia', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Altar of Dementia eats the '
+        + 'Cat for free and mills a player for its power.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite mill',
+        'Infinite self-mill',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-997-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Woe Strider', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Woe Strider eats the Cat '
+        + 'for free — "another creature", and the Cat is another.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '394-413-856-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Blasting Station', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Blasting Station eats the '
+        + 'Cat for free and untaps on the Squirrel entering.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite Food tokens',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite damage',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-3967-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Desecrated Tomb', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Yahenni, Undying Partisan '
+        + 'eats the Cat for free.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-2511-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Desecrated Tomb', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Bloodflow Connoisseur eats '
+        + 'the Cat for free and grows by a counter each lap.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite +1/+1 counters on a creature',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Spawning Pit'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-3899-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Spawning Pit', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Spawning Pit eats the Cat '
+        + 'for free, banking a charge counter each lap.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Goblin Bombardment'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-4321-5147',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Goblin Bombardment', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Goblin Bombardment eats '
+        + 'the Cat for free and pings for 1 each lap.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite damage',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-4321-5231',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Thermopod', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Camellia, the Seedmiser', inId: 5777 },
+      why: 'Desecrated Tomb answers the Cat leaving the graveyard with a token; Camellia '
+        + 'answers the Food being sacrificed to get it out, which is the same lap seen '
+        + 'from the cost side. One Food spent, one Squirrel created, and Peregrin Took '
+        + 'turns that creation into the Food for the next lap. Thermopod eats the Cat for '
+        + 'free and pays for itself in red mana.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite red mana',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
+    {
+      cards: ['Cauldron Familiar', 'Peregrin Took', 'Trudge Garden', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '394-856-2034-4321',
+        cards: ['Peregrin Took', 'Cauldron Familiar', 'Ashnod\'s Altar', 'Desecrated Tomb'],
+      },
+      swap: { out: 'Desecrated Tomb', in: 'Trudge Garden', inId: 2308 },
+      why: 'The Cat’s own arrival gains you 1 life, which is Trudge Garden’s trigger, and '
+        + 'the 4/4 it makes is the token Peregrin Took turns into the next lap’s Food. '
+        + 'Unlike Desecrated Tomb the trigger is not free — it costs {2} — so the outlet '
+        + 'has to pay for it, and Ashnod’s Altar is the one in this family that gets '
+        + '{C}{C} out of a single creature. Eat only the Cat and the Beasts pile up; eat '
+        + 'the Beast as well and you are {C}{C} ahead a lap instead.',
+      produces: [
+        'Infinite LTB',
+        'Infinite ETB',
+        'Infinite sacrifice triggers',
+        'Infinite death triggers',
+        'Infinite colorless mana',
+        'Infinite lifegain triggers',
+        'Infinite lifegain',
+        'Infinite creature tokens',
+        'Infinite lifeloss',
+        'Infinite Food tokens',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

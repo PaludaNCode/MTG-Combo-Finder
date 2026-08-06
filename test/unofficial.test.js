@@ -508,6 +508,16 @@ test('a real deck: the unofficial rows it unlocks are exactly these', () => {
     'Basking Broodscale + Heliod, Sun-Crowned + Aunt May',
     'Basking Broodscale + Heliod, Sun-Crowned + Elas il-Kor, Sadistic Pilgrim',
     'Basking Broodscale + Heliod, Sun-Crowned + Lunarch Veteran // Luminous Phantom',
+    // Four of the twelve rows the Cauldron Familiar + Peregrin Took token-slot sweep
+    // added. The Cat, Took, Camellia and Trudge Garden are all in this deck already,
+    // and so are three of the eleven outlets — the other eight rows want an outlet it
+    // does not hold. Camellia's three are the ones to read if this list moves again:
+    // she is in the slot because she answers the Food *sacrifice* rather than the Cat
+    // leaving the graveyard, which is the same lap one step earlier.
+    'Cauldron Familiar + Peregrin Took + Camellia, the Seedmiser + Carrion Feeder',
+    'Cauldron Familiar + Peregrin Took + Camellia, the Seedmiser + Phyrexian Altar',
+    'Cauldron Familiar + Peregrin Took + Camellia, the Seedmiser + Viscera Seer',
+    "Cauldron Familiar + Peregrin Took + Trudge Garden + Ashnod's Altar",
     'Herd Baloth + Necrosynthesis + Carrion Feeder',
     'Herd Baloth + Necrosynthesis + Hammerhead, Maggia Boss',
     'Herd Baloth + Necrosynthesis + Umbral Collar Zealot',

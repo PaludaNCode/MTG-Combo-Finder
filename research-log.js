@@ -1668,6 +1668,197 @@ const PASSES = [
       + 'cards. That is not a milestone to defend: the next sweep will add `derived` rows the '
       + 'moment somebody reasons faster than they read, and the label exists so they can.',
   },
+  {
+    subject: 'the token slot of the Cauldron Familiar + Peregrin Took loop',
+    cards: [
+      'Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Trudge Garden',
+      'Experimental Confectioner', 'Desecrated Tomb', 'Ghave, Guru of Spores',
+    ],
+    cardIds: [856, 4321, 5777, 2308, 2590, 394, 5189],
+    // Read from card-text.json, which answered all of them with no request — the
+    // state the cache was built for. The peers below are in `read` and not in
+    // `cards` because the pass reasoned about them without sweeping them, which is
+    // the half that went wrong when Confectioner was recalled instead of fetched.
+    read: {
+      'Cauldron Familiar': 'When this creature enters, each opponent loses 1 life and you gain 1 life. Sacrifice a Food: Return this card from your graveyard to the battlefield. Creature — Cat 1/1 for {B}.',
+      'Peregrin Took': 'If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. Sacrifice three Foods: Draw a card. Legendary Creature — Halfling Citizen 2/3 for {2}{G}.',
+      'Camellia, the Seedmiser': 'Menace. Other Squirrels you control have menace. Whenever you sacrifice one or more Foods, create a 1/1 green Squirrel creature token. {2}, Forage: Put a +1/+1 counter on each other Squirrel you control. (To forage, exile three cards from your graveyard or sacrifice a Food.) Legendary Creature — Squirrel Warlock 3/3.',
+      'Trudge Garden': 'Whenever you gain life, you may pay {2}. If you do, create a 4/4 green Fungus Beast creature token with trample. Enchantment.',
+      'Experimental Confectioner': 'When this creature enters, create a Food token. Whenever you sacrifice a Food, create a 1/1 black Rat creature token with "This token can’t block." Creature — Human Peasant 2/3 for {2}{B}.',
+      'Desecrated Tomb': 'Whenever one or more creature cards leave your graveyard, create a 1/1 black Bat creature token with flying. Artifact.',
+      'Ghave, Guru of Spores': 'Ghave enters with five +1/+1 counters on it. {1}, Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling creature token. {1}, Sacrifice a creature: Put a +1/+1 counter on target creature. Legendary Creature — Fungus Shaman 0/0.',
+      // The rest of the published token slot, read to establish what the slot is.
+      // Twelve of the thirteen read "cards leave your graveyard"; Pitiless Plunderer
+      // is the one that reads the Cat dying instead.
+      'Garrison Excavator': 'Menace. Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token. Creature — Orc Sorcerer 3/4.',
+      'Insidious Roots': 'Creature tokens you control have "{T}: Add one mana of any color." Whenever one or more creature cards leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control. Enchantment.',
+      'Pitiless Plunderer': 'Whenever another creature you control dies, create a Treasure token. Creature — Human Pirate 1/4 for {3}{B}.',
+      'Nuka-Cola Vending Machine': '{1}, {T}: Create a Food token. Whenever you sacrifice a Food, create a tapped Treasure token. Artifact for {3}.',
+      'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token. Creature — Zombie Goblin Wizard 3/3 for {2}{B}.',
+      'Samwise Gamgee': 'Whenever another nontoken creature you control enters, create a Food token. Sacrifice three Foods: Return target historic card from your graveyard to your hand. Legendary Creature — Halfling Peasant 2/2 for {G}{W}.',
+      'Shilgengar, Sire of Famine': 'Flying. Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your graveyard to the battlefield with a finality counter on it. Legendary Creature — Elder Demon 6/6.',
+      // The three outlets the rows this pass kept were measured against, because the
+      // Trudge Garden rule-out is arithmetic about what each one pays.
+      'Ashnod’s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color. Artifact for {3}.',
+      'Thermopod': '{S}: Thermopod gains haste until end of turn. Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3 for {4}{R}.',
+    },
+    date: '2026-08-06',
+    method: 'the slot Spellbook fills by name, diffed against one deck — the same shape as the outlet-slot pass, one slot along',
+    proposed: 90,
+    examined: 18,
+    kept: 12,
+    ruledOut: [
+      { reason: 'Warren Soultrader fills BOTH slots at once — he is the outlet and he '
+        + 'makes the Treasure — so Spellbook publishes him as a three-card combo with the '
+        + 'Cat and Peregrin Took, and every four-card set naming him is a strict superset '
+        + 'of it. Shilgengar, Sire of Famine is the same card in this respect, with a '
+        + 'Blood token instead of a Treasure, and is published the same way', count: 15 },
+      { reason: 'Samwise Gamgee does not need Peregrin Took at all: Cauldron Familiar '
+        + 'returning from the graveyard is a NONTOKEN creature entering, which is Samwise’s '
+        + 'trigger, so he makes the Food himself. Spellbook publishes six three-card '
+        + 'combos of Samwise plus the Cat plus an outlet and every four-card set adding '
+        + 'Took to one is a superset', count: 15 },
+      { reason: 'Ghave, Guru of Spores makes a token, but both of his abilities cost {1} '
+        + 'and the Saproling also costs a +1/+1 counter removed from a creature. The slot '
+        + 'wants a token every lap for free; his supply of counters is five and does not '
+        + 'renew inside this loop', count: 15 },
+      { reason: 'SUBSUMED BY A PUBLISHED TWO-CARD COMBO, and this is the answer to why '
+        + 'Experimental Confectioner sits in exactly one combo in a deck built around him. '
+        + 'He and Nuka-Cola Vending Machine trigger on the same event as Camellia — '
+        + 'sacrificing a Food — but they read "a Food" and answer PER FOOD, so Peregrin '
+        + 'Took’s own "sacrifice three Foods: draw a card" gives three triggers and three '
+        + 'Foods back. That is already the whole combo: `Peregrin Took + Experimental '
+        + 'Confectioner` (pop 33,850) and `Peregrin Took + Nuka-Cola Vending Machine` (pop '
+        + '56,856) are both published as TWO cards, so every larger set containing the pair '
+        + 'is a strict superset. Camellia reads "one or more Foods" and answers once '
+        + 'however many were spent — three Foods buy one Squirrel — so she is not a combo '
+        + 'with Took alone, and the Cat spends exactly one Food a lap, which is the one '
+        + 'rate she keeps up with. The batching that ruled her out of Took’s draw loop is '
+        + 'what keeps her out of this subsumption', count: 15 },
+      { reason: 'Camellia is already published with Peregrin Took and this outlet as a '
+        + 'three-card combo, so adding Cauldron Familiar makes a superset. Four of the '
+        + 'fifteen outlets: the two that eat an artifact for free and so can eat the Food '
+        + 'themselves (Umbral Collar Zealot, Bartolomé del Presidio, and Phantom Train, '
+        + 'which reads "another artifact or creature"), plus Ashnod’s Altar, where '
+        + 'Camellia’s own Forage eats the Food and the Altar eats the Squirrel for the {2}',
+      count: 4,
+      sets: [
+        ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Umbral Collar Zealot'],
+        ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Bartolomé del Presidio'],
+        ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Phantom Train'],
+        ['Cauldron Familiar', 'Peregrin Took', 'Camellia, the Seedmiser', 'Ashnod\'s Altar'],
+      ] },
+      { reason: 'TRUDGE GARDEN’S TRIGGER IS NOT FREE and the outlet has to pay for it. '
+        + 'It reads "whenever you gain life, you may pay {2}" — the Cat’s own arrival '
+        + 'gains the life, so the lap is there, but {2} has to come from somewhere every '
+        + 'time. Only three of the fifteen outlets make mana at all, and only Ashnod’s '
+        + 'Altar gets {C}{C} out of a single creature. Phyrexian Altar and Thermopod give '
+        + 'one mana each, so they cover the {2} only by also eating the previous lap’s '
+        + '4/4 — which leaves the board flat and stops the row producing the infinite '
+        + 'creature tokens the combo it cites produces. Those two were read through rather '
+        + 'than dropped mechanically; the other twelve make no mana and the loop stops on '
+        + 'the first lap', count: 14 },
+    ],
+    notes: 'Prompted by somebody reading their own decklist and saying Cauldron Familiar, '
+      + 'Peregrin Took, Rosie Cotton, Academy Manufactor and Experimental Confectioner '
+      + 'ought to be in more of its combos. Two of the five were right, and the reason is '
+      + 'structural rather than an oversight in Spellbook’s list.\n\n'
+      + 'THE SLOT. Spellbook enumerates this engine exhaustively — 175 combos name both '
+      + 'the Cat and Peregrin Took, and all 175 are the same four parts: the Cat, a free '
+      + 'sacrifice outlet to send it back to the graveyard (15 named cards), Peregrin Took, '
+      + 'and something that creates a token every lap so that Took’s replacement effect '
+      + 'hands back the Food the Cat just ate. Thirteen cards fill that last slot and '
+      + 'twelve of them read "whenever one or more cards leave your graveyard" — the Cat '
+      + 'leaving IS the event. Nothing published reads the *cost*. The Food being '
+      + 'sacrificed is the same lap one step earlier, three cards trigger on it, and all '
+      + 'three make a token.\n\n'
+      + 'Only Camellia survives, and the two that do not die to the subsumption rule-out '
+      + 'above rather than to anything about the loop. Zero of 103,867 published combos '
+      + 'name Cauldron Familiar and Camellia together; zero name Cauldron Familiar and '
+      + 'Experimental Confectioner. Eleven rows for Camellia, one for Trudge Garden, and '
+      + 'the deck that prompted this holds all four cards of three Camellia rows and of '
+      + 'the Trudge Garden one.\n\n'
+      + 'THE ROWS CLAIM TWO RESULTS FEWER THAN THE COMBOS THEY CITE, on purpose. Spellbook '
+      + 'lists "Infinite card draw" and "Infinite draw triggers" on the Desecrated Tomb '
+      + 'family and its own published step list does not support it: the loop holds exactly '
+      + 'one Food at every point — one spent, one replaced — and Took’s draw ability wants '
+      + 'three off a single sacrifice. Dropped rather than copied, because copying a result '
+      + 'list is how a row ends up asserting something nobody checked.\n\n'
+      + 'Each row cites the Desecrated Tomb version of its own outlet rather than the more '
+      + 'popular Insidious Roots one. The Tomb creates one creature token and does nothing '
+      + 'else, which is Camellia’s sentence; Insidious Roots also hands every token a mana '
+      + 'ability and counters the Plants, and would drag results into the row that Camellia '
+      + 'does not produce.\n\n'
+      + 'One negative worth having: tools/deck-gaps.js proposes four rows swapping a plain '
+      + 'creature-only outlet in for Shilgengar in `Shilgengar + Cauldron Familiar + '
+      + 'Peregrin Took`, and every one of them is wrong for the reason above — Shilgengar '
+      + 'is in that combo as the token maker, not as the outlet, so replacing him with '
+      + 'Viscera Seer leaves Took with nothing to replace and the Food never comes back. '
+      + 'They are recorded as `sets` under the first rule-out so the tool stops offering '
+      + 'them.',
+  },
+  {
+    subject: 'Academy Manufactor and Rosie Cotton of South Lane against one deck',
+    cards: ['Academy Manufactor', 'Rosie Cotton of South Lane'],
+    cardIds: [4231, 2433],
+    read: {
+      'Academy Manufactor': 'If you would create a Clue, Food, or Treasure token, instead create one of each. Artifact Creature — Assembly-Worker 1/3 for {3}.',
+      'Rosie Cotton of South Lane': 'When Rosie Cotton enters, create a Food token. Whenever you create a token, put a +1/+1 counter on target creature you control other than Rosie Cotton. Legendary Creature — Halfling Peasant 1/1 for {2}{W}.',
+      // The two the deck offers as substitutes, and the doublers they were measured
+      // against. This is the whole pass: are a token ADDER and a token DOUBLER the
+      // same card in these loops, and they are not.
+      'Chatterfang, Squirrel General': 'Forestwalk. If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead. {B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn. Legendary Creature — Squirrel Warrior 3/3.',
+      'Quina, Qu Gourmet': 'If one or more tokens would be created under your control, those tokens plus a 1/1 green Frog creature token are created instead. {2}, Sacrifice a Frog: Put a +1/+1 counter on Quina. Legendary Creature — Qu 2/3.',
+      'Doubling Season': 'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead. Enchantment.',
+      'Parallel Lives': 'If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. Enchantment.',
+      'Peregrin Took': 'If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. Sacrifice three Foods: Draw a card. Legendary Creature — Halfling Citizen 2/3 for {2}{G}.',
+    },
+    date: '2026-08-06',
+    method: 'the shapes each is published in that the deck is exactly one card short of, against what the deck holds instead',
+    proposed: 47,
+    examined: 8,
+    kept: 0,
+    ruledOut: [
+      { reason: 'A TOKEN ADDER IS NOT A TOKEN DOUBLER. Academy Manufactor’s largest '
+        + 'unreached family is Camellia + Peregrin Took + Academy Manufactor + a doubler, '
+        + 'and the deck holds two cards that look like they fill that slot and do not. '
+        + 'Doubling Season and Parallel Lives read "it creates TWICE THAT MANY of those '
+        + 'tokens", so the Food Took added is doubled and the loop nets a Food a lap. '
+        + 'Chatterfang adds "that many 1/1 green SQUIRREL" tokens and Quina adds "a 1/1 '
+        + 'green FROG" — a fixed extra body of their own type, never another copy of the '
+        + 'token that was being created. The Food count stays flat and there is no mana '
+        + 'for Camellia’s {2}. Ygra, Eater of All is the card that makes Chatterfang work '
+        + 'in the one published combo where he appears in this family, because Ygra turns '
+        + 'the Squirrels into Foods; the deck does not have Ygra', count: 8 },
+      { reason: 'Academy Manufactor reads three token types and this deck makes none of '
+        + 'them in a loop. Every per-lap token the deck can produce is a Squirrel '
+        + '(Chatterfang, Camellia), a Rat (Experimental Confectioner), a Frog (Quina) or a '
+        + '4/4 Fungus Beast (Trudge Garden), and a Clue, a Food or a Treasure is what she '
+        + 'is looking at. The only Treasure it makes on a repeatable trigger is Warren '
+        + 'Soultrader’s, and `Warren Soultrader + Cauldron Familiar + Academy Manufactor` '
+        + 'is already published' },
+      { reason: 'Rosie Cotton reads "whenever you CREATE A TOKEN", which is the broadest '
+        + 'trigger in the deck and is exactly why she produces nothing new: any repeatable '
+        + 'token creation the deck can assemble is already a published combo without her, '
+        + 'so adding her is a strict superset every time. The seven shapes she is one card '
+        + 'short of want Phyrexian Altar (published with Ashnod’s Altar, which the deck '
+        + 'has), Lonis, Animation Module, Pentavus, Triskelavus, Invisible Woman or '
+        + 'Jaheira, and the deck holds no peer of any of them', count: 7 },
+    ],
+    notes: 'Logged because it found nothing, which is the case this file is most useful '
+      + 'for. Academy Manufactor is in 661 published combos and this deck reaches 2 of '
+      + 'them; Rosie Cotton is in 47 and it reaches 4. Both ratios look like neglect and '
+      + 'neither is. Manufactor is a CONVERTER — she needs the loop’s token to already be '
+      + 'a Clue, a Food or a Treasure — and this deck’s loops all run on creature tokens. '
+      + 'Rosie is the opposite problem: her trigger is so broad that everything she would '
+      + 'close is closed already.\n\n'
+      + 'The adder-against-doubler rule-out is the one to reuse. It comes up wherever a '
+      + 'deck runs Chatterfang or Quina and a combo asks for Doubling Season, and the '
+      + 'substitution score will keep proposing it because all four cards are replacement '
+      + 'effects on token creation. The difference is what they create: another copy of '
+      + 'the token, or one more of a type of their own.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
