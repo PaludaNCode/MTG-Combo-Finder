@@ -428,8 +428,16 @@
       // spells because the front face is what you cast — which is also what the reader's
       // deck site shows — but a deck runs them partly as lands, so a land count that
       // never mentions them answers a slightly different question than the one asked.
-      if (counts.landBacksKnown && Number(counts.landBacks)) {
-        spells.sub = `${counts.landBacks} with a land back`;
+      //
+      // "MDFC" and not "with a land back": it is what a deckbuilder calls these, and it
+      // is short enough to sit inside a strip that already wraps on a phone. It is also
+      // the page's only acronym, so it carries its expansion — `subTitle` becomes a
+      // `title` on the aside, which is where a reader who does not know the word can
+      // find out without leaving the page.
+      if (counts.mdfcKnown && Number(counts.mdfc)) {
+        spells.sub = plural(Number(counts.mdfc), 'MDFC');
+        spells.subTitle = 'Modal double-faced cards: a spell on the front, a land on the back. '
+          + 'Counted here rather than as lands, which is what your deck site does too.';
       }
       parts.push(spells);
       // The one sub-number a deckbuilder acts on, and only when both halves of it are

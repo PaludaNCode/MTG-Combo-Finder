@@ -229,10 +229,10 @@ test('fixture: the land lists come through as their own fields', () => {
   assert.deepStrictEqual(published.basicLands, ['Island']);
   // Not a subset of the lands but the complement of them: a card whose front face is
   // something you cast and whose back is a land is published here and nowhere else.
-  assert.deepStrictEqual(published.landBacks, ['Bala Ged Recovery // Bala Ged Sanctuary']);
+  assert.deepStrictEqual(published.mdfc, ['Bala Ged Recovery // Bala Ged Sanctuary']);
   assert.ok(!published.lands.includes('Bala Ged Recovery // Bala Ged Sanctuary'),
-    'a land back is not a land — counting it as one would put the number above what a deck site shows');
-  assert.match(log, /2 lands \(1 basic\), 1 with a land back/);
+    'an MDFC is not a land — counting it as one would put the number above what a deck site shows');
+  assert.match(log, /2 lands \(1 basic\), 1 MDFC/);
 });
 
 test('fixture: a result missing from the tier inventory is reported, not hidden', () => {

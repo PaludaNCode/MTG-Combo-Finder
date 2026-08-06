@@ -129,7 +129,7 @@
     container.appendChild(box);
   }
 
-  // "Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)" — what the list
+  // "Deck  98 cards · 62 spells (3 MDFCs) · 36 lands (16 basic · 20 nonbasic)" — what the list
   // in the box is, before anything about what is in it. Every decision about which of
   // those numbers can be said is DeckView's; this walks what it was handed.
   function renderDeckCounts(container, counts) {
@@ -150,7 +150,15 @@
       const [count, ...rest] = part.text.split(' ');
       span.appendChild(el('b', null, count));
       span.appendChild(document.createTextNode(' ' + rest.join(' ')));
-      if (part.sub) span.appendChild(el('span', 'deck-sub', ' (' + part.sub + ')'));
+      if (part.sub) {
+        const sub = el('span', 'deck-sub', ' (' + part.sub + ')');
+        // Only the MDFC aside carries one: it is the page's one acronym, and a reader who
+        // does not know the word has nowhere else on the page to find out. A title and
+        // not <abbr>, because the parentheses and the count are part of what is being
+        // explained and marking up the four letters alone would explain less.
+        if (part.subTitle) sub.title = part.subTitle;
+        span.appendChild(sub);
+      }
       line.appendChild(span);
     });
     container.appendChild(line);

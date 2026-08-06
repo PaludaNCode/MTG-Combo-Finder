@@ -3252,7 +3252,7 @@ function captionDrift(notes) {
       .concat(unread ? [`${unread} cards unread`] : []);
     // In DOM order, which is the order they are read in: the aside on the spells, then
     // the one on the lands.
-    const wantSubs = (v.deck === 'misspelled' ? ['1 with a land back'] : []).concat('10 basic');
+    const wantSubs = (v.deck === 'misspelled' ? ['1 MDFC'] : []).concat('10 basic');
     if (!strip.shown) {
       problems.push('no deck-counts strip after a search');
     } else {
@@ -3261,7 +3261,7 @@ function captionDrift(notes) {
         problems.push(`the strip reads ${JSON.stringify(strip.parts)}, expected ${JSON.stringify(want)}`);
       }
       // All ten lands are Islands, so there is nothing to say about nonbasics -- and the
-      // aside must not invent "0 nonbasic" to say it with. The land back is an aside on
+      // aside must not invent "0 nonbasic" to say it with. The MDFC count is an aside on
       // the *spells*, because that is where such a card is counted.
       if (JSON.stringify(strip.subs) !== JSON.stringify(wantSubs)) {
         problems.push(`the asides read ${JSON.stringify(strip.subs)}, expected ${JSON.stringify(wantSubs)}`);

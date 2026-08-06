@@ -352,7 +352,7 @@ function readFixture(file) {
       banned: (doc.banned || []).slice().sort((a, b) => a.localeCompare(b)),
       lands: (doc.lands || []).slice().sort((a, b) => a.localeCompare(b)),
       basicLands: (doc.basicLands || []).slice().sort((a, b) => a.localeCompare(b)),
-      landBacks: (doc.landBacks || []).slice().sort((a, b) => a.localeCompare(b)),
+      mdfc: (doc.mdfc || []).slice().sort((a, b) => a.localeCompare(b)),
     },
   };
 }
@@ -392,12 +392,16 @@ async function fetchCardIdentities() {
   // because there are 13 of them, 204 bytes: Scryfall types the five, Wastes, the six
   // Snow-Covered printings, and one un-card.
   const basicLands = [];
-  // The cards that are a land on the *back* only -- Agadeem's Awakening, Bala Ged
-  // Recovery. They are counted as spells, because the front face is what you cast and
-  // because that is what Moxfield and Archidekt show for the same list, but a deck runs
-  // them partly as lands and a land count that says nothing about them is answering a
-  // slightly different question than the one being asked. 82 names, 1.7 KB gzipped.
-  const landBacks = [];
+  // The modal double-faced cards: a land on the *back* only -- Agadeem's Awakening,
+  // Bala Ged Recovery. They are counted as spells, because the front face is what you
+  // cast and because that is what Moxfield and Archidekt show for the same list, but a
+  // deck runs them partly as lands and a land count that says nothing about them is
+  // answering a slightly different question than the one being asked. 82 names,
+  // 1.7 KB gzipped.
+  //
+  // Named `mdfc` after what a deckbuilder calls them, which is also the word the page
+  // prints -- one name from the bulk file to the strip.
+  const mdfc = [];
   let cards = 0;
   const collect = (card) => {
     cards += 1;
@@ -428,7 +432,7 @@ async function fetchCardIdentities() {
       // so the word is not always in front of "Land".
       if (/\bBasic\b/.test(front)) basicLands.push(card.name);
     } else if (faces.slice(1).some((face) => /\bLand\b/.test(face))) {
-      landBacks.push(card.name);
+      mdfc.push(card.name);
     }
   };
 
@@ -443,14 +447,14 @@ async function fetchCardIdentities() {
   }
 
   console.log(`  read ${cards} cards, ${Object.keys(identities).length} with a colour identity, `
-    + `${lands.length} lands (${basicLands.length} basic), ${landBacks.length} with a land back`);
+    + `${lands.length} lands (${basicLands.length} basic), ${mdfc.length} MDFC`);
   return {
     identities,
     gameChangers: gameChangers.sort((a, b) => a.localeCompare(b)),
     banned: banned.sort((a, b) => a.localeCompare(b)),
     lands: lands.sort((a, b) => a.localeCompare(b)),
     basicLands: basicLands.sort((a, b) => a.localeCompare(b)),
-    landBacks: landBacks.sort((a, b) => a.localeCompare(b)),
+    mdfc: mdfc.sort((a, b) => a.localeCompare(b)),
   };
 }
 
@@ -845,7 +849,7 @@ async function main() {
   if (STEPS_DIR) steps.report(combos.length);
 
   const {
-    identities: cardIdentity, gameChangers, banned, lands, basicLands, landBacks,
+    identities: cardIdentity, gameChangers, banned, lands, basicLands, mdfc,
   } = fixture
     ? fixture.cardData
     : await fetchCardIdentities();
@@ -910,10 +914,10 @@ async function main() {
     // "0 basic", and only one of those is a number worth printing — so the page needs
     // to be able to tell them apart. 13 names.
     basicLands,
-    // The spells with a land on the back. Not a subset of `lands` — the opposite: these
-    // are counted as spells, and this is what lets the strip say so rather than leave a
+    // The modal double-faced cards. Not a subset of `lands` — the opposite: these are
+    // counted as spells, and this is what lets the strip say so rather than leave a
     // reader wondering why their 36 lands are not the 39 their deck site shows.
-    landBacks,
+    mdfc,
     templates,
     // The 29 templates Spellbook gives no Scryfall query for, by name only.
     // There is no card list to match against and there never will be, so these
@@ -940,7 +944,7 @@ async function main() {
     + `${resolvedCount} templates over ${Object.keys(templateCards).length} cards, `
     + `${gameChangers.length} Game Changers, ${banned.length} banned, `
     + `${lands.length} lands (${basicLands.length} basic), `
-    + `${landBacks.length} with a land back, ${mb} MB`);
+    + `${mdfc.length} MDFC, ${mb} MB`);
   console.log(`  interned ${names.length} card names and ${results.length} results`);
   const unsolved = cardIds.filter((id) => id === null).length;
   console.log(`  derived ${names.length - unsolved} card ids; ${keptIds} combo(s) kept a literal id`

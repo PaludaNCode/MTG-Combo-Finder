@@ -31,10 +31,11 @@
     "  (last)       no `uses` at all, which compact() drops entirely — so the count",
     "               out is one lower than the count in",
     "",
-    "`lands`, `basicLands` and `landBacks` are Scryfall's half of the fixture, like",
+    "`lands`, `basicLands` and `mdfc` are Scryfall's half of the fixture, like",
     "`cardIdentity`: names over every card rather than only the ones in combos.",
-    "Snow-Covered Island is a land and not a basic, and Bala Ged Recovery is a spell",
-    "with a land on the back — three lists because no one of them implies the others."
+    "Snow-Covered Island is a land and not a basic, and Bala Ged Recovery is an MDFC —",
+    "a spell on the front, a land on the back. Three lists because no one of them",
+    "implies the others."
   ],
 
   "variants": [
@@ -147,5 +148,5 @@
   "banned": ["Scurry Oak"],
   "lands": ["Island", "Snow-Covered Island"],
   "basicLands": ["Island"],
-  "landBacks": ["Bala Ged Recovery // Bala Ged Sanctuary"]
+  "mdfc": ["Bala Ged Recovery // Bala Ged Sanctuary"]
 }
