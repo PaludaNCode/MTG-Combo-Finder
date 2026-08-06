@@ -1036,9 +1036,13 @@ the line count under the word "cards" until this feature disagreed with it.
 16.5 MB that `prune-artifact.js` deletes out of the artifact, because it is the research cache and not
 page data. So `fetch-combos.js` reads `type_line` in the pass it already makes over Scryfall's
 oracle-cards bulk file for colour identity, Game Changers and the ban list, and publishes three name
-lists: **1,191 lands, 13 basics and 82 MDFCs**, of 34,422 cards — **10.8 KB
-gzipped against a 1.72 MB payload** (6 Aug 2026). A boolean per card is the whole question the page asks,
-and every card's type line would have been 282 KB for it.
+lists: **1,191 lands, 13 basics and 82 MDFCs**, of 34,422 cards — **10.8 KB gzipped**, against the
+**1.25 MB the whole payload gzips to**, so about 0.9% (6 Aug 2026, off the publish gate's own line:
+`node tools/check-snapshot.js` prints the wire size against its ceiling). A boolean per card is the whole
+question the page asks, and every card's type line would have been 282 KB for it.
+
+The counts are the live ones, not this repository's cache: the first refresh to carry the lists reported
+`lands: 0 → 1,191`, `basic lands: 0 → 13`, `MDFCs: 0 → 82` against Scryfall's oracle bulk.
 
 **Three claims, three ways to be silent rather than wrong**, all of them the rule
 [the unrecognized-cards box](#telling-the-reader-which-cards-were-not-recognised) already follows:

@@ -49,8 +49,10 @@ give:
   `(16 basic · 20 nonbasic)` aside needs.
 - Plus the **82 MDFCs** — a spell on the front, a land on the back — 3.4 KB, 1.7 KB gzipped,
   for the `62 spells (3 MDFCs)` aside. Not a subset of the lands but the complement of them.
-- The payload is 1.72 MB on the wire, so the three together are **+0.6%**, and they are read by
-  `search-worker.js`, not the main thread.
+- The whole payload gzips to **1.25 MB** on the wire (the publish gate's own figure, against its
+  1.53 MB ceiling), so the three lists are about **+0.9%**, and they are read by `search-worker.js`
+  rather than the main thread. An earlier draft of this file said 1.72 MB and took it from a table
+  further up the README rather than measuring — `check-snapshot.js` is the live answer.
 
 A `lands` array is the cheap shape and the right one: the page needs one boolean per card, not a
 type line. Shipping full type lines for every card is 282 KB gzipped — **31× the cost** for a
