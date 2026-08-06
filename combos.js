@@ -689,6 +689,103 @@
     return true;
   }
 
+  // ---- which combos are worth looking at at all ------------------------------
+  //
+  // Both walks of the database — matchDeck() and standInRows() — used to visit all
+  // 103,891 combos and call nameKey() on every card as they went: about 343,000
+  // `trim().toLowerCase()` allocations per search, over a dataset that is parsed
+  // once per worker and never mutated afterwards. The keys are the same every time.
+  //
+  // So they are computed once, into card key -> the positions of the combos naming
+  // it. Kept on the combos array in a WeakMap, exactly as identityIndex() is kept on
+  // cardIdentity and for the same reason: the tests use several datasets and each
+  // gets its own, and a dataset that goes away takes its index with it.
+  //
+  // **The candidate set is not small, and a design that assumes it is, is designed
+  // against the wrong number.** 27,018 of 103,891 combos name at least one card of
+  // the standing deck — 26%, not a few thousand. What makes this worth doing is that
+  // a posting is an integer with nameKey() already applied, not that there is little
+  // to walk: measured 7.0x on the standing deck and 15.9x on the tuning deck,
+  // identical output on both. Issue #181 has the rest of the measurements.
+  const comboIndexes = new WeakMap();
+
+  function comboIndex(combos) {
+    const held = comboIndexes.get(combos);
+    if (held) return held;
+
+    const byCard = new Map();
+    // A combo naming one card, or none, can be one card short while naming nothing
+    // the deck holds — so the index can never reach it and it has to be carried
+    // separately. There are 7 in the published database, which is why this is a
+    // list rather than a special case: cheap to keep, invisible to get wrong.
+    const loose = [];
+    // `for…of` and a counter rather than forEach, so this is one pass over anything
+    // iterable and test/unofficial.test.js can hand it a list that counts its own
+    // passes. That test is the only reason the shape matters, and it is a good
+    // reason: "the database is walked once" is the property this whole index exists
+    // to provide, and it is not observable from the results.
+    let at = -1;
+    for (const combo of combos) {
+      at += 1;
+      const cards = combo.c || [];
+      if (cards.length <= 1) loose.push(at);
+      for (const name of cards) {
+        const key = nameKey(name);
+        let list = byCard.get(key);
+        if (!list) byCard.set(key, (list = []));
+        // **One posting per occurrence, not per distinct card**, and the difference
+        // is the whole correctness argument. The walk this replaced counted a
+        // *name* it could not find, so a combo naming the same card twice and
+        // scoring it once would come back one short when the old code called it
+        // complete. Pushing every occurrence makes `cards.length - held` exactly
+        // the count that loop produced, for any data, including data no published
+        // combo has ever contained. A guard against the duplicate would have been
+        // the cheaper-looking answer and a silent behaviour change.
+        list.push(at);
+      }
+    }
+
+    const index = { byCard, loose };
+    comboIndexes.set(combos, index);
+    return index;
+  }
+
+  // The combos naming at least one of `keys`, as positions **in database order**,
+  // with how many of `keys` each of them names.
+  //
+  // The sort is not an aesthetic choice and costs about half the time this saves.
+  // Candidates come out of the index grouped by the card that found them, and both
+  // callers hand their results to a stable sort — bySizeThenPopularity, byPopularity,
+  // and standInRows' first-one-wins on `best`. 42% of published combos carry no
+  // `pop` at all, so ties are the common case rather than the edge one, and an
+  // unsorted walk reorders the page while returning exactly the same combos.
+  function candidateCombos(combos, keys, includeLoose) {
+    const index = comboIndex(combos);
+    // One byte per combo, thrown away at the end of the walk: ~100 KB, against a Map
+    // that would allocate an entry per candidate. Every combo names at most 10 cards,
+    // so nothing here can reach 255.
+    const held = new Uint8Array(combos.length);
+    const order = [];
+    for (const key of keys) {
+      const list = index.byCard.get(key);
+      if (!list) continue;
+      for (const at of list) {
+        if (held[at] === 0) order.push(at);
+        held[at] += 1;
+      }
+    }
+    if (includeLoose) for (const at of index.loose) if (held[at] === 0) order.push(at);
+    order.sort((a, b) => a - b);
+    return { order, held };
+  }
+
+  // How much of the last matchDeck() the index saved, for the test that would
+  // otherwise have nothing to fail on: a walk that quietly went back to visiting
+  // every combo returns the same answers, just slower, and no assertion about
+  // *results* can tell the difference. A duration assertion would be a flake on CI,
+  // so the property pinned is the count. → test/scan-index.test.js.
+  let scan = { examined: 0, total: 0 };
+
   // ---- template slots -------------------------------------------------------
   //
   // Some combos have a slot naming a property instead of a card — "a Persist
@@ -818,15 +915,21 @@
     const almost = [];
     const almostByAddingColors = [];
 
-    for (const combo of combos) {
+    // Only the combos naming a card this deck holds, plus the handful that name at
+    // most one card at all. A combo missing two or more of its cards cannot become
+    // anything this function returns, and one missing at most one names at least
+    // n-1 of the deck's cards — so for everything above a single card, "names
+    // nothing you play" and "is at least two cards away" are the same statement.
+    const { order, held } = candidateCombos(combos, deckNames, true);
+    scan = { examined: order.length, total: combos.length };
+
+    for (const at of order) {
+      const combo = combos[at];
       const cards = combo.c || [];
-      let missing = 0;
-      for (const name of cards) {
-        if (!deckNames.has(nameKey(name))) {
-          missing += 1;
-          if (missing > 1) break;
-        }
-      }
+      // Exact rather than capped at 2, because the index counted it: `held` is how
+      // many of this combo's cards the deck has, and they are distinct by
+      // construction — see the adjacency guard in comboIndex().
+      const missing = cards.length - held[at];
       if (missing > 1) continue;
 
       // A template slot has no one card to suggest — thousands of cards fill
@@ -1026,10 +1129,19 @@
     if (!rules.length) return [];
 
     const best = new Map();
-    // The one pass. Written as a loop that gives up on the first disqualifying
-    // card rather than as map/filter/every: almost every combo fails on its first
-    // or second name, and the arrays those would allocate are the whole cost.
-    for (const combo of combos) {
+    // The one pass, and now only over the combos that name one of the cards being
+    // swapped out. That is exactly the set the old walk kept: a combo naming no
+    // source card leaves `candidates` null below and is skipped, so restricting the
+    // walk to the index's answer drops nothing — it just stops asking 100,000
+    // combos a question three rules already know the answer to. No `loose` here:
+    // a rule with no source card in a combo has nothing to stand in for.
+    //
+    // Written as a loop that gives up on the first disqualifying card rather than
+    // as map/filter/every: almost every combo fails on its first or second name,
+    // and the arrays those would allocate are the whole cost.
+    const { order } = candidateCombos(combos, bySource.keys(), false);
+    for (const at of order) {
+      const combo = combos[at];
       const names = combo.c || [];
       let candidates = null; // rules this combo could serve, found on the way past
       let missing = null;    // cards the deck does not have, source cards aside
@@ -1545,6 +1657,7 @@
     groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn,
     variantSignature,
     deckTemplateIndex, fillTemplates, resolveSlots,
+    candidateCombos, lastScan: () => scan,
     comboSize, sizeBreakdown, bracketCheck, legalityCheck,
     decode, rebuildId,
   };
