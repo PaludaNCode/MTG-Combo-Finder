@@ -221,7 +221,13 @@ function captionBoxes(win, doc) {
   }).filter(Boolean);
 }
 
+// The node's OWN display is checked as well as its children's. Without that, asking a
+// hidden element for its visible text returns all of it — which is how the deck-counts
+// label read "Deck" at a width that hides it, in a check written specifically to catch
+// that. The recursion always had the test; the entry point did not.
 function visibleTextIn(win, node) {
+  if (!node) return '';
+  if (node.nodeType === 1 && win.getComputedStyle(node).display === 'none') return '';
   return [...node.childNodes].map((n) => {
     if (n.nodeType === 3) return n.textContent;
     if (n.nodeType !== 1) return '';
@@ -913,7 +919,9 @@ function measure(win, doc) {
     const identityLine = doc.querySelector('#identity .identity-line');
     return {
       shown: !!line,
-      label: line ? (line.querySelector('.deck-counts-label') || {}).textContent || '' : '',
+      // What a reader sees, so a piece the ladder has hidden reads as absent rather than
+      // as present-but-invisible. The label is gone below 37rem of column.
+      label: line ? visibleText(line.querySelector('.deck-counts-label')).trim() : '',
       // Each number with its noun, so "10 lands" is one reading rather than two -- and
       // without the aside, which is read separately below. Taken off the child nodes
       // rather than off the element, because the aside is *inside* the land count and
@@ -921,6 +929,10 @@ function measure(win, doc) {
       parts: [...doc.querySelectorAll('#deck-counts .deck-count')].map((e) => [...e.childNodes]
         .filter((n) => !(n.nodeType === 1 && n.classList.contains('deck-sub')))
         .map((n) => n.textContent).join('').trim()),
+      // Which of the four numbers each part is, read off the class the renderer sets --
+      // the stylesheet names them the same way, so a check can too.
+      keys: [...doc.querySelectorAll('#deck-counts .deck-count')]
+        .map((e) => (String(e.className).match(/is-(cards|spells|lands|unread)/) || [])[1] || '?'),
       // The parentheses are in the DOM rather than drawn by CSS, so a screen reader gets
       // them too; they are not part of the claim, so they come off here.
       //
@@ -929,8 +941,17 @@ function measure(win, doc) {
       // which is how the first draft of this line reported "(10 basic)" unchanged while
       // looking exactly like a strip that worked. CLAUDE.md, "Tests, and what a tool says
       // about itself".
+      //
+      // visibleText, because half of the land aside is hidden below 31rem of column and
+      // textContent would report a page that says more than it shows.
       subs: [...doc.querySelectorAll('#deck-counts .deck-sub')]
-        .map((e) => e.textContent.trim().split('(').join('').split(')').join('')),
+        // .split(' ') and not a regex: a backslash-s class inside this template literal
+        // arrives as a plain s and turns "10 basic" into "10 ba ic". Same trap as the
+        // parentheses two lines up, met twice in one expression -- and note there is no
+        // backtick in this comment either, because one would end the literal.
+        .map((e) => visibleText(e).trim().split('(').join('').split(')').join('')
+          .split(' ').filter(Boolean).join(' '))
+        .filter(Boolean),
       separators: [...doc.querySelectorAll('#deck-counts .deck-sep')]
         .filter((e) => win.getComputedStyle(e).display !== 'none').length,
       // One line at every width the page is checked at, or the design is not the design.
@@ -3250,45 +3271,62 @@ function captionDrift(notes) {
     const spells = 7 + (extra - unread);
     const want = [`${17 + extra} cards`, `${spells} spells`, '10 lands']
       .concat(unread ? [`${unread} cards unread`] : []);
-    // In DOM order, which is the order they are read in: the aside on the spells, then
-    // the one on the lands.
-    const wantSubs = (v.deck === 'misspelled' ? ['1 MDFC'] : []).concat('10 basic');
+    // THE LADDER, checked the same way round as the CSS writes it. The strip must be
+    // ONE LINE at every width, so instead of wrapping it shows less as the column
+    // narrows: the derivable half of the land aside goes first, then the separators,
+    // then the label. Thresholds are on the strip's own column -- 25rem/31rem/37rem,
+    // which is 400/496/592px -- and they were measured by rendering a real deck into
+    // the real column from 320px to 1920px, not chosen.
+    //
+    // In DOM order: the aside on the spells, then the one on the lands.
+    const col = strip.column;
+    const wantSubs = (v.deck === 'misspelled' ? ['1 MDFC'] : [])
+      // All ten lands are Islands, so there is nothing to say about nonbasics -- and the
+      // aside must not invent "0 nonbasic" to say it with. That also means this fixture
+      // cannot see the 31rem step, which is what the width sweep in the header of the
+      // rules in style.css is for.
+      .concat(col >= 400 ? ['10 basic'] : []);
+    const wantLabel = col >= 592 ? 'Deck' : '';
+    const wantSeps = col >= 496 ? want.length - 1 : 0;
+    const wantKeys = ['cards', 'spells', 'lands'].concat(unread ? ['unread'] : []);
     if (!strip.shown) {
       problems.push('no deck-counts strip after a search');
     } else {
-      if (strip.label !== 'Deck') problems.push(`the strip is labelled "${strip.label}"`);
+      if (strip.label !== wantLabel) {
+        problems.push(`the label reads ${JSON.stringify(strip.label)} in a ${col}px column, `
+          + `expected ${JSON.stringify(wantLabel)}`);
+      }
       if (JSON.stringify(strip.parts) !== JSON.stringify(want)) {
         problems.push(`the strip reads ${JSON.stringify(strip.parts)}, expected ${JSON.stringify(want)}`);
       }
-      // All ten lands are Islands, so there is nothing to say about nonbasics -- and the
-      // aside must not invent "0 nonbasic" to say it with. The MDFC count is an aside on
-      // the *spells*, because that is where such a card is counted.
-      if (JSON.stringify(strip.subs) !== JSON.stringify(wantSubs)) {
-        problems.push(`the asides read ${JSON.stringify(strip.subs)}, expected ${JSON.stringify(wantSubs)}`);
+      // Each number says which one it is, because the stylesheet hides them by name: a
+      // rule that counted positions would hide the wrong thing the day a number moved.
+      if (JSON.stringify(strip.keys) !== JSON.stringify(wantKeys)) {
+        problems.push(`the strip's parts are keyed ${JSON.stringify(strip.keys)}, expected ${JSON.stringify(wantKeys)}`);
       }
-      // One line on anything but a phone, and never more than two.
+      // The MDFC count is an aside on the *spells*, because that is where such a card is
+      // counted, and it never drops -- it is the one number here nothing else implies.
+      if (JSON.stringify(strip.subs) !== JSON.stringify(wantSubs)) {
+        problems.push(`the asides read ${JSON.stringify(strip.subs)} in a ${col}px column, `
+          + `expected ${JSON.stringify(wantSubs)}`);
+      }
+      // ONE LINE, EVERYWHERE — with one measured exception. The ladder exists so that a
+      // 320px phone gets one line too, so a second line means a threshold is wrong rather
+      // than that the column is small. This replaces a rule that allowed two lines under
+      // 416px, which is what the page did until the ladder existed.
       //
-      // The narrow case is measured rather than assumed, and it is measured on a real
-      // deck rather than on this fixture: the tuning deck renders "98 cards · 62 spells ·
-      // 36 lands (16 basic · 20 nonbasic)", which takes two lines in the 358px column a
-      // 390px phone leaves. The fixture's own numbers are 17/7/10 and fit on one, so this
-      // check would pass a rule that only works for short decks -- which is why the limit
-      // is written for what a real deck does at each width and not for what this deck
-      // happens to do.
-      //
-      // Two lines rather than dropping the aside, which is the other way out: it is the
-      // one number here a deckbuilder acts on, and hiding it on a phone would leave the
-      // phone with a strip that cannot say why 36 lands is the right 36.
-      const maxLines = strip.column < 416 ? 2 : 1;
+      // The exception is the four-number case: a deck with an unrecognized card in it
+      // shows an unread count as well, and four numbers do not fit 371px however they are
+      // worded — "2 unread" wraps at 320px, and at 390px as soon as the counts run to
+      // three digits. Dropping it instead would remove the one number that explains why
+      // the other three do not add up, and the box directly above names those cards.
+      const maxLines = unread && col < 400 ? 2 : 1;
       if (strip.lines > maxLines) {
-        problems.push(`the strip took ${strip.lines} lines in ${strip.column}px, expected ${maxLines}`);
+        problems.push(`the strip took ${strip.lines} lines in a ${col}px column, expected ${maxLines}`);
       }
       if (!strip.aboveIdentity) problems.push('the deck-counts strip is below the colour identity');
-      // The separators answer the strip's own column and not the viewport -- 26rem, which
-      // is 416px -- because a wrapped line would otherwise end on a middot.
-      const wantSeps = strip.column < 416 ? 0 : want.length - 1;
       if (strip.separators !== wantSeps) {
-        problems.push(`${strip.separators} separator(s) drawn in a ${strip.column}px column, expected ${wantSeps}`);
+        problems.push(`${strip.separators} separator(s) drawn in a ${col}px column, expected ${wantSeps}`);
       }
     }
 

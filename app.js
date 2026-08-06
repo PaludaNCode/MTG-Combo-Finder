@@ -144,16 +144,28 @@
       // container query once the strip is narrow enough to wrap — a wrapped line
       // otherwise ends on the separator. See style.css.
       if (at) line.appendChild(el('span', 'deck-sep', '·'));
-      const span = el('span', 'deck-count' + (part.quiet ? ' is-quiet' : ''));
+      // `is-<key>` so the stylesheet can name one number rather than count positions.
+      // The land aside is the first thing a narrow column drops, and `.deck-count:last-child
+      // .deck-sub` would have meant something different the day an unread count appeared.
+      const span = el('span', 'deck-count is-' + part.key + (part.quiet ? ' is-quiet' : ''));
       // The number in its own element so it can carry the weight without bolding the
       // noun with it: "**36** lands" reads as a figure, "**36 lands**" as a heading.
       const [count, ...rest] = part.text.split(' ');
       span.appendChild(el('b', null, count));
       span.appendChild(document.createTextNode(' ' + rest.join(' ')));
       if (part.sub) {
-        const sub = el('span', 'deck-sub', ' (' + part.sub + ')');
-        // Only the MDFC aside carries one: it is the page's one acronym, and a reader who
-        // does not know the word has nowhere else on the page to find out. A title and
+        // The brackets are in the DOM, not drawn by CSS, so a screen reader gets them —
+        // and they sit outside the two halves, so hiding the second half narrow leaves
+        // "(14 basic)" rather than "(14 basic".
+        const sub = el('span', 'deck-sub');
+        sub.appendChild(document.createTextNode(' ('));
+        sub.appendChild(el('span', 'deck-sub-main', part.sub));
+        // The half a phone does without: nonbasic is the land count minus the basics, so
+        // it is the one number here a reader can recover. See the ladder in style.css.
+        if (part.subExtra) sub.appendChild(el('span', 'deck-sub-extra', ' · ' + part.subExtra));
+        sub.appendChild(document.createTextNode(')'));
+        // Only the MDFC aside carries a title: it is the page's one acronym, and a reader
+        // who does not know the word has nowhere else on the page to find out. A title and
         // not <abbr>, because the parentheses and the count are part of what is being
         // explained and marking up the four letters alone would explain less.
         if (part.subTitle) sub.title = part.subTitle;
