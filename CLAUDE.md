@@ -54,10 +54,19 @@ npx serve .                                       # any static file server works
   the ruleset requires survived the split. Its `if: always()` is load-bearing: without it a failed
   dependency **skips** it and GitHub reads a skipped required check as neutral, not failed →
   `test/workflow-pins.test.js`.
-- **CI does not run on push to `main`, and that rests on "Require branches to be up to date".** That
+- **CI runs on a pull request AND on a push to any branch but `main`.** The push half is not
+  belt-and-braces testing, it is the release path: **a required check is only credited from the PR's own
+  event, so one dropped webhook strands a pull request that nothing is wrong with.** #187 sat unmergeable
+  for two hours with `checks`, `static` and `browser` green on its exact head SHA, and neither a
+  `workflow_dispatch` run nor closing and reopening the PR produced anything the ruleset would look at —
+  both tried, both refused with `Required status check "checks" is expected`. The cost is a duplicate run
+  per push while a PR is open, ~84s each → `test/workflow-pins.test.js`, which also pins that `main`
+  stays excluded and that the pair is **not** deduplicated with `cancel-in-progress`: a cancelled
+  `checks` is what blocked #187 in the first place.
+- **`main` itself is still excluded, and that rests on "Require branches to be up to date".** That
   setting is what makes the pull-request run a statement about the tree that lands — `checkout` on a
   `pull_request` event takes the *merge*, identical to the branch tip in 36 of the last 39 merges. **Turn
-  it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
+  it off and `main` belongs in that trigger too.** README § *What the release pipeline costs*.
 - **The Chromium cache is warmed on `main` by `warm-cache.yml`, and that is the only place it
   works.** A cache written on a branch is restorable by that branch alone and is never visible to a
   sibling — measured: a second run of the same branch hits (install-deps only, 14s),

@@ -136,8 +136,30 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: .
+      # **`timeout` is raised from the action's ten-minute default, and that default is
+      # what burned eleven commits on 6 Aug 2026.** Every failure that day read
+      # `Current status: deployment_in_progress` → `Timeout reached, aborting!` →
+      # `Canceled deployment with ID <sha>`, which is not a deploy that failed: it is a
+      # deploy GitHub was still working on when the action gave up waiting. And the
+      # cancel is permanent — the Pages deployment id *is* the commit SHA, so every
+      # later attempt on that SHA dies in about five seconds with `Deployment
+      # cancelled`. Ten minutes of patience therefore costs a commit that can never be
+      # deployed again, and on a repository where merging to main *is* the release,
+      # that means an unreleasable release.
+      #
+      # Thirty minutes because the queue was minutes-slow rather than broken — the one
+      # data point we have is a *dry run* of the data job queueing 11 minutes the same
+      # evening, and a CI job that was cancelled and then ran fine 20 minutes later. A
+      # deploy that genuinely hangs now blocks the job for half an hour instead of ten
+      # minutes, which is the cost side, and it is much the cheaper of the two: a slow
+      # job wastes runner time, a cancelled deployment wastes the commit.
+      #
+      # This does not make the queue faster and is not a fix for the outage. It stops
+      # a slow queue from being converted into a permanent failure.
       - id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 1800000
 
       # Did the CDN actually serve it?
       #

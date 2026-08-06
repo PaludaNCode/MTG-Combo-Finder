@@ -22,6 +22,27 @@ on:
   # `main` ruleset, which turns those 36 into 39. **If that setting is ever turned off,
   # this trigger belongs back.**
   pull_request:
+  # **And on a push to any branch but `main`, which is here to make the required check
+  # independent of one webhook arriving.** #187 sat unmergeable for two hours because
+  # GitHub delivered no `pull_request` event: nothing on the branch was wrong, the
+  # suite was green on the exact SHA from a dispatch, and the ruleset went on saying
+  # `Required status check "checks" is expected` because it only credits a check from
+  # the PR's own event. A dispatch does not count and reopening the PR produces no
+  # event at all — both tried.
+  #
+  # A push is a second, independent chance at the same check on the same commit. It is
+  # not free: while a PR is open, a push fires this twice, so a branch pays two runs a
+  # push against the ~84s each. That is the cost of not having a release path that one
+  # dropped webhook can stop.
+  #
+  # `branches-ignore: [main]` keeps the deliberate exclusion of push-to-main intact —
+  # see the note above, and README § *What the release pipeline costs*. **No
+  # `concurrency` with `cancel-in-progress` to deduplicate the pair**: a cancelled
+  # `checks` is exactly what blocked #187, and a rule that cancels the PR-event run to
+  # save a minute would recreate the outage by hand.
+  push:
+    branches-ignore:
+      - main
   # So the suite can be re-run by hand. **It does not unblock a pull request**, and that
   # is worth knowing before reaching for it: a run dispatched on the branch produces a
   # check named `checks` on the head commit, green, and the ruleset goes on reporting

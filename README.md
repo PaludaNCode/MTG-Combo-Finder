@@ -1730,6 +1730,23 @@ synchronously, so every line is latency on every session.
 PR opened → live is **~1.9m** median, from **2.9m**: CI 84s, auto-merge immediate, merge → live 25s.
 Queue time is 0s everywhere, so none of it is contention.
 
+**That figure assumes GitHub delivers the `pull_request` event, and on 6 Aug 2026 it did not.** PR #187
+sat unmergeable for two hours: the suite was green on its exact head SHA, and the ruleset went on
+answering `Required status check "checks" is expected`, because a required check is only credited from
+the PR's own event — not from a `workflow_dispatch`, and not from reopening the PR. Both were tried.
+CI now also runs **on a push to any branch but `main`**, which gives the same check a second, independent
+chance to exist on the same commit. It costs a duplicate run per push while a PR is open; a release path
+that one webhook can stop costs more. The pair is deliberately *not* deduplicated with
+`cancel-in-progress`, since a cancelled `checks` is what blocked #187 to begin with.
+
+**`deploy-pages` waits 30 minutes rather than its default 10, for the same day's other failure.** Eleven
+deploys died with `deployment_in_progress` → `Timeout reached, aborting!` → `Canceled deployment with ID
+<sha>`. That is not a deploy that failed; it is one GitHub was still working on when the action stopped
+waiting — and the cancel is permanent, because the Pages deployment id *is* the commit SHA and every
+later attempt on it fails in seconds with `Deployment cancelled`. A slow queue was being converted into
+an unreleasable commit. Waiting longer costs runner minutes on a genuinely hung deploy; giving up early
+costs the release.
+
 **Measure CI from the job timestamps, not the run's.** A run's `updated_at` moves again after its jobs
 finish — check-suite finalisation, the auto-merge — so the run-level figure read a steady 121s for three
 PRs whose jobs took 78s, 84s and 87s. Identical numbers across different work is the tell.
