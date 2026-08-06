@@ -972,9 +972,16 @@ function measure(win, doc) {
       banned: cardsIn('#legality .is-banned'),
       bannedClaim: (doc.querySelector('#legality .is-banned .legality-claim') || {}).textContent || '',
       offIdentity: cardsIn('#legality .is-off-identity'),
+      // The pips a card carries that its commander does not. Read as letters off the pip
+      // elements, because these are drawn now rather than written -- this same reader used
+      // to collect the text "{W}", which is what the page was wrongly printing.
       colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
-        .map((e) => e.textContent.trim()),
+        .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.textContent).join('')),
       identityClaim: (doc.querySelector('#legality .is-off-identity .legality-claim') || {}).textContent || '',
+      // The commander's own identity, inside that sentence, as pips rather than the
+      // braces it used to print.
+      identityClaimPips: [...doc.querySelectorAll('#legality .is-off-identity .legality-claim .pip')]
+        .map((pip) => pip.textContent).join(''),
       notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
       // Beside the bracket, which means under it and above the combos.
       belowBracket: (() => {
@@ -1600,6 +1607,8 @@ async function runLegality(vp) {
     const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
       .map((e) => e.textContent);
     const claim = (sel) => (doc.querySelector(sel + ' .legality-claim') || {}).textContent || '';
+    const claimPips = (sel) => [...doc.querySelectorAll(sel + ' .legality-claim .pip')]
+      .map((pip) => pip.textContent).join('');
     const bracket = doc.querySelector('#bracket .bracket-line');
     const firstPanel = doc.querySelector('#results .panel');
     return {
@@ -1613,8 +1622,9 @@ async function runLegality(vp) {
         bannedClaim: claim('#legality .is-banned'),
         offIdentity: cardsIn('#legality .is-off-identity'),
         colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
-          .map((e) => e.textContent.trim()),
+          .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.textContent).join('')),
         identityClaim: claim('#legality .is-off-identity'),
+        identityClaimPips: claimPips('#legality .is-off-identity'),
         notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
         // Beside the bracket: under that line, above the first panel of results.
         besideBracket: !!(box && bracket && firstPanel
@@ -2554,11 +2564,20 @@ function captionDrift(notes) {
           if (!legal.offIdentity.includes('Heliod, Sun-Crowned')) {
             wrong.push(`the off-identity card was not named: ${JSON.stringify(legal.offIdentity)}`);
           }
-          if (!legal.colours.includes('{W}')) {
-            wrong.push(`the offending colour was not shown: ${JSON.stringify(legal.colours)}`);
+          // Drawn as pips, both of them, like every other colour on this page. Asserted
+          // as the pips' own letters rather than as text: the sentence said "({U}{G})"
+          // in production and this check passed it, because it was written against the
+          // same braced string the page was printing.
+          if (!legal.colours.includes('W')) {
+            wrong.push(`the offending colour was not drawn: ${JSON.stringify(legal.colours)}`);
           }
-          if (!/\{U\}\{G\}/.test(legal.identityClaim)) {
-            wrong.push(`the commander's identity is not in the claim: "${legal.identityClaim}"`);
+          if (legal.identityClaimPips !== 'UG') {
+            wrong.push(`the commander's identity is not drawn in the claim: `
+              + `pips ${JSON.stringify(legal.identityClaimPips)}, text "${legal.identityClaim}"`);
+          }
+          // And the braces are gone from the words, which is the bug itself.
+          if (/[{}]/.test(legal.identityClaim)) {
+            wrong.push(`the claim still prints braces: "${legal.identityClaim}"`);
           }
           // Murderous Redcap is banned *and* off-identity. One card, one accusation,
           // and the graver one: two lines about the same card read as two problems.

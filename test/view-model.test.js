@@ -664,18 +664,25 @@ test('legalityProse: an off-identity card names the identity it is outside, in p
   const said = View.legalityProse(check({ offIdentity: [{ card: 'Heliod, Sun-Crowned', colours: 'W' }] }));
   // WUBRG is the printed order, so Simic reads {U}{G} — the same order the mana pips
   // and identityString() put it in.
-  assert.match(said.identitySentence, /^One card is outside your commander’s colour identity \(\{U\}\{G\}\):/);
-  assert.deepStrictEqual(said.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: '{W}' }]);
+  // The sentence stops at the bracket and the colours come back as letters, because
+  // app.js draws them as pips: a braced string here is a notation only this file would
+  // recognise, and printing it verbatim is exactly what the page used to do.
+  assert.equal(said.identitySentence, 'One card is outside your commander’s colour identity (');
+  assert.equal(said.identityColours, 'UG');
+  assert.equal(said.identitySentenceEnd, '):');
+  assert.deepStrictEqual(said.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: 'W' }]);
   assert.equal(said.banned.length, 0);
 });
 
-test('legalityProse: pips are in WUBRG order whatever order the colours arrive in', () => {
+// WUBRG, whichever order they arrive in — Magic prints them that way, and a page that
+// says BR where the cards say RB reads as a different claim to anyone who plays.
+test('legalityProse: colours come back in WUBRG order whatever order they arrive in', () => {
   const said = View.legalityProse(check({
-    allowed: ['U', 'G'],
+    allowed: ['G', 'U'],
     offIdentity: [{ card: 'Murderous Redcap', colours: 'RB' }],
   }));
-  assert.match(said.identitySentence, /\(\{U\}\{G\}\)/);
-  assert.equal(said.offIdentity[0].colours, '{B}{R}');
+  assert.equal(said.identityColours, 'UG');
+  assert.equal(said.offIdentity[0].colours, 'BR');
 });
 
 test('legalityProse: both findings are reported, and stay separate', () => {
@@ -757,7 +764,7 @@ test('legalityProse: a banned card is not also accused of its colours', () => {
     offIdentity: [{ card: 'Murderous Redcap', colours: 'BR' }, { card: 'Heliod, Sun-Crowned', colours: 'W' }],
   }));
   assert.deepStrictEqual(said.banned, ['Murderous Redcap']);
-  assert.deepStrictEqual(said.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: '{W}' }]);
+  assert.deepStrictEqual(said.offIdentity, [{ card: 'Heliod, Sun-Crowned', colours: 'W' }]);
   assert.match(said.identitySentence, /^One card is outside/, 'and the count follows the shorter list');
 });
 
