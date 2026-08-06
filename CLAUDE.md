@@ -362,6 +362,14 @@ loosely.
   precache list (`--worker sw.js`), so the shell cannot drift from what the pages ask for, and
   **`sw.js` is cache-first only for stamped URLs** since local work, `verify` and `test:ui` all
   serve unstamped. `verify-layout.js` builds its stamped fixture from the same `rewriteAssets()`.
+- **The artifact is pruned to what the site serves**, as the last step before the upload —
+  `tools/prune-artifact.js --apply`. `path: .` had been publishing the whole checkout: 17.5 MB of an
+  18.5 MB artifact against a site of 1.06 MB, `card-text.json` alone being 16.5 MB. **Not a speed
+  fix — `upload-pages-artifact` measured 2s and 3s inside jobs of 238s and 17s**, and saying otherwise
+  is how a correctness change gets reverted for not paying. What survives is **computed from what the
+  pages reference**, sharing `localAssets()` with the stamping, and the runtime-only files come from
+  `sw.js`'s `NOT_IN_THE_HTML` so there is one list rather than two. It runs last because it deletes
+  `tools/`. README § *The artifact carries the site and nothing else*.
 - **The footer says which build and when** — `Build <sha> · deployed <YYYY-MM-DD HH:MM:SS UTC>`,
   both pages, one step, one `grep -q` guard per marker. Anything measuring that line must
   substitute the **deployed** string: unstamped it is 20 characters shorter, so measuring what a
