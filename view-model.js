@@ -484,9 +484,15 @@
   // lets `node --test` reach it. Five letters in a fixed order is the cheapest thing
   // in the repository to keep in three places.
   const WUBRG_ORDER = ['W', 'U', 'B', 'R', 'G'];
-  const pips = (colours) => WUBRG_ORDER
+  // The letters a card or a command zone carries, in the order Magic prints them, so a
+  // Simic commander is UG and never GU.
+  //
+  // Letters and not "{U}{G}". This used to return the braced form and app.js printed it
+  // as text, so the one place on the page that talks about colours in a sentence was the
+  // one place that showed "{U}{B}{R}" instead of drawing the pips every other line draws.
+  // The braces were a notation for a renderer that never read them.
+  const colourLetters = (colours) => WUBRG_ORDER
     .filter((c) => String(colours || '').includes(c))
-    .map((c) => '{' + c + '}')
     .join('');
 
   // What to say about a decklist's legality, or null for nothing at all.
@@ -544,11 +550,17 @@
       bannedSentence: banned.length === 1
         ? 'One card in your list is banned in Commander:'
         : `${banned.length} cards in your list are banned in Commander:`,
-      offIdentity: off.map((o) => ({ card: o.card, colours: pips(o.colours) })),
+      offIdentity: off.map((o) => ({ card: o.card, colours: colourLetters(o.colours) })),
+      // The sentence and the commander's colours are separate, because the colours are
+      // drawn rather than written: app.js puts real pips between the two halves. Ending
+      // the first half without its bracket would leave a renderer free to forget the
+      // colours entirely and still read as a finished sentence, so the halves are named
+      // for what surrounds them.
       identitySentence: off.length === 1
-        ? `One card is outside your commander’s colour identity (${pips((check.allowed || []).join(''))}):`
-        : `${off.length} cards are outside your commander’s colour identity `
-          + `(${pips((check.allowed || []).join(''))}):`,
+        ? 'One card is outside your commander’s colour identity ('
+        : `${off.length} cards are outside your commander’s colour identity (`,
+      identityColours: colourLetters((check.allowed || []).join('')),
+      identitySentenceEnd: '):',
       unchecked,
       // The floor of the claim, the same shape the bracket panel uses: this is two of
       // the format's rules and never a verdict on the whole list.

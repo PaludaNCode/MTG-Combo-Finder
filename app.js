@@ -272,17 +272,36 @@
     const box = el('section', 'legality');
 
     // Named, and named first: the reader needs the card, not the count.
-    const listLine = (cls, label, sentence, items) => {
+    //
+    // `claim` may be a string or the two halves of one with the commander's colours
+    // between them, because those colours are DRAWN. Every other place on this page that
+    // names a colour draws a pip, and this line used to print "{U}{B}{R}" as text — a
+    // notation that only ever made sense to the function producing it.
+    const listLine = (cls, label, claim, items) => {
       const line = el('p', 'legality-line ' + cls);
       line.appendChild(el('span', 'legality-label', label));
-      line.appendChild(el('span', 'legality-claim', sentence));
+      const said = el('span', 'legality-claim');
+      if (typeof claim === 'string') {
+        said.textContent = claim;
+      } else {
+        said.appendChild(document.createTextNode(claim.start));
+        said.appendChild(RenderRows.manaPips(claim.colours));
+        said.appendChild(document.createTextNode(claim.end));
+      }
+      line.appendChild(said);
       const names = el('span', 'legality-cards');
       items.forEach((item, i) => {
         if (i > 0) names.appendChild(document.createTextNode(' · '));
         names.appendChild(el('span', 'card-name', item.card || item));
         // The colours the card carries that the commander does not — the reason it
-        // is on this line, so it does not have to be looked up to be believed.
-        if (item.colours) names.appendChild(el('span', 'legality-colours', ' ' + item.colours));
+        // is on this line, so it does not have to be looked up to be believed. Pips
+        // again, and the same ones: a reader comparing this against the identity in the
+        // summary box above is comparing two of the same thing.
+        if (item.colours) {
+          const carried = el('span', 'legality-colours');
+          carried.appendChild(RenderRows.manaPips(item.colours));
+          names.appendChild(carried);
+        }
         names.appendChild(RenderRows.cardLinks(item.card || item));
       });
       line.appendChild(names);
@@ -293,7 +312,11 @@
       listLine('is-banned', 'Banned', prose.bannedSentence, prose.banned.map((card) => ({ card })));
     }
     if (prose.offIdentity.length) {
-      listLine('is-off-identity', 'Colours', prose.identitySentence, prose.offIdentity);
+      listLine('is-off-identity', 'Colours', {
+        start: prose.identitySentence,
+        colours: prose.identityColours,
+        end: prose.identitySentenceEnd,
+      }, prose.offIdentity);
     }
 
     // What went unanswered, with the finding rather than in place of it.

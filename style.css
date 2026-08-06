@@ -293,9 +293,13 @@ button:disabled { opacity: .6; cursor: wait; }
 /* The links sit against the name without this — "Murderous RedcapEDHREC" — because
    the flex gap above is between the line's parts and not inside this span. */
 .legality-cards .card-links { margin-left: .35rem; font-size: .85em; }
-/* The colours the card carries and the commander does not, so the claim can be
-   checked without opening the card. */
-.legality-colours { color: var(--muted); font-size: .85em; }
+/* The colours the card carries and the commander does not, so the claim can be checked
+   without opening the card — and the commander's own identity inside the sentence above
+   it. Pips in both, like every other place on this page that names a colour: these were
+   text reading "{W}" and "({U}{B}{R})" until 6 Aug 2026, a notation that meant something
+   only to the function producing it. The margin is what the leading space used to do. */
+.legality-colours { margin-left: .35rem; }
+.legality-claim .mana { margin: 0 .15rem; }
 .legality-note { margin: .35rem 0 0; font-size: .8rem; color: var(--muted); }
 
 /* ---- cards the snapshot did not recognise ----
