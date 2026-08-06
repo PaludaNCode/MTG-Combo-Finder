@@ -943,6 +943,24 @@ reading off a real phone was `download 1.5s · parse 61ms · match 64ms` — **t
 the IndexedDB idea by a number rather than an argument, and **the download was 94% of the search**, which
 is why the combo id stopped being published.
 
+### The mana symbols are drawn here, and they are not Wizards' art
+
+The five pips carry a sun, a drop, a skull, a fireball and a tree — inline SVG in
+`render-rows.js`, filled with `currentColor` so the pip's own ink carries them. They were the colour's
+letter in a coloured circle until 6 Aug 2026, which asks a reader to know that B is black rather than
+blue.
+
+**Drawn rather than fetched, for the reason the theme icons are**: the CSP allows no remote images or
+fonts, the page works offline, and a symbol font is one more thing to fail. **And they are our own
+drawings of the five shapes, not the printed symbols** — those are Wizards' artwork, and shipping them
+means deciding about somebody else's assets first. What is copied is which shape means which colour,
+because that is what a player reads.
+
+The letter moved to `data-colour` on the pip, which is what every check reads now; the accessible name
+is still the colour spelled out, so a screen reader hears *green* rather than *G* or a path. `verify`
+measures the glyph's box as well as the disc — `display: none` on the art leaves every other assertion
+about pips passing, over five blank circles.
+
 ### Colours come from the cards, not from a commander
 
 The commander used to decide the deck's colours, which meant finding one when the box was left empty —

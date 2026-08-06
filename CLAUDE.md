@@ -371,6 +371,12 @@ loosely.
   spends an already-allocated contrast budget invisibly; three of four rules that did it were
   hundredths under AA. `--faint` is the token for text below `--muted`, **only safe on `--bg`** →
   `e2e/a11y.spec.js`.
+- **The mana pips are drawn, not fetched, and they are ours rather than Wizards'.** Inline SVG in
+  `render-rows.js`, `currentColor`-filled, one glyph per colour — the CSP allows no remote image or font,
+  and the printed symbols are somebody else's artwork. The letter lives in `data-colour` now, which is
+  what checks read: `pip.textContent` is empty and compares clean against another empty string →
+  `verify` also measures the glyph's box, because `display: none` on it leaves every other pip assertion
+  passing over five blank circles. README § *The mana symbols are drawn here, and they are not Wizards' art*.
 - **Both HTML files carry a CSP** (`default-src 'none'`, `script-src 'self'`): no inline scripts,
   no CDN, no remote fonts or icons. `connect-src` is `raw.githubusercontent.com` and Archidekt.
 

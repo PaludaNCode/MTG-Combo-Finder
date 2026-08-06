@@ -453,7 +453,9 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 /* Mana symbols, drawn rather than fetched — a remote symbol font would be one
-   more thing to load, and one more thing to fail offline. */
+   more thing to load, and one more thing to fail offline. The glyphs are inline SVG
+   in render-rows.js: our own drawings of the five shapes, not Wizards' artwork.
+   `color` below is what inks them, since every path is filled with currentColor. */
 .mana { display: inline-flex; gap: .2rem; }
 .pip {
   display: inline-flex;
@@ -463,13 +465,15 @@ button:disabled { opacity: .6; cursor: wait; }
   height: 1.35em;
   border-radius: 50%;
   /* Wizards' own colour swatches, so the pips read as Magic colours. Ink is
-     dark on every one of them, which is why they all carry the same text colour. */
+     dark on every one of them, which is why they all carry the same colour. */
   color: #1b1b1b;
   font-size: .85rem;
-  font-weight: 800;
   line-height: 1;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .45);
 }
+/* The glyph fills most of the disc but not all of it: at 1em inside a 1.35em circle the
+   sun's rays and the skull's jaw touch the rim, which reads as a smudge at pip size. */
+.pip-art { width: .95em; height: .95em; display: block; }
 .pip-W { background: #fffbd5; }
 .pip-U { background: #aae0fa; }
 .pip-B { background: #cbc2bf; }
