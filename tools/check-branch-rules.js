@@ -13,26 +13,46 @@
 //   node tools/check-branch-rules.js --fixture test/fixtures/branch-rules.json
 //   node tools/check-branch-rules.js --json        # dump what was fetched
 //
-// Three unauthenticated GETs, and no admin scope anywhere: a session's token is
-// `metadata=read`, so `/branches/main/protection` answers 403 and cannot be used,
-// while `/rules/branches/<branch>` lists the rules that *effectively apply* and needs
-// no auth at all. Unauthenticated GitHub allows 60 requests an hour per IP and this
-// spends three, so **it never sends a token** — a `contents: read` workflow token
-// gets *fewer* repository fields than an anonymous caller, which cost three false
-// findings on the first live run. See narrowedResponse().
+// **The thirteen claims split in two by what it takes to see them, and that split was
+// got wrong twice before it was measured.**
 //
-// **It cannot run live from the sandbox this repository is usually edited from.**
-// `api.github.com` is not on the agent proxy's allowlist and Node's `fetch()` does not
-// route through the proxy anyway, so live mode answers 403 while `curl` to the same
-// URL succeeds — measured, and the same shape as the Scryfall block in CLAUDE.md
-// § *Network, and this sandbox*. Use the runner (check-branch-rules.yml), or re-record
-// the fixture through the proxy and replay it:
+// Ten of them live on `/rules/branches/<branch>`, which lists the rules that
+// *effectively apply* and answers anybody. `/branches/main/protection` would need admin
+// and is not used at all — a session's token is `metadata=read`, so it answers 403.
+//
+// The other three are repository settings — the three merge methods, auto-merge, and
+// whether merged branches are kept — and **GitHub returns those fields only to a caller
+// with push access.** An anonymous request does not get them, and neither does a
+// workflow `GITHUB_TOKEN`: the strongest thing Actions can grant is `contents: write`,
+// and there is no `administration` permission for it to hold. So on a runner those
+// three are permanently UNKNOWN, and that is a property of the endpoint rather than
+// something to work around. `GITHUB_API_TOKEN` (deliberately not `GITHUB_TOKEN`, so a
+// runner's token is never picked up by accident) is honoured for anyone holding a PAT
+// with push access, which is what turns the three into real answers.
+//
+// **The first live run reported all three as BROKEN, and the diagnosis of that was also
+// wrong.** The findings were absent fields compared against `=== false` / `=== true`;
+// that part is fixed by narrowedResponse() below. But the cause was blamed on the token
+// the workflow was sending, and removing it changed nothing — the next run was still
+// narrowed. What had actually happened is that every request from the editing sandbox
+// goes through an agent proxy that **injects a GitHub credential with push access**, so
+// the `curl` used to record the fixture saw fields the runner never could. The tell was
+// there and unread: `/rate_limit` reports 5,000 an hour from here, not the anonymous 60.
+// Two wrong stories in one evening, both from assuming what a request was rather than
+// asking it.
+//
+// **Live mode cannot run from that sandbox at all**, for an unrelated reason:
+// `api.github.com` is off the proxy's allowlist and Node's `fetch()` does not read
+// `HTTPS_PROXY`, so live mode answers 403 while `curl` to the same URL succeeds. Same
+// shape as the Scryfall block in CLAUDE.md § *Network, and this sandbox*. So: dispatch
+// check-branch-rules.yml for the ten, and re-record the fixture with `curl` — which is
+// authenticated from there, and is the only way to reach the other three:
 //
 //   for b in main data; do curl -sS "$API/rules/branches/$b"; done   # + curl -sS "$API"
 //
-// which is what test/fixtures/branch-rules.json is. A replayed run answers "was this
-// true when the fixture was taken", never "is this true now" — the file carries the
-// date it was recorded so a stale answer cannot pass for a live one.
+// which is what test/fixtures/branch-rules.json is: a **push-access** recording, and
+// labelled as one, because replaying it answers "was this true when it was taken" and
+// never "is this true now".
 //
 // Deliberately NOT wired into CI, for probe-cors.js's reason: it asks a live third
 // party, and a check that goes red when somebody else is having an outage is a check
@@ -187,6 +207,30 @@ const CLAIMS = [
       // them out is the fix; narrowedResponse() is what made the bug visible.
       const FIELD = { merge: 'allow_merge_commit', squash: 'allow_squash_merge', rebase: 'allow_rebase_merge' };
       const methods = ['merge', 'squash', 'rebase'];
+      // **A ruleset pinned to merge-only settles this on its own, and that is the whole
+      // point of pinning it.** The effective set is the intersection, so it cannot
+      // contain anything the ruleset does not — no repository field can widen it back.
+      // That makes the claim answerable by a caller with no push access at all, which
+      // is what turns this from a settings page somebody has to go and look at into a
+      // thing the runner checks. Asking for the repository settings first would throw
+      // that away and report UNKNOWN for a configuration that is fully determined.
+      //
+      // One exception, and it is not the claim failing: if the repository ALSO has merge
+      // commits switched off, the intersection is empty and nothing can merge at all.
+      // Worth its own message, because "no way to merge but a merge commit" is still
+      // technically true there and reporting a pass would be absurd.
+      if (fromRuleset && fromRuleset.length === 1 && fromRuleset[0] === 'merge') {
+        if (o.repo.allow_merge_commit === false) {
+          return {
+            level: 'BROKEN',
+            saw: 'the ruleset allows [merge] and the repository has merge commits off '
+              + '→ effective [none]',
+            then: 'no pull request can be merged at all. Turn merge commits back on in '
+              + 'Settings; the ruleset is not the thing to change.',
+          };
+        }
+        return null;
+      }
       const narrow = narrowedResponse(methods.map((m) => FIELD[m]), o);
       if (narrow) return narrow;
       const fromRepo = methods.filter((m) => o.repo[FIELD[m]]);
@@ -268,10 +312,11 @@ const CLAIMS = [
     check: (o) => ({
       level: 'UNKNOWN',
       saw: o.bypassSeen === undefined
-        ? 'bypass_actors is absent from the unauthenticated response — absent is not empty'
+        ? 'bypass_actors is on /rulesets/<id>, which this does not read — and that '
+          + 'endpoint omitted it even for a push-access caller. Absent is not empty'
         : `bypass_actors = ${JSON.stringify(o.bypassSeen)}`,
-      then: 'read it in Settings → Rules, or with a token that has admin scope. '
-        + 'A bypass actor makes every finding above advisory for whoever holds it.',
+      then: 'read it in Settings → Rules, which needs admin. A bypass actor makes every '
+        + 'finding above advisory for whoever holds it, so this one never passes.',
     }),
   },
 ];
@@ -280,30 +325,32 @@ const CLAIMS = [
 //
 // **This function exists because its absence shipped, and the tool reported three false
 // findings on its first live run.** `/repos/{owner}/{repo}` answered without
-// `allow_squash_merge`, `delete_branch_on_merge` or `allow_auto_merge`, and each check
-// compared the missing value against the state it wanted — `=== false`, `=== true` —
-// so absent read as "the documented claim is false". The run said auto-merge was off
-// four minutes after auto-merge had merged the pull request that added the tool.
+// `allow_merge_commit`, `allow_squash_merge`, `allow_rebase_merge`, `allow_auto_merge`
+// or `delete_branch_on_merge`, and each check compared the missing value against the
+// state it wanted — `=== false`, `=== true` — so absent read as "the documented claim is
+// false". The run said auto-merge was off four minutes after auto-merge had merged the
+// pull request that added the tool.
 //
-// The cause was the tool's own doing: it sent `GITHUB_TOKEN` to buy the 5,000/hour
-// rate-limit bucket, and a workflow token scoped to `contents: read` gets a NARROWER
-// repository object than an anonymous caller does — GitHub omits the fields the token
-// has no visibility for rather than refusing the request. So the optimisation cost
-// exactly the data the tool was written to read. It no longer sends a token at all.
+// **Those fields are returned only to a caller with push access**, which took two wrong
+// diagnoses to establish; the header has the full story. Nothing is working around it —
+// on a runner these three claims are simply not answerable, and saying so is the whole
+// job of this function.
 //
 // The general rule was already applied to `bypass_actors` and not to anything else,
-// which is the whole lesson: **absent is not empty, and it is not false either.** A
-// check that cannot see a setting has to say so, because "the docs are wrong" and "I
-// could not look" are the same bytes and only one of them is worth acting on.
+// which is the lesson: **absent is not empty, and it is not false either.** A check that
+// cannot see a setting has to say so, because "the docs are wrong" and "I could not
+// look" are the same bytes and only one of them is worth acting on.
 function narrowedResponse(fields, observation) {
   const missing = fields.filter((f) => observation.repo[f] === undefined);
   if (!missing.length) return null;
   return {
     level: 'UNKNOWN',
     saw: `the repository response carried no ${missing.join(', ')}`,
-    then: 'the response was narrowed, so this claim was not checked — it is not a '
-      + 'finding. An authenticated GITHUB_TOKEN scoped to contents:read gets fewer '
-      + 'fields here than an anonymous request does; re-run without a token.',
+    then: 'not a finding — this claim was not checked. GitHub returns these fields only '
+      + 'to a caller with push access, and neither an anonymous request nor a workflow '
+      + 'GITHUB_TOKEN has it (Actions cannot grant repository administration). Set '
+      + 'GITHUB_API_TOKEN to a PAT with push access, or replay a fixture recorded with '
+      + 'one.',
   };
 }
 
@@ -339,21 +386,24 @@ function checkClaims(observation) {
 }
 
 async function getJson(url) {
-  // **Anonymous on purpose, and never send a token.** A workflow `GITHUB_TOKEN` scoped
-  // to `contents: read` gets a narrower `/repos/{owner}/{repo}` object than an
-  // anonymous caller — the merge-method and auto-merge fields are simply absent — so
-  // authenticating to buy the 5,000/hour rate-limit bucket cost the tool the settings
-  // it exists to read, and three claims came back FALSE on the first live run. Three
-  // requests do not need a bigger bucket. See narrowedResponse() above.
-  const res = await fetch(url, { headers: { accept: 'application/vnd.github+json' } });
+  const headers = { accept: 'application/vnd.github+json' };
+  // `GITHUB_API_TOKEN`, never `GITHUB_TOKEN`. A workflow token is picked up by that
+  // second name automatically in some setups, and it cannot help here — Actions has no
+  // repository-administration permission, so it sees the same narrowed repository object
+  // an anonymous caller does. Reading it would only disguise which of the two ran. This
+  // name has to be set on purpose, by somebody holding a PAT with push access, which is
+  // the only thing that turns the three settings claims into answers.
+  const token = process.env.GITHUB_API_TOKEN;
+  if (token) headers.authorization = `Bearer ${token}`;
+  const res = await fetch(url, { headers });
   if (!res.ok) {
     // 403 here is the rate limit or a blocked host, never a permissions problem — say
     // so, because "403" alone sends people looking for a token scope that would not
     // help. From the usual sandbox this is the proxy: see the header.
     const hint = res.status === 403
-      ? '\n  403 is not a scope problem: every endpoint here is readable anonymously.'
-        + '\n  Either the 60/hour anonymous limit, or api.github.com is off the proxy'
-        + "\n  allowlist — Node's fetch() does not use HTTPS_PROXY, so `curl` to the same"
+      ? '\n  Not a scope problem: the rules endpoints answer any caller. Either the'
+        + '\n  60/hour anonymous rate limit, or api.github.com is off the agent proxy'
+        + "\n  allowlist — Node's fetch() does not read HTTPS_PROXY, so `curl` to the same"
         + '\n  URL can succeed while this fails. Run it on a runner, or replay --fixture.'
       : '';
     throw new Error(`GET ${url} → HTTP ${res.status}${hint}`);
@@ -378,6 +428,10 @@ function report(result, observation) {
   // that if the output does not say which it is.
   if (observation.fetched) {
     console.log(`REPLAY of a fixture recorded ${observation.fetched} — not a live answer.`);
+    // Which caller recorded it decides which claims it can speak to at all: three of
+    // them are invisible without push access, so a replay that does not say so invites
+    // the reader to think a runner could have produced the same output.
+    if (observation.access) console.log(`  recorded with: ${observation.access}`);
   }
   console.log(`\n${result.passed} of ${result.total} documented claims hold.\n`);
   for (const f of result.findings) {
@@ -390,10 +444,18 @@ function report(result, observation) {
   if (result.broken.length) {
     console.log(`${result.broken.length} claim(s) this repository's docs make are FALSE right now.`);
     console.log('Change the setting, or change the sentence — a wrong one is worse than none.');
+  } else if (result.findings.length) {
+    // Never just "all good". A clean BROKEN list with FRAGILE or UNKNOWN lines above it
+    // is not the same statement as a clean run, and the summary has to keep them apart —
+    // this whole tool exists because a reassuring sentence outlived the thing it
+    // described.
+    const parts = [];
+    if (result.fragile.length) parts.push(`${result.fragile.length} held by a single setting`);
+    if (result.unknown.length) parts.push(`${result.unknown.length} not answerable here`);
+    console.log(`No documented claim is false. Not the same as "protected": ${parts.join(', ')}`);
+    console.log('— read those lines above before relying on this.');
   } else {
-    console.log('No documented claim is false. Read the FRAGILE and UNKNOWN lines above');
-    console.log('before treating that as "protected": one is held by a single checkbox,');
-    console.log('and one this endpoint cannot answer.');
+    console.log('Every documented claim holds, and none of them is guesswork.');
   }
   return result.broken.length ? 1 : 0;
 }

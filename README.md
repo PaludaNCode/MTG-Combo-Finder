@@ -1528,11 +1528,16 @@ its own.
 
 **Merge commits only, and merged branches are kept.** Squash and rebase merging are off, and so is
 *Automatically delete head branches* — three checkboxes that between them make a follow-up push on a
-reused branch name an ordinary fast-forward with no exception. **All three are repository settings,
-and the ruleset backs up none of them** — it still lists squash and rebase as allowed merge methods,
-so what actually applies is the intersection and a single checkbox is holding the invariant the next
-two paragraphs rest on. `node tools/check-branch-rules.js` reports that as FRAGILE rather than
-passing it.
+reused branch name an ordinary fast-forward with no exception.
+
+**Merge-only is locked in two places, and that second lock is worth more than a spare.** The
+repository settings say it, and since 6 Aug 2026 the ruleset's allowed merge methods say it too. What
+actually applies is the intersection, so for the first 173 pull requests the invariant the next two
+paragraphs rest on was held by one checkbox with nothing watching — `node tools/check-branch-rules.js`
+called that FRAGILE and still would. Pinning the ruleset also made the claim *readable*: an
+intersection cannot be widened by the settings page, so a caller with no push access can now settle
+it, which is the difference between a rule somebody has to go and confirm and one the runner
+checks.
 
 Neither is untidiness. Deleting branches made every follow-up a remembered ritual (`fetch --prune`,
 never `--force-with-lease`, because the lease named a ref that no longer existed and failed in a way
