@@ -418,12 +418,12 @@
     const cards = Number(counts && counts.cards) || 0;
     if (!cards) return null;
 
-    const parts = [{ text: plural(cards, 'card') }];
+    const parts = [{ key: 'cards', text: plural(cards, 'card') }];
     const unread = Number(counts.unread) || 0;
     const typed = Number(counts.mapped) > 0 && !tooMuchOfTheDeck(unread, cards);
 
     if (typed) {
-      const spells = { text: `${Number(counts.spells) || 0} spells` };
+      const spells = { key: 'spells', text: `${Number(counts.spells) || 0} spells` };
       // The modal double-faced cards, said where they are counted. They are in the
       // spells because the front face is what you cast — which is also what the reader's
       // deck site shows — but a deck runs them partly as lands, so a land count that
@@ -444,22 +444,29 @@
       // real. Written as the strip's own aside rather than a second line: it qualifies
       // the land count and means nothing away from it.
       const count = Number(counts.lands) || 0;
-      const lands = { text: `${count} lands` };
+      const lands = { key: 'lands', text: `${count} lands` };
       // Only the halves that are there. "10 basic · 0 nonbasic" is a zero nobody asked
       // about, and a deck of nothing but duals reads better as "36 nonbasic" than as an
       // apology for having no Forests.
+      //
+      // Two fields rather than one string, because the second half is what a narrow
+      // column drops first — see style.css. `sub` is what always shows once the aside
+      // shows at all, and `subExtra` is the part a phone does without: it is the one
+      // number here a reader can work out from the other two, since nonbasic is the
+      // land count minus the basics.
       if (counts.basicsKnown && count) {
-        lands.sub = [
+        const halves = [
           Number(counts.basic) ? `${counts.basic} basic` : '',
           Number(counts.nonbasic) ? `${counts.nonbasic} nonbasic` : '',
-        ].filter(Boolean).join(' · ');
-        if (!lands.sub) delete lands.sub;
+        ].filter(Boolean);
+        if (halves.length) lands.sub = halves[0];
+        if (halves.length > 1) lands.subExtra = halves[1];
       }
       parts.push(lands);
       // Says why the three numbers do not add up, in the one case where they don't.
       // Quiet, because it is a note about the data and not a finding about the deck —
       // the unrecognized-cards box above is where those names are named.
-      if (unread) parts.push({ text: `${plural(unread, 'card')} unread`, quiet: true });
+      if (unread) parts.push({ key: 'unread', text: `${plural(unread, 'card')} unread`, quiet: true });
     }
 
     return { label: 'Deck', parts, typed };

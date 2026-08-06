@@ -1044,6 +1044,17 @@ question the page asks, and every card's type line would have been 282 KB for it
 The counts are the live ones, not this repository's cache: the first refresh to carry the lists reported
 `lands: 0 → 1,191`, `basic lands: 0 → 13`, `MDFCs: 0 → 82` against Scryfall's oracle bulk.
 
+**One line, at every width, by showing less rather than wrapping.** The strip sits directly above the
+answer the page is for, so a second line is height taken from that. Measured by rendering a real deck
+into the real column from 320px to 1920px, one line needs: the three numbers and the MDFC count from
+**301px**, `(14 basic)` from **371px**, `· 20 nonbasic` and the separators from **468px**, the `DECK`
+label from **568px**. Shrinking the type instead does not work — at `.75rem` the full line still wraps —
+so the only thing that fits is less text, and what goes first is what a reader can recover: nonbasic is
+the land count minus the basics. Thresholds are container queries at 25/31/37rem of **column**, a little
+above each measurement, because those came from one deck. The one case that still wraps on a phone is a
+deck with an unrecognized card in it: four numbers do not fit 371px however they are worded, and the
+number that would have to go is the one explaining why the other three do not add up.
+
 **Three claims, three ways to be silent rather than wrong**, all of them the rule
 [the unrecognized-cards box](#telling-the-reader-which-cards-were-not-recognised) already follows:
 

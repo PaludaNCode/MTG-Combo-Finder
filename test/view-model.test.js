@@ -511,7 +511,11 @@ const counted = (over) => Object.assign(
   },
   over
 );
-const said = (note) => note.parts.map((p) => p.text + (p.sub ? ' (' + p.sub + ')' : '')).join(' · ');
+// Everything the strip can say, including the half a narrow column hides — the CSS
+// ladder is what drops `subExtra`, and these tests are about what the page *has* to
+// say rather than about how much of it fits.
+const said = (note) => note.parts.map((p) => p.text
+  + (p.sub ? ' (' + p.sub + (p.subExtra ? ' · ' + p.subExtra : '') + ')' : '')).join(' · ');
 
 // The order is the design: the total, then the deck's body, then the number somebody
 // came to check.
@@ -555,11 +559,32 @@ test('deckCountsNote: no basic list drops the split, not the land count', () => 
 // A zero half is not information. "10 basic · 0 nonbasic" is a number nobody asked
 // about, and a deck of nothing but duals reads better as "36 nonbasic" than as an
 // apology for having no Forests. The fixture deck is the first of these: 10 Island.
+// The two halves are separate fields, because the second is the first thing a phone
+// drops: nonbasic is the land count minus the basics, so it is the only number in the
+// strip a reader can work out for themselves. style.css hides it under 31rem of column.
+test('deckCountsNote: the basic half and the derivable half are separate fields', () => {
+  const lands = View.deckCountsNote(counted()).parts.find((p) => p.key === 'lands');
+  assert.equal(lands.sub, '16 basic');
+  assert.equal(lands.subExtra, '20 nonbasic');
+});
+
+// Every part is keyed, so the stylesheet names a number rather than counting positions
+// — `.deck-count:last-child` meant something different the day an unread count arrived.
+test('deckCountsNote: every part says which number it is', () => {
+  assert.deepStrictEqual(View.deckCountsNote(counted({ unread: 4, spells: 58 })).parts.map((p) => p.key),
+    ['cards', 'spells', 'lands', 'unread']);
+});
+
 test('deckCountsNote: the aside names only the halves that are there', () => {
-  assert.equal(said(View.deckCountsNote(counted({ cards: 17, spells: 7, lands: 10, basic: 10, nonbasic: 0 }))),
-    '17 cards · 7 spells · 10 lands (10 basic)');
-  assert.equal(said(View.deckCountsNote(counted({ basic: 0, nonbasic: 36 }))),
-    '98 cards · 62 spells · 36 lands (36 nonbasic)');
+  const only = View.deckCountsNote(counted({ cards: 17, spells: 7, lands: 10, basic: 10, nonbasic: 0 }));
+  assert.equal(said(only), '17 cards · 7 spells · 10 lands (10 basic)');
+  assert.equal(only.parts.find((p) => p.key === 'lands').subExtra, undefined);
+  // And with no basics, the half that survives a narrow column is the one there is:
+  // "36 nonbasic" goes in `sub`, not in the field a phone hides.
+  const duals = View.deckCountsNote(counted({ basic: 0, nonbasic: 36 }));
+  assert.equal(said(duals), '98 cards · 62 spells · 36 lands (36 nonbasic)');
+  assert.equal(duals.parts.find((p) => p.key === 'lands').sub, '36 nonbasic');
+  assert.equal(duals.parts.find((p) => p.key === 'lands').subExtra, undefined);
 });
 
 // No lands at all is a real answer — the data said so — but it has nothing to break down.

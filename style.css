@@ -371,18 +371,60 @@ button:disabled { opacity: .6; cursor: wait; }
 /* The aside on the land count, and only ever beside it: it qualifies that number and
    says nothing on its own. */
 .deck-sub { color: var(--muted); font-size: .85em; }
+/* ---- one line, at every width, by earning each piece of it ----
+ *
+ * The strip must not wrap. It sits directly above the answer the page is for, and a
+ * second line is height taken from that — so instead of wrapping, the narrow column
+ * shows less. Written the other way round from how it reads: the smallest case is the
+ * default and each container query *adds* something back.
+ *
+ * The ladder is measured, not guessed. Rendering "101 cards · 67 spells (1 MDFC) ·
+ * 34 lands (14 basic · 20 nonbasic)" into the real column at viewport widths from 320
+ * to 600px, one line needs:
+ *
+ *   from  301px   the three numbers and the MDFC aside
+ *   from  371px   + "(14 basic)"
+ *   from  468px   + "· 20 nonbasic", and the separators
+ *   from  568px   + the DECK label
+ *
+ * Thresholds sit a little above each measurement, because those numbers came from one
+ * deck: 25rem/31rem/37rem against 371/468/568px leaves room for a three-figure count
+ * and the plural "3 MDFCs". Shrinking the type instead does not work and was measured
+ * too — at .75rem the full line still wraps, so the only thing that fits is less text.
+ *
+ * What goes first is what a reader can recover: nonbasic is the land count minus the
+ * basics. Then the label, which the strip's position already says. The MDFC count
+ * never goes, because it is the one number here that cannot be derived from the
+ * others.
+ *
+ * ONE CASE STILL WRAPS ON A PHONE AND IS MEANT TO: a deck with a card the snapshot has
+ * never heard of shows a fourth number, and four of them do not fit 371px however they
+ * are worded — measured at "2 cards unread" (2 lines), shortened to "2 unread" (2 lines
+ * at 320px, and 2 lines at 390px as soon as the counts are three digits). The choice is
+ * a second line or dropping a number, and the number in question is the one that
+ * explains why the other three do not add up. So it wraps, in the rare case where a
+ * card was misspelled, and the unrecognized-cards box directly above names the cards. */
+.deck-counts-label { display: none; }
+.is-lands .deck-sub { display: none; }
+.deck-sub-extra { display: none; }
 /* A character between the numbers rather than a border, so it moves with the text it
-   separates instead of hanging in the gap — and dropped once the strip is narrow
-   enough to wrap, because a wrapped line otherwise ends on the dot: measured at
-   390px, "98 cards ·" then "62 spells · 36 lands". `.combo-link > .sep` further down
-   is hidden narrow and shown wide for exactly this reason.
+   separates instead of hanging in the gap. Off until there is room, because a wrapped
+   line would end on the dot — `.combo-link > .sep` further down is hidden narrow and
+   shown wide for exactly this reason. */
+.deck-sep { display: none; color: var(--line-strong); }
 
-   A container query and not a media query. This strip is in the results column, which
-   is 442px at a 900px window because the decklist takes 370px of it — so the viewport
-   would style the narrow case as though it were roomy. */
-.deck-sep { color: var(--line-strong); }
-@container (max-width: 26rem) {
-  .deck-sep { display: none; }
+/* A container query and not a media query, all the way down. This strip is in the
+   results column, which is 442px at a 900px window because the decklist takes 370px of
+   it — the viewport would style the narrow case as though it were roomy. */
+@container (min-width: 25rem) {
+  .is-lands .deck-sub { display: inline; }
+}
+@container (min-width: 31rem) {
+  .deck-sub-extra { display: inline; }
+  .deck-sep { display: inline; }
+}
+@container (min-width: 37rem) {
+  .deck-counts-label { display: inline; }
 }
 
 .identity-line {

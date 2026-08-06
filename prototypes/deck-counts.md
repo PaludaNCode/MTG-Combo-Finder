@@ -96,12 +96,12 @@ entirely valid. Every class in the shipped rules is prefixed because of it.
 
 Two things it did not settle, both measured afterwards on the real page:
 
-- **At 390px the strip takes two lines** — `98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)`
-  does not fit 358px of column. Two lines rather than dropping the aside, which is the number a phone
-  would most want. `verify` allows two below a 416px column and exactly one above it, and the limit is
-  written for what a real deck does rather than for what the fixture deck does — the fixture's `17 cards ·
-  7 spells · 10 lands` fits on one line at every width and would have passed a rule that only works for
-  short decks.
+- **At 390px the strip took two lines, and no longer does.** It shipped that way, was seen on a phone,
+  and the answer turned out to be a ladder rather than a wrap: each piece appears once the column can
+  hold it. Measured from 320px to 1920px — numbers and MDFC from 301px, `(14 basic)` from 371px,
+  `· 20 nonbasic` and the separators from 468px, the label from 568px. Shrinking the type was measured
+  too and does not work: `.75rem` still wraps. A deck with an unrecognized card still wraps on a phone,
+  because four numbers do not fit and the fourth is the one that explains the arithmetic.
 - **The aside names only the halves that are there.** `10 basic · 0 nonbasic` is a zero nobody asked
   about; the fixture deck is ten Islands and reads `(10 basic)`.
 
