@@ -523,6 +523,18 @@ reach it, and fails if the CDN never serves the SHA it just stamped into the foo
 one case where the job's conclusion is enough. It was not before: `deploy-pages` succeeding means
 the artifact was accepted, not that anyone is being served it.
 
+**A failed deploy burns its commit, and the same commit can never be deployed again.** The Pages
+deployment id **is** the commit SHA, so when `deploy-pages` gives up — its own timeout is 10 minutes —
+it cancels that deployment, and every later attempt on that SHA fails in about five seconds with
+`Deployment cancelled` rather than queueing. **Re-dispatching is therefore not the recovery; a new
+commit on `main` is**, which on this repository means a PR, so give it something worth committing.
+Two adjacent traps, both met on 6 Aug 2026 (five failed deploys, `d4220ad` and `02773c8` both burnt):
+**`rerun_failed_jobs` is never the recovery either** — the re-run uploads a *second* artifact named
+`github-pages` into the same run and `deploy-pages` refuses with `Multiple artifacts … count is 2`;
+and a run stuck in `deployment_queued` is **GitHub's queue, not this repository** — every step before
+it succeeds, so read the poll lines rather than the conclusion before changing anything here.
+README § *Deploying*.
+
 **Report the feature, not the code.** What changed for someone using the page, in the words
 on screen — panel names, chip labels, button text — with a number they can check rather than
 an adjective. Files and functions when the question is *where does this live*; never a diff

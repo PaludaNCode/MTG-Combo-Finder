@@ -1740,6 +1740,24 @@ failure deletes the assets and then finds nothing missing, because it has stoppe
 stamped-page test in `test/prune-artifact.test.js` is what covers it, verified by breaking the query strip
 and watching 9 of 10 tests stay green.
 
+### A failed deploy burns its commit
+
+The Pages deployment id **is** the commit SHA. So when `deploy-pages` gives up — it polls for its own
+10-minute timeout and then cancels — that SHA is spent: every later attempt on it fails in about five
+seconds with `Deployment cancelled` instead of queueing. **Re-dispatching is not the recovery. A new
+commit on `main` is**, which here means a pull request, so give it something worth committing.
+
+**`rerun_failed_jobs` is not the recovery either.** Re-running the failed job uploads a *second*
+artifact named `github-pages` into the same workflow run, and `deploy-pages` refuses outright:
+`Multiple artifacts named "github-pages" were unexpectedly found … Artifact count is 2`.
+
+**And a run stuck in `deployment_queued` is GitHub's queue, not this repository.** Read the poll lines
+rather than the job's conclusion before changing anything here: every step before `deploy-pages`
+succeeds, the artifact is accepted, and the deployment is created — it simply never advances. On
+6 Aug 2026 five deploys failed this way inside forty minutes, two of them burning a commit, while the
+same job had taken **6s at 02:34 and 227s at 09:45 the same morning**. Nothing in the repository
+changed between those.
+
 **Action versions are kept on a supported Node runtime**, and the runtime an action uses is declared in its
 own `action.yml` — reading those rather than the release notes is the only way to know. **CI cannot verify
 these**: `checks` never runs the deploy workflow, so a wrong version shows up only on the next push to
