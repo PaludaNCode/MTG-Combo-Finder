@@ -109,8 +109,26 @@ jobs:
       # survives is computed from what the pages reference — never a list, for the
       # same reason stamp-assets.js carries no list — and the tool re-reads the
       # pages afterwards and fails the deploy if it removed something they ask for.
-      - name: Ship only what the site serves
-        run: node tools/prune-artifact.js index.html tiers.html --apply | tee -a "$GITHUB_STEP_SUMMARY"
+      # `--apply` IS DELIBERATELY ABSENT, and this is a bisect rather than a
+      # decision — put it back the moment the question below is answered.
+      #
+      # Six consecutive deploys failed on 6 Aug 2026, every one of them sitting in
+      # `deployment_queued` until deploy-pages timed out at ten minutes. The four
+      # deploys before them succeeded. The only thing separating the two groups is
+      # this step: **6 failures with it, 0 without.** githubstatus.com reported no
+      # incident, which was the other candidate and is now the weaker one.
+      #
+      # The reasoning that dismissed it — "the deployment never leaves
+      # `deployment_queued`, so Pages has not read the artifact yet" — is an
+      # assumption about GitHub's internals that nothing here can check. A
+      # correlation of six is worth more than an unverifiable mechanism, so this
+      # deploy changes exactly one variable and nothing else.
+      #
+      # Dry-run rather than deleted, so the step still runs and still prints what it
+      # *would* drop: if this deploy succeeds, the cause is the deletion itself
+      # rather than anything about running the tool.
+      - name: Ship only what the site serves (BISECT — not applying, see comment)
+        run: node tools/prune-artifact.js index.html tiers.html | tee -a "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/configure-pages@v6
         with:
