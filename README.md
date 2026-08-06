@@ -1474,7 +1474,7 @@ npx serve .                                                   # any static serve
 
 ### Answering questions from the data
 
-Seven read-only tools, each also a manual workflow, for the questions that keep coming up.
+**10 read-only tools** for the questions that keep coming up.
 
 ```bash
 node tools/try-deck.js [deck.txt]           # what the page would show. Does NOT cover the
@@ -1488,7 +1488,17 @@ node tools/substitution-scope.js [jaccard] [minShared]   # how much of the space
 node tools/deck-cards.js [deck.txt] --unswept            # which cards carry a deck's combos
 node tools/deck-gaps.js [deck.txt]          # which gaps THIS deck exposes, castable tonight
 node tools/probe-cors.js [site]             # can a browser read a deck from this site?
+node tools/check-branch-rules.js            # does GitHub enforce what these files claim?
 ```
+
+**7 have a manual workflow**, and the split is about network rather than convenience: a runner can
+reach hosts this sandbox cannot, which is the whole reason `probe-cors.js` and
+`check-branch-rules.js` have one. The three that do not — `substitution-scope.js`,
+`deck-cards.js`, `deck-gaps.js` — read only files already in the tree, so there is nothing a
+runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
+workflow* while the list held nine and six of them had one: a count in prose beside the list it
+counts is the easiest kind of number to leave behind, and `check:readme` now measures the second
+against `.github/workflows/` rather than against the prose.
 
 `deck-cards.js` picks *subjects* and sweeps each across the whole database; `deck-gaps.js` bounds
 candidate shapes to the deck's own cards and drops the sets a pass ruled out, printing what it dropped.
