@@ -901,7 +901,48 @@ function measure(win, doc) {
         && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
     };
   })();
-  // What the page said about legality. Two lines, or none — and read as a reader sees
+  // The strip above the results: how many cards, how many spells, how many lands.
+  // Read as a reader sees it -- the numbers in order, the aside on the land count, and
+  // whether the separators are drawn, since those are dropped by a container query once
+  // the strip is too narrow to hold them and a wrapped line would otherwise end on one.
+  //
+  // It cannot be measured off the markup order alone: the strip has to sit above the
+  // colour identity, and both are plain blocks that a stylesheet could reorder.
+  const deckCounts = (() => {
+    const line = doc.querySelector('#deck-counts .deck-counts');
+    const identityLine = doc.querySelector('#identity .identity-line');
+    return {
+      shown: !!line,
+      label: line ? (line.querySelector('.deck-counts-label') || {}).textContent || '' : '',
+      // Each number with its noun, so "10 lands" is one reading rather than two -- and
+      // without the aside, which is read separately below. Taken off the child nodes
+      // rather than off the element, because the aside is *inside* the land count and
+      // asking the element for its text folds the two claims into one string.
+      parts: [...doc.querySelectorAll('#deck-counts .deck-count')].map((e) => [...e.childNodes]
+        .filter((n) => !(n.nodeType === 1 && n.classList.contains('deck-sub')))
+        .map((n) => n.textContent).join('').trim()),
+      // The parentheses are in the DOM rather than drawn by CSS, so a screen reader gets
+      // them too; they are not part of the claim, so they come off here.
+      //
+      // With split() and join() and not a regex, on purpose: this is inside the HARNESS
+      // template literal, where /^\\(/ arrives as /^(/ and matches the empty string --
+      // which is how the first draft of this line reported "(10 basic)" unchanged while
+      // looking exactly like a strip that worked. CLAUDE.md, "Tests, and what a tool says
+      // about itself".
+      subs: [...doc.querySelectorAll('#deck-counts .deck-sub')]
+        .map((e) => e.textContent.trim().split('(').join('').split(')').join('')),
+      separators: [...doc.querySelectorAll('#deck-counts .deck-sep')]
+        .filter((e) => win.getComputedStyle(e).display !== 'none').length,
+      // One line at every width the page is checked at, or the design is not the design.
+      lines: line ? Math.round(line.getBoundingClientRect().height / parseFloat(win.getComputedStyle(line).lineHeight)) : 0,
+      aboveIdentity: !!(line && identityLine
+        && line.getBoundingClientRect().top < identityLine.getBoundingClientRect().top),
+      // The strip's own column, which is what the container query answers to -- not the
+      // viewport. At 768px the results column is far narrower than the window.
+      column: line ? Math.round(line.parentElement.getBoundingClientRect().width) : 0,
+    };
+  })();
+  // What the page said about legality. Two lines, or none -- and read as a reader sees
   // it: which claim, which cards, and what it admitted to not checking.
   const legality = (() => {
     const box = doc.querySelector('#legality .legality');
@@ -1307,6 +1348,7 @@ function measure(win, doc) {
     slots,
     stuckSlot,
     unknownCards,
+    deckCounts,
     legality,
     comboCompare,
     gutterNeeds,
@@ -3192,6 +3234,64 @@ function captionDrift(notes) {
       problems.push(`a clean deck was told ${unknown.names.length} of its cards are unrecognized`);
     }
 
+    // The strip above the results. The fixture deck is 7 lines and 17 cards, because its
+    // lands arrive as "10 Island" — so the count is also the check that this is counted by
+    // quantity rather than by line, which is the mistake tools/try-deck.js makes.
+    //
+    // Expected numbers are derived from the deck under test rather than written out per
+    // viewport: the misspelled deck adds two cards the fixture map has never heard of, and
+    // those must leave the lands and spells alone and turn up as their own quiet number.
+    const strip = v.deckCounts;
+    // The misspelled deck carries three cards the tuning deck does not: two the fixture
+    // map has never heard of, and Bala Ged Recovery, which is a spell with a land on the
+    // back. So it is the run that exercises every reading the strip has.
+    const extra = { misspelled: 3, illegal: 2, illegalNoCommander: 2 }[v.deck] || 0;
+    const unread = v.deck === 'misspelled' ? 2 : 0;
+    const spells = 7 + (extra - unread);
+    const want = [`${17 + extra} cards`, `${spells} spells`, '10 lands']
+      .concat(unread ? [`${unread} cards unread`] : []);
+    // In DOM order, which is the order they are read in: the aside on the spells, then
+    // the one on the lands.
+    const wantSubs = (v.deck === 'misspelled' ? ['1 MDFC'] : []).concat('10 basic');
+    if (!strip.shown) {
+      problems.push('no deck-counts strip after a search');
+    } else {
+      if (strip.label !== 'Deck') problems.push(`the strip is labelled "${strip.label}"`);
+      if (JSON.stringify(strip.parts) !== JSON.stringify(want)) {
+        problems.push(`the strip reads ${JSON.stringify(strip.parts)}, expected ${JSON.stringify(want)}`);
+      }
+      // All ten lands are Islands, so there is nothing to say about nonbasics -- and the
+      // aside must not invent "0 nonbasic" to say it with. The MDFC count is an aside on
+      // the *spells*, because that is where such a card is counted.
+      if (JSON.stringify(strip.subs) !== JSON.stringify(wantSubs)) {
+        problems.push(`the asides read ${JSON.stringify(strip.subs)}, expected ${JSON.stringify(wantSubs)}`);
+      }
+      // One line on anything but a phone, and never more than two.
+      //
+      // The narrow case is measured rather than assumed, and it is measured on a real
+      // deck rather than on this fixture: the tuning deck renders "98 cards · 62 spells ·
+      // 36 lands (16 basic · 20 nonbasic)", which takes two lines in the 358px column a
+      // 390px phone leaves. The fixture's own numbers are 17/7/10 and fit on one, so this
+      // check would pass a rule that only works for short decks -- which is why the limit
+      // is written for what a real deck does at each width and not for what this deck
+      // happens to do.
+      //
+      // Two lines rather than dropping the aside, which is the other way out: it is the
+      // one number here a deckbuilder acts on, and hiding it on a phone would leave the
+      // phone with a strip that cannot say why 36 lands is the right 36.
+      const maxLines = strip.column < 416 ? 2 : 1;
+      if (strip.lines > maxLines) {
+        problems.push(`the strip took ${strip.lines} lines in ${strip.column}px, expected ${maxLines}`);
+      }
+      if (!strip.aboveIdentity) problems.push('the deck-counts strip is below the colour identity');
+      // The separators answer the strip's own column and not the viewport -- 26rem, which
+      // is 416px -- because a wrapped line would otherwise end on a middot.
+      const wantSeps = strip.column < 416 ? 0 : want.length - 1;
+      if (strip.separators !== wantSeps) {
+        problems.push(`${strip.separators} separator(s) drawn in a ${strip.column}px column, expected ${wantSeps}`);
+      }
+    }
+
     // A deck with nothing wrong is told nothing. The two illegal decks have their own
     // run below, because the full battery here is about the tuning deck: adding an
     // off-colour card to it changes its colour identity, its combo list and its
@@ -3668,6 +3768,11 @@ function captionDrift(notes) {
       const unknownNote = v.unknownCards.shown
         ? `unrecognized [${v.unknownCards.names.join(', ')}]`
         : 'every card recognized';
+      // The strip as a reader sees it, with the column that decided whether the middots
+      // are drawn -- the pair that makes a changed threshold visible in a passing run.
+      const stripNote = `strip "${v.deckCounts.parts.join(' · ')}"`
+        + `${v.deckCounts.subs.length ? ` (${v.deckCounts.subs.join('; ')})` : ''}`
+        + `, ${v.deckCounts.separators} middot(s) in ${v.deckCounts.column}px`;
       const linked = v.numberColumns.filter((c) => c.rowLinks.length);
       const linkNote = `links ${linked.some((c) => c.rowLinks.every((r) => r.beside)) ? 'beside' : 'below'} the name `
         + `in ${linked.map((c) => c.column + 'px').join('/')} column(s)`;
@@ -3690,7 +3795,7 @@ function captionDrift(notes) {
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}, ${footerNote(v.footer)}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${stripNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}, ${footerNote(v.footer)}`);
     }
   }
 

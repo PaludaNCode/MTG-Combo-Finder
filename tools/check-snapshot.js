@@ -59,6 +59,18 @@ const COUNTS = [
   // saying whether the deck is legal — and a page that has stopped making that claim
   // looks exactly like a deck with nothing banned in it.
   { key: 'banned', of: (d) => (d.banned || []).length, what: 'banned cards' },
+  // The lands, for the deck-counts strip. Empty is read by the page as "cannot say",
+  // so the strip does not break when this vanishes — it silently loses two of its three
+  // numbers, which looks exactly like a page that never showed them.
+  { key: 'lands', of: (d) => (d.lands || []).length, what: 'lands' },
+  // The basics among them. Thirteen names that have not changed in years, so a drop
+  // here is a rule that stopped matching rather than a card being retired — and what it
+  // costs is the "(16 basic · 20 nonbasic)" aside, silently.
+  { key: 'basicLands', of: (d) => (d.basicLands || []).length, what: 'basic lands' },
+  // The modal double-faced cards. Losing the list costs the aside that explains why the
+  // page's land count is lower than the reader's deck site's, which is a difference they
+  // would otherwise have to work out.
+  { key: 'mdfc', of: (d) => (d.mdfc || []).length, what: 'MDFCs' },
   { key: 'templateCards', of: (d) => Object.keys(d.templateCards || {}).length, what: 'template cards' },
   // The string tables. A table shrinking without the combo count shrinking means
   // rows are pointing somewhere new, which is a shape change wearing a normal

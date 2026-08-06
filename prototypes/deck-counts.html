@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — how many cards, how many lands</title>
+  <!-- The layout prototype the shipped strip was chosen from, kept as the record of
+       that choice. It is a page and not a screenshot because the numbers had to be
+       measured against the real stylesheet — see the note on `.count` below, which is
+       the kind of thing only a browser says out loud.
+
+       WHAT SHIPPED IS VARIANT A+, with the spells before the lands. The other three
+       are kept because the reasons they lost are reasons somebody may want to revisit:
+       B costs height directly above the answer, C spends a whole panel on one line, and
+       A alone drops the sub-number a deckbuilder acts on. The live version is in
+       style.css under "how many cards, how many lands"; this file is not wired to it,
+       so a change there does not show up here.
+
+       Nothing references it, so tools/prune-artifact.js deletes the directory out of
+       the Pages artifact — see its header. It loads the real theme.js and the real
+       style.css so the tokens, the panel chrome and both themes are the shipped ones;
+       only the rules for the new strip are inline, because that is what is being
+       decided. -->
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* ---- the deck-counts strip -------------------------------------------
+     *
+     * Every colour here is an existing token. The numbers are --text on --panel
+     * and the labels --muted, which is the pairing .legality-line already uses and
+     * clears AA there; --faint is not reached for, since it is only safe on --bg.
+     * Nothing leans on opacity to soften a colour.
+     *
+     * EVERY CLASS IS PREFIXED, and that is not tidiness. The first draft used
+     * `.count` for "98 cards" — and `.count` is taken: style.css:1841 gives it
+     * `display: flex` for the magnitude bar behind a suggestion's number, which
+     * made the <b> a flex item and so a block, and a block eats the space after
+     * it. The strip rendered "98cards · 36lands", in valid HTML, with the space
+     * present in the DOM. A screenshot is the only thing that catches that, which
+     * is why this file exists rather than a sketch. */
+
+    /* Variant A — one line, the shape .identity-line already has. */
+    .deck-counts {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: .3rem .6rem;
+      margin: 0 0 1rem;
+      font-size: .9rem;
+    }
+    .deck-counts-label {
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .deck-counts .deck-count { color: var(--text); }
+    .deck-counts .deck-count b { font-weight: 600; }
+    /* The separator is a character rather than a border, so it moves with the text
+       it sits between instead of leaving a rule hanging in the gap. It is dropped
+       once the strip is narrow enough to wrap, because a wrapped line ends on the
+       dot — measured, at 390px: "98 cards ·" then "62 spells · 36 lands". The
+       precedent is style.css's `.combo-link > .sep`, hidden narrow and shown wide
+       for exactly this.
+
+       On the *container*, never the viewport: this strip sits in the results
+       column, which is 442px at a 900px window because the decklist takes 370px of
+       it — CLAUDE.md, "Layout and CSS". A media query here would style the narrower
+       case as though it were roomier. */
+    .deck-counts .deck-sep { color: var(--line-strong); }
+    @container (max-width: 26rem) {
+      .deck-counts .deck-sep { display: none; }
+    }
+    .deck-counts .deck-sub { color: var(--muted); font-size: .85em; }
+
+    /* Variant B — tiles. Three numbers read as three numbers, which is what a
+       reader glancing at a freshly pasted list wants; the cost is vertical space
+       above the answer, and the answer is what the page is for. */
+    .deck-tiles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin: 0 0 1rem;
+    }
+    .deck-tile {
+      flex: 1 1 6rem;
+      min-width: 5.5rem;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: .5rem .7rem;
+    }
+    .deck-tile .deck-n {
+      display: block;
+      color: var(--text);
+      font-size: 1.35rem;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+    .deck-tile .deck-k {
+      display: block;
+      margin-top: .15rem;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .deck-tile .deck-sub { display: block; margin-top: .2rem; color: var(--muted); font-size: .78rem; }
+
+    /* Variant C reuses .legality's chrome unchanged — the box the page already draws
+       for "the page talking about your input" — so it needs no rules of its own. */
+
+    /* ---- prototype scaffolding, none of it shipping ---------------------- */
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .proto-note b { color: var(--text); }
+    /* Both demo frames are query containers, so the rule above resolves against the
+       width of the strip rather than the window — which is the whole point of it. */
+    .proto-frame { max-width: 46rem; container-type: inline-size; }
+    .proto-narrow { max-width: 22rem; container-type: inline-size; border: 1px dashed var(--line); padding: .8rem; border-radius: var(--radius); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1>Deck counts — layout prototype</h1>
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+        <span class="icon icon-moon" aria-hidden="true"></span>
+        <span class="icon icon-sun" aria-hidden="true"></span>
+        <span class="theme-label"></span>
+      </button>
+    </div>
+    <p class="tagline">Real numbers, from <code>test/fixtures/deck.txt</code>: 85 lines, 98 cards,
+      62 spells, 36 lands (16 basic).</p>
+  </header>
+
+  <main class="proto-frame">
+
+    <p class="proto-note"><b>Variant A</b> — one line, above the colour identity it already
+      resembles. Cheapest thing on the page and the only one that adds no vertical block.</p>
+
+    <p class="deck-counts">
+      <span class="deck-counts-label">Deck</span>
+      <span class="deck-count"><b>98</b> cards</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>62</b> spells</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>36</b> lands</span>
+    </p>
+    <p class="identity-line">
+      <span class="identity-label">Colour identity</span>
+      <span class="mana"><span class="pip pip-W">W</span><span class="pip pip-B">B</span><span class="pip pip-G">G</span></span>
+    </p>
+
+    <p class="proto-note"><b>Variant A+ — this is what shipped.</b> The same line carrying the
+      basic/nonbasic split, which is the one sub-number a deckbuilder acts on. Spells before
+      lands: the deck's body is what somebody reads first, and the land count is the number
+      they came to check, so it goes last where the eye stops.</p>
+
+    <p class="deck-counts">
+      <span class="deck-counts-label">Deck</span>
+      <span class="deck-count"><b>98</b> cards</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>62</b> spells <span class="deck-sub">(3 MDFCs)</span></span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>36</b> lands <span class="deck-sub">(16 basic · 20 nonbasic)</span></span>
+    </p>
+
+    <p class="proto-note">The MDFCs are said where they are counted. They are spells — the front
+      face is what you cast, and it is what Moxfield and Archidekt show — but a deck runs them partly
+      as lands, so a reader whose deck site says 39 lands to this page's 36 has the difference in
+      front of them. On the page the aside carries a <code>title</code> spelling the acronym out,
+      since it is the only one there. The tuning deck has none; the 3 above is from a deck that
+      does.</p>
+
+    <p class="proto-note"><b>Variant B</b> — tiles. Reads fastest, costs the most height, and
+      the height is spent directly above <em>Combos in your deck</em>.</p>
+
+    <div class="deck-tiles">
+      <div class="deck-tile"><span class="deck-n">98</span><span class="deck-k">Cards</span></div>
+      <div class="deck-tile"><span class="deck-n">62</span><span class="deck-k">Spells</span></div>
+      <div class="deck-tile"><span class="deck-n">36</span><span class="deck-k">Lands</span><span class="deck-sub">16 basic · 20 nonbasic</span></div>
+    </div>
+
+    <p class="proto-note"><b>Variant C</b> — in the chrome <code>.legality</code> already owns,
+      so the strip is a box the stylesheet can already draw.</p>
+
+    <div class="legality">
+      <p class="legality-line">
+        <span class="legality-label">Deck</span>
+        <span class="legality-claim"><b>98</b> cards, <b>62</b> spells, <b>36</b> lands.</span>
+      </p>
+      <p class="legality-note">16 basic, 20 nonbasic. Counted off the list as pasted —
+        a sideboard is not included.</p>
+    </div>
+
+    <p class="proto-note"><b>The state that decides the design.</b> The land count is only as
+      good as the card data: a card the snapshot has never heard of has no type line, so it can
+      be neither land nor spell. Saying <em>36 lands</em> while four cards went unread would be
+      a number nobody can check. Variant A, telling the truth:</p>
+
+    <p class="deck-counts">
+      <span class="deck-counts-label">Deck</span>
+      <span class="deck-count"><b>98</b> cards</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>58</b> spells</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count"><b>36</b> lands</span>
+      <span class="deck-sep">·</span>
+      <span class="deck-count deck-sub">4 cards unread</span>
+    </p>
+
+    <p class="proto-note">And when the type data is missing outright — the shape the test
+      fixture has, where <code>cardIdentity</code> knows 14 of 85 cards — the lands half is
+      dropped rather than guessed. The card count never needs data at all:</p>
+
+    <p class="deck-counts">
+      <span class="deck-counts-label">Deck</span>
+      <span class="deck-count"><b>98</b> cards</span>
+    </p>
+
+    <p class="proto-note"><b>At 390px</b>, which is where every variant has to survive — and where
+      the shipped one takes two lines: measured on the real page, "98 cards · 62 spells · 36 lands
+      (16 basic · 20 nonbasic)" does not fit 358px of column. Two lines rather than dropping the
+      aside, which is the number a phone would most want. The separators go, though: a wrapped
+      line otherwise ends on a middot.</p>
+
+    <div class="proto-narrow">
+      <p class="deck-counts">
+        <span class="deck-counts-label">Deck</span>
+        <span class="deck-count"><b>98</b> cards</span>
+        <span class="deck-sep">·</span>
+        <span class="deck-count"><b>62</b> spells</span>
+        <span class="deck-sep">·</span>
+        <span class="deck-count"><b>36</b> lands <span class="deck-sub">(16 basic · 20 nonbasic)</span></span>
+      </p>
+      <div class="deck-tiles">
+        <div class="deck-tile"><span class="deck-n">98</span><span class="deck-k">Cards</span></div>
+        <div class="deck-tile"><span class="deck-n">62</span><span class="deck-k">Spells</span></div>
+        <div class="deck-tile"><span class="deck-n">36</span><span class="deck-k">Lands</span></div>
+      </div>
+    </div>
+
+    <p class="proto-note">Where it sits in the results column: first, above <em>Colour
+      identity</em> and the bracket, because it describes the list that was pasted rather than
+      anything the search found — the same reason the unrecognized-cards box leads.</p>
+
+  </main>
+</body>
+</html>

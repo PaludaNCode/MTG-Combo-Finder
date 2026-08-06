@@ -115,10 +115,16 @@ test('the warmer runs on the default branch, which is the only place a shared ca
   // The entire reason this file exists. A cache written on a feature branch is restorable by that
   // branch alone and is never visible to a sibling, so a new branch name always starts cold.
   assert.match(warm, /^\s*branches: \[main\]\s*$/m, 'warm-cache.yml must trigger on main');
-  // And ci.yml must NOT have regained a push trigger to do this job — that would make its own
-  // documented rule false.
+  // And ci.yml must not warm the cache by running on the default branch. It DOES run on a
+  // push now — that is how a required check stops depending on one webhook arriving, see the
+  // note on the trigger — but a push to `main` is a different claim and still excluded, both
+  // because it re-tests a tree the pull request already tested and because it would make
+  // this file's own reasoning about who writes the shared cache false.
   const ciTriggers = ci.slice(0, ci.indexOf('jobs:'));
-  assert.doesNotMatch(ciTriggers, /^\s*push:/m, 'ci.yml must not run on push; warm-cache.yml does that');
+  assert.match(ciTriggers, /^\s*push:\s*$/m, 'ci.yml runs on push, so a dropped pull_request event cannot strand a PR');
+  assert.match(ciTriggers, /^\s*branches-ignore:\s*$\n\s*- main\s*$/m,
+    'ci.yml must exclude main from its push trigger; warm-cache.yml is what runs there');
+  assert.doesNotMatch(ciTriggers, /^\s*branches: \[main\]\s*$/m, 'ci.yml must not opt back into push-to-main');
 });
 
 module.exports = { playwrightPinInPackage, playwrightPinInWorkflow };

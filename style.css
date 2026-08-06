@@ -329,6 +329,62 @@ button:disabled { opacity: .6; cursor: wait; }
 .unknown-more { margin: .3rem 0 0; font-size: .85rem; color: var(--muted); }
 .unknown-why { margin: .45rem 0 0; font-size: .82rem; color: var(--muted); }
 
+/* ---- how many cards, how many lands ----
+ *
+ * "Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)", above the colour
+ * identity and built to read like it: a label, a compact fact, no prose and no panel.
+ * One line is the whole design — the strip sits directly above the answer the page is
+ * for, so every pixel of height it takes is height taken from that.
+ *
+ * Colours are tokens: the numbers --text on --bg, the label, the aside and the unread
+ * note --muted. Nothing here softens a colour with opacity, and --faint is not reached
+ * for even though this does sit on --bg, because .deck-sub is small enough already.
+ *
+ * EVERY CLASS IS PREFIXED. `.count` was the obvious name for "98 cards" and `.count`
+ * is taken — it carries display:flex further down this file, for the magnitude bar
+ * behind a suggestion's number, which turns a <b> into a block and makes the space
+ * after it vanish. The strip rendered "98cards · 36lands" with the space present in
+ * the DOM. See prototypes/deck-counts.md. */
+#deck-counts {
+  /* The query context for the separators below. On this wrapper rather than on
+     .col-output, so the containment it implies is scoped to one line of text. */
+  container-type: inline-size;
+}
+.deck-counts {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .3rem .6rem;
+  margin: 0 0 1rem;
+  font-size: .9rem;
+  color: var(--text);
+}
+.deck-counts-label {
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.deck-count b { font-weight: 600; }
+.deck-count.is-quiet { color: var(--muted); }
+/* The aside on the land count, and only ever beside it: it qualifies that number and
+   says nothing on its own. */
+.deck-sub { color: var(--muted); font-size: .85em; }
+/* A character between the numbers rather than a border, so it moves with the text it
+   separates instead of hanging in the gap — and dropped once the strip is narrow
+   enough to wrap, because a wrapped line otherwise ends on the dot: measured at
+   390px, "98 cards ·" then "62 spells · 36 lands". `.combo-link > .sep` further down
+   is hidden narrow and shown wide for exactly this reason.
+
+   A container query and not a media query. This strip is in the results column, which
+   is 442px at a 900px window because the decklist takes 370px of it — so the viewport
+   would style the narrow case as though it were roomy. */
+.deck-sep { color: var(--line-strong); }
+@container (max-width: 26rem) {
+  .deck-sep { display: none; }
+}
+
 .identity-line {
   display: flex;
   align-items: center;

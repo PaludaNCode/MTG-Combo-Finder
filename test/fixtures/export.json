@@ -29,7 +29,13 @@
     "  101-404      utility-only results, which fall back to being shown",
     "  303-404      a mix, where the utility half is dropped and the rest kept",
     "  (last)       no `uses` at all, which compact() drops entirely — so the count",
-    "               out is one lower than the count in"
+    "               out is one lower than the count in",
+    "",
+    "`lands`, `basicLands` and `mdfc` are Scryfall's half of the fixture, like",
+    "`cardIdentity`: names over every card rather than only the ones in combos.",
+    "Snow-Covered Island is a land and not a basic, and Bala Ged Recovery is an MDFC —",
+    "a spell on the front, a land on the back. Three lists because no one of them",
+    "implies the others."
   ],
 
   "variants": [
@@ -139,5 +145,8 @@
   },
 
   "gameChangers": ["Rings of Brighthearth", "Basalt Monolith"],
-  "banned": ["Scurry Oak"]
+  "banned": ["Scurry Oak"],
+  "lands": ["Island", "Snow-Covered Island"],
+  "basicLands": ["Island"],
+  "mdfc": ["Bala Ged Recovery // Bala Ged Sanctuary"]
 }

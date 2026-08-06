@@ -280,6 +280,11 @@
       // dataset stays in the worker. Facts only — the page decides whether they are
       // worth a sentence, since a thin map makes everything a miss.
       unrecognized: DeckCombos.unrecognizedCards(data.cardIdentity, entries),
+      // How many cards the list holds and how many are lands, for the strip above
+      // the results. Here rather than in the page because the land list is part of
+      // the dataset and the dataset stays in the worker — the same reason as the two
+      // claims below. Facts only; DeckView decides which of them can be said.
+      deckCounts: DeckCombos.deckCounts(data, entries),
       // The Game Changer list lives in the dataset, and the dataset stays here —
       // so the bracket is worked out beside the match rather than in the page.
       // Deliberately `included` and not the unofficial rows: the bracket is a

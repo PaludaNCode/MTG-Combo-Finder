@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const {
-  matchDeck, deckIdentity, withinIdentity, unrecognizedCards, legalityCheck, expand, deckNameSet,
+  matchDeck, deckIdentity, withinIdentity, unrecognizedCards, deckCounts,
+  legalityCheck, expand, deckNameSet,
   computeSuggestions,
 } = require('../combos.js');
 
@@ -474,6 +475,118 @@ test('unrecognizedCards: with no map at all, nothing has been checked against an
 test('unrecognizedCards: an empty deck reports nothing', () => {
   assert.deepStrictEqual(unrecognizedCards(IDENTITIES, []).names, []);
   assert.deepStrictEqual(unrecognizedCards(IDENTITIES, null).names, []);
+});
+
+// ---- how many cards, and how many of them are lands -------------------------
+//
+// Counted by quantity, never by line, and split three ways rather than two: a card the
+// data has no type line for cannot be a spell. Every one of these numbers renders just
+// as happily when wrong, and the strip invites being checked against a deck site.
+
+const COUNTED = {
+  cardIdentity: {
+    'Sol Ring': '', 'Forest': 'G', 'Ancient Tomb': '', 'Vindicate': 'BW',
+    'Bala Ged Recovery // Bala Ged Sanctuary': 'G',
+  },
+  lands: ['Forest', 'Ancient Tomb'],
+  basicLands: ['Forest'],
+  mdfc: ['Bala Ged Recovery // Bala Ged Sanctuary'],
+};
+
+test('deckCounts: counts cards by quantity, not by line', () => {
+  const counts = deckCounts(COUNTED, [{ card: 'Forest', quantity: 10 }, { card: 'Sol Ring', quantity: 1 }]);
+  assert.equal(counts.cards, 11, 'two lines, eleven cards');
+  assert.equal(counts.lands, 10);
+  assert.equal(counts.spells, 1);
+});
+
+// The sum a reader can check at a glance. It is the property the three-way split exists
+// to protect, so it is pinned rather than left to arithmetic on the fields.
+test('deckCounts: lands + spells + unread is the card count', () => {
+  const counts = deckCounts(COUNTED, [
+    { card: 'Forest', quantity: 10 }, { card: 'Ancient Tomb', quantity: 1 },
+    { card: 'Sol Ring', quantity: 1 }, { card: 'Vindicate', quantity: 1 },
+    { card: 'Sol Rimg', quantity: 2 },
+  ]);
+  assert.equal(counts.cards, 15);
+  assert.equal(counts.lands + counts.spells + counts.unread, counts.cards);
+  assert.equal(counts.unread, 2, 'by quantity, like everything else here');
+});
+
+test('deckCounts: the basics are a subset of the lands', () => {
+  const counts = deckCounts(COUNTED, [{ card: 'Forest', quantity: 9 }, { card: 'Ancient Tomb', quantity: 1 }]);
+  assert.equal(counts.lands, 10);
+  assert.equal(counts.basic, 9);
+  assert.equal(counts.nonbasic, 1);
+  assert.equal(counts.basicsKnown, true);
+});
+
+// A card missing from the identity map has no type line to read, so it cannot be a
+// spell — the land list holds only lands, and "absent from it" would otherwise call
+// every misspelling a spell.
+test('deckCounts: a card the data has never heard of is neither', () => {
+  const counts = deckCounts(COUNTED, [{ card: 'Sol Rimg', quantity: 1 }]);
+  assert.equal(counts.unread, 1);
+  assert.equal(counts.spells, 0);
+  assert.equal(counts.lands, 0);
+});
+
+// The two shapes a payload can arrive in that cannot answer, told apart from a deck
+// that genuinely plays no lands. DeckView turns `mapped: 0` into silence; the facts
+// have to make it visible first.
+test('deckCounts: no land list is not a landless deck', () => {
+  const counts = deckCounts({ cardIdentity: COUNTED.cardIdentity }, [{ card: 'Forest', quantity: 10 }]);
+  assert.equal(counts.cards, 10, 'the card count never depended on the lists');
+  assert.equal(counts.mapped, 0);
+  const empty = deckCounts({ cardIdentity: COUNTED.cardIdentity, lands: [] }, [{ card: 'Forest', quantity: 10 }]);
+  assert.equal(empty.mapped, 0, 'a published empty list is the same "cannot say"');
+});
+
+test('deckCounts: no basic list is not a deck without basics', () => {
+  const counts = deckCounts({ cardIdentity: COUNTED.cardIdentity, lands: COUNTED.lands },
+    [{ card: 'Forest', quantity: 10 }]);
+  assert.equal(counts.lands, 10);
+  assert.equal(counts.basic, 0);
+  assert.equal(counts.basicsKnown, false, 'so the page can drop the split rather than print 0 basic');
+});
+
+// nameKey() everywhere, the same as every other comparison in this file: the land list
+// is Scryfall's spelling and the deck line is whatever somebody pasted.
+test('deckCounts: case and a split card are matched', () => {
+  const counts = deckCounts(
+    { cardIdentity: { 'Hostile Hostel // Creeping Inn': 'B' }, lands: ['Hostile Hostel // Creeping Inn'] },
+    [{ card: 'hostile hostel', quantity: 1 }]
+  );
+  assert.equal(counts.lands, 1);
+  assert.equal(counts.unread, 0);
+});
+
+// A modal double-faced card is a spell, and counted again as an MDFC. It must not be
+// both a spell and a land: the sum would stop adding up, and the land count would go
+// above what the reader's deck site shows for the same list.
+test('deckCounts: an MDFC is a spell, and is also counted as an MDFC', () => {
+  const counts = deckCounts(COUNTED, [
+    { card: 'Bala Ged Recovery', quantity: 1 },
+    { card: 'Sol Ring', quantity: 1 },
+    { card: 'Forest', quantity: 8 },
+  ]);
+  assert.equal(counts.spells, 2);
+  assert.equal(counts.mdfc, 1);
+  assert.equal(counts.lands, 8);
+  assert.equal(counts.lands + counts.spells + counts.unread, counts.cards);
+  assert.equal(counts.mdfcKnown, true);
+});
+
+test('deckCounts: no land-back list is not a deck without them', () => {
+  const counts = deckCounts({ cardIdentity: COUNTED.cardIdentity, lands: COUNTED.lands },
+    [{ card: 'Bala Ged Recovery', quantity: 1 }]);
+  assert.equal(counts.mdfc, 0);
+  assert.equal(counts.mdfcKnown, false);
+});
+
+test('deckCounts: an empty deck counts nothing', () => {
+  assert.equal(deckCounts(COUNTED, []).cards, 0);
+  assert.equal(deckCounts(COUNTED, null).cards, 0);
 });
 
 // ---- whether the decklist is allowed ---------------------------------------

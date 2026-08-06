@@ -54,10 +54,19 @@ npx serve .                                       # any static file server works
   the ruleset requires survived the split. Its `if: always()` is load-bearing: without it a failed
   dependency **skips** it and GitHub reads a skipped required check as neutral, not failed →
   `test/workflow-pins.test.js`.
-- **CI does not run on push to `main`, and that rests on "Require branches to be up to date".** That
+- **CI runs on a pull request AND on a push to any branch but `main`.** The push half is not
+  belt-and-braces testing, it is the release path: **a required check is only credited from the PR's own
+  event, so one dropped webhook strands a pull request that nothing is wrong with.** #187 sat unmergeable
+  for two hours with `checks`, `static` and `browser` green on its exact head SHA, and neither a
+  `workflow_dispatch` run nor closing and reopening the PR produced anything the ruleset would look at —
+  both tried, both refused with `Required status check "checks" is expected`. The cost is a duplicate run
+  per push while a PR is open, ~84s each → `test/workflow-pins.test.js`, which also pins that `main`
+  stays excluded and that the pair is **not** deduplicated with `cancel-in-progress`: a cancelled
+  `checks` is what blocked #187 in the first place.
+- **`main` itself is still excluded, and that rests on "Require branches to be up to date".** That
   setting is what makes the pull-request run a statement about the tree that lands — `checkout` on a
   `pull_request` event takes the *merge*, identical to the branch tip in 36 of the last 39 merges. **Turn
-  it off and the `push` trigger belongs back in `ci.yml`.** README § *What the release pipeline costs*.
+  it off and `main` belongs in that trigger too.** README § *What the release pipeline costs*.
 - **The Chromium cache is warmed on `main` by `warm-cache.yml`, and that is the only place it
   works.** A cache written on a branch is restorable by that branch alone and is never visible to a
   sibling — measured: a second run of the same branch hits (install-deps only, 14s),
@@ -461,6 +470,17 @@ loosely.
   would forbid the merge commits `main` already uses, and any required-approval count above zero makes
   every PR unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
   `update-data.yml` force-pushes it nightly.
+- **Only a `pull_request`-event run satisfies the required check, so a session that cannot make GitHub
+  fire one cannot merge — no matter how green the suite is.** #187 sat blocked with `checks`, `static`
+  and `browser` all success on the exact head SHA, because they came from a `workflow_dispatch`: GitHub
+  answers `Required status check "checks" is expected` and there are **no bypass actors**, so nobody can
+  click past it either. **A dispatch is not the recovery and neither is closing and reopening the PR** —
+  both were tried on #187 and neither produced a run → the comment on `workflow_dispatch` in `ci.yml`
+  says so now. The only remedy is a new commit on the branch, which fires `synchronize`.
+  **And that too depends on GitHub being healthy**: on 6 Aug 2026 nothing this session pushed fired an
+  event after 15:10 UTC, Pages deployments had been timing out in their own queue since 12:11, and
+  dispatched jobs were being cancelled while queued. Three symptoms, one outage, and none of them worth
+  a workaround — the work waits.
 - **Never assume that ruleset is in force. On 5 Aug 2026 it did not exist at all**, while this file, the
   README and a session's reasoning all said it did — and **a missing gate is indistinguishable from a
   working one**, since PRs merge and CI goes green either way. It exists again as of 15:34 UTC that day
