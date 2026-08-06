@@ -44,6 +44,8 @@ node tools/substitution-scope.js                  # how much of the space is unr
 node tools/deck-cards.js [deck.txt] --unswept     # which cards carry a deck's combos
 node tools/deck-gaps.js [deck.txt]                # which gaps THIS deck exposes
 node tools/probe-cors.js [site]                   # can a browser read a deck from this site?
+node tools/check-branch-rules.js                  # does GitHub enforce what this file claims?
+node tools/check-branch-rules.js --fixture test/fixtures/branch-rules.json  # replay; 403s live here
 npx serve .                                       # any static file server works
 ```
 
@@ -412,8 +414,21 @@ loosely.
 - Comments explain *why*, not what. Removing a reason without replacing it reads as a regression.
 - **No dependencies.** ESLint and Playwright are fetched per run; a `node_modules` here would be
   the first. No style rules in the lint config either — match the surrounding code.
-- Trunk-based: short-lived `feat/…` / `fix/…` off `main`, PR, auto-merge when green. Merging to
-  `main` *is* the release. **Short-lived is load-bearing** — see below.
+- Trunk-based: a branch off `main`, PR, auto-merge when green. Merging to `main` *is* the release.
+  **What is load-bearing is that a branch is restarted from `main`, not that its name is new** —
+  every branch here is a harness-assigned `claude/<topic>-<suffix>` and they get **reused**:
+  `claude/release-process-breakdown-qupy5t` carried **11 PRs (#161–#173) over 4.5 hours** while each
+  individual PR lived about two minutes. What that name must never accumulate is divergence, which the
+  restart below handles. (This bullet said `feat/…` / `fix/…` until 5 Aug 2026, and **0 of the last 40
+  branches** had ever used either — a convention describing nothing, next to a rule it made sound like
+  it was about naming.)
+- **Batch a session's small changes into one PR.** Every merge is a release: 52 merges in three days,
+  and on 5 Aug alone **22 CI runs, 34.6 minutes of runner time and 14 deploys**. #170–#173 were four
+  PRs in 50 minutes all editing `README.md`/`CLAUDE.md`, and #173 spent a 95s CI run plus a full
+  production deploy on **17 lines of one file**. Nothing is gained by splitting them: with 0 required
+  approvals the PR reviews nothing, it is the only way through the ruleset. Open one per *piece of
+  work*, not per commit. **The exception is a change you want bisectable** — a behaviour change that
+  could need reverting on its own is worth its own PR at the same price.
 - **A ruleset refuses direct pushes to `main`**: PR required, `checks` green, **branches up to date**,
   no force-push, no deletion. **Nothing automated can land on `main`, and the bypass list cannot fix
   that: GitHub Actions is not an available bypass actor** — the list offers Deploy keys, Repository
@@ -427,11 +442,26 @@ loosely.
   `update-data.yml` force-pushes it nightly.
 - **Never assume that ruleset is in force. On 5 Aug 2026 it did not exist at all**, while this file, the
   README and a session's reasoning all said it did — and **a missing gate is indistinguishable from a
-  working one**, since PRs merge and CI goes green either way. No test here can reach it
-  (`metadata=read` → `/branches/main/protection` is 403). `curl /rules/branches/main` needs only read
-  access and lists what actually applies.
+  working one**, since PRs merge and CI goes green either way. It exists again as of 15:34 UTC that day
+  (ruleset 20465218, `~DEFAULT_BRANCH`, enforcement active), which means **#1–#160 merged ungated** and
+  nothing about them says so. No test here can reach it (`metadata=read` →
+  `/branches/main/protection` is 403), so → **`node tools/check-branch-rules.js`**, which reads
+  `/rules/branches/main` and the repo settings anonymously and checks every claim this file makes
+  against them. It cannot run live from this sandbox (`api.github.com` is off the proxy allowlist and
+  `fetch()` ignores `HTTPS_PROXY`) — dispatch *Check the branch rules are real*, or replay the
+  fixture.
+- **`allowed_merge_methods` on the ruleset still permits squash and rebase.** They are off as
+  *repository* settings, which is the only thing holding the invariant that `main`'s tip is always a
+  descendant of the PR head — and that invariant is what the whole *designated branch* section and
+  `.githooks/pre-push` rest on. One checkbox, no second lock, and `check-branch-rules.js` reports it
+  **FRAGILE** rather than passing it. Setting the ruleset to `["merge"]` makes the guarantee readable
+  off the rule instead of off a settings page.
 - **Up to date costs a click when it bites**: auto-merge does not update a stale branch, so a PR whose base
-  moved waits for **Update branch**, which re-runs CI.
+  moved waits for **Update branch**, which re-runs CI. *Always suggest updating pull request branches*
+  is off, so nothing volunteers the button — with strict checks on it appears anyway once the PR is
+  behind. Serialisation is the real price and it is invisible on a solo repo: every merge makes every
+  other open PR stale, so two concurrent streams would each pay a re-run per merge. Batching is what
+  keeps that theoretical.
 - **Push protection is on.** A push carrying anything credential-shaped is rejected outright — if
   it fails on a fixture, comment or test where you were only quoting a token *shape*, that is why.
 - **The `data` branch is a build artifact.** Never branch from it or PR into it.
@@ -532,7 +562,9 @@ git fetch origin main && git checkout -B <branch> origin/main && git push -u ori
 ```
 
 **That is a fast-forward, so no force and no prune** — and it has no exception, because **squash and
-rebase merging are both off**. `main`'s merge commit always has the PR head as a parent, so a branch
+rebase merging are both off** as repository settings (the `main` ruleset still lists all three as
+allowed merge methods, so the effective set is the intersection and one checkbox is carrying it →
+`node tools/check-branch-rules.js`). `main`'s merge commit always has the PR head as a parent, so a branch
 restarted from `main` is always a *descendant* of what the remote has and always pushes cleanly. Six of
 the last six merges check out that way.
 
