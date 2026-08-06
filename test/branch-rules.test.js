@@ -12,9 +12,11 @@ const { CLAIMS, checkClaims } = require('../tools/check-branch-rules.js');
 // green, no ruleset anywhere — so every case below is written as "make the docs
 // false, and check the tool says so".
 //
-// The fixture is the real response, recorded. It is the one case that proves the
-// tool parses the shape GitHub actually sends rather than the shape I imagined:
-// re-record it with the curl in the tool's header if the API ever changes.
+// The fixture is the real response, recorded **with push access** — which matters, and
+// is the thing this file got wrong first: three of the claims are invisible to a caller
+// without it, so the fixture and a runner's live response are legitimately different
+// shapes rather than one being broken. Both are covered below. Re-record with the curl
+// in the tool's header if the API ever changes.
 
 const FIXTURE = path.join(__dirname, 'fixtures', 'branch-rules.json');
 const recorded = () => JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
@@ -37,9 +39,9 @@ test('the recorded live configuration has nothing broken', () => {
 
 test('the recorded configuration is fragile on merge methods and silent on bypass', () => {
   const got = checkClaims(recorded());
-  // Both are deliberate: the merge-commit invariant is held by a repository
-  // checkbox the ruleset does not back up, and bypass_actors is absent from an
-  // unauthenticated response. Neither may be reported as a pass.
+  // Both are deliberate: the merge-commit invariant is held by a repository checkbox
+  // the ruleset does not back up, and bypass_actors lives on an endpoint this does not
+  // read — which omitted it even for the push-access caller. Neither is a pass.
   assert.deepStrictEqual(got.fragile.map((f) => f.claim), [MERGE_CLAIM]);
   assert.deepStrictEqual(got.unknown.map((f) => f.claim), ['nothing can bypass the ruleset']);
 });
@@ -169,9 +171,10 @@ test('losing auto-merge is BROKEN', () => {
   assert.deepStrictEqual(levelsFor(o, 'auto-merge is available'), ['BROKEN']);
 });
 
-// The response an authenticated `contents: read` workflow token actually got, which is
-// the narrower one: GitHub omits the repository fields the token has no visibility for
-// instead of refusing the request. Reconstructed from run 31064133085.
+// The response a runner actually got — with a `contents: read` token and, on the next
+// run, with no token at all: identical either way. GitHub returns these fields only to a
+// caller with push access, which a workflow token cannot have, so it omits them rather
+// than refusing the request. Reconstructed from runs 31064133085 and 31064463635.
 const narrowed = () => {
   const o = recorded();
   for (const f of ['allow_merge_commit', 'allow_squash_merge', 'allow_rebase_merge',
@@ -197,7 +200,7 @@ test('a narrowed repository response is UNKNOWN on every setting, never BROKEN',
     MERGE_CLAIM,
   ].sort());
   // And it has to say why, or the reader treats a narrowed run as a clean one.
-  assert.match(got.unknown[0].then, /re-run without a token/);
+  assert.match(got.unknown[0].then, /push access/);
 });
 
 test('the merge-commit setting is read from allow_merge_commit', () => {

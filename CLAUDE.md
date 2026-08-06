@@ -449,12 +449,16 @@ loosely.
   `/rules/branches/main` and the repo settings anonymously and checks every claim this file makes
   against them. It cannot run live from this sandbox (`api.github.com` is off the proxy allowlist and
   `fetch()` ignores `HTTPS_PROXY`) — dispatch *Check the branch rules are real*, or replay the
-  fixture. **Never give it a token.** A `contents: read` workflow token gets a *narrower*
-  `/repos/{owner}/{repo}` than an anonymous caller — `allow_squash_merge`, `allow_auto_merge` and
-  `delete_branch_on_merge` are absent rather than refused — so its first live run reported three
-  claims FALSE, one of them auto-merge being off four minutes after auto-merge merged the PR that
-  added the tool. **Absent is not false and not empty**: a setting the response does not carry is
-  reported UNKNOWN → `test/branch-rules.test.js`.
+  fixture. **A runner can only answer ten of the thirteen.** The three repository settings — merge
+  methods, auto-merge, branch retention — come back **only to a caller with push access**, and
+  Actions has no repository-administration permission, so `github.token` sees what an anonymous
+  caller sees. They read UNKNOWN there; to check them, replay a fixture recorded from a session
+  (**every request from this sandbox is authenticated — the proxy injects a credential, and
+  `/rate_limit` says 5,000 an hour, not the anonymous 60**) or set `GITHUB_API_TOKEN` to a PAT.
+  **Absent is not false and not empty** — a setting the response does not carry is UNKNOWN →
+  `test/branch-rules.test.js`. Its first live run called three of them FALSE, one being auto-merge
+  four minutes after auto-merge merged the PR that added the tool; **the token was then blamed for
+  it twice and was never the cause.**
 - **`allowed_merge_methods` on the ruleset still permits squash and rebase.** They are off as
   *repository* settings, which is the only thing holding the invariant that `main`'s tip is always a
   descendant of the PR head — and that invariant is what the whole *designated branch* section and

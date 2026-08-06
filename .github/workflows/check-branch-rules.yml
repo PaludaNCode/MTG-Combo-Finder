@@ -41,14 +41,20 @@ jobs:
       # when a documented claim is false — FRAGILE and UNKNOWN lines are reported and
       # do not fail the run, because neither is a thing the tree can fix.
       #
-      # **No GITHUB_TOKEN, deliberately.** The first version of this step passed
-      # `${{ github.token }}` to buy the 5,000/hour rate-limit bucket, and the run
-      # reported three of the repository's documented claims as FALSE: a workflow token
-      # scoped to `contents: read` gets a NARROWER /repos/{owner}/{repo} object than an
-      # anonymous caller, so allow_squash_merge, allow_auto_merge and
-      # delete_branch_on_merge were simply absent and every check read absent as
-      # "false". It said auto-merge was off four minutes after auto-merge merged the
-      # pull request that added this file. Three requests do not need a bigger bucket.
+      # **This run can only ever answer ten of the thirteen claims, and that is not a
+      # bug to fix here.** The three repository settings — the merge methods, auto-merge,
+      # and whether merged branches are kept — are returned only to a caller with push
+      # access, and a workflow token cannot have it: Actions has no repository
+      # administration permission, so `${{ github.token }}` sees exactly what an
+      # anonymous caller sees. They are reported UNKNOWN, which is the honest answer.
+      # Checking them needs a PAT with push access in GITHUB_API_TOKEN, or a replayed
+      # fixture recorded by one.
+      #
+      # Passing no token is therefore not an optimisation and not a fix. The first
+      # version of this step did pass `${{ github.token }}`, the run reported those three
+      # claims as FALSE, and removing the token changed nothing — the second run was
+      # still narrowed. The false findings came from comparing absent fields against
+      # `=== false`; the token was a red herring that got written down as a cause twice.
       - name: Ask GitHub what applies to main
         run: |
           set -o pipefail
