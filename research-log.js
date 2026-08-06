@@ -1697,8 +1697,30 @@ const PASSES = [
       'Warren Soultrader': 'Pay 1 life, Sacrifice another creature: Create a Treasure token. Creature — Zombie Goblin Wizard 3/3 for {2}{B}.',
       'Samwise Gamgee': 'Whenever another nontoken creature you control enters, create a Food token. Sacrifice three Foods: Return target historic card from your graveyard to your hand. Legendary Creature — Halfling Peasant 2/2 for {G}{W}.',
       'Shilgengar, Sire of Famine': 'Flying. Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your graveyard to the battlefield with a finality counter on it. Legendary Creature — Elder Demon 6/6.',
-      // The three outlets the rows this pass kept were measured against, because the
-      // Trudge Garden rule-out is arithmetic about what each one pays.
+      // EVERY OUTLET THIS PASS WROTE A ROW FOR, fetched here rather than read off the
+      // outlet-slot pass above, which records all sixteen verbatim. That entry is not
+      // a source: it is somebody's transcription, and a pass that cites another pass's
+      // `read` block has moved one step away from the card without saying so. Seven of
+      // these eleven were originally taken that way and are re-fetched; all seven
+      // matched, and the rows did not change. The check that matters is that each is
+      // FREE and eats the CAT — the loop asks nothing else of the outlet, because
+      // Camellia eats the Food and Peregrin Took replaces it.
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. Creature — Vampire Wizard 1/1 for {B}.',
+      'Carrion Feeder': 'This creature can’t block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
+      'Altar of Dementia': 'Sacrifice a creature: Target player mills cards equal to the sacrificed creature’s power. Artifact.',
+      'Woe Strider': 'When this creature enters, create a 0/1 white Goat creature token. Sacrifice ANOTHER creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. This creature escapes with two +1/+1 counters on it. Creature — Horror 3/2.',
+      'Yahenni, Undying Partisan': 'Haste. Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni. Sacrifice ANOTHER creature: Yahenni gains indestructible until end of turn. Legendary Creature — Aetherborn Vampire 2/2.',
+      'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Vampire 1/1.',
+      'Goblin Bombardment': 'Sacrifice a creature: This enchantment deals 1 damage to any target. Enchantment.',
+      // The two whose text needed reading rather than glancing at. Blasting Station
+      // TAPS to sacrifice, so it would be a one-shot — its second line is what saves
+      // it, and the Squirrel Camellia makes every lap is a creature entering. Spawning
+      // Pit's sacrifice is free; only its token costs {1} and two charge counters, and
+      // the loop never needs the token.
+      'Blasting Station': '{T}, Sacrifice a creature: This artifact deals 1 damage to any target. Whenever a creature enters, you may untap this artifact. Artifact for {3}.',
+      'Spawning Pit': 'Sacrifice a creature: Put a charge counter on this artifact. {1}, Remove two charge counters from this artifact: Create a 2/2 colorless Spawn artifact creature token. Artifact for {2}.',
+      // The three the Trudge Garden rule-out is arithmetic about — what each pays for
+      // one creature, against the {2} its trigger costs.
       'Ashnod’s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact.',
       'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color. Artifact for {3}.',
       'Thermopod': '{S}: Thermopod gains haste until end of turn. Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3 for {4}{R}.',
