@@ -907,60 +907,58 @@ function measure(win, doc) {
         && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
     };
   })();
-  // The strip above the results: how many cards, how many spells, how many lands.
-  // Read as a reader sees it -- the numbers in order, the aside on the land count, and
-  // whether the separators are drawn, since those are dropped by a container query once
-  // the strip is too narrow to hold them and a wrapped line would otherwise end on one.
+  // The deck summary: one box holding what the page can say about the *list* rather
+  // than about the search — colours, bracket, and a row per number. Read as a reader
+  // sees it, which for this box means row by row: the keys line up in a column, and a
+  // row whose value wrapped is a row twice the height of its neighbours.
   //
-  // It cannot be measured off the markup order alone: the strip has to sit above the
-  // colour identity, and both are plain blocks that a stylesheet could reorder.
-  const deckCounts = (() => {
-    const line = doc.querySelector('#deck-counts .deck-counts');
-    const identityLine = doc.querySelector('#identity .identity-line');
+  // It cannot be measured off the markup order alone. The box has to sit above the
+  // results and below the unrecognized-cards notice, and both are plain blocks that a
+  // stylesheet could reorder.
+  const deckSummary = (() => {
+    const box = doc.querySelector('#deck-summary');
+    const rows = box && !box.hidden ? [...box.querySelectorAll('.identity-line, .bracket-line, .summary-row')] : [];
+    const firstPanel = doc.querySelector('#results .panel');
     return {
-      shown: !!line,
-      // What a reader sees, so a piece the ladder has hidden reads as absent rather than
-      // as present-but-invisible. The label is gone below 37rem of column.
-      label: line ? visibleText(line.querySelector('.deck-counts-label')).trim() : '',
-      // Each number with its noun, so "10 lands" is one reading rather than two -- and
-      // without the aside, which is read separately below. Taken off the child nodes
-      // rather than off the element, because the aside is *inside* the land count and
-      // asking the element for its text folds the two claims into one string.
-      parts: [...doc.querySelectorAll('#deck-counts .deck-count')].map((e) => [...e.childNodes]
-        .filter((n) => !(n.nodeType === 1 && n.classList.contains('deck-sub')))
-        .map((n) => n.textContent).join('').trim()),
-      // Which of the four numbers each part is, read off the class the renderer sets --
-      // the stylesheet names them the same way, so a check can too.
-      keys: [...doc.querySelectorAll('#deck-counts .deck-count')]
-        .map((e) => (String(e.className).match(/is-(cards|spells|lands|unread)/) || [])[1] || '?'),
-      // The parentheses are in the DOM rather than drawn by CSS, so a screen reader gets
-      // them too; they are not part of the claim, so they come off here.
-      //
-      // With split() and join() and not a regex, on purpose: this is inside the HARNESS
-      // template literal, where /^\\(/ arrives as /^(/ and matches the empty string --
-      // which is how the first draft of this line reported "(10 basic)" unchanged while
-      // looking exactly like a strip that worked. CLAUDE.md, "Tests, and what a tool says
-      // about itself".
-      //
-      // visibleText, because half of the land aside is hidden below 31rem of column and
-      // textContent would report a page that says more than it shows.
-      subs: [...doc.querySelectorAll('#deck-counts .deck-sub')]
-        // .split(' ') and not a regex: a backslash-s class inside this template literal
-        // arrives as a plain s and turns "10 basic" into "10 ba ic". Same trap as the
-        // parentheses two lines up, met twice in one expression -- and note there is no
-        // backtick in this comment either, because one would end the literal.
-        .map((e) => visibleText(e).trim().split('(').join('').split(')').join('')
-          .split(' ').filter(Boolean).join(' '))
-        .filter(Boolean),
-      separators: [...doc.querySelectorAll('#deck-counts .deck-sep')]
-        .filter((e) => win.getComputedStyle(e).display !== 'none').length,
-      // One line at every width the page is checked at, or the design is not the design.
-      lines: line ? Math.round(line.getBoundingClientRect().height / parseFloat(win.getComputedStyle(line).lineHeight)) : 0,
-      aboveIdentity: !!(line && identityLine
-        && line.getBoundingClientRect().top < identityLine.getBoundingClientRect().top),
-      // The strip's own column, which is what the container query answers to -- not the
-      // viewport. At 768px the results column is far narrower than the window.
-      column: line ? Math.round(line.parentElement.getBoundingClientRect().width) : 0,
+      shown: Boolean(box) && !box.hidden,
+      // Key, value and aside per row, in the order they are drawn. The key doubles as
+      // the row's name in a failure message, which is worth more than an index.
+      rows: rows.map((row) => ({
+        key: visibleText(row.querySelector('.summary-key, .identity-label, .bracket-label')).trim(),
+        n: visibleText(row.querySelector('.summary-n')).trim(),
+        sub: visibleText(row.querySelector('.summary-sub')).trim(),
+        // Rounded to the line: a row that wrapped is twice the height of one that did
+        // not, and that is the failure this box replaced a one-line strip to avoid.
+        lines: Math.round(row.getBoundingClientRect().height
+          / parseFloat(win.getComputedStyle(row).lineHeight)),
+      })),
+      // The pips still belong to their own renderers; this only checks they are in here.
+      identityPips: box ? box.querySelectorAll('.identity-line .pip').length : 0,
+      // .step and not .bracket-pip -- the renderer has always called them steps, and a
+      // selector matching nothing would report a box with a bracket in it as a bracket
+      // with no pips. No backticks in here: this is inside the HARNESS template literal.
+      bracketPips: box ? box.querySelectorAll('.bracket-line .step').length : 0,
+      // Every key starts at the same x, or the column is not a column.
+      keyLefts: [...new Set(rows.map((row) => {
+        const key = row.querySelector('.summary-key, .identity-label, .bracket-label');
+        return key ? Math.round(key.getBoundingClientRect().left) : -1;
+      }))],
+      // Same question for the figures, which only line up while the key column is fixed
+      // — under 24rem of box the keys size to their text and this is expected to spread.
+      valueLefts: [...new Set(rows.map((row) => {
+        const n = row.querySelector('.summary-n');
+        return n ? Math.round(n.getBoundingClientRect().left) : -1;
+      })).values()].filter((x) => x !== -1),
+      column: box ? Math.round(box.getBoundingClientRect().width) : 0,
+      // What the container query actually answers to: an inline-size container measures
+      // its CONTENT box, so the padding and border come off. Reading the outer width and
+      // comparing it against the rule's rem value is how the first threshold here landed
+      // between the two phones on paper and fired on both in the browser.
+      inner: box ? Math.round(box.clientWidth
+        - parseFloat(win.getComputedStyle(box).paddingLeft)
+        - parseFloat(win.getComputedStyle(box).paddingRight)) : 0,
+      aboveResults: Boolean(box && firstPanel
+        && box.getBoundingClientRect().top < firstPanel.getBoundingClientRect().top),
     };
   })();
   // What the page said about legality. Two lines, or none -- and read as a reader sees
@@ -1369,7 +1367,7 @@ function measure(win, doc) {
     slots,
     stuckSlot,
     unknownCards,
-    deckCounts,
+    deckSummary,
     legality,
     comboCompare,
     gutterNeeds,
@@ -1923,6 +1921,12 @@ function runOne(vp) {
           spoken: addBtn ? addBtn.getAttribute('aria-label') : '',
           card: addRow ? addRow.querySelector('h3 .card-name').textContent : '',
           combosBefore: before.included.badge,
+          // The deck-counts strip has to move with the deck, and it is the one thing on
+          // the page that describes the decklist rather than the search — so a render
+          // that rebuilt every panel and left the strip alone would look entirely
+          // correct. It said 101 cards before this check existed and would have gone on
+          // saying 101 after the add.
+          countsBefore: before.deckSummary.rows.map((r) => r.key + ' ' + r.n).join(' | '),
           // The map is drawn from the search's own results, so it has to move
           // with them. A picture that is one search behind the list beside it is
           // worse than no picture — it says the added card is in no combos.
@@ -1981,6 +1985,7 @@ function runOne(vp) {
           afterAdd.sectionLine = lines.findIndex(function (l) { return /^side\\s*board/i.test(l); });
           afterAdd.status = doc.getElementById('status').textContent;
           afterAdd.combosAfter = now.included.badge;
+          afterAdd.countsAfter = now.deckSummary.rows.map((r) => r.key + ' ' + r.n).join(' | ');
           afterAdd.mapAfter = now.map ? now.map.dots.length : 0;
           afterAdd.mapHasCard = now.map
             ? now.map.titled.some(function (t) { return t.indexOf(afterAdd.card) === 0; })
@@ -3255,79 +3260,67 @@ function captionDrift(notes) {
       problems.push(`a clean deck was told ${unknown.names.length} of its cards are unrecognized`);
     }
 
-    // The strip above the results. The fixture deck is 7 lines and 17 cards, because its
-    // lands arrive as "10 Island" — so the count is also the check that this is counted by
-    // quantity rather than by line, which is the mistake tools/try-deck.js makes.
+    // THE DECK SUMMARY. One box, five rows: colours and bracket first — what the deck
+    // *is* — then a row per number. It replaced a one-line strip that had to hide the
+    // label and the basic/nonbasic split on a phone; the point of the rows is that
+    // nothing is hidden at any width, so what is checked is that every row says its
+    // whole piece and none of them wrapped.
     //
-    // Expected numbers are derived from the deck under test rather than written out per
-    // viewport: the misspelled deck adds two cards the fixture map has never heard of, and
-    // those must leave the lands and spells alone and turn up as their own quiet number.
-    const strip = v.deckCounts;
     // The misspelled deck carries three cards the tuning deck does not: two the fixture
-    // map has never heard of, and Bala Ged Recovery, which is a spell with a land on the
-    // back. So it is the run that exercises every reading the strip has.
+    // map has never heard of, and Bala Ged Recovery, an MDFC. So it is the run that
+    // exercises every row the box has.
     const extra = { misspelled: 3, illegal: 2, illegalNoCommander: 2 }[v.deck] || 0;
     const unread = v.deck === 'misspelled' ? 2 : 0;
     const spells = 7 + (extra - unread);
-    const want = [`${17 + extra} cards`, `${spells} spells`, '10 lands']
-      .concat(unread ? [`${unread} cards unread`] : []);
-    // THE LADDER, checked the same way round as the CSS writes it. The strip must be
-    // ONE LINE at every width, so instead of wrapping it shows less as the column
-    // narrows: the derivable half of the land aside goes first, then the separators,
-    // then the label. Thresholds are on the strip's own column -- 25rem/31rem/37rem,
-    // which is 400/496/592px -- and they were measured by rendering a real deck into
-    // the real column from 320px to 1920px, not chosen.
-    //
-    // In DOM order: the aside on the spells, then the one on the lands.
-    const col = strip.column;
-    const wantSubs = (v.deck === 'misspelled' ? ['1 MDFC'] : [])
+    const summary = v.deckSummary;
+    const wantRows = [
+      { key: 'Colour identity', n: '', sub: '' },
+      { key: 'Bracket', n: '', sub: '' },
+      { key: 'cards', n: String(17 + extra), sub: '' },
       // All ten lands are Islands, so there is nothing to say about nonbasics -- and the
-      // aside must not invent "0 nonbasic" to say it with. That also means this fixture
-      // cannot see the 31rem step, which is what the width sweep in the header of the
-      // rules in style.css is for.
-      .concat(col >= 400 ? ['10 basic'] : []);
-    const wantLabel = col >= 592 ? 'Deck' : '';
-    const wantSeps = col >= 496 ? want.length - 1 : 0;
-    const wantKeys = ['cards', 'spells', 'lands'].concat(unread ? ['unread'] : []);
-    if (!strip.shown) {
-      problems.push('no deck-counts strip after a search');
+      // aside must not invent "0 nonbasic" to say it with. The MDFC count is an aside on
+      // the *spells*, because that is where such a card is counted.
+      { key: 'spells', n: String(spells), sub: v.deck === 'misspelled' ? '1 MDFC' : '' },
+      { key: 'lands', n: '10', sub: '10 basic' },
+    ].concat(unread ? [{ key: 'cards unread', n: String(unread), sub: '' }] : []);
+
+    if (!summary.shown) {
+      problems.push('no deck summary after a search');
     } else {
-      if (strip.label !== wantLabel) {
-        problems.push(`the label reads ${JSON.stringify(strip.label)} in a ${col}px column, `
-          + `expected ${JSON.stringify(wantLabel)}`);
+      const got = summary.rows.map((r) => ({ key: r.key, n: r.n, sub: r.sub }));
+      if (JSON.stringify(got) !== JSON.stringify(wantRows)) {
+        problems.push(`the summary rows read ${JSON.stringify(got)}, expected ${JSON.stringify(wantRows)}`);
       }
-      if (JSON.stringify(strip.parts) !== JSON.stringify(want)) {
-        problems.push(`the strip reads ${JSON.stringify(strip.parts)}, expected ${JSON.stringify(want)}`);
+      // Nothing wraps. A row twice the height of its neighbours is the failure the box
+      // exists to avoid, and it is invisible in a screenshot of a short fixture deck.
+      const wrapped = summary.rows.filter((r) => r.lines > 1).map((r) => r.key);
+      if (wrapped.length) {
+        problems.push(`${JSON.stringify(wrapped)} wrapped in a ${summary.column}px box`);
       }
-      // Each number says which one it is, because the stylesheet hides them by name: a
-      // rule that counted positions would hide the wrong thing the day a number moved.
-      if (JSON.stringify(strip.keys) !== JSON.stringify(wantKeys)) {
-        problems.push(`the strip's parts are keyed ${JSON.stringify(strip.keys)}, expected ${JSON.stringify(wantKeys)}`);
+      // The keys are a column at every width -- that is what makes five facts read as
+      // one answer rather than five sentences.
+      if (summary.keyLefts.length !== 1) {
+        problems.push(`the keys start at ${JSON.stringify(summary.keyLefts)}, expected one x`);
       }
-      // The MDFC count is an aside on the *spells*, because that is where such a card is
-      // counted, and it never drops -- it is the one number here nothing else implies.
-      if (JSON.stringify(strip.subs) !== JSON.stringify(wantSubs)) {
-        problems.push(`the asides read ${JSON.stringify(strip.subs)} in a ${col}px column, `
-          + `expected ${JSON.stringify(wantSubs)}`);
+      // And the figures line up too, while the key column is fixed. Under 18.5rem of the
+      // box's CONTENT width -- 296px, which a 320px phone is under at 270px and a 390px
+      // phone is not at 325px -- the keys size to their own text and the figures are
+      // expected to spread. Compared against the inner width for the same reason the CSS
+      // is written against it: the container query never sees the padding.
+      const alignedFigures = summary.inner >= 296;
+      if (alignedFigures && summary.valueLefts.length !== 1) {
+        problems.push(`the figures start at ${JSON.stringify(summary.valueLefts)} in a `
+          + `${summary.column}px box (${summary.inner}px inside), expected one x`);
       }
-      // ONE LINE, EVERYWHERE — with one measured exception. The ladder exists so that a
-      // 320px phone gets one line too, so a second line means a threshold is wrong rather
-      // than that the column is small. This replaces a rule that allowed two lines under
-      // 416px, which is what the page did until the ladder existed.
-      //
-      // The exception is the four-number case: a deck with an unrecognized card in it
-      // shows an unread count as well, and four numbers do not fit 371px however they are
-      // worded — "2 unread" wraps at 320px, and at 390px as soon as the counts run to
-      // three digits. Dropping it instead would remove the one number that explains why
-      // the other three do not add up, and the box directly above names those cards.
-      const maxLines = unread && col < 400 ? 2 : 1;
-      if (strip.lines > maxLines) {
-        problems.push(`the strip took ${strip.lines} lines in a ${col}px column, expected ${maxLines}`);
+      if (!alignedFigures && summary.valueLefts.length === 1 && summary.rows.length > 2) {
+        problems.push(`the figures still share one x in a ${summary.column}px box (${summary.inner}px inside) — the narrow `
+          + 'rule that lets the keys size to their text is not applying');
       }
-      if (!strip.aboveIdentity) problems.push('the deck-counts strip is below the colour identity');
-      if (strip.separators !== wantSeps) {
-        problems.push(`${strip.separators} separator(s) drawn in a ${col}px column, expected ${wantSeps}`);
+      if (summary.identityPips < 1) problems.push('the colour identity is not in the summary box');
+      if (summary.bracketPips !== 5) {
+        problems.push(`${summary.bracketPips} bracket pips inside the summary box, expected 5`);
       }
+      if (!summary.aboveResults) problems.push('the deck summary is below the results it describes');
     }
 
     // A deck with nothing wrong is told nothing. The two illegal decks have their own
@@ -3451,6 +3444,15 @@ function captionDrift(notes) {
           + `${added.mapAfter} after — it was not rebuilt`);
       }
       if (!added.mapHasCard) problems.push(`${added.card} was added but is not on the map`);
+      // And the strip, which is the one thing on the page describing the decklist rather
+      // than the search — so a render that rebuilt every panel and left it alone would
+      // look entirely correct while telling the reader their deck is a card smaller than
+      // it is. Compared as text rather than parsed: whichever number moved, it has to
+      // have moved.
+      if (added.countsAfter === added.countsBefore) {
+        problems.push(`the deck-counts strip still reads "${added.countsBefore}" after adding `
+          + `${added.card} — it was not recalculated`);
+      }
       // …and it was redrawn without forcing a layout to find out how wide to draw.
       // See the note beside widthReads in the harness: the old read cost 601ms of a
       // 3,620ms search on a phone, and nothing about the picture says whether it is
@@ -3806,11 +3808,12 @@ function captionDrift(notes) {
       const unknownNote = v.unknownCards.shown
         ? `unrecognized [${v.unknownCards.names.join(', ')}]`
         : 'every card recognized';
-      // The strip as a reader sees it, with the column that decided whether the middots
-      // are drawn -- the pair that makes a changed threshold visible in a passing run.
-      const stripNote = `strip "${v.deckCounts.parts.join(' · ')}"`
-        + `${v.deckCounts.subs.length ? ` (${v.deckCounts.subs.join('; ')})` : ''}`
-        + `, ${v.deckCounts.separators} middot(s) in ${v.deckCounts.column}px`;
+      // The summary box as a reader sees it, row by row, with the box width that decides
+      // whether the keys hold a column — the pair that makes a changed threshold visible
+      // in a passing run rather than only in a failure.
+      const stripNote = 'summary ' + v.deckSummary.rows
+        .map((r) => `${r.key} ${r.n}${r.sub ? ' (' + r.sub + ')' : ''}`.trim())
+        .join(' / ') + ` in ${v.deckSummary.column}px`;
       const linked = v.numberColumns.filter((c) => c.rowLinks.length);
       const linkNote = `links ${linked.some((c) => c.rowLinks.every((r) => r.beside)) ? 'beside' : 'below'} the name `
         + `in ${linked.map((c) => c.column + 'px').join('/')} column(s)`;
@@ -3827,7 +3830,8 @@ function captionDrift(notes) {
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
         + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
-        + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`;
+        + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`
+        + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`;
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
         + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `

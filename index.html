@@ -102,20 +102,24 @@
              above the answer, because it says the answer is smaller than the deck
              deserves. Absent entirely when there are none. -->
         <div id="unrecognized"></div>
-        <!-- What the pasted list *is*: how many cards, how many of those are lands.
-             Above everything about what is in it, beside the colour identity it
-             reads like — both describe the decklist rather than the search.
+        <!-- Everything the page can say about the *list* rather than about the
+             search, in one box: what colours it is, which bracket it is still
+             eligible for, and how many cards of each kind it holds. They were three
+             loose lines and are one panel now, because they answer one question and
+             a reader was reading them as three unrelated facts.
 
-             It is its own element because it is a container query context: the
-             separators between the numbers are dropped once the strip is too narrow
-             to hold them on one line, and that has to be answered by the width of
-             the strip rather than of the window. -->
-        <div id="deck-counts"></div>
-        <div id="identity"></div>
-        <!-- Which Commander bracket the list is still eligible for. Two of the
-             bracket criteria are readable off a decklist; the rest are judgement
-             calls, and the panel says which it did not check. -->
-        <div id="bracket"></div>
+             Order is deliberate. Colour identity and the bracket come first — they
+             are what the deck *is* — and the counts follow as its contents. Two of
+             the bracket criteria are readable off a decklist and the rest are
+             judgement calls, which the bracket's own panel says.
+
+             The box is hidden by app.js when all three render nothing, since an
+             empty frame is worse than no frame. -->
+        <section id="deck-summary" class="deck-summary" hidden>
+          <div id="identity"></div>
+          <div id="bracket"></div>
+          <div id="deck-counts"></div>
+        </section>
         <!-- And whether the list is *allowed*: cards outside the commander's colour
              identity, and cards banned in Commander. Two different accusations, so
              two lines, and nothing at all when there is neither. -->

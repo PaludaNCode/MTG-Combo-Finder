@@ -42,10 +42,10 @@ branch.
   ranked ("add Rings of Brighthearth → unlocks 4 combos"), ties broken on popularity. **+ Add to deck**
   appends the card and re-runs the search against the database already in memory.
 - **Size breakdowns** everywhere a count appears: a `+3` reads *1 × 2-card · 1 × 3-card · 1 × 4-card*.
-- **What you pasted, before anything about it** — `Deck  98 cards · 62 spells (3 MDFCs) ·
-  36 lands (16 basic · 20 nonbasic)`, counted by quantity so `10 Forest` is ten cards. A card the
-  snapshot has no type line for is counted apart rather than called a spell, and with no land list in
-  the payload the strip says only how many cards there are.
+- **What you pasted, before anything about it** — one box holding the colour identity, the bracket, and
+  a row per number: `cards 98`, `spells 62 (3 MDFCs)`, `lands 36 (16 basic · 20 nonbasic)`. Counted by
+  quantity, so `10 Forest` is ten cards. A card the snapshot has no type line for is counted apart rather
+  than called a spell, and with no land list in the payload the box says only how many cards there are.
 - **Which bracket the list is in** — five pips under the colour identity. A floor, never a verdict, with
   the reasoning and the unchecked criteria one hover away. Beside it, **whether the list is *allowed***:
   off-identity cards and Commander bans, and nothing at all when there is neither.
@@ -1044,16 +1044,22 @@ question the page asks, and every card's type line would have been 282 KB for it
 The counts are the live ones, not this repository's cache: the first refresh to carry the lists reported
 `lands: 0 → 1,191`, `basic lands: 0 → 13`, `MDFCs: 0 → 82` against Scryfall's oracle bulk.
 
-**One line, at every width, by showing less rather than wrapping.** The strip sits directly above the
-answer the page is for, so a second line is height taken from that. Measured by rendering a real deck
-into the real column from 320px to 1920px, one line needs: the three numbers and the MDFC count from
-**301px**, `(14 basic)` from **371px**, `· 20 nonbasic` and the separators from **468px**, the `DECK`
-label from **568px**. Shrinking the type instead does not work — at `.75rem` the full line still wraps —
-so the only thing that fits is less text, and what goes first is what a reader can recover: nonbasic is
-the land count minus the basics. Thresholds are container queries at 25/31/37rem of **column**, a little
-above each measurement, because those came from one deck. The one case that still wraps on a phone is a
-deck with an unrecognized card in it: four numbers do not fit 371px however they are worded, and the
-number that would have to go is the one explaining why the other three do not add up.
+**A row per number, in one box with the colour identity and the bracket.** These three answer one
+question — what is this list — and as three loose lines above the results they read as three unrelated
+facts. The box is `.legality`'s chrome, which is already the page's shape for talking about your input,
+and the order is what the deck *is* before what it contains.
+
+It began as one line, and that is worth recording because it is the argument against going back: at
+390px the line could only fit by dropping the `DECK` label and the basic/nonbasic split, and a phone is
+exactly where somebody is checking their land count. Shrinking the type was measured too and does not
+work — at `.75rem` the full line still wraps. Rows cost height, all of it directly above the answer the
+page is for: **149px** for five rows against **22px** for the line. Nothing is hidden at any width in
+exchange.
+
+The keys hold a **9.5rem column**, which is what `COLOUR IDENTITY` needs at `.8rem`; under **24rem of
+box** — a 320px phone leaves 301px — they size to their own text instead, because a fixed column there
+leaves 130px for the value and two of the five rows wrap to double height. `verify` checks every row is
+one line, that the keys share one x, and that the figures share one x while the column is fixed.
 
 **Three claims, three ways to be silent rather than wrong**, all of them the rule
 [the unrecognized-cards box](#telling-the-reader-which-cards-were-not-recognised) already follows:

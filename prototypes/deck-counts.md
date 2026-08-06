@@ -81,7 +81,13 @@ question nobody is asking yet.
 4. **Lands + spells must equal cards, visibly.** 36 + 62 = 98 is checkable at a glance, and that
    is the point — so the unread bucket cannot be quietly folded into either half.
 
-## What shipped, and what the prototype caught
+## What shipped in the end
+
+**Layout C from `deck-counts-rows.html`** — one box, a row per number, with the colour identity and the
+bracket moved in above them. The one-line strip below is what shipped first and what it replaced; the
+reasoning for the line is kept because it is the argument against going back to it.
+
+## What shipped first, and what the prototype caught
 
 **Variant A+, with the spells before the lands**: `Deck  98 cards · 62 spells · 36 lands (16 basic ·
 20 nonbasic)`. One line, above the colour identity, no panel — the strip sits directly above the answer

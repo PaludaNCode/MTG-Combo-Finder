@@ -329,104 +329,108 @@ button:disabled { opacity: .6; cursor: wait; }
 .unknown-more { margin: .3rem 0 0; font-size: .85rem; color: var(--muted); }
 .unknown-why { margin: .45rem 0 0; font-size: .82rem; color: var(--muted); }
 
-/* ---- how many cards, how many lands ----
+/* ---- the deck summary: what the pasted list is ----
  *
- * "Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)", above the colour
- * identity and built to read like it: a label, a compact fact, no prose and no panel.
- * One line is the whole design — the strip sits directly above the answer the page is
- * for, so every pixel of height it takes is height taken from that.
+ * One box holding the three things the page can say about the *list* rather than about
+ * the search: its colours, the bracket it is still eligible for, and how many cards of
+ * each kind it holds. They were three loose lines above the results and read as three
+ * unrelated facts; as rows in one frame they read as one answer, and the keys line up.
  *
- * Colours are tokens: the numbers --text on --bg, the label, the aside and the unread
- * note --muted. Nothing here softens a colour with opacity, and --faint is not reached
- * for even though this does sit on --bg, because .deck-sub is small enough already.
+ * The chrome is `.legality`'s, deliberately — that is already the page's shape for
+ * "talking about your input" — and it is worth the height it costs. Measured at 900px:
+ * three loose lines were 22px of strip plus two lines of their own; the box is 96px for
+ * three rows and 120px for four, spent directly above the answer the page is for. What
+ * it buys is that nothing is ever hidden: the one-line strip this replaces had to drop
+ * the label and the basic/nonbasic split on a phone, and a phone is exactly where
+ * somebody is checking their land count.
  *
- * EVERY CLASS IS PREFIXED. `.count` was the obvious name for "98 cards" and `.count`
- * is taken — it carries display:flex further down this file, for the magnitude bar
- * behind a suggestion's number, which turns a <b> into a block and makes the space
- * after it vanish. The strip rendered "98cards · 36lands" with the space present in
- * the DOM. See prototypes/deck-counts.md. */
-#deck-counts {
-  /* The query context for the separators below. On this wrapper rather than on
-     .col-output, so the containment it implies is scoped to one line of text. */
-  container-type: inline-size;
+ * Colours are tokens throughout: keys and asides --muted, figures --text, both on
+ * --panel, which is the pairing .legality-line already clears AA with. Nothing here
+ * softens a colour with opacity, and --faint is not reached for — it is only safe on
+ * --bg, and this box is not on --bg.
+ *
+ * EVERY CLASS IS PREFIXED `summary-`. `.count`, `.row` and `.name` are all taken in this
+ * file, and reusing `.count` for a number once already turned a <b> into a block and
+ * rendered "98cards". See prototypes/deck-counts.md. */
+.deck-summary {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  margin: 0 0 1rem;
 }
-.deck-counts {
+.deck-summary[hidden] { display: none; }
+/* A query container, so the rule at the bottom of this block answers to the width of
+   the box rather than of the window — the results column is 474px at a 900px window
+   because the decklist takes 370px of it. */
+.deck-summary { container-type: inline-size; }
+
+/* One rhythm for every row in the box, including the two the identity and bracket
+   renderers draw — they are matched to this rather than the other way round, so a row
+   added later inherits it instead of inventing a fourth spacing. */
+.summary-row,
+.deck-summary .identity-line,
+.deck-summary .bracket-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: .3rem .6rem;
-  margin: 0 0 1rem;
+  margin: .25rem 0;
   font-size: .9rem;
-  color: var(--text);
 }
-.deck-counts-label {
+/* The key column. A fixed basis so the five keys stack into a column rather than
+   wandering with the length of each word — and `flex: 0 0` rather than a width, so a
+   long key wraps its own text instead of pushing the figure off the row. */
+.summary-key,
+.deck-summary .identity-label,
+.deck-summary .bracket-label {
+  /* 9.5rem because COLOUR IDENTITY is the longest key and wraps at anything less,
+     which makes one row taller than the other four and the column stop reading as a
+     column. Measured, not guessed: it renders 130px at .8rem/700/.04em. */
+  flex: 0 0 9.5rem;
   color: var(--muted);
   font-size: .8rem;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
-.deck-count b { font-weight: 600; }
-.deck-count.is-quiet { color: var(--muted); }
-/* The aside on the land count, and only ever beside it: it qualifies that number and
-   says nothing on its own. */
-.deck-sub { color: var(--muted); font-size: .85em; }
-/* ---- one line, at every width, by earning each piece of it ----
- *
- * The strip must not wrap. It sits directly above the answer the page is for, and a
- * second line is height taken from that — so instead of wrapping, the narrow column
- * shows less. Written the other way round from how it reads: the smallest case is the
- * default and each container query *adds* something back.
- *
- * The ladder is measured, not guessed. Rendering "101 cards · 67 spells (1 MDFC) ·
- * 34 lands (14 basic · 20 nonbasic)" into the real column at viewport widths from 320
- * to 600px, one line needs:
- *
- *   from  301px   the three numbers and the MDFC aside
- *   from  371px   + "(14 basic)"
- *   from  468px   + "· 20 nonbasic", and the separators
- *   from  568px   + the DECK label
- *
- * Thresholds sit a little above each measurement, because those numbers came from one
- * deck: 25rem/31rem/37rem against 371/468/568px leaves room for a three-figure count
- * and the plural "3 MDFCs". Shrinking the type instead does not work and was measured
- * too — at .75rem the full line still wraps, so the only thing that fits is less text.
- *
- * What goes first is what a reader can recover: nonbasic is the land count minus the
- * basics. Then the label, which the strip's position already says. The MDFC count
- * never goes, because it is the one number here that cannot be derived from the
- * others.
- *
- * ONE CASE STILL WRAPS ON A PHONE AND IS MEANT TO: a deck with a card the snapshot has
- * never heard of shows a fourth number, and four of them do not fit 371px however they
- * are worded — measured at "2 cards unread" (2 lines), shortened to "2 unread" (2 lines
- * at 320px, and 2 lines at 390px as soon as the counts are three digits). The choice is
- * a second line or dropping a number, and the number in question is the one that
- * explains why the other three do not add up. So it wraps, in the rare case where a
- * card was misspelled, and the unrecognized-cards box directly above names the cards. */
-.deck-counts-label { display: none; }
-.is-lands .deck-sub { display: none; }
-.deck-sub-extra { display: none; }
-/* A character between the numbers rather than a border, so it moves with the text it
-   separates instead of hanging in the gap. Off until there is room, because a wrapped
-   line would end on the dot — `.combo-link > .sep` further down is hidden narrow and
-   shown wide for exactly this reason. */
-.deck-sep { display: none; color: var(--line-strong); }
+/* tabular-nums so 101 / 65 / 36 line up on the digit down the column: the whole point
+   of a row per number is that they can be read against each other. */
+.summary-n {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.summary-sub { color: var(--muted); font-size: .85em; }
 
-/* A container query and not a media query, all the way down. This strip is in the
-   results column, which is 442px at a 900px window because the decklist takes 370px of
-   it — the viewport would style the narrow case as though it were roomy. */
-@container (min-width: 25rem) {
-  .is-lands .deck-sub { display: inline; }
-}
-@container (min-width: 31rem) {
-  .deck-sub-extra { display: inline; }
-  .deck-sep { display: inline; }
-}
-@container (min-width: 37rem) {
-  .deck-counts-label { display: inline; }
-}
+/* Under 21.5rem of box the fixed key column costs more than it buys, and the number is
+   measured rather than rounded to something tidy: a 320px phone leaves a 301px box,
+   where 9.5rem of key leaves 130px for the value and both the land aside and the
+   bracket pips wrap — two rows at double the height of the other three. A 390px phone
+   leaves 356px and every row fits, so the threshold has to sit between them.
 
+   IT IS WRITTEN AGAINST THE CONTENT WIDTH, WHICH IS NOT THE WIDTH OF THE BOX. An
+   inline-size container queries its content box, so the .9rem of padding on each side
+   and the border come off first: those two phones present 270px and 325px here, not
+   301px and 356px. The first version of this rule was 21.5rem — between the outer
+   widths — and therefore fired on both. 18.5rem sits between the inner ones.
+
+   Keys size to their own text below it. The column stops lining up, which is the trade,
+   and it is the right way round — five ragged one-line rows beat three aligned ones and
+   two double-height ones. */
+@container (max-width: 18.5rem) {
+  .summary-key,
+  .deck-summary .identity-label,
+  .deck-summary .bracket-label { flex: 0 0 auto; }
+}
+/* The unread row is a note about the data rather than a finding about the deck — the
+   unrecognized-cards box above is where those cards are named. */
+.summary-row.is-quiet .summary-n { color: var(--muted); font-weight: 500; }
+
+/* Outside the summary box these two are still standalone lines — tiers.html and any
+   future caller — so their own rules stay. Inside it the block above overrides the
+   margins, which is why these two selectors are listed there rather than being edited
+   here: a reader of this rule should see that it is not the only one that applies. */
 .identity-line {
   display: flex;
   align-items: center;
