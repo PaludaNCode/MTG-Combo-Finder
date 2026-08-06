@@ -14,7 +14,7 @@
 //   yellow (decisive) real value that something else still has to convert
 //   grey   (other)    the plumbing a loop runs on
 //
-// Counts at the time of writing: 1079 outcomes across 103,054 combos.
+// Counts at the time of writing: 1080 outcomes across 103,891 combos.
 (function (global) {
   'use strict';
 
@@ -912,6 +912,7 @@
     'Near-infinite copies of all permanents',
     'Near-infinite copies of creatures you control',
     'Near-infinite copies of the casted instant or sorcery',
+    'Near-infinite creature sacrifice triggers',
     'Near-infinite death triggers',
     'Near-infinite death triggers for target opponent',
     'Near-infinite energy counters',

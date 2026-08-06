@@ -87,6 +87,31 @@ jobs:
       # Jekyll. It also stops publishing .github/ to the live site, which was never
       # anything but noise. If a dotfile ever does need serving, v5 added an
       # `include-hidden-files` input for exactly that.
+      # Ship only what the site serves.
+      #
+      # `path: .` below uploads the whole checkout, which meant every deploy
+      # published card-text.json (16.5 MB of oracle text that only the research
+      # tools read), templates.json, research-log.js, both .md references, and
+      # tools/, test/ and e2e/. 17.5 MB of an 18.5 MB artifact, for a site that is
+      # 1.06 MB. Nothing fetched any of it — but it was all served under our
+      # origin to anyone who asked for it by name.
+      #
+      # **This is not a speed change and must not be described as one.** Measured
+      # on the two deploys before it existed: upload-pages-artifact took 2s and 3s,
+      # inside jobs of 238s and 17s. All of that spread is deploy-pages queueing.
+      #
+      # Last, after both stamping steps, because it deletes tools/ — the directory
+      # holding the scripts those steps run. Node has the file in memory by then, so
+      # the prune deleting its own script mid-run is fine.
+      #
+      # The decision lives in the tool, not here: a `run:` block is the one thing in
+      # this repository nothing can test, and this one deletes directories. What
+      # survives is computed from what the pages reference — never a list, for the
+      # same reason stamp-assets.js carries no list — and the tool re-reads the
+      # pages afterwards and fails the deploy if it removed something they ask for.
+      - name: Ship only what the site serves
+        run: node tools/prune-artifact.js index.html tiers.html --apply | tee -a "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/configure-pages@v6
         with:
           enablement: true

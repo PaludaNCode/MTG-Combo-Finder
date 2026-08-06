@@ -74,7 +74,7 @@ combo does something it does not.
 | 🟨 Greyish-yellow | `decisive` | Real value that something else still has to convert |
 | ⬜ Grey | `other` | The plumbing a loop runs on — relevant, but not a way to win |
 
-**Which outcome sits in which tier is written down, not worked out.** `result-tiers.js` lists all 1,079
+**Which outcome sits in which tier is written down, not worked out.** `result-tiers.js` lists all 1,080
 results Commander Spellbook publishes, by exact name, so moving one outcome between tiers means moving one
 string between lists. That replaced pattern matching, which needed an exception list for every rule
 (`Infinite turns` is a win; `Infinite turns for each opponent` is the opposite of one). Two consequences,
@@ -669,7 +669,7 @@ section about unchecked numbers, and it had already drifted once.
 
 | claim | counted from |
 | --- | --- |
-| `lists all 1,079 results Commander Spellbook publishes` | `result-tiers.js` |
+| `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
 | `All 463 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
@@ -1671,6 +1671,31 @@ serves whatever the CDN cached. Writing it also caught `theme.js` and `favicon.s
 and a `verify-layout.js` fixture built from its own regex that proved a stamped page worked while
 production served one that was not. Both go through `rewriteAssets()` now. `search-worker.js` needs no
 entry — it stamps its own imports out of its query string.
+
+### The artifact carries the site and nothing else
+
+`upload-pages-artifact` is pointed at `path: .`, so for its first 180-odd deploys the published site was
+the whole checkout: `card-text.json` — 16.5 MB of oracle text only the research tools read — plus
+`templates.json`, `research-log.js`, both `.md` references, and `tools/`, `test/` and `e2e/`. **17.5 MB of
+an 18.5 MB artifact, against a site of 1.06 MB.** Nothing fetched any of it, which is why nothing ever
+broke; it was simply all served under our own origin to anybody who asked for it by name.
+
+`tools/prune-artifact.js --apply` deletes it, as the last step before the upload. **It is not a speed
+fix and the numbers say so**: on the two deploys before it existed, `upload-pages-artifact` took 2s and
+3s inside jobs of 238s and 17s, and all of that spread is `deploy-pages` queueing.
+
+**What survives is computed from what the pages reference, never listed** — the rule `stamp-assets.js` is
+built on, applied to the opposite question, and the two share `localAssets()`. The files no `src=` names
+(`sw.js`, the worker, the no-Worker fallback scripts) come from `sw.js`'s own `NOT_IN_THE_HTML`, so there
+is one such list rather than two. Afterwards the tool re-reads the pages and **fails the deploy if it
+removed something they ask for**.
+
+It runs last because it deletes `tools/`, which holds the scripts the two stamping steps run; and it is a
+tool rather than a `run:` block because a `run:` block is the one thing here nothing can test, and this one
+deletes directories. The guard it cannot be is the one for a keep set that comes out too *small* — that
+failure deletes the assets and then finds nothing missing, because it has stopped looking for them. The
+stamped-page test in `test/prune-artifact.test.js` is what covers it, verified by breaking the query strip
+and watching 9 of 10 tests stay green.
 
 **Action versions are kept on a supported Node runtime**, and the runtime an action uses is declared in its
 own `action.yml` — reading those rather than the release notes is the only way to know. **CI cannot verify
