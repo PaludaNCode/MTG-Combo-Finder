@@ -461,6 +461,17 @@ loosely.
   would forbid the merge commits `main` already uses, and any required-approval count above zero makes
   every PR unmergeable on a solo repo. **A ruleset for `data` must not block force-pushes**:
   `update-data.yml` force-pushes it nightly.
+- **Only a `pull_request`-event run satisfies the required check, so a session that cannot make GitHub
+  fire one cannot merge — no matter how green the suite is.** #187 sat blocked with `checks`, `static`
+  and `browser` all success on the exact head SHA, because they came from a `workflow_dispatch`: GitHub
+  answers `Required status check "checks" is expected` and there are **no bypass actors**, so nobody can
+  click past it either. **A dispatch is not the recovery and neither is closing and reopening the PR** —
+  both were tried on #187 and neither produced a run → the comment on `workflow_dispatch` in `ci.yml`
+  says so now. The only remedy is a new commit on the branch, which fires `synchronize`.
+  **And that too depends on GitHub being healthy**: on 6 Aug 2026 nothing this session pushed fired an
+  event after 15:10 UTC, Pages deployments had been timing out in their own queue since 12:11, and
+  dispatched jobs were being cancelled while queued. Three symptoms, one outage, and none of them worth
+  a workaround — the work waits.
 - **Never assume that ruleset is in force. On 5 Aug 2026 it did not exist at all**, while this file, the
   README and a session's reasoning all said it did — and **a missing gate is indistinguishable from a
   working one**, since PRs merge and CI goes green either way. It exists again as of 15:34 UTC that day
