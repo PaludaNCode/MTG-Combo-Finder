@@ -702,50 +702,81 @@
   // gets its own, and a dataset that goes away takes its index with it.
   //
   // **The candidate set is not small, and a design that assumes it is, is designed
-  // against the wrong number.** 27,018 of 103,891 combos name at least one card of
+  // against the wrong number.** 27,039 of 103,891 combos name at least one card of
   // the standing deck — 26%, not a few thousand. What makes this worth doing is that
   // a posting is an integer with nameKey() already applied, not that there is little
-  // to walk: measured 7.0x on the standing deck and 15.9x on the tuning deck,
-  // identical output on both. Issue #181 has the rest of the measurements.
+  // to walk: matchDeck measured 71.1ms -> 5.4ms on the standing deck and 63.7ms ->
+  // 1.3ms on the tuning one, and 1.5x even on a deck holding every card in the
+  // database, where nothing is filtered out at all and the only saving left is the
+  // lowercasing. Issue #181 has the rest.
+  //
+  // **Held as one flat array with offsets, not 7,370 little ones.** The obvious
+  // shape — a Map of card key to an array of positions — measured **+6.3 MB of
+  // worker heap on a 35.3 MB payload**, which is a fifth of the string interning
+  // that took the payload from 69 MB to 35 MB in the first place, handed back for a
+  // lookup table. Every posting is a small integer, so they all live in one
+  // Int32Array, `starts` says where each card's run begins, and the Map holds a slot
+  // number rather than an array: **2.0 MB for the same answers.** The cost is that
+  // the build reads the database twice — once to count, once to place — which is
+  // ~70ms more, once per dataset, against a parse that already takes 678ms.
   const comboIndexes = new WeakMap();
 
   function comboIndex(combos) {
     const held = comboIndexes.get(combos);
     if (held) return held;
 
-    const byCard = new Map();
+    // `for…of` and a counter rather than forEach or an index, so each pass works on
+    // anything iterable and test/unofficial.test.js can hand this a list that counts
+    // its own passes. "The database is walked once per dataset" is the property this
+    // whole index exists to provide and it is not observable from the results.
+    const slot = new Map();
+    const counts = [];
     // A combo naming one card, or none, can be one card short while naming nothing
-    // the deck holds — so the index can never reach it and it has to be carried
-    // separately. There are 7 in the published database, which is why this is a
-    // list rather than a special case: cheap to keep, invisible to get wrong.
+    // the deck holds — so no deck card can ever lead the index to it, and it has to
+    // be carried separately. There are 7 in the published database.
     const loose = [];
-    // `for…of` and a counter rather than forEach, so this is one pass over anything
-    // iterable and test/unofficial.test.js can hand it a list that counts its own
-    // passes. That test is the only reason the shape matters, and it is a good
-    // reason: "the database is walked once" is the property this whole index exists
-    // to provide, and it is not observable from the results.
     let at = -1;
+    let postings = 0;
     for (const combo of combos) {
       at += 1;
       const cards = combo.c || [];
       if (cards.length <= 1) loose.push(at);
       for (const name of cards) {
         const key = nameKey(name);
-        let list = byCard.get(key);
-        if (!list) byCard.set(key, (list = []));
+        let s = slot.get(key);
+        if (s === undefined) { s = counts.length; slot.set(key, s); counts.push(0); }
         // **One posting per occurrence, not per distinct card**, and the difference
-        // is the whole correctness argument. The walk this replaced counted a
-        // *name* it could not find, so a combo naming the same card twice and
-        // scoring it once would come back one short when the old code called it
-        // complete. Pushing every occurrence makes `cards.length - held` exactly
-        // the count that loop produced, for any data, including data no published
-        // combo has ever contained. A guard against the duplicate would have been
-        // the cheaper-looking answer and a silent behaviour change.
-        list.push(at);
+        // is the whole correctness argument. The walk this replaced counted a *name*
+        // it could not find, so a combo naming the same card twice and scored once
+        // would come back one short where the old code called it complete. Counting
+        // every occurrence makes `cards.length - held` exactly the number that loop
+        // produced, for any data — including data no published combo has ever
+        // contained. A guard against the duplicate looked cheaper and was a silent
+        // behaviour change.
+        counts[s] += 1;
+        postings += 1;
       }
     }
 
-    const index = { byCard, loose };
+    // Prefix sums, so every card's run of positions has its place before anything is
+    // written into it. `cursor` walks each run as the second pass fills it and ends
+    // up equal to the next run's start, which is what makes this a placement rather
+    // than an append.
+    const starts = new Int32Array(counts.length + 1);
+    for (let i = 0; i < counts.length; i += 1) starts[i + 1] = starts[i] + counts[i];
+    const cursor = starts.slice(0, counts.length);
+    const list = new Int32Array(postings);
+    at = -1;
+    for (const combo of combos) {
+      at += 1;
+      for (const name of combo.c || []) {
+        const s = slot.get(nameKey(name));
+        list[cursor[s]] = at;
+        cursor[s] += 1;
+      }
+    }
+
+    const index = { slot, starts, list, loose };
     comboIndexes.set(combos, index);
     return index;
   }
@@ -765,17 +796,27 @@
     // that would allocate an entry per candidate. Every combo names at most 10 cards,
     // so nothing here can reach 255.
     const held = new Uint8Array(combos.length);
-    const order = [];
+    // Typed too, and sized for the worst case rather than grown: a deck holding every
+    // card in the database makes every combo a candidate. `sort()` on an Int32Array
+    // is numeric with no comparator to call, which is most of why the sort is
+    // affordable at all — an Array with `(a, b) => a - b` calls into JS per comparison.
+    const found = new Int32Array(combos.length);
+    let n = 0;
     for (const key of keys) {
-      const list = index.byCard.get(key);
-      if (!list) continue;
-      for (const at of list) {
-        if (held[at] === 0) order.push(at);
+      const s = index.slot.get(key);
+      if (s === undefined) continue;
+      const end = index.starts[s + 1];
+      for (let i = index.starts[s]; i < end; i += 1) {
+        const at = index.list[i];
+        if (held[at] === 0) { found[n] = at; n += 1; }
         held[at] += 1;
       }
     }
-    if (includeLoose) for (const at of index.loose) if (held[at] === 0) order.push(at);
-    order.sort((a, b) => a - b);
+    if (includeLoose) {
+      for (const at of index.loose) if (held[at] === 0) { found[n] = at; n += 1; }
+    }
+    const order = found.subarray(0, n);
+    order.sort();
     return { order, held };
   }
 

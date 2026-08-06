@@ -846,15 +846,25 @@ dataset that is parsed once per worker and never mutated. The keys are identical
 computed once into a card → combo-positions index, kept on the combos array in a `WeakMap` exactly as
 `identityIndex()` is kept on `cardIdentity`.
 
-Measured on the 6 Aug snapshot: **`matchDeck` 25ms → 5.9ms and `standInRows` 147ms → 11.8ms** on the
-standing deck, output identical. The second search of a session does not walk the database at all →
-`test/unofficial.test.js` counts the passes.
+Measured on the 6 Aug snapshot, old and new in one process, standing deck: **`matchDeck` 71.1ms → 5.4ms
+and `standInRows` 78.4ms → 10.2ms**; on the tuning deck 63.7ms → 1.3ms and 72.5ms → 4.6ms. Output
+identical on all of it. A first search on a fresh dataset costs 294ms *including* the build; every search
+after that reuses it → `test/unofficial.test.js` counts the passes.
 
 **The candidate set is not small, and a design that assumes it is, is designed against the wrong
 number.** 27,039 of 103,891 combos name at least one of the standing deck's cards — a quarter, not a
-handful. What makes this worth doing is that a posting is an integer with `nameKey()` already applied.
+handful. What makes this worth doing is that a posting is an integer with `nameKey()` already applied, so
+even a deck holding **every card in the database**, where nothing is filtered out at all, is 1.5x faster.
 
-Three things that are not obvious, each with a test behind it:
+**The postings are one flat `Int32Array` with offsets, not 7,370 small arrays.** The obvious shape — a
+`Map` of card key to an array of positions — measured **+6.3 MB of worker heap on a 35.3 MB payload**,
+a fifth of what the string interning bought back for a lookup table. One array plus a `starts` table is
+**2.0 MB for the same answers, and slightly faster** (the 60-busiest-cards deck goes 13.4ms → 9.3ms,
+because `sort()` on a typed array has no comparator to call). It costs a second pass over the database at
+build time — the count has to exist before anything can be placed — which is why the pass counter in
+`test/unofficial.test.js` says two rather than one.
+
+Three more things that are not obvious, each with a test behind it:
 
 - **Candidates are re-sorted into database order, and that sort costs about half of what the index
   saves.** They come out grouped by the card that found them, and both callers hand their results to a

@@ -112,7 +112,7 @@ test('candidates come back in database order', () => {
 // walk returns the same combos in a different order and silently reorders the page.
 test('an unsorted walk would reorder the results, which is why the sort is not optional', () => {
   const { order, held } = candidateCombos(DATASET.combos, NAMES, true);
-  const complete = order.filter((at) => (DATASET.combos[at].c || []).length - held[at] === 0);
+  const complete = Array.from(order).filter((at) => (DATASET.combos[at].c || []).length - held[at] === 0);
   const asDatabase = complete.map((at) => DATASET.combos[at].id);
   const byPosition = complete.slice().sort((a, b) => a - b).map((at) => DATASET.combos[at].id);
   assert.deepStrictEqual(asDatabase, byPosition);

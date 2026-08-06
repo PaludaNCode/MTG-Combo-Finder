@@ -200,7 +200,13 @@ test('stand-in: nothing is generated for a deck without the card', () => {
 //
 // This counts the walks rather than trusting the comment. The list is a real Array
 // so it can be indexed, with a Symbol.iterator that counts each pass over it.
-test('stand-in: the combo list is walked once per dataset, whatever the rules cost', () => {
+//
+// **Two passes, not one, and that is the price of the index's shape.** The postings
+// live in one flat Int32Array, so the build counts each card's occurrences before it
+// can know where to place them. Seven thousand small arrays would need one pass and
+// cost 6.3 MB of worker heap instead of 2.0 MB — see comboIndex(). What the number
+// must never become is *per call*, which is what the rest of this test is for.
+test('stand-in: the combo list is walked twice per dataset, whatever the rules cost', () => {
   let passes = 0;
   const counted = OUTLET.combos.slice();
   const plain = counted[Symbol.iterator].bind(counted);
@@ -212,7 +218,7 @@ test('stand-in: the combo list is walked once per dataset, whatever the rules co
   const names = deck('Copycat', 'Understudy', 'Gravecrawler', 'Scurry Oak', 'Sadistic Glee');
 
   standInRows(counting, [RULE], names);
-  assert.strictEqual(passes, 1, 'one rule took ' + passes + ' passes over the combo list');
+  assert.strictEqual(passes, 2, 'one rule took ' + passes + ' passes over the combo list');
 
   // Ten rules, and the same dataset again. Zero now, not one: the index is built
   // once and kept, so the second search of a session does not walk the database at
