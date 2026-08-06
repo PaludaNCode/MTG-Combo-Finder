@@ -22,7 +22,17 @@ on:
   # `main` ruleset, which turns those 36 into 39. **If that setting is ever turned off,
   # this trigger belongs back.**
   pull_request:
-  # So a run can be re-triggered by hand when GitHub misses a pull_request event.
+  # So the suite can be re-run by hand. **It does not unblock a pull request**, and that
+  # is worth knowing before reaching for it: a run dispatched on the branch produces a
+  # check named `checks` on the head commit, green, and the ruleset goes on reporting
+  # `Required status check "checks" is expected` — GitHub only counts a check from the
+  # PR's own event. Met on #187, where the suite was green on the exact SHA and the merge
+  # was refused anyway.
+  #
+  # When GitHub misses a `pull_request` event, the fix is a new commit on the branch,
+  # which fires `synchronize`. Closing and reopening the PR does not: tried on #187, no
+  # run. So this trigger is for proving something about the workflow (see `prove_upload`
+  # below), not for rescuing a merge.
   workflow_dispatch:
     inputs:
       # The upload step at the bottom of the browser job sits behind `if: failure()`,
