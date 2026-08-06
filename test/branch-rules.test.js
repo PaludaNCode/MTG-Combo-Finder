@@ -24,6 +24,19 @@ const recorded = () => JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
 const levelsFor = (o, claim) => checkClaims(o).findings
   .filter((f) => f.claim === claim).map((f) => f.level);
 
+// The response a runner actually got — with a `contents: read` token and, on the next
+// run, with no token at all: identical either way. GitHub returns these fields only to a
+// caller with push access, which a workflow token cannot have, so it omits them rather
+// than refusing the request. Reconstructed from runs 31064133085 and 31064463635.
+const narrowed = () => {
+  const o = recorded();
+  for (const f of ['allow_merge_commit', 'allow_squash_merge', 'allow_rebase_merge',
+    'allow_auto_merge', 'delete_branch_on_merge', 'allow_update_branch']) {
+    delete o.repo[f];
+  }
+  return o;
+};
+
 // Every claim, once, so a claim added without a case here is visible: the point of
 // the tool is coverage of the documented rules, and an unexercised check is one
 // nobody has seen work.
@@ -37,13 +50,49 @@ test('the recorded live configuration has nothing broken', () => {
   assert.strictEqual(got.total, CLAIMS.length);
 });
 
-test('the recorded configuration is fragile on merge methods and silent on bypass', () => {
+test('the recorded configuration is clean apart from bypass', () => {
   const got = checkClaims(recorded());
-  // Both are deliberate: the merge-commit invariant is held by a repository checkbox
-  // the ruleset does not back up, and bypass_actors lives on an endpoint this does not
-  // read — which omitted it even for the push-access caller. Neither is a pass.
-  assert.deepStrictEqual(got.fragile.map((f) => f.claim), [MERGE_CLAIM]);
+  // The ruleset was pinned to merge-only on 6 Aug 2026, which is what cleared the
+  // FRAGILE this tool was written to surface — so the recorded state now has none, and
+  // the fragile case below is a mutation rather than the live reading.
+  assert.deepStrictEqual(got.fragile, []);
+  // bypass_actors stays UNKNOWN forever: it lives on an endpoint this does not read,
+  // which omitted it even for the push-access caller. It is never a pass.
   assert.deepStrictEqual(got.unknown.map((f) => f.claim), ['nothing can bypass the ruleset']);
+});
+
+test('a ruleset permitting all three, with only the repo holding it, is FRAGILE', () => {
+  // The configuration this repository ran until 6 Aug 2026, and the finding that got it
+  // changed: merge-only held by a single repository checkbox with no second lock.
+  const o = recorded();
+  o.mainRules.find((r) => r.type === 'pull_request')
+    .parameters.allowed_merge_methods = ['merge', 'squash', 'rebase'];
+  assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), ['FRAGILE']);
+  assert.match(checkClaims(o).fragile[0].then, /allowed_merge_methods/);
+});
+
+test('a ruleset pinned to squash-only is BROKEN, not short-circuited to a pass', () => {
+  // The short-circuit below fires on "the ruleset names exactly one method". It must
+  // also check WHICH one: pinned to squash, `main`'s tip stops being a descendant of the
+  // PR head and the whole designated-branch section breaks — while the shape of the
+  // configuration looks identical to the good one. Without this case the short-circuit
+  // could ignore the method entirely and every other test here still passed.
+  for (const only of ['squash', 'rebase']) {
+    const o = recorded();
+    o.mainRules.find((r) => r.type === 'pull_request')
+      .parameters.allowed_merge_methods = [only];
+    assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), ['BROKEN'], `pinned to ${only}`);
+  }
+});
+
+test('a merge-only ruleset answers the claim with no repository access at all', () => {
+  // Why pinning it was worth doing twice over: the effective set is an intersection, so
+  // nothing in the repository settings can widen it back. A runner — which never sees
+  // allow_* — can therefore settle this claim, and reporting UNKNOWN for a fully
+  // determined configuration would be the same "I could not look" confusion this file
+  // exists to prevent, just in the safe direction.
+  const o = narrowed();
+  assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), []);
 });
 
 test('bypass is never a pass, however the configuration looks', () => {
@@ -67,18 +116,15 @@ test('no ruleset at all is BROKEN, and says so first', () => {
 
 test('a squash merge enabled anywhere is BROKEN, not fragile', () => {
   const o = recorded();
+  // The ruleset has to permit it too, or the pin settles the claim before the repository
+  // settings are read — which is correct, and is exactly what the pin buys.
+  o.mainRules.find((r) => r.type === 'pull_request')
+    .parameters.allowed_merge_methods = ['merge', 'squash', 'rebase'];
   o.repo.allow_squash_merge = true;
   assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), ['BROKEN']);
   // Because `main`'s tip stops being a descendant of the PR head, which is what
   // CLAUDE.md, "The designated branch after its PR merges" rests on entirely.
   assert.match(checkClaims(o).broken[0].then, /force-push/);
-});
-
-test('pinning the ruleset to merge-only clears the fragility', () => {
-  const o = recorded();
-  const pr = o.mainRules.find((r) => r.type === 'pull_request');
-  pr.parameters.allowed_merge_methods = ['merge'];
-  assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), [], 'this is the recommended fix; it has to read as a pass');
 });
 
 test('a ruleset pinned to merge-only holds even if the repo checkbox comes back on', () => {
@@ -171,19 +217,6 @@ test('losing auto-merge is BROKEN', () => {
   assert.deepStrictEqual(levelsFor(o, 'auto-merge is available'), ['BROKEN']);
 });
 
-// The response a runner actually got — with a `contents: read` token and, on the next
-// run, with no token at all: identical either way. GitHub returns these fields only to a
-// caller with push access, which a workflow token cannot have, so it omits them rather
-// than refusing the request. Reconstructed from runs 31064133085 and 31064463635.
-const narrowed = () => {
-  const o = recorded();
-  for (const f of ['allow_merge_commit', 'allow_squash_merge', 'allow_rebase_merge',
-    'allow_auto_merge', 'delete_branch_on_merge', 'allow_update_branch']) {
-    delete o.repo[f];
-  }
-  return o;
-};
-
 test('a narrowed repository response is UNKNOWN on every setting, never BROKEN', () => {
   // The tool's first live run reported three of this repository's documented claims as
   // FALSE — including auto-merge being off, four minutes after auto-merge had merged
@@ -193,11 +226,12 @@ test('a narrowed repository response is UNKNOWN on every setting, never BROKEN',
   const got = checkClaims(narrowed());
   assert.deepStrictEqual(got.broken, [], 'absent fields must not manufacture false findings');
   const unknown = got.unknown.map((f) => f.claim).sort();
+  // MERGE_CLAIM is NOT here: the pinned ruleset answers it without the repository
+  // fields. Only the two that have nowhere else to be read stay unknown.
   assert.deepStrictEqual(unknown, [
     'auto-merge is available',
     'merged branches are kept',
     'nothing can bypass the ruleset',
-    MERGE_CLAIM,
   ].sort());
   // And it has to say why, or the reader treats a narrowed run as a clean one.
   assert.match(got.unknown[0].then, /push access/);
@@ -211,8 +245,18 @@ test('the merge-commit setting is read from allow_merge_commit', () => {
   // it: merge commits genuinely off, which must read as BROKEN rather than as fine.
   const o = recorded();
   o.repo.allow_merge_commit = false;
+  // With the ruleset pinned to merge-only this is the empty-intersection case: nothing
+  // can merge, which is its own message rather than the invariant failing.
   assert.deepStrictEqual(levelsFor(o, MERGE_CLAIM), ['BROKEN']);
-  const shown = checkClaims(o).broken[0].saw;
+  assert.match(checkClaims(o).broken[0].saw, /effective \[none\]/);
+  // And with a permissive ruleset it is the plain wrong-field case: reading
+  // `allow_merge_merge` instead of `allow_merge_commit` leaves 'merge' in the allowed
+  // list by accident, because undefined is not false.
+  const p2 = recorded();
+  p2.mainRules.find((r) => r.type === 'pull_request')
+    .parameters.allowed_merge_methods = ['merge', 'squash', 'rebase'];
+  p2.repo.allow_merge_commit = false;
+  const shown = checkClaims(p2).broken[0].saw;
   assert.match(shown, /repo allows \[none\]/, `read the wrong field: ${shown}`);
 });
 

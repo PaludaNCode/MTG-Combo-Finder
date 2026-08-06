@@ -207,6 +207,30 @@ const CLAIMS = [
       // them out is the fix; narrowedResponse() is what made the bug visible.
       const FIELD = { merge: 'allow_merge_commit', squash: 'allow_squash_merge', rebase: 'allow_rebase_merge' };
       const methods = ['merge', 'squash', 'rebase'];
+      // **A ruleset pinned to merge-only settles this on its own, and that is the whole
+      // point of pinning it.** The effective set is the intersection, so it cannot
+      // contain anything the ruleset does not — no repository field can widen it back.
+      // That makes the claim answerable by a caller with no push access at all, which
+      // is what turns this from a settings page somebody has to go and look at into a
+      // thing the runner checks. Asking for the repository settings first would throw
+      // that away and report UNKNOWN for a configuration that is fully determined.
+      //
+      // One exception, and it is not the claim failing: if the repository ALSO has merge
+      // commits switched off, the intersection is empty and nothing can merge at all.
+      // Worth its own message, because "no way to merge but a merge commit" is still
+      // technically true there and reporting a pass would be absurd.
+      if (fromRuleset && fromRuleset.length === 1 && fromRuleset[0] === 'merge') {
+        if (o.repo.allow_merge_commit === false) {
+          return {
+            level: 'BROKEN',
+            saw: 'the ruleset allows [merge] and the repository has merge commits off '
+              + '→ effective [none]',
+            then: 'no pull request can be merged at all. Turn merge commits back on in '
+              + 'Settings; the ruleset is not the thing to change.',
+          };
+        }
+        return null;
+      }
       const narrow = narrowedResponse(methods.map((m) => FIELD[m]), o);
       if (narrow) return narrow;
       const fromRepo = methods.filter((m) => o.repo[FIELD[m]]);
@@ -420,10 +444,18 @@ function report(result, observation) {
   if (result.broken.length) {
     console.log(`${result.broken.length} claim(s) this repository's docs make are FALSE right now.`);
     console.log('Change the setting, or change the sentence — a wrong one is worse than none.');
+  } else if (result.findings.length) {
+    // Never just "all good". A clean BROKEN list with FRAGILE or UNKNOWN lines above it
+    // is not the same statement as a clean run, and the summary has to keep them apart —
+    // this whole tool exists because a reassuring sentence outlived the thing it
+    // described.
+    const parts = [];
+    if (result.fragile.length) parts.push(`${result.fragile.length} held by a single setting`);
+    if (result.unknown.length) parts.push(`${result.unknown.length} not answerable here`);
+    console.log(`No documented claim is false. Not the same as "protected": ${parts.join(', ')}`);
+    console.log('— read those lines above before relying on this.');
   } else {
-    console.log('No documented claim is false. Read the FRAGILE and UNKNOWN lines above');
-    console.log('before treating that as "protected": one is held by a single checkbox,');
-    console.log('and one this endpoint cannot answer.');
+    console.log('Every documented claim holds, and none of them is guesswork.');
   }
   return result.broken.length ? 1 : 0;
 }

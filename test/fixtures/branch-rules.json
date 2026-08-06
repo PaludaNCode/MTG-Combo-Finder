@@ -1,5 +1,5 @@
 {
-  "fetched": "2026-08-05",
+  "fetched": "2026-08-06",
   "access": "push (the editing sandbox proxy injects a credential); an anonymous or workflow-token caller gets no allow_*/delete_branch_on_merge fields",
   "slug": "PaludaNCode/MTG-Combo-Finder",
   "mainRules": [
@@ -25,9 +25,7 @@
         "require_last_push_approval": false,
         "required_review_thread_resolution": false,
         "allowed_merge_methods": [
-          "merge",
-          "squash",
-          "rebase"
+          "merge"
         ]
       },
       "ruleset_source_type": "Repository",
