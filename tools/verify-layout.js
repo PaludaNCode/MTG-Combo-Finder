@@ -1672,6 +1672,24 @@ async function runLegality(vp) {
           .map((li) => Math.round(li.getBoundingClientRect().top))).size,
         identityClaim: claim('#legality .is-off-identity'),
         identityClaimPips: claimPips('#legality .is-off-identity'),
+        // Where the names start, relative to the label that heads the line. The list is
+        // a row of its own under the claim, and it was a third item *beside* it: 30 names
+        // in a 600px column with the left half of a 1,108px box empty. Two numbers
+        // because they are two different mistakes -- a list that is below the claim but
+        // still carries its indent looks almost right and wastes the same space, so the
+        // boolean alone would pass it.
+        listIndent: (() => {
+          const li = doc.querySelector('#legality .is-off-identity .legality-cards li');
+          const label = doc.querySelector('#legality .is-off-identity .legality-label');
+          return li && label ? Math.round(li.getBoundingClientRect().left - label.getBoundingClientRect().left) : null;
+        })(),
+        listBelowClaim: (() => {
+          const li = doc.querySelector('#legality .is-off-identity .legality-cards li');
+          const said = doc.querySelector('#legality .is-off-identity .legality-claim');
+          return li && said
+            ? Math.round(li.getBoundingClientRect().top - said.getBoundingClientRect().bottom)
+            : null;
+        })(),
         notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
         // Beside the bracket: under that line, above the first panel of results.
         besideBracket: !!(box && bracket && firstPanel
@@ -2610,6 +2628,18 @@ function captionDrift(notes) {
         if (legal.offIdentity.length && legal.cardLines !== legal.offIdentity.length) {
           wrong.push(`${legal.offIdentity.length} off-identity card(s) on ${legal.cardLines} line(s)`);
         }
+        // And the whole list starts on a row of its own, under the claim and at the
+        // label's indent. Beside the claim it was a narrow column with half the box
+        // empty to its left, which is legible and wastes the space the names need.
+        if (legal.offIdentity.length) {
+          if (legal.listBelowClaim === null || legal.listBelowClaim < 0) {
+            wrong.push(`the card list is level with the claim rather than under it (${legal.listBelowClaim}px)`);
+          }
+          if (legal.listIndent === null || legal.listIndent !== 0) {
+            wrong.push(`the card list starts ${legal.listIndent}px in from the label, not at it — `
+              + 'it is sharing a line with the sentence instead of taking one of its own');
+          }
+        }
         if (v.deck === 'illegal') {
           // A commander was named, so both halves are answerable. Heliod is {W}
           // against a {U}{G} commander.
@@ -2657,7 +2687,12 @@ function captionDrift(notes) {
       } else {
         console.log(`ok   ${v.name} — banned ${JSON.stringify(legal.banned)}, `
           + `off-colour ${JSON.stringify(legal.offIdentity)}${legal.colours.length ? ' ' + legal.colours.join('') : ''}, `
-          + `${legal.notes.length} caveat(s)`);
+          + `${legal.notes.length} caveat(s)`
+          // Where the names sit, printed in a passing run: the whole bug was that they
+          // read fine in a column half the box wide, so the indent is worth seeing.
+          + (legal.offIdentity.length
+            ? `, ${legal.cardLines} name(s) ${legal.listBelowClaim}px under the claim at +${legal.listIndent}px`
+            : ''));
       }
       continue;
     }

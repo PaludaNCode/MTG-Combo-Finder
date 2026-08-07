@@ -602,6 +602,12 @@ format saying no — but **one card only ever collects one accusation**, and the
 **Silence is not a clean bill of health, so silence is what a legal deck gets.** A tick would read as
 covering singleton, deck size and everything else nobody checked.
 
+**The names take a row of their own, under the claim rather than beside it.** As a third flex item on
+the same line the list got whatever width the sentence left over: 30 off-identity names rendered as a
+600px column starting halfway across a 1,108px box, with the left half of it empty. `npm run verify`
+prints the indent — `+0px` from the label — because a list that wrapped but kept the sentence's indent
+looks almost right and wastes the same space.
+
 `tooMuchOfTheDeck()` in `view-model.js` is shared with the unrecognised-card rule: more than half the
 deck reading as off-identity is a claim about the data, so the colour half goes quiet.
 

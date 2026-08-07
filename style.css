@@ -293,7 +293,19 @@ button:disabled { opacity: .6; cursor: wait; }
    enumeration of it, and a bullet in front of each would read as a second claim. Same
    shape the unrecognized-cards box uses, for the same reason — a reader is comparing
    these against lines in the box on the left, which are also one per line. */
-.legality-cards { list-style: none; margin: .25rem 0 0; padding: 0; }
+.legality-cards {
+  list-style: none;
+  margin: .25rem 0 0;
+  padding: 0;
+  /* A ROW OF ITS OWN, UNDER THE CLAIM — never a third item beside it. As a plain flex
+     item the list took whatever width was left after the label and the sentence, so 30
+     off-identity names rendered as a 600px column starting halfway across a 1,108px box
+     with the whole left half of it empty. Nothing was wrong with the list; it was being
+     asked to share a line with a sentence. `flex: 0 0 100%` is what puts it on the next
+     line at the label's own indent, and it reads as a list of things to go and cut —
+     which is what it is. → `legality.listIndent` in verify-layout.js. */
+  flex: 0 0 100%;
+}
 .legality-cards li { margin: .15rem 0; }
 .legality-cards .card-name { color: var(--text); font-weight: 600; }
 /* The links sit against the name without this — "Murderous RedcapEDHREC" — because
