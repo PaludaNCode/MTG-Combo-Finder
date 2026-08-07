@@ -1089,15 +1089,40 @@ function measure(win, doc) {
     // The caveat is now behind a hover, so the ways of asking for it are what has to
     // hold. Hover cannot be simulated here; a press is the path a phone has, and the
     // one that would silently fail if the control were hover-only.
-    opensOnPress: (() => {
-      if (!scaleButton || !whyPanel) return false;
+    //
+    // Everything only readable while it is open is read in this one press, because the
+    // panel is the one thing on this page whose layout no other check can see. It shipped
+    // 123px past the right of a 390px phone: the document grew wider than the screen,
+    // mobile Safari zoomed the whole page out to fit, and every assertion here — including
+    // the document-wide overflow number — passed, because all of them measure it shut.
+    // (No backticks in here, ever: this is inside HARNESS, a template literal.)
+    whileOpen: (() => {
+      if (!scaleButton || !whyPanel) return null;
       scaleButton.click();
-      const open = win.getComputedStyle(whyPanel).display !== 'none';
+      const r = whyPanel.getBoundingClientRect();
+      const box = doc.querySelector('.deck-summary');
+      const out = {
+        open: win.getComputedStyle(whyPanel).display !== 'none',
+        width: Math.round(r.width),
+        // The document's own overflow, re-measured with the panel out. This is the
+        // number the reader feels, since it is what makes the browser rescale.
+        overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
+        // How far past the box it explains — the shape the bug takes before it becomes
+        // document overflow. Reported separately because the box sits inside the shell's
+        // padding, so a panel can clear the box's edge by 20px and still be inside the
+        // window: this goes red first, on the wider viewports, where the overflow number
+        // alone stays 0 and says nothing is wrong.
+        pastBox: box ? Math.round(r.right - box.getBoundingClientRect().right) : null,
+        pastWindow: Math.round(r.right - doc.documentElement.clientWidth),
+      };
       scaleButton.click(); // put it back, so nothing measured after this sees it open
-      return open;
+      return out;
     })(),
     closesOnSecondPress: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
   };
+  // After the literal rather than in it, because it reads a sibling key: the press
+  // happens once, so whether it opened is one of the things that press found out.
+  bracket.opensOnPress = Boolean(bracket.whileOpen && bracket.whileOpen.open);
 
   const ageEl = doc.getElementById('data-age');
   const dataAge = {
@@ -3440,6 +3465,26 @@ function captionDrift(notes) {
     if (!bracket.closed) problems.push('the bracket explanation is on screen without being asked for');
     if (!bracket.opensOnPress) problems.push('pressing the bracket scale did not open the explanation');
     if (!bracket.closesOnSecondPress) problems.push('a second press did not close the bracket explanation again');
+    // And that opening it does not cost the reader the page. An absolutely positioned
+    // panel hanging off a control two paddings into the window is the one thing here
+    // that can widen the document, and a document wider than the screen is not a
+    // scrollbar on a phone — it is the browser zooming everything out to fit, which is
+    // how this was reported. Three numbers because they go red in that order: past the
+    // box first on a desktop, past the window next, document overflow last.
+    const open = bracket.whileOpen;
+    if (!open) {
+      problems.push('the bracket explanation was never measured open');
+    } else {
+      if (open.pastBox > 1) {
+        problems.push(`the open bracket explanation is ${open.pastBox}px wider than the summary box it explains `
+          + `(${open.width}px) — bound it to the line it hangs off, never to the viewport`);
+      }
+      if (open.pastWindow > 0) problems.push(`the open bracket explanation is ${open.pastWindow}px off the right of the screen`);
+      if (open.overflow > 0) {
+        problems.push(`opening the bracket explanation gives the page ${open.overflow}px of horizontal overflow — `
+          + 'a phone answers that by zooming the whole page out');
+      }
+    }
     // The caveat is the reason a bracket number here is honest at all.
     if (!/Mass land denial/.test(bracket.caveat)) problems.push('the bracket explanation does not say what it did not check');
 
@@ -3879,7 +3924,11 @@ function captionDrift(notes) {
       const dividerNote = `divider at ${v.dividers[0].blocks[0].line}px, ${v.dividers[0].blocks.length} pieces,`
         + ` blocks from ${v.dividers[0].summaryLeft}px${shape}`;
       const bracketNote = `bracket [${v.bracket.pips.map((p) => (p.state === 'floor' ? `(${p.n})` : p.state === 'out' ? '·' : p.n)).join('')}] `
-        + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links)`;
+        + `${v.bracket.floor.replace(/ — .*/, '')}, why on press (${v.bracket.changerLinks} card links) `
+        // The panel's width and the room it has left, printed in a passing run: the whole
+        // bug was that it read fine and measured 123px off the screen, and the bound is
+        // the box now rather than the window, so what the box gives it is worth seeing.
+        + `${v.bracket.whileOpen.width}px wide, ${-v.bracket.whileOpen.pastBox}px inside the box`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
         + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`
         + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`;

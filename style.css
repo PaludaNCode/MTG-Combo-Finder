@@ -1158,6 +1158,9 @@ button:disabled { opacity: .6; cursor: wait; }
   flex-wrap: wrap;
   gap: .5rem;
   margin: -.5rem 0 1rem;
+  /* The explanation panel is positioned against this and not against the pips it
+     hangs off — see .bracket-why, where the reason is the whole rule. */
+  position: relative;
 }
 .bracket-label {
   color: var(--muted);
@@ -1167,9 +1170,10 @@ button:disabled { opacity: .6; cursor: wait; }
   text-transform: uppercase;
 }
 
-/* The panel is positioned against this, and shown while anything inside is hovered
-   or focused. */
-.bracket-wrap { position: relative; display: inline-flex; }
+/* Shown while anything inside is hovered or focused. Deliberately *not* positioned:
+   the panel measures itself against `.bracket-line` instead, and a `position: relative`
+   here would silently take that back — it is the nearer ancestor. */
+.bracket-wrap { display: inline-flex; }
 
 /* The pips. A button, because the explanation has to be reachable by keyboard and
    by tap, not by hover alone — none of the button chrome comes with it. */
@@ -1208,16 +1212,34 @@ button:disabled { opacity: .6; cursor: wait; }
    "could be this" is a third state and not a milder version of either. */
 .step.open { border-color: var(--line-strong); color: var(--text); }
 
-/* Why it landed there. Everything the panel used to print, one hover away. */
+/* Why it landed there. Everything the panel used to print, one hover away.
+ *
+ * IT IS ANCHORED TO THE LINE, NOT TO THE PIPS, AND ITS BOUND IS THE LINE'S WIDTH AND
+ * NOT THE WINDOW'S. Both halves of that are one bug. Hanging off `.bracket-wrap` put
+ * the panel's left edge wherever the pips happen to sit — 155px into a 390px phone,
+ * after the 130px key column — while `max-width: min(38rem, calc(100vw - 2rem))`
+ * bounded only its *width*, so it was allowed to be 358px wide starting at 155px and
+ * its right edge landed 123px past the screen. Nothing clips it, so the document grew
+ * to 513px against a 390px viewport and mobile Safari did the only thing it can with a
+ * page wider than the screen: zoomed the whole thing out to fit. One tap on the pips
+ * and every word on the page got smaller.
+ *
+ * `100%` is the fix and `100vw` was the trap: a percentage here resolves against
+ * `.bracket-line`, which spans the summary box, so the panel starts at the box's left
+ * edge and can never be wider than it — inset by whatever the shell and the box are
+ * inset by, at every viewport, with no arithmetic to keep in step. A viewport-relative
+ * bound can only ever be right for an element flush against the viewport, and this one
+ * is two paddings in. → `bracket.whileOpen` in verify-layout.js, which opens the panel
+ * before it measures: with it shut, every other check on this page passed. */
 .bracket-why {
   display: none;
   position: absolute;
   top: calc(100% + .4rem);
   left: 0;
   z-index: 20;
-  /* Wide enough for the caveat to read as prose, never wider than the screen. */
+  /* Wide enough for the caveat to read as prose, never wider than the box it explains. */
   width: max-content;
-  max-width: min(38rem, calc(100vw - 2rem));
+  max-width: min(38rem, 100%);
   padding: .7rem .85rem;
   background: var(--panel);
   border: 1px solid var(--line-strong);

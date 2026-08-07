@@ -239,10 +239,21 @@ test('adding a card redraws the map with it on', async ({ page }) => {
 test('nothing on the page scrolls sideways', async ({ page }) => {
   // Checked here as well as in the layout test because this is the run with a
   // real scrollbar and a real device pixel ratio.
-  const overflow = await page.evaluate(
+  const sideways = () => page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth
   );
-  expect(overflow).toBeLessThanOrEqual(0);
+  expect(await sideways()).toBeLessThanOrEqual(0);
+
+  // And with the one thing on the page that overhangs its own container held open.
+  // This test was named for the whole page and measured only its resting state: the
+  // bracket explanation is absolutely positioned off a control ~155px into a 390px
+  // screen, and it shipped 170px past the right edge — a phone answers a document
+  // wider than the screen by zooming everything out, so a reader lost the page for
+  // asking why their deck is bracket 3. Nothing already here could see it, because
+  // nothing already here pressed anything before measuring.
+  await page.locator('.bracket-scale').click();
+  await expect(page.locator('.bracket-why')).toBeVisible();
+  expect(await sideways()).toBeLessThanOrEqual(0);
 });
 
 // The map is drawn in canvas units and scaled into whatever column it lands in,

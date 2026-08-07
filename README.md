@@ -571,6 +571,15 @@ tap away**, reachable three ways because a phone has no hover.
 The pips are `aria-hidden` — five numbered circles read out as "1 2 3 4 5" is worse than nothing — so
 the button carries the whole answer as its accessible name.
 
+**The panel is bounded by the box it explains, never by the window.** It hangs off pips sitting two
+paddings into the page — 155px into a 390px phone, after the key column — so a width capped at
+`100vw` was still free to end up off the screen: measured at **170px of horizontal overflow at 390px
+and 48px at 768px**, which on a phone is not a scrollbar but the browser zooming the whole page out
+to fit, on one tap. Anchoring it to the bracket line and capping it at `min(38rem, 100%)` costs
+nothing anywhere it fitted before — 608px at 768px and up, 325px on a phone. `npm run verify` opens
+the panel before it measures and prints both numbers; with the panel shut, every other check on the
+page passed while this was live.
+
 **"Two-card infinite combo" means a two-card line that wins**, by the same written-down inventory the
 result chips use. Basalt Monolith + Rings of Brighthearth loops all day and wins nothing. A filled
 template slot counts as one of the two cards.
