@@ -1260,9 +1260,30 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 :root[data-theme='light'] .bracket-why { box-shadow: 0 8px 24px rgb(0 0 0 / .14); }
 
-/* Hover for a mouse, focus-within for a keyboard, aria-expanded for a tap. */
-.bracket-wrap:hover .bracket-why,
-.bracket-wrap:focus-within .bracket-why,
+/* THE BUTTON'S OWN STATE IS THE ONLY WAY THE PANEL CLOSES, so it is the only way it
+ * opens except for a real mouse hover. It used to open three ways — hover,
+ * `:focus-within`, and `aria-expanded` — and `:focus-within` is what made it
+ * unclosable: a press leaves focus on the button, so the second press set
+ * `aria-expanded="false"` and the panel stayed exactly where it was. On a phone that
+ * is the end of the road. There is no pointer to move away and no Escape key to reach
+ * for, so the explanation covered the rows underneath it until the page was reloaded.
+ * It also meant the button announced itself as collapsed over an open panel, which is
+ * the same bug told to a screen reader.
+ *
+ * A keyboard now opens it by activating the button rather than by arriving at it, which
+ * is what a button is for and what makes `aria-expanded` true when it says it is. The
+ * links inside stay reachable: the panel is displayed, and it follows the button in the
+ * DOM, so Tab walks straight into it. Escape closes it — see the keydown in app.js.
+ *
+ * `@media (hover: hover)` and not a bare `:hover`, because a touch browser applies
+ * `:hover` to whatever was tapped last and holds it until something else is tapped —
+ * which would restore the same stuck panel through the other selector. → the phone
+ * project in e2e/deck.spec.js, which runs with `hover: none` and drives real input:
+ * `element.click()` does not move focus, so a dispatched-event harness cannot see any
+ * of this. That is why `closesOnSecondPress` in verify-layout.js passed throughout. */
+@media (hover: hover) {
+  .bracket-wrap:hover .bracket-why { display: block; }
+}
 .bracket-scale[aria-expanded='true'] + .bracket-why { display: block; }
 
 .why-floor { margin: 0 0 .25rem; font-size: 1rem; font-weight: 700; color: var(--text); }

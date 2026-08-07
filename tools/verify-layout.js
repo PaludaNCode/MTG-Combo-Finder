@@ -1098,6 +1098,13 @@ function measure(win, doc) {
     // (No backticks in here, ever: this is inside HARNESS, a template literal.)
     whileOpen: (() => {
       if (!scaleButton || !whyPanel) return null;
+      // FOCUS IT FIRST, because a real press does. element.click() dispatches an event
+      // and moves nothing, so this harness pressed a control that never held focus --
+      // and that is the whole reason closesOnSecondPress below passed for as long as
+      // the panel existed. A CSS rule keyed on :focus-within held the panel open
+      // through the second press, on every device, and nothing here was in a position
+      // to notice. A dispatched press is not a press until focus goes with it.
+      scaleButton.focus();
       scaleButton.click();
       const r = whyPanel.getBoundingClientRect();
       const box = doc.querySelector('.deck-summary');
@@ -1118,7 +1125,25 @@ function measure(win, doc) {
       scaleButton.click(); // put it back, so nothing measured after this sees it open
       return out;
     })(),
+    // Read with focus still on the button, which is where the second press leaves it.
+    // This is the state a phone reader is stuck in and the one thing that has to hold:
+    // there is no pointer to move away and no Escape key within reach.
     closesOnSecondPress: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
+    // And the attribute agrees with the panel. They disagreed: false over an open
+    // panel, so a screen reader was told "collapsed" about something on screen.
+    saysClosed: Boolean(scaleButton) && scaleButton.getAttribute('aria-expanded') === 'false',
+    // Focus alone must not open it. This is the rule that was removed to fix the close,
+    // so it is the one that would quietly come back -- and a page where arriving at the
+    // control opens the panel is a page where leaving the control is the only way to
+    // shut it, which is the bug again.
+    opensOnFocusAlone: (() => {
+      if (!scaleButton || !whyPanel) return null;
+      scaleButton.blur();
+      scaleButton.focus();
+      const open = win.getComputedStyle(whyPanel).display !== 'none';
+      scaleButton.blur();
+      return open;
+    })(),
   };
   // After the literal rather than in it, because it reads a sibling key: the press
   // happens once, so whether it opened is one of the things that press found out.
@@ -3499,7 +3524,18 @@ function captionDrift(notes) {
     // so the press path stands in: it is the one a phone has.
     if (!bracket.closed) problems.push('the bracket explanation is on screen without being asked for');
     if (!bracket.opensOnPress) problems.push('pressing the bracket scale did not open the explanation');
-    if (!bracket.closesOnSecondPress) problems.push('a second press did not close the bracket explanation again');
+    // The only way a phone has of putting it away, and it did not work: focus stays on
+    // the button after a press, and a CSS rule keyed on that held the panel open while
+    // aria-expanded went back to false. Three assertions because they are three
+    // different mistakes — the panel, what the button says about it, and the rule that
+    // caused it, which is the one that could come back without either of the others.
+    if (!bracket.closesOnSecondPress) {
+      problems.push('a second press did not close the bracket explanation again — a phone has no other way to put it away');
+    }
+    if (!bracket.saysClosed) problems.push('the pips still announce themselves as expanded after a second press');
+    if (bracket.opensOnFocusAlone) {
+      problems.push('focusing the pips opens the explanation, so leaving them is the only way to close it');
+    }
     // And that opening it does not cost the reader the page. An absolutely positioned
     // panel hanging off a control two paddings into the window is the one thing here
     // that can widen the document, and a document wider than the screen is not a
