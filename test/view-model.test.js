@@ -532,10 +532,20 @@ test('deckCountsNote: one card is not one cards', () => {
 // The unread bucket is what keeps the sum checkable, so it is said whenever it is not
 // zero — quietly, because the names are named in the box above and this is a note about
 // the data rather than a finding about the deck.
+// "4 unread" and not "4 cards unread": the noun becomes the key of its row, so the old
+// wording rendered as "CARD UNREAD | 1" — the count and its noun either side of the
+// column, reading backwards. What it means moves into the aside.
 test('deckCountsNote: cards with no type line are said, and said quietly', () => {
   const note = View.deckCountsNote(counted({ spells: 58, unread: 4 }));
-  assert.equal(said(note), '98 cards · 58 spells · 36 lands (16 basic · 20 nonbasic) · 4 cards unread');
+  assert.equal(said(note), '98 cards · 58 spells · 36 lands (16 basic · 20 nonbasic) · 4 unread (not in this snapshot)');
   assert.equal(note.parts[3].quiet, true);
+  assert.equal(note.parts[3].sub, 'not in this snapshot');
+});
+
+// One of them is still "1 unread", not "1 unreads" and not "one card unread".
+test('deckCountsNote: one unread card reads as one', () => {
+  const note = View.deckCountsNote(counted({ spells: 61, unread: 1 }));
+  assert.equal(note.parts[3].text, '1 unread');
 });
 
 test('deckCountsNote: nothing unread is not mentioned', () => {
