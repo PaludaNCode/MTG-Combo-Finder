@@ -289,10 +289,14 @@
         said.appendChild(document.createTextNode(claim.end));
       }
       line.appendChild(said);
-      const names = el('span', 'legality-cards');
-      items.forEach((item, i) => {
-        if (i > 0) names.appendChild(document.createTextNode(' · '));
-        names.appendChild(el('span', 'card-name', item.card || item));
+      // One card per line. They ran together separated by middots, which on a phone
+      // wraps into a paragraph where "Elsha of the Infinite · Samut, the Driving Force"
+      // reads as one card with a very long name — and every card here carries a name,
+      // its colours and two links, so there is a lot to run together.
+      const names = el('ul', 'legality-cards');
+      items.forEach((item) => {
+        const line2 = el('li');
+        line2.appendChild(el('span', 'card-name', item.card || item));
         // The colours the card carries that the commander does not — the reason it
         // is on this line, so it does not have to be looked up to be believed. Pips
         // again, and the same ones: a reader comparing this against the identity in the
@@ -300,9 +304,10 @@
         if (item.colours) {
           const carried = el('span', 'legality-colours');
           carried.appendChild(RenderRows.manaPips(item.colours));
-          names.appendChild(carried);
+          line2.appendChild(carried);
         }
-        names.appendChild(RenderRows.cardLinks(item.card || item));
+        line2.appendChild(RenderRows.cardLinks(item.card || item));
+        names.appendChild(line2);
       });
       line.appendChild(names);
       box.appendChild(line);

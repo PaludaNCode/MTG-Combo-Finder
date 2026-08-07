@@ -23,6 +23,10 @@ const FIXTURE = {
     'The Destined White Mage': 'G',
     'Murderous Redcap': 'BR',
     'Bala Ged Recovery // Bala Ged Sanctuary': 'G',
+    // A second off-identity card for the illegal decks. One was not enough: the colours
+    // line lists a card per line now, and a check for that cannot fail while the fixture
+    // only ever puts one card on it.
+    'Swords to Plowshares': 'W',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
   // Wizards' Game Changer list, as the fetcher publishes it. Which real cards are
@@ -214,13 +218,13 @@ const DECKS = {
   // fixture's ban list. Both are in `cardIdentity`, so neither is an unrecognized
   // card as well — one card must not collect two accusations.
   illegal: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
-    .concat(REST, ['1 Heliod, Sun-Crowned', '1 Murderous Redcap']).join('\n'),
+    .concat(REST, ['1 Heliod, Sun-Crowned', '1 Swords to Plowshares', '1 Murderous Redcap']).join('\n'),
   // The same cards with no commander named, which is the case the identity half
   // cannot answer at all: a Commander deck's identity is its commander's, and there
   // is no commander to read. It has to say that rather than fall back on the deck's
   // own colours, which would make every list legal by construction.
   illegalNoCommander: ['1 Kinnan, Bonder Prodigy']
-    .concat(REST, ['1 Heliod, Sun-Crowned', '1 Murderous Redcap']).join('\n'),
+    .concat(REST, ['1 Heliod, Sun-Crowned', '1 Swords to Plowshares', '1 Murderous Redcap']).join('\n'),
 };
 
 // ---- the shape the deploy actually publishes --------------------------------

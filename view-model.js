@@ -466,7 +466,20 @@
       // Says why the three numbers do not add up, in the one case where they don't.
       // Quiet, because it is a note about the data and not a finding about the deck —
       // the unrecognized-cards box above is where those names are named.
-      if (unread) parts.push({ key: 'unread', text: `${plural(unread, 'card')} unread`, quiet: true });
+      // "unread", not "N cards unread". In a keyed row the noun becomes the key, so the
+      // old wording rendered as "CARD UNREAD | 1" — the count and its noun either side of
+      // the column, reading backwards. The aside carries what it means.
+      if (unread) {
+        parts.push({
+          key: 'unread',
+          text: `${unread} unread`,
+          // The unrecognized-cards box above says "aren't in this snapshot of the card
+          // list"; this is the same claim in the words that fit a row. "no type line in
+          // this snapshot" was the first wording and wrapped the row on a phone.
+          sub: 'not in this snapshot',
+          quiet: true,
+        });
+      }
     }
 
     return { label: 'Deck', parts, typed };

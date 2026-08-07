@@ -965,7 +965,9 @@ function measure(win, doc) {
   // it: which claim, which cards, and what it admitted to not checking.
   const legality = (() => {
     const box = doc.querySelector('#legality .legality');
-    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
+    // One <li> per card now, so this reads the names off the list items rather than off a
+    // run of spans. Same query either way -- what changed is that a name is a line.
+    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards li .card-name')]
       .map((e) => e.textContent);
     return {
       shown: !!box,
@@ -1617,7 +1619,9 @@ async function runLegality(vp) {
     await settled(doc, '.combo');
 
     const box = doc.querySelector('#legality .legality');
-    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards .card-name')]
+    // One <li> per card now, so this reads the names off the list items rather than off a
+    // run of spans. Same query either way -- what changed is that a name is a line.
+    const cardsIn = (sel) => [...doc.querySelectorAll(sel + ' .legality-cards li .card-name')]
       .map((e) => e.textContent);
     const claim = (sel) => (doc.querySelector(sel + ' .legality-claim') || {}).textContent || '';
     const claimPips = (sel) => [...doc.querySelectorAll(sel + ' .legality-claim .pip')]
@@ -1636,6 +1640,11 @@ async function runLegality(vp) {
         offIdentity: cardsIn('#legality .is-off-identity'),
         colours: [...doc.querySelectorAll('#legality .is-off-identity .legality-colours')]
           .map((e) => [...e.querySelectorAll('.pip')].map((pip) => pip.getAttribute('data-colour')).join('')),
+        // How many distinct lines those names occupy -- by their top edge, not by how
+        // many list items there are, so a rule that put two <li> side by side would fail
+        // this rather than pass it on markup alone.
+        cardLines: new Set([...doc.querySelectorAll('#legality .is-off-identity .legality-cards li')]
+          .map((li) => Math.round(li.getBoundingClientRect().top))).size,
         identityClaim: claim('#legality .is-off-identity'),
         identityClaimPips: claimPips('#legality .is-off-identity'),
         notes: [...doc.querySelectorAll('#legality .legality-note')].map((e) => e.textContent),
@@ -2571,6 +2580,11 @@ function captionDrift(notes) {
         if (!legal.notes.some((t) => /Singleton, deck size/.test(t))) {
           wrong.push('the legality line does not say what it left unchecked');
         }
+        // One card per line. They ran together separated by middots and wrapped into a
+        // paragraph on a phone, where two names read as one very long one.
+        if (legal.offIdentity.length && legal.cardLines !== legal.offIdentity.length) {
+          wrong.push(`${legal.offIdentity.length} off-identity card(s) on ${legal.cardLines} line(s)`);
+        }
         if (v.deck === 'illegal') {
           // A commander was named, so both halves are answerable. Heliod is {W}
           // against a {U}{G} commander.
@@ -3319,7 +3333,7 @@ function captionDrift(notes) {
       // the *spells*, because that is where such a card is counted.
       { key: 'spells', n: String(spells), sub: v.deck === 'misspelled' ? '1 MDFC' : '' },
       { key: 'lands', n: '10', sub: '10 basic' },
-    ].concat(unread ? [{ key: 'cards unread', n: String(unread), sub: '' }] : []);
+    ].concat(unread ? [{ key: 'unread', n: String(unread), sub: 'not in this snapshot' }] : []);
 
     if (!summary.shown) {
       problems.push('no deck summary after a search');

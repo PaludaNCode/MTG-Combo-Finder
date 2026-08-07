@@ -289,6 +289,12 @@ button:disabled { opacity: .6; cursor: wait; }
 .is-banned .legality-label,
 .is-banned .legality-claim { color: var(--error); }
 .legality-claim { color: var(--text); }
+/* One card per line, and the list markers off: the names are the finding rather than an
+   enumeration of it, and a bullet in front of each would read as a second claim. Same
+   shape the unrecognized-cards box uses, for the same reason — a reader is comparing
+   these against lines in the box on the left, which are also one per line. */
+.legality-cards { list-style: none; margin: .25rem 0 0; padding: 0; }
+.legality-cards li { margin: .15rem 0; }
 .legality-cards .card-name { color: var(--text); font-weight: 600; }
 /* The links sit against the name without this — "Murderous RedcapEDHREC" — because
    the flex gap above is between the line's parts and not inside this span. */
