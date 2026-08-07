@@ -40,7 +40,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const DeckParser = require('../parser.js');
 const DeckCombos = require('../combos.js');
-const { COMBOS } = require('../unofficial.js');
+const { COMBOS, STAND_INS } = require('../unofficial.js');
 const { ruledOutSets } = require('../research-log.js');
 
 const COMBOS_URL = 'https://raw.githubusercontent.com/PaludaNCode/MTG-Combo-Finder/data/combos.json';
@@ -72,13 +72,31 @@ function ruledOutIndex(entries) {
   return out;
 }
 
+// A row the page will draw for this deck, whether somebody wrote it out by hand or a
+// stand-in rule produced it. Both halves have to be here: checking only COMBOS is what
+// let this tool offer six shapes as unwritten while the browser was rendering them, on a
+// deck holding Elas il-Kor, Sadistic Pilgrim — the rule reaches 121 combos and the tool
+// could see none of them. That is the worst kind of wrong answer this file can give,
+// because it reads as work to do rather than as work already done, and the six were
+// carried through a whole reading pass before anyone asked the page.
+//
+// `allowMissing` is 0 and the rows are filtered to what the deck actually holds, because
+// a gap is a combo you can cast tonight; a stand-in row the deck is one card short of is
+// a suggestion, and suggestions are not this tool's question.
+function drawnFor(data, deck) {
+  const rows = DeckCombos.standInRows(data, STAND_INS, deck, undefined, 0);
+  return rows.filter((r) => (r.cards || []).every((n) => deck.has(DeckCombos.nameKey(n))));
+}
+
 // Returns { gaps, ruledOut } rather than the bare list it used to: what the filter
 // removed is part of the answer, not a side effect. A candidate list that silently
 // got shorter is a candidate list nobody can audit.
 function findGaps(data, deck, minJaccard, ruledOut) {
   const combos = data.combos || [];
   const published = new Set(combos.map((c) => keyOf(c.c)));
-  const written = new Set(COMBOS.map((r) => keyOf(r.cards)));
+  const written = new Set(
+    COMBOS.concat(drawnFor(data, deck)).map((r) => keyOf(r.cards))
+  );
   const settled = ruledOutIndex(ruledOut === undefined ? ruledOutSets() : ruledOut);
   const dropped = [];
 
@@ -208,4 +226,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { findGaps, shapeKey, ruledOutIndex };
+module.exports = { findGaps, shapeKey, ruledOutIndex, drawnFor };

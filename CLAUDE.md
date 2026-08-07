@@ -245,6 +245,12 @@ Rows 2 and 3 differ: `deck-cards.js` picks *subjects* and sweeps each across the
 `deck-gaps.js` also bounds candidate shapes to cards the deck holds, so every hit is castable
 tonight. It drops rule-outs recorded as `sets` and prints what it dropped.
 
+**`deck-gaps.js` checks a candidate against `COMBOS` *and* against what a stand-in rule draws
+for that deck.** Only the first half existed until 7 Aug 2026, and on a deck holding Elas
+il-Kor it offered **6 of 34** shapes as unwritten gaps while the browser was rendering every
+one of them — a wrong answer that reads as work to do rather than work already done, and it
+survived a whole reading pass before anyone asked the page → `test/deck-gaps.test.js`.
+
 **`sets` is always a subset of its reason.** Most rule-outs are categorical ("the loop needs a
 *token* out of the sacrifice") and enumerate no cards, so `ruledOutSets()` answers *has this been
 ruled out?* with **yes** or **nothing recorded** — never with *no*. A surviving candidate means

@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { findGaps, ruledOutIndex } = require('../tools/deck-gaps.js');
+const { findGaps, ruledOutIndex, drawnFor } = require('../tools/deck-gaps.js');
 const { deckNameSet } = require('../combos.js');
 const { ruledOutSets } = require('../research-log.js');
 
@@ -90,4 +90,50 @@ test('every recorded rule-out set carries the pass and the reason it died to', (
     assert.ok(entry.subject && entry.subject.length > 3, at + ': names no pass');
     assert.ok(entry.reason && entry.reason.length > 20, at + ': gives no reason');
   });
+});
+
+// The other half of "already written down", and the one this tool could not see for
+// its first two months: a stand-in RULE produces rows too, and the page draws them.
+// Checking a candidate against COMBOS alone offered six shapes on a real deck as
+// unpublished gaps while the browser was rendering every one of them, from the Elas
+// il-Kor, Sadistic Pilgrim rule. That is worse than a missed gap — it reads as work to
+// do rather than work already done, and it survived a whole reading pass.
+//
+// The fixture is the smallest thing that makes a rule fire: Impassioned Orator is one
+// of the sources Elas stands in for, so a combo published with the Orator is a row the
+// rule hands to any deck holding Elas. `Wall` exists only to make the two of them peers,
+// which is what gets the shape proposed in the first place.
+const STANDIN_DATA = {
+  combos: [
+    { c: ['Impassioned Orator', 'Wall'], id: '1-2', pop: 10 },
+    { c: ['Elas il-Kor, Sadistic Pilgrim', 'Wall'], id: '2-3', pop: 10 },
+    { c: ['Impassioned Orator', 'Scurry Oak', 'Sunbond'], id: '1-4-5', pop: 99 },
+  ],
+};
+const STANDIN_DECK = deck('Elas il-Kor, Sadistic Pilgrim', 'Scurry Oak', 'Sunbond', 'Wall');
+
+test('deck-gaps: a shape a stand-in rule already draws is not offered as a gap', () => {
+  const { gaps } = findGaps(STANDIN_DATA, STANDIN_DECK, 0.3, []);
+  assert.deepStrictEqual(
+    gaps.map((g) => [g.subject, ...g.rest].sort().join(' + ')),
+    [],
+    'the Elas il-Kor row for this shape is on the page already'
+  );
+});
+
+// Break it on purpose: without the stand-in half of `written` the same call proposes
+// the row. Asserting the rule fires at all is what stops this pair going quietly green
+// if the Elas rule is ever retired — a fixture that produces no rows would satisfy the
+// test above for the wrong reason.
+test('deck-gaps: the rule really does produce that row, so the check above means something', () => {
+  const drawn = drawnFor(STANDIN_DATA, STANDIN_DECK)
+    .map((r) => r.cards.slice().sort().join(' + ')).sort();
+  // Two rows, not one: the rule swaps into every Orator combo it can reach, and `Wall`
+  // is in one of them. That second row is already published as `2-3` and so is dropped a
+  // step later by `published` — which is exactly why `written` and `published` are
+  // separate sets rather than one.
+  assert.deepStrictEqual(drawn, [
+    'Elas il-Kor, Sadistic Pilgrim + Scurry Oak + Sunbond',
+    'Elas il-Kor, Sadistic Pilgrim + Wall',
+  ]);
 });
