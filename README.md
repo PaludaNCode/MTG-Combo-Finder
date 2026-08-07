@@ -707,7 +707,7 @@ section about unchecked numbers, and it had already drifted once.
 | claim | counted from |
 | --- | --- |
 | `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 463 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 600 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
@@ -1438,10 +1438,14 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 463 hand-written rows cite a published combo, and **all 463 are `verified`** — every swap read
-against both cards' oracle text. `derived` is not deprecated by that and the label is not going
-anywhere: **use `derived` rather than reading loosely and claiming `verified`.** The next sweep that
-reasons faster than it reads will add some, which is what it is for.
+All 600 hand-written rows cite a published combo. **533 are `verified` and 67 are `derived`** — the
+sentence above this one said *all of them* were verified until 7 Aug 2026, and the sweep that broke it
+is the one the label was waiting for. Viscera Seer and Carrion Feeder are the two most-published cards
+in the database, and their families are large enough that reading every member's steps individually
+buys nothing: the Mortuary + Aluren family is **one** shape with eight interchangeable cheap creatures,
+Death's Oasis + Deathrender is one shape with five. Rows carry `verified` only where that exact combo's
+published steps were fetched, and `derived` where the decision came from the family's shape. **Use
+`derived` rather than reading loosely and claiming `verified`** — that is what it is for.
 
 `test/unofficial.test.js` enforces the shape of both halves — every row cites a real combo id, every swap
 is genuinely one card in and one out against the cited combo, and every row gives a reason; every rule
@@ -1531,7 +1535,7 @@ is a ratio. *Read the pair count, not the score, for a card this widely publishe
 **Which makes the log a record of the cards somebody asked about, and nothing wider.**
 `tools/substitution-scope.js` points the same method at every card: at the strict bar, **1,779
 interchangeable pairs implying 4,835 combos Spellbook has not published**. Those are candidates, not owed
-rows. **1,032 candidates have been read.**
+rows. **1,277 candidates have been read.**
 
 **A rule-out can also be written as cards, and then a tool can act on it** — a rule-out may carry `sets`,
 the exact combinations it killed, which `tools/deck-gaps.js` drops and prints. **`sets` is always a

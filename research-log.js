@@ -1881,6 +1881,775 @@ const PASSES = [
       + 'effects on token creation. The difference is what they create: another copy of '
       + 'the token, or one more of a type of their own.',
   },
+  {
+    subject: 'Viscera Seer, and what a free sacrifice outlet is actually interchangeable with',
+    cards: [
+      'Viscera Seer',
+      'Carrion Feeder',
+      'Bloodflow Connoisseur',
+      'Woe Strider',
+      'Yahenni, Undying Partisan',
+      'Goblin Bombardment',
+      'Altar of Dementia',
+      'Blasting Station',
+      'Thermopod',
+      'Shilgengar, Sire of Famine',
+      'Bartolomé del Presidio',
+      'Umbral Collar Zealot',
+      'Phantom Train',
+      'Animation Module',
+      'Gravecrawler',
+      'Liliana, Untouched by Death',
+      'Gravespawn Sovereign',
+      'Faces of the Past',
+      'Tayam, Luminous Enigma',
+      'Agatha\'s Soul Cauldron',
+      'Walking Ballista',
+      'Triskelion',
+      'Morophon, the Boundless',
+    ],
+    cardIds: [2292, 2438, 2511, 997, 3967, 5147, 5256, 413, 5231, 5686, 2921, 6798, 6797, 3490, 2577, 598, 4599, 4275, 687, 4613, 3693, 1495, 877],
+    read: {
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. (Look at the top card of your library. You may put'
+        + ' that card on the bottom.) Creature — Vampire Wizard 1/1. Cost {B}.',
+      'Carrion Feeder': 'This creature can\'t block. Sacrifice a creature: Put a +1/+1 counter on this'
+        + ' creature. Creature — Zombie 1/1. Cost {B}.',
+      'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Vampire 1/1.'
+        + ' Cost {2}{B}.',
+      'Woe Strider': 'When this creature enters, create a 0/1 white Goat creature token. Sacrifice another'
+        + ' creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. (You'
+        + ' may cast this card from your graveyard for its escape cost.) This creature escapes'
+        + ' with two +1/+1 counters on it. Creature — Horror 3/2. Cost {2}{B}.',
+      'Yahenni, Undying Partisan': 'Haste Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni.'
+        + ' Sacrifice another creature: Yahenni gains indestructible until end of turn.'
+        + ' Legendary Creature — Aetherborn Vampire 2/2. Cost {2}{B}.',
+      'Goblin Bombardment': 'Sacrifice a creature: This enchantment deals 1 damage to any target. Enchantment.'
+        + ' Cost {1}{R}.',
+      'Altar of Dementia': 'Sacrifice a creature: Target player mills cards equal to the sacrificed creature\'s'
+        + ' power. Artifact. Cost {2}.',
+      'Blasting Station': '{T}, Sacrifice a creature: This artifact deals 1 damage to any target. Whenever a'
+        + ' creature enters, you may untap this artifact. Artifact. Cost {3}.',
+      'Thermopod': '{S}: This creature gains haste until end of turn. ({S} can be paid with one mana'
+        + ' from a snow source.) Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3. Cost'
+        + ' {4}{R}.',
+      'Shilgengar, Sire of Famine': 'Flying Sacrifice another creature: Create a Blood token. If you sacrificed an Angel'
+        + ' this way, create a number of Blood tokens equal to its toughness instead.'
+        + ' {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your'
+        + ' graveyard to the battlefield with a finality counter on it. Those creatures are'
+        + ' Vampires in addition to their other types. Legendary Creature — Elder Demon 6/6.'
+        + ' Cost {3}{B}{B}.',
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del'
+        + ' Presidio. Legendary Creature — Vampire Knight 2/1. Cost {W}{B}.',
+      'Umbral Collar Zealot': 'Sacrifice another creature or artifact: Surveil 1. (Look at the top card of your'
+        + ' library. You may put it into your graveyard.) Creature — Human Cleric 3/2. Cost'
+        + ' {1}{B}.',
+      'Phantom Train': 'Trample Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle.'
+        + ' It becomes a Spirit artifact creature in addition to its other types until end of'
+        + ' turn. Artifact — Vehicle 4/4. Cost {3}{B}.',
+      'Animation Module': 'Whenever one or more +1/+1 counters are put on a permanent you control, you may pay'
+        + ' {1}. If you do, create a 1/1 colorless Servo artifact creature token. {3}, {T}:'
+        + ' Choose a counter on target permanent or player. Give that permanent or player'
+        + ' another counter of that kind. Artifact. Cost {1}.',
+      'Gravecrawler': 'This creature can\'t block. You may cast this card from your graveyard as long as you'
+        + ' control a Zombie. Creature — Zombie 2/1. Cost {B}.',
+      'Liliana, Untouched by Death': '+1: Mill three cards. If at least one Zombie card is milled this way, each opponent'
+        + ' loses 2 life and you gain 2 life. −2: Target creature gets -X/-X until end of turn,'
+        + ' where X is the number of Zombies you control. −3: You may cast Zombie spells from'
+        + ' your graveyard this turn. Legendary Planeswalker — Liliana. Cost {2}{B}{B}.',
+      'Gravespawn Sovereign': 'Tap five untapped Zombies you control: Put target creature card from a graveyard'
+        + ' onto the battlefield under your control. Creature — Zombie 3/3. Cost {4}{B}{B}.',
+      'Faces of the Past': 'Whenever a creature dies, tap all untapped creatures that share a creature type with'
+        + ' it or untap all tapped creatures that share a creature type with it. Enchantment.'
+        + ' Cost {2}{U}.',
+      'Tayam, Luminous Enigma': 'Each other creature you control enters with an additional vigilance counter on it.'
+        + ' {3}, Remove three counters from among creatures you control: Mill three cards, then'
+        + ' return a permanent card with mana value 3 or less from your graveyard to the'
+        + ' battlefield. Legendary Creature — Nightmare Beast 3/3. Cost {1}{W}{B}{G}.',
+      'Agatha\'s Soul Cauldron': 'You may spend mana as though it were mana of any color to activate abilities of'
+        + ' creatures you control. Creatures you control with +1/+1 counters on them have all'
+        + ' activated abilities of all creature cards exiled with Agatha\'s Soul Cauldron. {T}:'
+        + ' Exile target card from a graveyard. When a creature card is exiled this way, put a'
+        + ' +1/+1 counter on target creature you control. Legendary Artifact. Cost {2}.',
+      'Walking Ballista': 'This creature enters with X +1/+1 counters on it. {4}: Put a +1/+1 counter on this'
+        + ' creature. Remove a +1/+1 counter from this creature: It deals 1 damage to any'
+        + ' target. Artifact Creature — Construct 0/0. Cost {X}{X}.',
+      'Triskelion': 'This creature enters with three +1/+1 counters on it. Remove a +1/+1 counter from'
+        + ' this creature: It deals 1 damage to any target. Artifact Creature — Construct 1/1.'
+        + ' Cost {6}.',
+      'Morophon, the Boundless': 'Changeling (This card is every creature type.) As Morophon enters, choose a creature'
+        + ' type. Spells of the chosen type you cast cost {W}{U}{B}{R}{G} less to cast. This'
+        + ' effect reduces only the amount of colored mana you pay. Other creatures you control'
+        + ' of the chosen type get +1/+1. Legendary Creature — Shapeshifter 6/6. Cost {7}.',
+    },
+    date: '2026-08-07',
+    method: 'every shape a true peer is published in and Viscera Seer is not, where a true '
+      + 'peer was chosen from the card text rather than from the overlap score',
+    proposed: 2709,
+    examined: 43,
+    kept: 26,
+    ruledOut: [
+      { reason: 'A SCORE IS NOT A PEER, AND EIGHT OF THE TWELVE ARE NOT. Twelve cards clear '
+        + 'jaccard 0.3 against Viscera Seer because they sit in the same 1,700-odd shapes, '
+        + 'and the shapes are the same because a free sacrifice outlet is a slot. What they '
+        + 'PRODUCE is not the same and a loop can spend it: Goblin Bombardment deals 1 '
+        + 'damage, Altar of Dementia mills, Thermopod adds {R}, Shilgengar, Sire of Famine '
+        + 'makes a Blood token, and Blasting Station is not even free — it taps, and wants a '
+        + 'creature entering to untap it. Bartolomé del Presidio, Umbral Collar Zealot and '
+        + 'Phantom Train eat an artifact as happily as a creature, which Viscera Seer cannot. '
+        + 'Cutting to the four whose output a loop cannot spend — Carrion Feeder, Bloodflow '
+        + 'Connoisseur, Woe Strider, Yahenni, Undying Partisan — took the candidate list from '
+        + '1,966 to 43. This is the whole pass: the 2,666 dropped here were never read, and '
+        + 'they did not need to be.', count: 2666 },
+      { reason: 'THE COUNTER IS THE LOOP, NOT A BYPRODUCT. Carrion Feeder puts a +1/+1 '
+        + 'counter on itself, and where a card reads that counter the swap is dead. Animation '
+        + 'Module triggers on counters being put and pays {1} to put another; Tayam, Luminous '
+        + 'Enigma spends counters from creatures you control as its activation cost, and the '
+        + 'published steps say so in words — "removing a counter from Carrion Feeder". '
+        + 'Viscera Seer scries, which nothing in these seven loops can spend.', count: 7,
+        sets: [
+          ['Viscera Seer', 'Animation Module', 'Pitiless Plunderer'],
+          ['Viscera Seer', 'Animation Module', 'Mana Echoes'],
+          ['Viscera Seer', 'Sword of the Meek', 'Animation Module', 'Krark-Clan Ironworks'],
+          ['Viscera Seer', 'Berta, Wise Extrapolator', 'Animation Module', 'Agatha\'s Soul Cauldron'],
+          ['Viscera Seer', 'Tayam, Luminous Enigma', 'Cathodion', 'Lesser Masticore'],
+          ['Viscera Seer', 'Tayam, Luminous Enigma', 'Cathodion', 'Golgari Germination'],
+          ['Viscera Seer', 'Tayam, Luminous Enigma', 'Cathodion', 'Mikaeus, the Unhallowed'],
+        ],
+      },
+      { reason: 'THE PEER’S OWN EXTRA IS THE ENGINE. Woe Strider makes a 0/1 Goat when it '
+        + 'enters, and Nim Deathmantle + Ashnod’s Altar is a loop that needs two bodies a lap '
+        + '— the returning Strider and the Goat it brings with it. Yahenni, Undying Partisan '
+        + 'gets a +1/+1 counter whenever an opponent’s creature dies, and that is what '
+        + 'reloads Walking Ballista and Triskelion through Agatha’s Soul Cauldron. Viscera '
+        + 'Seer has neither an entry trigger nor a counter it did not pay for.', count: 3,
+        sets: [
+          ['Viscera Seer', 'Nim Deathmantle', 'Ashnod\'s Altar'],
+          ['Viscera Seer', 'Agatha\'s Soul Cauldron', 'Walking Ballista'],
+          ['Viscera Seer', 'Agatha\'s Soul Cauldron', 'Triskelion'],
+        ],
+      },
+      { reason: 'THE OUTLET HAS TO BE THE ZOMBIE. Carrion Feeder is a Zombie and Viscera Seer '
+        + 'is a Vampire Wizard, and seven loops turn on exactly that. Gravecrawler reads "you '
+        + 'may cast this card from your graveyard as long as you control a Zombie", and in '
+        + 'each of those the Feeder IS the Zombie. Liliana, Untouched by Death’s -3 casts '
+        + 'Zombie spells from the graveyard and the card being recast is the Feeder itself. '
+        + 'Gravespawn Sovereign taps five Zombies as a cost and Faces of the Past untaps the '
+        + 'creatures sharing a type with the one that died — both are counting the outlet.', count: 7,
+        sets: [
+          ['Viscera Seer', 'Carnival of Souls', 'Gravecrawler', 'Blood Artist'],
+          ['Viscera Seer', 'Carnival of Souls', 'Gravecrawler', 'Zulaport Cutthroat'],
+          ['Viscera Seer', 'Ayara, First of Locthwain', 'Carnival of Souls', 'Gravecrawler'],
+          ['Viscera Seer', 'K\'rrik, Son of Yawgmoth', 'Ayara, First of Locthwain', 'Deathgreeter', 'Gravecrawler'],
+          ['Viscera Seer', 'Liliana, Untouched by Death', 'Pitiless Plunderer'],
+          ['Viscera Seer', 'Morophon, the Boundless', 'Liliana, Untouched by Death'],
+          ['Viscera Seer', 'Gravespawn Sovereign', 'Faces of the Past'],
+        ],
+      },
+    ],
+    notes: 'Every one of the 43 had its published steps fetched from the steps/ tree or is a '
+      + 'member of a family whose shape was read there — the Mortuary + Aluren family is one '
+      + 'shape with eight interchangeable cheap creatures, Death’s Oasis + Deathrender is one '
+      + 'shape with five. Rows carry `verified` only where that exact combo’s steps were read '
+      + 'and `derived` for the rest, which is why the file has both.',
+  },
+  {
+    subject: 'Carrion Feeder, and the eight loops that are really about the scry',
+    cards: [
+      'Carrion Feeder',
+      'Viscera Seer',
+      'Bloodflow Connoisseur',
+      'Woe Strider',
+      'Yahenni, Undying Partisan',
+      'Eligeth, Crossroads Augur',
+      'Matoya, Archon Elder',
+      'Galadriel of Lothlórien',
+      'Arwen Undómiel',
+      'The Temporal Anchor',
+      'Weatherlight Compleated',
+      'Vhal, Candlekeep Researcher',
+      'Princess Lucrezia',
+      'Kydele, Chosen of Kruphix',
+      'Haunted One',
+      'Fain, the Broker',
+      'Agatha\'s Soul Cauldron',
+      'Nim Deathmantle',
+      'Bloodline Necromancer',
+      'Olivia, Crimson Bride',
+      'Naru Meha, Master Wizard',
+      'Mikaeus, the Unhallowed',
+    ],
+    cardIds: [2438, 2292, 2511, 997, 3967, 1689, 6625, 1359, 1920, 2823, 3394, 3784, 2110, 427, 2527, 4170, 4613, 5003, 2721, 4897, 141, 628],
+    read: {
+      'Carrion Feeder': 'This creature can\'t block. Sacrifice a creature: Put a +1/+1 counter on this'
+        + ' creature. Creature — Zombie 1/1. Cost {B}.',
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. (Look at the top card of your library. You may put'
+        + ' that card on the bottom.) Creature — Vampire Wizard 1/1. Cost {B}.',
+      'Bloodflow Connoisseur': 'Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Vampire 1/1.'
+        + ' Cost {2}{B}.',
+      'Woe Strider': 'When this creature enters, create a 0/1 white Goat creature token. Sacrifice another'
+        + ' creature: Scry 1. Escape—{3}{B}{B}, Exile four other cards from your graveyard. (You'
+        + ' may cast this card from your graveyard for its escape cost.) This creature escapes'
+        + ' with two +1/+1 counters on it. Creature — Horror 3/2. Cost {2}{B}.',
+      'Yahenni, Undying Partisan': 'Haste Whenever a creature an opponent controls dies, put a +1/+1 counter on Yahenni.'
+        + ' Sacrifice another creature: Yahenni gains indestructible until end of turn.'
+        + ' Legendary Creature — Aetherborn Vampire 2/2. Cost {2}{B}.',
+      'Eligeth, Crossroads Augur': 'Flying If you would scry a number of cards, draw that many cards instead. Partner'
+        + ' (You can have two commanders if both have partner.) Legendary Creature — Sphinx 5/6.'
+        + ' Cost {4}{U}{U}.',
+      'Matoya, Archon Elder': 'Whenever you scry or surveil, draw a card. (Draw after you scry or surveil.)'
+        + ' Legendary Creature — Human Warlock 1/4. Cost {2}{U}.',
+      'Galadriel of Lothlórien': 'Whenever the Ring tempts you, if you chose a creature other than Galadriel as your'
+        + ' Ring-bearer, scry 3. Whenever you scry, you may reveal the top card of your library.'
+        + ' If a land card is revealed this way, put it onto the battlefield tapped. Legendary'
+        + ' Creature — Elf Noble 3/3. Cost {1}{G}{U}.',
+      'Arwen Undómiel': 'Whenever you scry, put a +1/+1 counter on target creature. {4}{G}{U}: Scry 2.'
+        + ' Legendary Creature — Elf Noble 2/2. Cost {G}{U}.',
+      'The Temporal Anchor': 'At the beginning of your upkeep, scry 2. Whenever you choose to put one or more'
+        + ' cards on the bottom of your library while scrying, exile that many cards from the'
+        + ' bottom of your library. During your turn, you may play cards exiled with The'
+        + ' Temporal Anchor. Legendary Artifact. Cost {3}{U}{U}{U}.',
+      'Weatherlight Compleated': 'Flying As long as Weatherlight Compleated has four or more phyresis counters on it,'
+        + ' it\'s a Phyrexian creature in addition to its other types. Whenever a creature you'
+        + ' control dies, put a phyresis counter on Weatherlight Compleated. Then draw a card if'
+        + ' it has seven or more phyresis counters on it. If it doesn\'t, scry 1. Legendary'
+        + ' Artifact — Vehicle 5/5. Cost {2}.',
+      'Vhal, Candlekeep Researcher': 'Vigilance {T}: Add an amount of {C} equal to Vhal\'s toughness. This mana can\'t be'
+        + ' spent to cast spells from your hand. Choose a Background (You can have a Background'
+        + ' as a second commander.) Legendary Creature — Human Wizard 2/3. Cost {3}{U}.',
+      'Princess Lucrezia': '{T}: Add {U}. Legendary Creature — Human Wizard 5/4. Cost {3}{U}{U}{B}.',
+      'Kydele, Chosen of Kruphix': '{T}: Add {C} for each card you\'ve drawn this turn. Partner (You can have two'
+        + ' commanders if both have partner.) Legendary Creature — Human Wizard 2/3. Cost'
+        + ' {2}{G}{U}.',
+      'Haunted One': 'Commander creatures you own have "Whenever this creature becomes tapped, it and'
+        + ' other creatures you control that share a creature type with it each get +2/+0 and'
+        + ' gain undying until end of turn." (When a creature with undying dies, if it had no'
+        + ' +1/+1 counters on it, return it to the battlefield under its owner\'s control with a'
+        + ' +1/+1 counter on it.) Legendary Enchantment — Background. Cost {2}{B}.',
+      'Fain, the Broker': '{T}, Sacrifice a creature: Put two +1/+1 counters on target creature. {T}, Remove a'
+        + ' counter from a creature you control: Create a Treasure token. {T}, Sacrifice an'
+        + ' artifact: Create a 2/1 white and black Inkling creature token with flying. {3}{B}:'
+        + ' Untap Fain. Legendary Creature — Human Warlock 3/3. Cost {2}{B}.',
+      'Agatha\'s Soul Cauldron': 'You may spend mana as though it were mana of any color to activate abilities of'
+        + ' creatures you control. Creatures you control with +1/+1 counters on them have all'
+        + ' activated abilities of all creature cards exiled with Agatha\'s Soul Cauldron. {T}:'
+        + ' Exile target card from a graveyard. When a creature card is exiled this way, put a'
+        + ' +1/+1 counter on target creature you control. Legendary Artifact. Cost {2}.',
+      'Nim Deathmantle': 'Equipped creature gets +2/+2, has intimidate, and is a black Zombie. (A creature'
+        + ' with intimidate can\'t be blocked except by artifact creatures and/or creatures that'
+        + ' share a color with it.) Whenever a nontoken creature is put into your graveyard from'
+        + ' the battlefield, you may pay {4}. If you do, return that card to the battlefield and'
+        + ' attach this Equipment to it. Equip {4} Artifact — Equipment. Cost {2}.',
+      'Bloodline Necromancer': 'Lifelink When this creature enters, you may return target Vampire or Wizard creature'
+        + ' card from your graveyard to the battlefield. Creature — Vampire Wizard 3/2. Cost'
+        + ' {4}{B}.',
+      'Olivia, Crimson Bride': 'Flying, haste Whenever Olivia attacks, return target creature card from your'
+        + ' graveyard to the battlefield tapped and attacking. It gains "When you don\'t control'
+        + ' a legendary Vampire, exile this creature." Legendary Creature — Vampire Noble 3/4.'
+        + ' Cost {4}{B}{R}.',
+      'Naru Meha, Master Wizard': 'Flash When Naru Meha enters, copy target instant or sorcery spell you control. You'
+        + ' may choose new targets for the copy. Other Wizards you control get +1/+1. Legendary'
+        + ' Creature — Human Wizard 3/3. Cost {2}{U}{U}.',
+      'Mikaeus, the Unhallowed': 'Intimidate (This creature can\'t be blocked except by artifact creatures and/or'
+        + ' creatures that share a color with it.) Whenever a Human deals damage to you, destroy'
+        + ' it. Other non-Human creatures you control get +1/+1 and have undying. (When a'
+        + ' creature with undying dies, if it had no +1/+1 counters on it, return it to the'
+        + ' battlefield under its owner\'s control with a +1/+1 counter on it.) Legendary'
+        + ' Creature — Zombie Cleric 5/5. Cost {3}{B}{B}{B}.',
+    },
+    date: '2026-08-07',
+    method: 'the mirror of the Viscera Seer pass — every shape one of the four true peers is '
+      + 'published in and Carrion Feeder is not',
+    proposed: 106,
+    examined: 78,
+    kept: 64,
+    ruledOut: [
+      { reason: 'SCRY 1 LOOKS LIKE A NULL OUTPUT AND IS NOT, EIGHT TIMES. Viscera Seer scries '
+        + 'and Carrion Feeder does not, which matters nowhere until a card reads the scry — '
+        + 'and then it is the whole engine. Eligeth, Crossroads Augur replaces the scry with '
+        + 'a draw outright ("If you would scry a number of cards, draw that many cards '
+        + 'instead"); Matoya, Archon Elder draws on it; Galadriel of Lothlórien puts a land '
+        + 'onto the battlefield off it; Arwen Undómiel turns it into a +1/+1 counter, which '
+        + 'is what makes Scurry Oak and Herd Baloth go. The Temporal Anchor is the subtlest: '
+        + 'Mortuary puts the creature on TOP, and the scry is what moves it to the bottom '
+        + 'where the Anchor can exile and recast it. Two of these are published with Woe '
+        + 'Strider, who also scries — which is how a first cut of this pass nearly kept them.', count: 8,
+        sets: [
+          ['Carrion Feeder', 'Eligeth, Crossroads Augur', 'The Locust God'],
+          ['Carrion Feeder', 'Eligeth, Crossroads Augur', 'The Watcher in the Water'],
+          ['Carrion Feeder', 'Matoya, Archon Elder', 'The Locust God'],
+          ['Carrion Feeder', 'Galadriel of Lothlórien', 'Dryad Arbor', 'Mortuary'],
+          ['Carrion Feeder', 'Arwen Undómiel', 'Scurry Oak'],
+          ['Carrion Feeder', 'Arwen Undómiel', 'Herd Baloth'],
+          ['Carrion Feeder', 'The Temporal Anchor', 'Mortuary', 'Memnite'],
+          ['Carrion Feeder', 'The Temporal Anchor', 'Mortuary', 'Ornithopter'],
+        ],
+      },
+      { reason: 'UNDYING THAT REACHES WIZARDS DOES NOT REACH ZOMBIES. Haunted One gives your '
+        + 'commander "whenever this creature becomes tapped, it and other creatures you '
+        + 'control THAT SHARE A CREATURE TYPE WITH IT get +2/+0 and gain undying". All three '
+        + 'commanders published in this shape — Vhal, Candlekeep Researcher, Princess '
+        + 'Lucrezia and Kydele, Chosen of Kruphix — are Human Wizards, and the loop sacrifices '
+        + 'the outlet to its own ability and gets it back on undying. Viscera Seer is a '
+        + 'Vampire Wizard and shares Wizard; Carrion Feeder is a Zombie and shares nothing, so '
+        + 'it stays dead. This is the Gravecrawler rule-out from the other pass, running the '
+        + 'other way.', count: 3,
+        sets: [
+          ['Carrion Feeder', 'Vhal, Candlekeep Researcher', 'Haunted One', 'Fain, the Broker', 'Intruder Alarm'],
+          ['Carrion Feeder', 'Princess Lucrezia', 'Haunted One', 'Fain, the Broker', 'Intruder Alarm'],
+          ['Carrion Feeder', 'Kydele, Chosen of Kruphix', 'Haunted One', 'Fain, the Broker', 'Intruder Alarm'],
+        ],
+      },
+      { reason: 'THE PEER’S OWN EXTRA IS THE ENGINE — the same three loops the Viscera Seer '
+        + 'pass lost, lost again for the same reason. Woe Strider’s Goat feeds Nim '
+        + 'Deathmantle + Ashnod’s Altar, and Yahenni, Undying Partisan’s counter is what '
+        + 'reloads Walking Ballista and Triskelion through Agatha’s Soul Cauldron. Carrion '
+        + 'Feeder does accumulate +1/+1 counters, which looks like it should cover the '
+        + 'Cauldron case and does not: its counters come from sacrificing your own creatures, '
+        + 'so they are the resource the loop was supposed to produce rather than a free '
+        + 'refill.', count: 3,
+        sets: [
+          ['Carrion Feeder', 'Nim Deathmantle', 'Ashnod\'s Altar'],
+          ['Carrion Feeder', 'Agatha\'s Soul Cauldron', 'Walking Ballista'],
+          ['Carrion Feeder', 'Agatha\'s Soul Cauldron', 'Triskelion'],
+        ],
+      },
+    ],
+    notes: 'The filter that made this readable: the swap differs in exactly two things — the '
+      + 'output and the creature types — so a candidate needs a hand reading only when one of '
+      + 'its OTHER cards can SEE one of them. Matching the type LINE flagged 55 of 78 and said '
+      + 'nothing (every combo with a Wizard in it); matching the rules TEXT for a scry '
+      + 'trigger, a counter being spent, or a tribe named as a noun flagged 24, and all 14 '
+      + 'rule-outs are inside those 24.',
+  },
+  {
+    subject: 'Prosperous Innkeeper, and the peer that gains life twice a lap',
+    cards: [
+      'Prosperous Innkeeper',
+      'Impassioned Orator',
+      'Lifecreed Duo',
+      'Hinterland Sanctifier',
+      'Dazzling Angel',
+      'Distinguished Conjurer',
+      'Social Climber',
+      'Aunt May',
+      'Kor Celebrant',
+      'Ajani\'s Welcome',
+      'Answered Prayers',
+      'Case of the Uneaten Feast',
+      'Leyline of Vitality',
+      'Suture Priest',
+      'Essence Warden',
+      'Soul Warden',
+      'Soul\'s Attendant',
+      'Auriok Champion',
+      'Haliya, Guided by Light',
+      'Daxos, Blessed by the Sun',
+      'Elas il-Kor, Sadistic Pilgrim',
+      'Guide of Souls',
+      'Healer of the Pride',
+      'Thunder of Unity',
+      'Bolas\'s Citadel',
+      'Mortuary',
+      'Darien, King of Kjeldor',
+    ],
+    cardIds: [4716, 2999, 5789, 6097, 6719, 3641, 3188, 6823, 4268, 1874, 4476, 6720, 3330, 261, 2741, 360, 567, 4506, 6752, 671, 2811, 5870, 1818, 6458, 2173, 5220, 1981],
+    read: {
+      'Prosperous Innkeeper': 'When this creature enters, create a Treasure token. (It\'s an artifact with "{T},'
+        + ' Sacrifice this token: Add one mana of any color.") Whenever another creature you'
+        + ' control enters, you gain 1 life. Creature — Halfling Citizen 1/1. Cost {1}{G}.',
+      'Impassioned Orator': 'Whenever another creature you control enters, you gain 1 life. Creature — Human'
+        + ' Cleric 2/2. Cost {1}{W}.',
+      'Lifecreed Duo': 'Flying Whenever another creature you control enters, you gain 1 life. Creature — Bat'
+        + ' Bird 1/2. Cost {1}{W}.',
+      'Hinterland Sanctifier': 'Whenever another creature you control enters, you gain 1 life. Creature — Rabbit'
+        + ' Cleric 1/2. Cost {W}.',
+      'Dazzling Angel': 'Flying Whenever another creature you control enters, you gain 1 life. Creature —'
+        + ' Angel 2/3. Cost {2}{W}.',
+      'Distinguished Conjurer': 'Whenever another creature you control enters, you gain 1 life. {4}{W}, {T}: Exile'
+        + ' another target creature you control, then return it to the battlefield under its'
+        + ' owner\'s control. Creature — Human Wizard 1/2. Cost {1}{W}.',
+      'Social Climber': 'Alliance — Whenever another creature you control enters, you gain 1 life. Creature —'
+        + ' Human Druid 3/2. Cost {2}{G}.',
+      'Aunt May': 'Whenever another creature you control enters, you gain 1 life. If it\'s a Spider, put'
+        + ' a +1/+1 counter on it. Legendary Creature — Human Citizen 0/2. Cost {W}.',
+      'Kor Celebrant': 'Whenever this creature or another creature you control enters, you gain 1 life.'
+        + ' Creature — Kor Cleric 1/4. Cost {2}{W}.',
+      'Ajani\'s Welcome': 'Whenever a creature you control enters, you gain 1 life. Enchantment. Cost {W}.',
+      'Answered Prayers': 'Whenever a creature you control enters, you gain 1 life. If this enchantment isn\'t a'
+        + ' creature, it becomes a 3/3 Angel creature with flying in addition to its other types'
+        + ' until end of turn. Enchantment. Cost {1}{W}{W}.',
+      'Case of the Uneaten Feast': 'Whenever a creature you control enters, you gain 1 life. To solve — You\'ve gained 5'
+        + ' or more life this turn. (If unsolved, solve at the beginning of your end step.)'
+        + ' Solved — Sacrifice this Case: Creature cards in your graveyard gain "You may cast'
+        + ' this card from your graveyard" until end of turn. Enchantment — Case. Cost {W}.',
+      'Leyline of Vitality': 'If this card is in your opening hand, you may begin the game with it on the'
+        + ' battlefield. Creatures you control get +0/+1. Whenever a creature you control'
+        + ' enters, you may gain 1 life. Enchantment. Cost {2}{G}{G}.',
+      'Suture Priest': 'Whenever another creature you control enters, you may gain 1 life. Whenever a'
+        + ' creature an opponent controls enters, you may have that player lose 1 life. Creature'
+        + ' — Phyrexian Cleric 1/1. Cost {1}{W}.',
+      'Essence Warden': 'Whenever another creature enters, you gain 1 life. Creature — Elf Shaman 1/1. Cost'
+        + ' {G}.',
+      'Soul Warden': 'Whenever another creature enters, you gain 1 life. Creature — Human Cleric 1/1. Cost'
+        + ' {W}.',
+      'Soul\'s Attendant': 'Whenever another creature enters, you may gain 1 life. Creature — Human Cleric 1/1.'
+        + ' Cost {W}.',
+      'Auriok Champion': 'Protection from black and from red Whenever another creature enters, you may gain 1'
+        + ' life. Creature — Human Cleric 1/1. Cost {W}{W}.',
+      'Haliya, Guided by Light': 'Whenever Haliya or another creature or artifact you control enters, you gain 1 life.'
+        + ' At the beginning of your end step, draw a card if you\'ve gained 3 or more life this'
+        + ' turn. Warp {W} (You may cast this card from your hand for its warp cost. Exile this'
+        + ' creature at the beginning of the next end step, then you may cast it from exile on a'
+        + ' later turn.) Legendary Creature — Human Soldier 3/3. Cost {2}{W}.',
+      'Daxos, Blessed by the Sun': 'Daxos\'s toughness is equal to your devotion to white. (Each {W} in the mana costs of'
+        + ' permanents you control counts toward your devotion to white.) Whenever another'
+        + ' creature you control enters or dies, you gain 1 life. Legendary Enchantment Creature'
+        + ' — Demigod 2/*. Cost {W}{W}.',
+      'Elas il-Kor, Sadistic Pilgrim': 'Deathtouch Whenever another creature you control enters, you gain 1 life. Whenever'
+        + ' another creature you control dies, each opponent loses 1 life. Legendary Creature —'
+        + ' Phyrexian Kor Cleric 2/2. Cost {W}{B}.',
+      'Guide of Souls': 'Whenever another creature you control enters, you gain 1 life and get {E} (an energy'
+        + ' counter). Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1'
+        + ' counters and a flying counter on target attacking creature. It becomes an Angel in'
+        + ' addition to its other types. Creature — Human Cleric 1/2. Cost {W}.',
+      'Healer of the Pride': 'Whenever another creature you control enters, you gain 2 life. Creature — Cat Cleric'
+        + ' 2/3. Cost {3}{W}.',
+      'Thunder of Unity': '(As this Saga enters and after your draw step, add a lore counter. Sacrifice after'
+        + ' III.) I — You draw two cards and you lose 2 life. II, III — Whenever a creature you'
+        + ' control enters this turn, each opponent loses 1 life and you gain 1 life.'
+        + ' Enchantment — Saga. Cost {R}{W}{B}.',
+      'Bolas\'s Citadel': 'You may look at the top card of your library any time. You may play lands and cast'
+        + ' spells from the top of your library. If you cast a spell this way, pay life equal to'
+        + ' its mana value rather than pay its mana cost. {T}, Sacrifice ten nonland permanents:'
+        + ' Each opponent loses 10 life. Legendary Artifact. Cost {3}{B}{B}{B}.',
+      'Mortuary': 'Whenever a creature is put into your graveyard from the battlefield, put that card'
+        + ' on top of your library. Enchantment. Cost {3}{B}.',
+      'Darien, King of Kjeldor': 'Whenever you\'re dealt damage, you may create that many 1/1 white Soldier creature'
+        + ' tokens. Legendary Creature — Human Soldier 3/3. Cost {4}{W}{W}.',
+    },
+    date: '2026-08-07',
+    method: 'every shape a lifegain-on-entry peer is published in and Prosperous Innkeeper is '
+      + 'not, with the peer list cut to cards whose trigger the Innkeeper can actually match',
+    proposed: 458,
+    examined: 90,
+    kept: 47,
+    ruledOut: [
+      { reason: 'ENERGY IS NOT LIFE, AND GUIDE OF SOULS MAKES BOTH. Guide of Souls reads '
+        + '"you gain 1 life AND GET {E}", and the loops it is published in — Aethergeode '
+        + 'Miner, Decoction Module, Izzet Generatorium, Aether Refinery, Whirler Virtuoso, '
+        + 'Automated Assembly Line — spend the energy, not the life. It scored as a peer '
+        + 'because it fills the same slot in the same shapes, and it is not one. Healer of '
+        + 'the Pride gains 2 rather than 1, and Trostani, Selesnya’s Voice, Verdant Sun’s '
+        + 'Avatar and Angelic Chorus gain a variable amount off power or toughness, so none '
+        + 'of them is interchangeable with a flat 1 either. Thunder of Unity only has the '
+        + 'trigger during two chapters of a Saga. Dropping these eleven took the list from '
+        + '264 to 90.', count: 174 },
+      { reason: 'DAXOS GAINS LIFE ON ENTERS *OR DIES*, AND THE LOOP IS PAYING LIFE A LAP. '
+        + 'Thirty of the ninety are published with Daxos, Blessed by the Sun, and all thirty '
+        + 'are Mortuary or Bolas’s Citadel loops that recast a cheap creature by paying life '
+        + 'equal to its mana value. Daxos triggers twice a lap — once when the creature '
+        + 'arrives, once when it dies — so a 1-mana creature nets the loop +1 life. Prosperous '
+        + 'Innkeeper triggers once, so the same lap nets 0 at best and goes negative the '
+        + 'moment the creature costs 2. This is the largest single rule-out in the pass and it '
+        + 'is arithmetic, not text.', count: 30,
+        sets: [
+          ['Prosperous Innkeeper', 'Yawgmoth, Thran Physician', 'Nest of Scarabs'],
+          ['Prosperous Innkeeper', 'Priest of Gix', 'Phyrexian Reclamation', 'Ashnod\'s Altar'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Viscera Seer'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Carrion Feeder'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Blood Pet'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Spore Frog'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Spore Frog', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Lord of the Forsaken', 'Osteomancer Adept', 'Priest of Gix'],
+          ['Prosperous Innkeeper', 'Lord of the Forsaken', 'Underworld Breach', 'Priest of Gix'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Wild Cantor', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Viscera Seer', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Tinder Wall', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Skirk Prospector', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Myr Scrapling', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Mogg Fanatic', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Goblin Firestarter', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Fanatical Firebrand', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Carrion Feeder', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Blood Pet', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bile Urchin', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Wild Cantor', 'Bolas\'s Citadel'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Tinder Wall'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Skirk Prospector', 'Bolas\'s Citadel'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Myr Scrapling'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Mogg Fanatic', 'Bolas\'s Citadel'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Goblin Firestarter'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bolas\'s Citadel', 'Fanatical Firebrand'],
+          ['Prosperous Innkeeper', 'Mortuary', 'Bile Urchin', 'Bolas\'s Citadel'],
+          ['Prosperous Innkeeper', 'Animation Module', 'Valentin, Dean of the Vein // Lisette, Dean of the Root', 'Krark-Clan Ironworks'],
+          ['Prosperous Innkeeper', 'Animation Module', 'Valentin, Dean of the Vein // Lisette, Dean of the Root', 'Ashnod\'s Altar'],
+        ],
+      },
+      { reason: 'SUTURE PRIEST’S PAYOFF IS THE HALF THE INNKEEPER HAS NOT GOT. Suture Priest '
+        + 'has two abilities and only the first is a lifegain-on-entry; the second drains an '
+        + 'opponent whenever a creature THEY control enters. Nine of its ten shapes are that '
+        + 'second half — Phelddagrif and Questing Phelddagrif handing opponents Hippos, '
+        + 'Rasputin and Eldrazi Displacer handing them Goblins, Hive Mind and Storm Herd '
+        + 'handing them Pegasus — and the published result is "each opponent loses infinite '
+        + 'life". Prosperous Innkeeper does not see an opponent’s creature enter at all. The '
+        + 'tenth, Ratchet + Sculpting Steel, uses only the first half and is kept.', count: 9,
+        sets: [
+          ['Prosperous Innkeeper', 'Phelddagrif', 'Intruder Alarm'],
+          ['Prosperous Innkeeper', 'Questing Phelddagrif', 'Intruder Alarm'],
+          ['Prosperous Innkeeper', 'Rasputin, the Oneiromancer', 'Eldrazi Displacer', 'Thousand-Year Elixir', 'Amulet of Vigor'],
+          ['Prosperous Innkeeper', 'Hive Mind', 'Storm Herd'],
+          ['Prosperous Innkeeper', 'Rasputin, the Oneiromancer', 'Eldrazi Displacer', 'Akroma\'s Memorial', 'Amulet of Vigor'],
+          ['Prosperous Innkeeper', 'Rasputin, the Oneiromancer', 'Emiel the Blessed', 'Thousand-Year Elixir'],
+          ['Prosperous Innkeeper', 'Rasputin, the Oneiromancer', 'Emiel the Blessed', 'Akroma\'s Memorial'],
+          ['Prosperous Innkeeper', 'Questing Phelddagrif', 'Sinking Feeling', 'Ashaya, Soul of the Wild', 'Market Festival'],
+          ['Prosperous Innkeeper', 'Questing Phelddagrif', 'Sinking Feeling', 'Ashaya, Soul of the Wild', 'New Horizons'],
+        ],
+      },
+      { reason: 'HALIYA COUNTS ARTIFACTS AND ELAS IL-KOR COUNTS DEATHS. Haliya, Guided by '
+        + 'Light reads "Haliya or another creature OR ARTIFACT you control enters", and both '
+        + 'of its shapes are Sensei’s Divining Top — an artifact — entering. Elas il-Kor, '
+        + 'Sadistic Pilgrim has a second trigger on another creature you control dying, and '
+        + 'both of its shapes are published for the drain that comes out of it. Neither is a '
+        + 'thing the Innkeeper does.', count: 4,
+        sets: [
+          ['Prosperous Innkeeper', 'Sensei\'s Divining Top', 'Bolas\'s Citadel'],
+          ['Prosperous Innkeeper', 'Sensei\'s Divining Top', 'Gwenom, Remorseless'],
+          ['Prosperous Innkeeper', 'Teysa Karlov', 'Oathsworn Vampire', 'Pitiless Plunderer', 'Lord of the Forsaken'],
+          ['Prosperous Innkeeper', 'Drivnod, Carnage Dominus', 'Oathsworn Vampire', 'Pitiless Plunderer', 'Lord of the Forsaken'],
+        ],
+      },
+    ],
+    notes: 'All ninety had their published steps read, which is why every kept row here is '
+      + '`verified`. The Innkeeper’s own Treasure — the ETB the peers have no equivalent of — '
+      + 'lands once, on its own arrival, and no lap in any of the 47 needs it, so it is a '
+      + 'bonus rather than a difference. The Elas il-Kor sets are recorded under the Haliya '
+      + 'rule-out because the two share a reason.',
+  },
+  {
+    subject: 'the 34 gaps one Chatterfang/Ghave deck exposes, and why every one of them dies',
+    cards: [
+      'Ghave, Guru of Spores',
+      'Basking Broodscale',
+      'Herd Baloth',
+      'Scurry Oak',
+      'Necrosynthesis',
+      'Sadistic Glee',
+      'Shilgengar, Sire of Famine',
+      'Chatterfang, Squirrel General',
+      'Quina, Qu Gourmet',
+      'Peregrin Took',
+      'Cauldron Familiar',
+      'Sunbond',
+      'Light of Promise',
+      'Cleric Class',
+      'Kitchen Finks',
+      'Thermopod',
+      'Puppeteer Clique',
+      'Heliod, Sun-Crowned',
+      'Thunder of Unity',
+      'Elas il-Kor, Sadistic Pilgrim',
+      'Viscera Seer',
+      'Carrion Feeder',
+      'Bartolomé del Presidio',
+      'Umbral Collar Zealot',
+      'Ashnod\'s Altar',
+    ],
+    cardIds: [5189, 5641, 3197, 4186, 1628, 2082, 5686, 3000, 6705, 4321, 856, 4017, 338, 104, 2086, 5231, 3020, 1274, 6458, 2811, 2292, 2438, 2921, 6798, 2034],
+    read: {
+      'Ghave, Guru of Spores': 'Ghave enters with five +1/+1 counters on it. {1}, Remove a +1/+1 counter from a'
+        + ' creature you control: Create a 1/1 green Saproling creature token. {1}, Sacrifice a'
+        + ' creature: Put a +1/+1 counter on target creature. Legendary Creature — Fungus Shaman'
+        + ' 0/0. Cost {2}{W}{B}{G}.',
+      'Basking Broodscale': 'Devoid (This card has no color.) {1}{G}: Adapt 1. (If this creature has no +1/+1'
+        + ' counters on it, put a +1/+1 counter on it.) Whenever one or more +1/+1 counters are'
+        + ' put on this creature, you may create a 0/1 colorless Eldrazi Spawn creature token'
+        + ' with "Sacrifice this token: Add {C}." Creature — Eldrazi Lizard 2/2. Cost {1}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4'
+        + ' green Beast creature token. Creature — Beast 4/4. Cost {3}{G}{G}.',
+      'Scurry Oak': 'Evolve (Whenever a creature you control enters, if that creature has greater power'
+        + ' or toughness than this creature, put a +1/+1 counter on this creature.) Whenever one'
+        + ' or more +1/+1 counters are put on this creature, you may create a 1/1 green Squirrel'
+        + ' creature token. Creature — Treefolk 1/2. Cost {2}{G}.',
+      'Necrosynthesis': 'Enchant creature Enchanted creature has "Whenever another creature dies, put a +1/+1'
+        + ' counter on this creature." When enchanted creature dies, look at the top X cards of'
+        + ' your library, where X is its power. Put one of those cards into your hand and the'
+        + ' rest on the bottom of your library in a random order. Enchantment — Aura. Cost'
+        + ' {1}{B}.',
+      'Sadistic Glee': 'Enchant creature Whenever a creature dies, put a +1/+1 counter on enchanted'
+        + ' creature. Enchantment — Aura. Cost {B}.',
+      'Shilgengar, Sire of Famine': 'Flying Sacrifice another creature: Create a Blood token. If you sacrificed an Angel'
+        + ' this way, create a number of Blood tokens equal to its toughness instead.'
+        + ' {W/B}{W/B}{W/B}, Sacrifice six Blood tokens: Return each creature card from your'
+        + ' graveyard to the battlefield with a finality counter on it. Those creatures are'
+        + ' Vampires in addition to their other types. Legendary Creature — Elder Demon 6/6.'
+        + ' Cost {3}{B}{B}.',
+      'Chatterfang, Squirrel General': 'Forestwalk (This creature can\'t be blocked as long as defending player controls a'
+        + ' Forest.) If one or more tokens would be created under your control, those tokens'
+        + ' plus that many 1/1 green Squirrel creature tokens are created instead. {B},'
+        + ' Sacrifice X Squirrels: Target creature gets +X/-X until end of turn. Legendary'
+        + ' Creature — Squirrel Warrior 3/3. Cost {2}{G}.',
+      'Quina, Qu Gourmet': 'If one or more tokens would be created under your control, those tokens plus a 1/1'
+        + ' green Frog creature token are created instead. {2}, Sacrifice a Frog: Put a +1/+1'
+        + ' counter on Quina. Legendary Creature — Qu 2/3. Cost {2}{G}.',
+      'Peregrin Took': 'If one or more tokens would be created under your control, those tokens plus an'
+        + ' additional Food token are created instead. (It\'s an artifact with "{2}, {T},'
+        + ' Sacrifice this token: You gain 3 life.") Sacrifice three Foods: Draw a card.'
+        + ' Legendary Creature — Halfling Citizen 2/3. Cost {2}{G}.',
+      'Cauldron Familiar': 'When this creature enters, each opponent loses 1 life and you gain 1 life. Sacrifice'
+        + ' a Food: Return this card from your graveyard to the battlefield. Creature — Cat 1/1.'
+        + ' Cost {B}.',
+      'Sunbond': 'Enchant creature Enchanted creature has "Whenever you gain life, put that many +1/+1'
+        + ' counters on this creature." Enchantment — Aura. Cost {3}{W}.',
+      'Light of Promise': 'Enchant creature Enchanted creature has "Whenever you gain life, put that many +1/+1'
+        + ' counters on this creature." Enchantment — Aura. Cost {2}{W}.',
+      'Cleric Class': '(Gain the next level as a sorcery to add its ability.) If you would gain life, you'
+        + ' gain that much life plus 1 instead. {3}{W}: Level 2 Whenever you gain life, put a'
+        + ' +1/+1 counter on target creature you control. {4}{W}: Level 3 When this Class'
+        + ' becomes level 3, return target creature card from your graveyard to the battlefield.'
+        + ' You gain life equal to that creature\'s toughness. Enchantment — Class. Cost {W}.',
+      'Kitchen Finks': 'When this creature enters, you gain 2 life. Persist (When this creature dies, if it'
+        + ' had no -1/-1 counters on it, return it to the battlefield under its owner\'s control'
+        + ' with a -1/-1 counter on it.) Creature — Ouphe 3/2. Cost {1}{G/W}{G/W}.',
+      'Thermopod': '{S}: This creature gains haste until end of turn. ({S} can be paid with one mana'
+        + ' from a snow source.) Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3. Cost'
+        + ' {4}{R}.',
+      'Puppeteer Clique': 'Flying When this creature enters, put target creature card from an opponent\'s'
+        + ' graveyard onto the battlefield under your control. It gains haste. At the beginning'
+        + ' of your next end step, exile it. Persist (When this creature dies, if it had no'
+        + ' -1/-1 counters on it, return it to the battlefield under its owner\'s control with a'
+        + ' -1/-1 counter on it.) Creature — Faerie Wizard 3/2. Cost {3}{B}{B}.',
+      'Heliod, Sun-Crowned': 'Indestructible As long as your devotion to white is less than five, Heliod isn\'t a'
+        + ' creature. Whenever you gain life, put a +1/+1 counter on target creature or'
+        + ' enchantment you control. {1}{W}: Another target creature gains lifelink until end of'
+        + ' turn. Legendary Enchantment Creature — God 5/5. Cost {2}{W}.',
+      'Thunder of Unity': '(As this Saga enters and after your draw step, add a lore counter. Sacrifice after'
+        + ' III.) I — You draw two cards and you lose 2 life. II, III — Whenever a creature you'
+        + ' control enters this turn, each opponent loses 1 life and you gain 1 life.'
+        + ' Enchantment — Saga. Cost {R}{W}{B}.',
+      'Elas il-Kor, Sadistic Pilgrim': 'Deathtouch Whenever another creature you control enters, you gain 1 life. Whenever'
+        + ' another creature you control dies, each opponent loses 1 life. Legendary Creature —'
+        + ' Phyrexian Kor Cleric 2/2. Cost {W}{B}.',
+      'Viscera Seer': 'Sacrifice a creature: Scry 1. (Look at the top card of your library. You may put'
+        + ' that card on the bottom.) Creature — Vampire Wizard 1/1. Cost {B}.',
+      'Carrion Feeder': 'This creature can\'t block. Sacrifice a creature: Put a +1/+1 counter on this'
+        + ' creature. Creature — Zombie 1/1. Cost {B}.',
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del'
+        + ' Presidio. Legendary Creature — Vampire Knight 2/1. Cost {W}{B}.',
+      'Umbral Collar Zealot': 'Sacrifice another creature or artifact: Surveil 1. (Look at the top card of your'
+        + ' library. You may put it into your graveyard.) Creature — Human Cleric 3/2. Cost'
+        + ' {1}{B}.',
+      'Ashnod\'s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact. Cost {3}.',
+    },
+    date: '2026-08-07',
+    method: 'tools/deck-gaps.js on a 65-card spell list — every shape the deck can assemble '
+      + 'that Spellbook has not published — then each candidate read against the published '
+      + 'steps of the combo it was proposed from',
+    proposed: 34,
+    examined: 34,
+    kept: 0,
+    ruledOut: [
+      { reason: 'THE ELDRAZI SPAWN IS MANA, AND THAT IS WHAT PAYS GHAVE. Basking Broodscale '
+        + 'makes a 0/1 Eldrazi Spawn with "Sacrifice this token: Add {C}", and the published '
+        + 'steps spend that {C} on Ghave, Guru of Spores’s second ability — "{1}, Sacrifice a '
+        + 'creature: Put a +1/+1 counter on target creature" — which is what puts the next '
+        + 'counter on the Broodscale. Herd Baloth makes a 4/4 Beast and Scurry Oak makes a '
+        + '1/1 Squirrel. Both are bodies Ghave can eat and neither adds mana, so the loop '
+        + 'runs exactly as long as you have {1} to spend on it.', count: 4,
+        sets: [
+          ['Herd Baloth', 'Ghave, Guru of Spores', 'Chatterfang, Squirrel General'],
+          ['Scurry Oak', 'Ghave, Guru of Spores', 'Chatterfang, Squirrel General'],
+          ['Herd Baloth', 'Ghave, Guru of Spores', 'Quina, Qu Gourmet'],
+          ['Scurry Oak', 'Ghave, Guru of Spores', 'Quina, Qu Gourmet'],
+        ],
+      },
+      { reason: 'AND THE SPAWN SACRIFICES ITSELF, WHICH IS THE OTHER HALF. Necrosynthesis on '
+        + 'Basking Broodscale needs no outlet at all: the Spawn eats itself for mana, that is '
+        + 'a creature dying, and the Aura turns the death back into the counter. Herd Baloth’s '
+        + 'Beast and Scurry Oak’s Squirrel have no sacrifice ability of their own, so with '
+        + 'either of them the shape is two cards short rather than one. This is the same '
+        + 'reading the first substitution sweep recorded against Sadistic Glee — the same '
+        + 'Aura text, the same two creatures — and it is recorded here as cards because '
+        + 'deck-gaps.js re-offered it under a different Aura.', count: 2,
+        sets: [
+          ['Herd Baloth', 'Necrosynthesis'],
+          ['Scurry Oak', 'Necrosynthesis'],
+        ],
+      },
+      { reason: 'THE BLOOD TOKEN IS WHAT THE TOKEN ADDER ADDS TO. Shilgengar, Sire of Famine '
+        + 'reads "Sacrifice another creature: Create a Blood token", and all three shapes pair '
+        + 'it with a card that adds to a token creation — Chatterfang, Squirrel General adds a '
+        + 'Squirrel, Quina, Qu Gourmet adds a Frog, Peregrin Took adds a Food. That added body '
+        + 'is what replaces the creature just eaten, which is the whole loop. Viscera Seer, '
+        + 'Carrion Feeder, Bartolomé del Presidio and Umbral Collar Zealot are free sacrifice '
+        + 'outlets that create nothing, so the adder has nothing to add to and the creature '
+        + 'count falls by one a lap. Twelve candidates, one sentence.', count: 12,
+        sets: [
+          ['Bartolomé del Presidio', 'Chatterfang, Squirrel General'],
+          ['Carrion Feeder', 'Chatterfang, Squirrel General'],
+          ['Viscera Seer', 'Chatterfang, Squirrel General'],
+          ['Umbral Collar Zealot', 'Chatterfang, Squirrel General'],
+          ['Bartolomé del Presidio', 'Cauldron Familiar', 'Peregrin Took'],
+          ['Carrion Feeder', 'Cauldron Familiar', 'Peregrin Took'],
+          ['Viscera Seer', 'Cauldron Familiar', 'Peregrin Took'],
+          ['Umbral Collar Zealot', 'Cauldron Familiar', 'Peregrin Took'],
+          ['Bartolomé del Presidio', 'Quina, Qu Gourmet'],
+          ['Carrion Feeder', 'Quina, Qu Gourmet'],
+          ['Viscera Seer', 'Quina, Qu Gourmet'],
+          ['Umbral Collar Zealot', 'Quina, Qu Gourmet'],
+        ],
+      },
+      { reason: 'SUNBOND IS LIGHT OF PROMISE, WORD FOR WORD, AND THE AURA DIES WITH THE '
+        + 'CREATURE. Both read "Enchanted creature has \'Whenever you gain life, put that many '
+        + '+1/+1 counters on this creature.\'" — identical text on a {3}{W} Aura and a {2}{W} '
+        + 'one. Every one of these five is Kitchen Finks plus a free sacrifice outlet, where '
+        + 'persist returns the Finks with a -1/-1 counter and the lifegain counter has to '
+        + 'annihilate it. Cleric Class does that from outside the creature; an Aura on the '
+        + 'Finks goes to the graveyard when the Finks does, and the second lap has no engine. '
+        + 'The pass of 4 Aug 2026 wrote this rule-out against Light of Promise and enumerated '
+        + 'Light of Promise sets; it is the same rule and Sunbond is the same card.', count: 5,
+        sets: [
+          ['Sunbond', 'Kitchen Finks', 'Ashnod\'s Altar'],
+          ['Sunbond', 'Kitchen Finks', 'Viscera Seer'],
+          ['Sunbond', 'Kitchen Finks', 'Carrion Feeder'],
+          ['Sunbond', 'Kitchen Finks', 'Bartolomé del Presidio'],
+          ['Sunbond', 'Kitchen Finks', 'Umbral Collar Zealot'],
+        ],
+      },
+      { reason: 'THERMOPOD’S {R} IS GHAVE’S {1}. "Sacrifice a creature: Add {R}" is what pays '
+        + 'for Ghave’s first ability in the published steps — remove a counter, make a '
+        + 'Saproling, eat the Saproling for {R}, and Sadistic Glee puts the counter back. The '
+        + 'four outlets proposed in its place make no mana, so the loop stops the moment you '
+        + 'run out of it. Same shape of mistake as the Shilgengar family: the outlet is not a '
+        + 'slot, it is a resource.', count: 4,
+        sets: [
+          ['Bartolomé del Presidio', 'Ghave, Guru of Spores', 'Sadistic Glee'],
+          ['Carrion Feeder', 'Ghave, Guru of Spores', 'Sadistic Glee'],
+          ['Viscera Seer', 'Ghave, Guru of Spores', 'Sadistic Glee'],
+          ['Umbral Collar Zealot', 'Ghave, Guru of Spores', 'Sadistic Glee'],
+        ],
+      },
+      { reason: 'PUPPETEER CLIQUE BRINGS THE BODY GHAVE EATS. Its ETB puts a creature card '
+        + 'from an OPPONENT’S graveyard onto the battlefield under your control, and the '
+        + 'published steps feed exactly that creature to Ghave to put the counter back on the '
+        + 'Clique — persist supplies the Clique, the stolen creature supplies the sacrifice. '
+        + 'Kitchen Finks also persists and its ETB gains 2 life, which is not a body. The loop '
+        + 'has nothing to eat on the second lap.', count: 1,
+        sets: [
+          ['Kitchen Finks', 'Ghave, Guru of Spores', 'Ashnod\'s Altar'],
+        ],
+      },
+    ],
+    notes: 'Six of the 34 were not gaps at all — the page already draws them, from the Elas '
+      + 'il-Kor, Sadistic Pilgrim stand-in rule. deck-gaps.js checked a candidate against '
+      + 'COMBOS and against the published data and not against STAND_INS, so it offered six '
+      + 'shapes as unwritten while the browser was rendering them. Fixed in the same change '
+      + 'as this entry; they are deliberately NOT recorded as `sets`, because they are drawn '
+      + 'rather than ruled out and hiding them would be the opposite of true. What the pass '
+      + 'is really worth: four of the six reasons are rules already in this log, met again '
+      + 'under a different card — the Aura that dies with its creature (Light of Promise, now '
+      + 'Sunbond) and the peer whose output is the engine (Shilgengar’s Blood, Thermopod’s '
+      + '{R}, the Eldrazi Spawn’s {C}). A deck that produces no new rows is a covered deck.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.

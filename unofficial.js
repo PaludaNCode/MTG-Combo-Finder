@@ -10934,6 +10934,2325 @@
         'Infinite Food tokens',
       ],
     },
+    // ---- the free sacrifice outlet, and the two things that tell one from another ----
+    //
+    // Viscera Seer and Carrion Feeder are the two most-cited cards in this whole database
+    // — 1,828 and 1,787 combos — and they are the same ability: `Sacrifice a creature:`,
+    // no tap, no mana, any creature including itself. Spellbook publishes 1,745 shapes
+    // with both and then diverges: 43 shapes only Carrion Feeder (or Woe Strider, or
+    // Yahenni) is written into, and 78 only Viscera Seer is.
+    //
+    // A SCORE IS NOT A PEER. Twelve cards clear jaccard 0.3 against Viscera Seer and eight
+    // of them are not peers at all: Goblin Bombardment deals the damage, Altar of Dementia
+    // does the milling, Thermopod makes the mana, Blasting Station has to untap, Shilgengar
+    // makes a Blood token. Every loop those are in may be consuming the output. Cutting the
+    // peer list to the four whose output a loop cannot spend took the candidate list from
+    // 1,966 to 43.
+    //
+    // What is left divides on exactly two things, and each one earned its rule-outs:
+    //
+    //   the output   Viscera Seer scries; Carrion Feeder counters itself. Neither is
+    //                normally a resource — until a card reads it. Animation Module,
+    //                Tayam and Agatha's Soul Cauldron eat the counter (7 rows lost);
+    //                Eligeth, Matoya, Galadriel, Arwen and The Temporal Anchor turn the
+    //                scry into the loop's engine (8 rows lost).
+    //   the types    Vampire Wizard against Zombie. Gravecrawler, Liliana Untouched by
+    //                Death and Gravespawn Sovereign need the outlet to BE the Zombie
+    //                (6 rows lost); Haunted One's undying reaches Wizards and not
+    //                Zombies, which is three loops Viscera Seer can run and the Feeder
+    //                cannot.
+    //
+    // Prosperous Innkeeper is the third subject and divides the same way, on arithmetic
+    // rather than typing: Daxos, Blessed by the Sun gains life on enter AND on dies, so
+    // every Mortuary/Bolas's Citadel loop paying life a lap has one life less per lap with
+    // the Innkeeper in it — 30 rows, the single largest rule-out here. Suture Priest's
+    // payoff is its opponent-facing half, which the Innkeeper does not have at all.
+    //
+    // research-log.js carries the three passes and every rule-out with its reason.
+    // ---- Viscera Seer -----
+    {
+      cards: ['Viscera Seer', 'Nether Traitor', 'Pawn of Ulamog', 'Pitiless Plunderer'],
+      confidence: 'verified',
+      from: {
+        id: '3240-3967-4314-4871',
+        cards: ['Yahenni, Undying Partisan', 'Nether Traitor', 'Pawn of Ulamog', 'Pitiless Plunderer'],
+      },
+      swap: { out: 'Yahenni, Undying Partisan', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Yahenni, Undying Partisan '
+        + 'gains indestructible and can only eat *another* creature, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Yahenni, Undying Partisan and not with Viscera Seer.',
+      produces: [
+        'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Rot Hulk', 'Phyrexian Delver', 'Gray Merchant of Asphodel'],
+      confidence: 'verified',
+      from: {
+        id: '122-328-1769-2438',
+        cards: ['Rot Hulk', 'Phyrexian Delver', 'Carrion Feeder', 'Gray Merchant of Asphodel'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Each opponent loses the game', 'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'The Locust God', 'Liliana, Dreadhorde General'],
+      confidence: 'verified',
+      from: {
+        id: '1339-1940-2438',
+        cards: ['The Locust God', 'Liliana, Dreadhorde General', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Sidisi, Undead Vizier', 'Rooftop Storm', 'Sedraxis Alchemist', 'Gray Merchant of Asphodel', 'Rot Hulk'],
+      confidence: 'verified',
+      from: {
+        id: '328-1769-1982-2006-2438-2452',
+        cards: ['Sidisi, Undead Vizier', 'Rooftop Storm', 'Sedraxis Alchemist', 'Gray Merchant of Asphodel', 'Rot Hulk', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Each opponent loses the game', 'Infinite +1/+1 counters on a creature',
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'The Locust God', 'Smothering Abomination'],
+      confidence: 'verified',
+      from: {
+        id: '1339-2425-2438',
+        cards: ['The Locust God', 'Smothering Abomination', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Zombie Infestation', 'Doom Weaver'],
+      confidence: 'verified',
+      from: {
+        id: '1856-2438-4550',
+        cards: ['Zombie Infestation', 'Doom Weaver', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite draw triggers', 'Infinite rummaging', 'Infinite self-discard triggers',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Death\'s Oasis', 'Deathrender', 'Myr Retriever'],
+      confidence: 'verified',
+      from: {
+        id: '1020-2438-3451-4766',
+        cards: ['Death\'s Oasis', 'Deathrender', 'Myr Retriever', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Toluz, Clever Conductor', 'Corpse Dance', 'Skirge Familiar'],
+      confidence: 'verified',
+      from: {
+        id: '313-325-1742-2438',
+        cards: ['Toluz, Clever Conductor', 'Corpse Dance', 'Skirge Familiar', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite draw triggers', 'Infinite looting', 'Infinite self-discard triggers',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite black mana',
+        'Near-infinite death triggers', 'Near-infinite creature ETB',
+        'Near-infinite creature LTB', 'Near-infinite magecraft triggers',
+        'Near-infinite creature sacrifice triggers', 'Near-infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Anje Falkenrath', 'Mortuary', 'Blazing Rootwalla'],
+      confidence: 'verified',
+      from: {
+        id: '2438-4980-5037-5220',
+        cards: ['Anje Falkenrath', 'Mortuary', 'Blazing Rootwalla', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite self-discard triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Death\'s Oasis', 'Deathrender', 'Junk Diver'],
+      confidence: 'derived',
+      from: {
+        id: '1117-2438-3451-4766',
+        cards: ['Death\'s Oasis', 'Deathrender', 'Junk Diver', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Death\'s Oasis', 'Deathrender', 'Workshop Assistant'],
+      confidence: 'derived',
+      from: {
+        id: '2438-3451-3689-4766',
+        cards: ['Death\'s Oasis', 'Deathrender', 'Workshop Assistant', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Death\'s Oasis', 'Deathrender', 'Dutiful Attendant'],
+      confidence: 'derived',
+      from: {
+        id: '750-2438-3451-4766',
+        cards: ['Death\'s Oasis', 'Deathrender', 'Dutiful Attendant', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Dockside Extortionist', 'Decaying Soil'],
+      confidence: 'verified',
+      from: {
+        id: '401-914-2438',
+        cards: ['Dockside Extortionist', 'Decaying Soil', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colored mana',
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'The Locust God', 'Species Specialist'],
+      confidence: 'verified',
+      from: {
+        id: '1339-1926-2438',
+        cards: ['The Locust God', 'Species Specialist', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Soaring Show-Off'],
+      confidence: 'verified',
+      from: {
+        id: '2438-4191-5220-5255',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Soaring Show-Off'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite card draw for opponents',
+        'Infinite death triggers', 'Infinite draw triggers for all players',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Cloudkin Seer'],
+      confidence: 'derived',
+      from: {
+        id: '1706-2438-4191-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Cloudkin Seer'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Carven Caryatid'],
+      confidence: 'derived',
+      from: {
+        id: '2438-3339-4191-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Carven Caryatid'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Baleful Strix'],
+      confidence: 'derived',
+      from: {
+        id: '1685-2438-4191-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Baleful Strix'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Elvish Visionary'],
+      confidence: 'derived',
+      from: {
+        id: '2438-2753-4191-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Elvish Visionary'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Journey to Eternity // Atzal, Cave of Eternity', 'Great Whale'],
+      confidence: 'verified',
+      from: {
+        id: '1888-2438-2792',
+        cards: ['Journey to Eternity // Atzal, Cave of Eternity', 'Great Whale', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinitely large creature',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Vohar, Vodalian Desecrator', 'Haunted One', 'Cauldron of Souls', 'Deceiver Exarch'],
+      confidence: 'verified',
+      from: {
+        id: '1365-2198-2438-2527-5294',
+        cards: ['Vohar, Vodalian Desecrator', 'Haunted One', 'Cauldron of Souls', 'Deceiver Exarch', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers', 'Infinite looting',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite creature LTB',
+        'Near-infinite power for certain creatures until end of turn',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Death\'s Oasis', 'Deathrender', 'Elderfang Ritualist'],
+      confidence: 'derived',
+      from: {
+        id: '535-2438-3451-4766',
+        cards: ['Death\'s Oasis', 'Deathrender', 'Elderfang Ritualist', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Runed Servitor'],
+      confidence: 'derived',
+      from: {
+        id: '2195-2438-4191-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Runed Servitor'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite card draw for opponents',
+        'Infinite death triggers', 'Infinite draw triggers for all players',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Dream Thief'],
+      confidence: 'derived',
+      from: {
+        id: '735-2438-4191-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Dream Thief'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Mortuary', 'Aluren', 'Council of Advisors'],
+      confidence: 'derived',
+      from: {
+        id: '2438-4191-4902-5220',
+        cards: ['Mortuary', 'Carrion Feeder', 'Aluren', 'Council of Advisors'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Viscera Seer', 'Journey to Eternity // Atzal, Cave of Eternity', 'Palinchron'],
+      confidence: 'derived',
+      from: {
+        id: '1888-2438-3542',
+        cards: ['Journey to Eternity // Atzal, Cave of Eternity', 'Palinchron', 'Carrion Feeder'],
+      },
+      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
+      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
+        + 'puts a +1/+1 counter on itself, '
+        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
+      produces: [
+        'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinitely large creature',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    // ---- Carrion Feeder -----
+    {
+      cards: ['Carrion Feeder', 'Nether Traitor', 'Pawn of Ulamog', 'Pitiless Plunderer'],
+      confidence: 'derived',
+      from: {
+        id: '3240-3967-4314-4871',
+        cards: ['Yahenni, Undying Partisan', 'Nether Traitor', 'Pawn of Ulamog', 'Pitiless Plunderer'],
+      },
+      swap: { out: 'Yahenni, Undying Partisan', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Yahenni, Undying Partisan’s — sacrifice a creature, free, repeatable, itself included'
+        + ', and strictly more permissive, since Yahenni, Undying Partisan can only eat *another* creature. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Yahenni, Undying Partisan and not with Carrion Feeder.',
+      produces: [
+        'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mazirek, Kraul Death Priest', 'Putrid Goblin'],
+      confidence: 'derived',
+      from: {
+        id: '301-317-2292',
+        cards: ['Mazirek, Kraul Death Priest', 'Putrid Goblin', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite +1/+1 counters on most creatures you control', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Anafenza, Kin-Tree Spirit', 'Murderous Redcap'],
+      confidence: 'derived',
+      from: {
+        id: '1657-2292-2355',
+        cards: ['Anafenza, Kin-Tree Spirit', 'Murderous Redcap', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mortuary', 'Aetherflux Reservoir', 'Gwenom, Remorseless'],
+      confidence: 'derived',
+      from: {
+        id: '2292-4740-5220-6900',
+        cards: ['Mortuary', 'Viscera Seer', 'Aetherflux Reservoir', 'Gwenom, Remorseless'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite storm count', 'Infinite damage',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mortuary', 'Aetherflux Reservoir', 'Bolas\'s Citadel'],
+      confidence: 'derived',
+      from: {
+        id: '2173-2292-4740-5220',
+        cards: ['Mortuary', 'Viscera Seer', 'Aetherflux Reservoir', 'Bolas\'s Citadel'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite storm count', 'Infinite damage',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Divine Visitation', 'Requiem Angel'],
+      confidence: 'derived',
+      from: {
+        id: '176-2292-4509',
+        cards: ['Divine Visitation', 'Requiem Angel', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'K\'rrik, Son of Yawgmoth', 'Buried Alive', 'Reanimate', 'Chainer, Dementia Master', 'Kokusho, the Evening Star'],
+      confidence: 'derived',
+      from: {
+        id: '1377-2123-2292-3211-3260-4078',
+        cards: ['K\'rrik, Son of Yawgmoth', 'Buried Alive', 'Reanimate', 'Chainer, Dementia Master', 'Viscera Seer', 'Kokusho, the Evening Star'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Return all creature cards from all graveyards to the battlefield under your control',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'K\'rrik, Son of Yawgmoth', 'Buried Alive', 'Animate Dead', 'Chainer, Dementia Master', 'Kokusho, the Evening Star'],
+      confidence: 'derived',
+      from: {
+        id: '2123-2292-3211-3260-4078-4812',
+        cards: ['K\'rrik, Son of Yawgmoth', 'Buried Alive', 'Animate Dead', 'Chainer, Dementia Master', 'Viscera Seer', 'Kokusho, the Evening Star'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Return all creature cards from all graveyards to the battlefield under your control',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Overseer of the Damned', 'Dictate of Erebos'],
+      confidence: 'derived',
+      from: {
+        id: '2292-4733-5038',
+        cards: ['Overseer of the Damned', 'Dictate of Erebos', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Each opponent sacrifices any creature that enters under their control',
+        'Each opponent sacrifices all creatures they control', 'Lock',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Dualcaster Mage', 'Living Death'],
+      confidence: 'derived',
+      from: {
+        id: '147-2292-2596',
+        cards: ['Viscera Seer', 'Dualcaster Mage', 'Living Death'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite magecraft triggers',
+        'Infinite recursion of creature cards in your graveyard',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Spark Double', 'Murderous Redcap'],
+      confidence: 'derived',
+      from: {
+        id: '1657-2292-3908',
+        cards: ['Spark Double', 'Murderous Redcap', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mikaeus, the Unhallowed', 'Cryptic Trilobite'],
+      confidence: 'verified',
+      from: {
+        id: '628-2292-4929',
+        cards: ['Mikaeus, the Unhallowed', 'Cryptic Trilobite', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite colorless mana that can only be spent to activate abilities',
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'K\'rrik, Son of Yawgmoth', 'Buried Alive', 'Necromancy', 'Chainer, Dementia Master', 'Kokusho, the Evening Star'],
+      confidence: 'derived',
+      from: {
+        id: '2123-2292-2896-3211-3260-4078',
+        cards: ['K\'rrik, Son of Yawgmoth', 'Buried Alive', 'Necromancy', 'Chainer, Dementia Master', 'Viscera Seer', 'Kokusho, the Evening Star'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Return all creature cards from all graveyards to the battlefield under your control',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Olivia, Crimson Bride', 'Port Razer'],
+      confidence: 'verified',
+      from: {
+        id: '1548-2292-4897',
+        cards: ['Olivia, Crimson Bride', 'Port Razer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite combat phases', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Kodama of the East Tree', 'Golgari Rot Farm', 'Bloodghast'],
+      confidence: 'derived',
+      from: {
+        id: '280-1479-2292-5310',
+        cards: ['Kodama of the East Tree', 'Golgari Rot Farm', 'Bloodghast', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite landfall triggers',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Protean Hulk', 'Body Snatcher', 'Murderous Redcap', 'Melira, Sylvok Outcast'],
+      confidence: 'derived',
+      from: {
+        id: '522-1657-2292-2890-4583',
+        cards: ['Protean Hulk', 'Body Snatcher', 'Viscera Seer', 'Murderous Redcap', 'Melira, Sylvok Outcast'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite scry', 'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Screams from Within', 'Ajani\'s Chosen'],
+      confidence: 'derived',
+      from: {
+        id: '1286-2292-5058',
+        cards: ['Screams from Within', 'Ajani\'s Chosen', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Living Death', 'Archaeomancer', 'Peregrine Drake'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2493-2596-3821',
+        cards: ['Living Death', 'Archaeomancer', 'Peregrine Drake', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite blinking for all players', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers',
+        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Nim Deathmantle', 'Su-Chi'],
+      confidence: 'verified',
+      from: {
+        id: '2292-4242-5003',
+        cards: ['Nim Deathmantle', 'Su-Chi', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Shepherd of the Cosmos', 'Angelic Renewal'],
+      confidence: 'derived',
+      from: {
+        id: '333-2292-2820',
+        cards: ['Shepherd of the Cosmos', 'Angelic Renewal', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Changeling Berserker', 'Bloodline Necromancer'],
+      confidence: 'verified',
+      from: {
+        id: '248-2292-2721',
+        cards: ['Changeling Berserker', 'Bloodline Necromancer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Naru Meha, Master Wizard', 'Living Death'],
+      confidence: 'verified',
+      from: {
+        id: '141-2292-2596',
+        cards: ['Viscera Seer', 'Naru Meha, Master Wizard', 'Living Death'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite magecraft triggers',
+        'Infinite recursion of creature cards in your graveyard',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Nim Deathmantle', 'Dockside Extortionist'],
+      confidence: 'verified',
+      from: {
+        id: '914-2292-5003',
+        cards: ['Nim Deathmantle', 'Dockside Extortionist', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'K\'rrik, Son of Yawgmoth', 'Doomsday', 'Aphotic Wisps', 'Cruel Bargain', 'Sacrifice', 'Mikaeus, the Unhallowed', 'Walking Ballista'],
+      confidence: 'derived',
+      from: {
+        id: '166-497-628-1181-2292-3189-3260-3693',
+        cards: ['K\'rrik, Son of Yawgmoth', 'Doomsday', 'Aphotic Wisps', 'Cruel Bargain', 'Sacrifice', 'Mikaeus, the Unhallowed', 'Walking Ballista', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Scholar of the Ages', 'Not Dead After All', 'Dark Ritual'],
+      confidence: 'derived',
+      from: {
+        id: '167-813-2292-2701',
+        cards: ['Scholar of the Ages', 'Not Dead After All', 'Dark Ritual', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite black mana', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifeloss', 'Infinite creature LTB', 'Infinite magecraft triggers',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+        'Return all instant and sorcery cards from your graveyard to your hand',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Junji, the Midnight Sky', 'Conspiracy', 'Dross Harvester'],
+      confidence: 'derived',
+      from: {
+        id: '640-2292-4875-5170',
+        cards: ['Junji, the Midnight Sky', 'Conspiracy', 'Dross Harvester', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Scholar of the Ages', 'Supernatural Stamina', 'Dark Ritual'],
+      confidence: 'derived',
+      from: {
+        id: '780-813-2292-2701',
+        cards: ['Scholar of the Ages', 'Supernatural Stamina', 'Dark Ritual', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite black mana', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite magecraft triggers', 'Infinite sacrifice triggers',
+        'Infinite storm count',
+        'Return all instant and sorcery cards from your graveyard to your hand',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Changeling Hero', 'Bloodline Necromancer'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2721-3839',
+        cards: ['Changeling Hero', 'Bloodline Necromancer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Scholar of the Ages', 'Undying Malice', 'Dark Ritual'],
+      confidence: 'derived',
+      from: {
+        id: '813-2292-2701-5117',
+        cards: ['Scholar of the Ages', 'Undying Malice', 'Dark Ritual', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite black mana', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite magecraft triggers', 'Infinite sacrifice triggers',
+        'Infinite storm count',
+        'Return all instant and sorcery cards from your graveyard to your hand',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Scholar of the Ages', 'Feign Death', 'Dark Ritual'],
+      confidence: 'derived',
+      from: {
+        id: '813-2292-2701-3047',
+        cards: ['Scholar of the Ages', 'Feign Death', 'Dark Ritual', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite black mana', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite death triggers', 'Infinite magecraft triggers',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+        'Return all instant and sorcery cards from your graveyard to your hand',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Adarkar Valkyrie', 'Village Bell-Ringer'],
+      confidence: 'derived',
+      from: {
+        id: '2059-2292-2857',
+        cards: ['Adarkar Valkyrie', 'Village Bell-Ringer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite untap of creatures you control',
+        'Infinite mana creatures you control can produce',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Muldrotha, the Gravetide', 'World Shaper', 'Walk the Aeons'],
+      confidence: 'derived',
+      from: {
+        id: '2292-3234-4377-5131',
+        cards: ['Muldrotha, the Gravetide', 'World Shaper', 'Walk the Aeons', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite turns', 'Lock',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Living Death', 'Archaeomancer', 'Palinchron'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2493-2596-3542',
+        cards: ['Living Death', 'Archaeomancer', 'Palinchron', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite blinking for all players', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers',
+        'Infinite mana lands you control can produce', 'Infinite sacrifice triggers',
+        'Infinite scry 1', 'Infinite storm count', 'Infinite untap of lands you control',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Golgari Thug', 'Aluren', 'Moldervine Reclamation'],
+      confidence: 'derived',
+      from: {
+        id: '2292-4191-4616-5010',
+        cards: ['Golgari Thug', 'Aluren', 'Moldervine Reclamation', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite draw triggers', 'Infinite creature LTB', 'Infinite creature ETB',
+        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1',
+        'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mikaeus, the Unhallowed', 'Mindless Automaton', 'Doubling Season'],
+      confidence: 'verified',
+      from: {
+        id: '628-2122-2292-4772',
+        cards: ['Mikaeus, the Unhallowed', 'Mindless Automaton', 'Doubling Season', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Demon of Dark Schemes', 'Myr Battlesphere', 'Pitiless Plunderer'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2867-4840-4871',
+        cards: ['Demon of Dark Schemes', 'Myr Battlesphere', 'Pitiless Plunderer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite colored mana', 'Infinite creature tokens', 'Infinite death triggers',
+        'Infinite energy counters', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Living Death', 'Archaeomancer', 'Great Whale'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2493-2596-2792',
+        cards: ['Living Death', 'Archaeomancer', 'Great Whale', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite blinking for all players', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers',
+        'Infinite mana lands you control can produce', 'Infinite sacrifice triggers',
+        'Infinite scry 1', 'Infinite storm count', 'Infinite untap of lands you control',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Junji, the Midnight Sky', 'Bloodline Necromancer', 'Zulaport Cutthroat', 'Arcane Adaptation'],
+      confidence: 'derived',
+      from: {
+        id: '803-1385-2292-2721-5170',
+        cards: ['Junji, the Midnight Sky', 'Bloodline Necromancer', 'Zulaport Cutthroat', 'Arcane Adaptation', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
+        'Infinite lifeloss', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Adarkar Valkyrie', 'Sparring Mummy'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2857-4730',
+        cards: ['Adarkar Valkyrie', 'Sparring Mummy', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mortuary', 'Bolas\'s Citadel', 'Pious Evangel // Wayward Disciple'],
+      confidence: 'derived',
+      from: {
+        id: '2173-2292-4210-5220',
+        cards: ['Mortuary', 'Bolas\'s Citadel', 'Viscera Seer', 'Pious Evangel // Wayward Disciple'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite storm count',
+        'Infinite lifeloss',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Golgari Thug', 'Aluren', 'Fecundity'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2835-4191-5010',
+        cards: ['Golgari Thug', 'Aluren', 'Fecundity', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Changeling Titan', 'Bloodline Necromancer'],
+      confidence: 'derived',
+      from: {
+        id: '1916-2292-2721',
+        cards: ['Changeling Titan', 'Bloodline Necromancer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Morophon, the Boundless', 'Worldheart Phoenix'],
+      confidence: 'derived',
+      from: {
+        id: '174-877-2292',
+        cards: ['Morophon, the Boundless', 'Worldheart Phoenix', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Deathrender', 'Gravedigger', 'Eternal Witness'],
+      confidence: 'derived',
+      from: {
+        id: '864-2292-3622-4766',
+        cards: ['Deathrender', 'Gravedigger', 'Eternal Witness', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mortuary', 'Bolas\'s Citadel', 'Lunarch Veteran // Luminous Phantom'],
+      confidence: 'derived',
+      from: {
+        id: '1939-2173-2292-5220',
+        cards: ['Mortuary', 'Bolas\'s Citadel', 'Viscera Seer', 'Lunarch Veteran // Luminous Phantom'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Demon of Dark Schemes', 'Hornet Queen', 'Pitiless Plunderer'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2867-3433-4871',
+        cards: ['Demon of Dark Schemes', 'Hornet Queen', 'Pitiless Plunderer', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite colored mana', 'Infinite creature tokens', 'Infinite death triggers',
+        'Infinite energy counters', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite Treasure tokens',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Junji, the Midnight Sky', 'Phyrexian Delver', 'Proper Burial'],
+      confidence: 'derived',
+      from: {
+        id: '122-2292-2324-5170',
+        cards: ['Junji, the Midnight Sky', 'Phyrexian Delver', 'Proper Burial', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mortuary', 'Pious Evangel // Wayward Disciple', 'Gwenom, Remorseless'],
+      confidence: 'derived',
+      from: {
+        id: '2292-4210-5220-6900',
+        cards: ['Mortuary', 'Viscera Seer', 'Pious Evangel // Wayward Disciple', 'Gwenom, Remorseless'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite storm count', 'Infinite lifeloss',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Mortuary', 'Lunarch Veteran // Luminous Phantom', 'Gwenom, Remorseless'],
+      confidence: 'derived',
+      from: {
+        id: '1939-2292-5220-6900',
+        cards: ['Mortuary', 'Lunarch Veteran // Luminous Phantom', 'Viscera Seer', 'Gwenom, Remorseless'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
+        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Golgari Thug', 'Aluren', 'Weatherlight Compleated'],
+      confidence: 'verified',
+      from: {
+        id: '2292-3394-4191-5010',
+        cards: ['Golgari Thug', 'Aluren', 'Weatherlight Compleated', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Golgari Thug', 'Aluren', 'Liliana, Dreadhorde General'],
+      confidence: 'derived',
+      from: {
+        id: '1940-2292-4191-5010',
+        cards: ['Golgari Thug', 'Aluren', 'Liliana, Dreadhorde General', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Fiend Hunter', 'Phyrexian Delver', 'Verdant Sun\'s Avatar'],
+      confidence: 'derived',
+      from: {
+        id: '122-1496-1734-2292',
+        cards: ['Fiend Hunter', 'Phyrexian Delver', 'Verdant Sun\'s Avatar', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Fiend Hunter', 'Phyrexian Delver', 'Trostani, Selesnya\'s Voice'],
+      confidence: 'derived',
+      from: {
+        id: '122-1545-1734-2292',
+        cards: ['Fiend Hunter', 'Phyrexian Delver', 'Trostani, Selesnya\'s Voice', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite creature LTB', 'Infinite lifegain triggers', 'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Athreos, Shroud-Veiled', 'Denry Klin, Editor in Chief'],
+      confidence: 'derived',
+      from: {
+        id: '251-1349-2292',
+        cards: ['Athreos, Shroud-Veiled', 'Denry Klin, Editor in Chief', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Koll, the Forgemaster', 'Deathrender'],
+      confidence: 'derived',
+      from: {
+        id: '2292-4763-4766',
+        cards: ['Koll, the Forgemaster', 'Deathrender', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Karador, Ghost Chieftain', 'World Shaper', 'Walk the Aeons'],
+      confidence: 'derived',
+      from: {
+        id: '2292-3234-3942-4377',
+        cards: ['Karador, Ghost Chieftain', 'World Shaper', 'Walk the Aeons', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite turns', 'Lock',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Faceless One', 'Rakdos, Lord of Riots', 'Warstorm Surge'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2773-2906-2931',
+        cards: ['Faceless One', 'Rakdos, Lord of Riots', 'Warstorm Surge', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Faceless One', 'Rakdos, Lord of Riots', 'Terror of the Peaks'],
+      confidence: 'derived',
+      from: {
+        id: '1110-2292-2906-2931',
+        cards: ['Faceless One', 'Rakdos, Lord of Riots', 'Terror of the Peaks', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'The Prismatic Piper', 'Rakdos, Lord of Riots', 'Warstorm Surge'],
+      confidence: 'derived',
+      from: {
+        id: '2019-2292-2773-2906',
+        cards: ['The Prismatic Piper', 'Rakdos, Lord of Riots', 'Warstorm Surge', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'The Prismatic Piper', 'Rakdos, Lord of Riots', 'Terror of the Peaks'],
+      confidence: 'derived',
+      from: {
+        id: '1110-2019-2292-2906',
+        cards: ['The Prismatic Piper', 'Rakdos, Lord of Riots', 'Terror of the Peaks', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Junji, the Midnight Sky', 'Conspiracy', 'Proper Burial'],
+      confidence: 'derived',
+      from: {
+        id: '2292-2324-4875-5170',
+        cards: ['Junji, the Midnight Sky', 'Conspiracy', 'Proper Burial', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite scry 1',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Flash', 'Protean Hulk', 'Body Snatcher', 'Laboratory Maniac', 'Hapless Researcher', 'Hermit Druid', 'Torch Courier'],
+      confidence: 'derived',
+      from: {
+        id: '1053-2292-2836-2890-4400-4583-4892-5161',
+        cards: ['Flash', 'Protean Hulk', 'Body Snatcher', 'Laboratory Maniac', 'Viscera Seer', 'Hapless Researcher', 'Hermit Druid', 'Torch Courier'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Win the game',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Flash', 'Protean Hulk', 'Cephalid Illusionist', 'Nomads en-Kor', 'Narcomoeba', 'Blood Artist', 'Kozilek, Butcher of Truth'],
+      confidence: 'derived',
+      from: {
+        id: '293-1209-1946-2292-2842-2890-2904-4892',
+        cards: ['Flash', 'Protean Hulk', 'Cephalid Illusionist', 'Nomads en-Kor', 'Narcomoeba', 'Viscera Seer', 'Blood Artist', 'Kozilek, Butcher of Truth'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifeloss', 'Infinite creature LTB', 'Infinite mill',
+        'Infinite sacrifice triggers', 'Infinite self-mill',
+      ],
+    },
+    {
+      cards: ['Carrion Feeder', 'Flash', 'Protean Hulk', 'Mikaeus, the Unhallowed', 'Walking Ballista'],
+      confidence: 'verified',
+      from: {
+        id: '628-2292-2890-3693-4892',
+        cards: ['Flash', 'Protean Hulk', 'Mikaeus, the Unhallowed', 'Walking Ballista', 'Viscera Seer'],
+      },
+      swap: { out: 'Viscera Seer', in: 'Carrion Feeder', inId: 2438 },
+      why: 'Carrion Feeder’s cost is the same as Viscera Seer’s — sacrifice a creature, free, repeatable, itself included'
+        + ' — and it hands back a +1/+1 counter on itself where Viscera Seer scries. '
+        + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite creature LTB', 'Infinite scry 1',
+      ],
+    },
+    // ---- Prosperous Innkeeper -----
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '360-413-1981',
+        cards: ['Darien, King of Kjeldor', 'Soul Warden', 'Blasting Station'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Dingus Staff', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-2034',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Dingus Staff', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-4050',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite colored mana', 'Infinite creature tokens', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Famished Paladin', 'Presence of Gond'],
+      confidence: 'verified',
+      from: {
+        id: '360-1424-3957',
+        cards: ['Famished Paladin', 'Presence of Gond', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel'],
+      confidence: 'verified',
+      from: {
+        id: '360-661-5118',
+        cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Sculpting Steel', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature ETB', 'Infinite lifegain', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite death triggers',
+        'Infinite lifegain triggers', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Yawgmoth, Thran Physician', 'Hapatra, Vizier of Poisons', 'Parallel Lives'],
+      confidence: 'verified',
+      from: {
+        id: '2228-2557-2741-4279',
+        cards: ['Yawgmoth, Thran Physician', 'Hapatra, Vizier of Poisons', 'Parallel Lives', 'Essence Warden'],
+      },
+      swap: { out: 'Essence Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Essence Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Essence Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Essence Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite card draw', 'Near-infinite -1/-1 counters', 'Near-infinite creature tokens',
+        'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite lifegain',
+        'Near-infinite lifegain triggers', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Dingus Staff', 'Altar of Dementia'],
+      confidence: 'verified',
+      from: {
+        id: '360-1610-1981-5256',
+        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Dingus Staff', 'Altar of Dementia'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite mill',
+        'Infinite sacrifice triggers', 'Infinite self-mill',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Yawgmoth, Thran Physician', 'Hapatra, Vizier of Poisons', 'Doubling Season'],
+      confidence: 'verified',
+      from: {
+        id: '2228-2741-4279-4772',
+        cards: ['Yawgmoth, Thran Physician', 'Hapatra, Vizier of Poisons', 'Doubling Season', 'Essence Warden'],
+      },
+      swap: { out: 'Essence Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Essence Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Essence Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Essence Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite card draw', 'Near-infinite -1/-1 counters', 'Near-infinite creature tokens',
+        'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite lifegain',
+        'Near-infinite lifegain triggers', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Defiler of Faith', 'Ashnod\'s Altar', 'Whitemane Lion'],
+      confidence: 'verified',
+      from: {
+        id: '360-2034-4399-4770',
+        cards: ['Defiler of Faith', 'Ashnod\'s Altar', 'Whitemane Lion', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Warstorm Surge'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2773',
+        cards: ['Darien, King of Kjeldor', 'Warstorm Surge', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Yawgmoth, Thran Physician', 'Fiend Hunter', 'Karmic Guide'],
+      confidence: 'verified',
+      from: {
+        id: '360-1734-4279-4681',
+        cards: ['Yawgmoth, Thran Physician', 'Fiend Hunter', 'Karmic Guide', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers', 'Near-infinite -1/-1 counters',
+        'Near-infinite death triggers', 'Near-infinite creature ETB',
+        'Near-infinite lifegain triggers', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Ajani\'s Pridemate', 'Animation Module', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '701-1874-2034-3490',
+        cards: ['Ajani\'s Pridemate', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Ajani\'s Welcome and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Ajani\'s Welcome says "a creature you control" and is an enchantment, so the "another" is the only difference and no creature here is the lifegainer. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Ajani\'s Welcome and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Defiler of Faith', 'Ashnod\'s Altar', 'Kor Skyfisher'],
+      confidence: 'verified',
+      from: {
+        id: '360-2034-4399-4518',
+        cards: ['Defiler of Faith', 'Ashnod\'s Altar', 'Kor Skyfisher', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite colorless mana', 'Infinite creature tokens', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers', 'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Karlov of the Ghost Council', 'Animation Module', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-3514',
+        cards: ['Karlov of the Ghost Council', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Ajani\'s Welcome and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Ajani\'s Welcome says "a creature you control" and is an enchantment, so the "another" is the only difference and no creature here is the lifegainer. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Ajani\'s Welcome and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Anointed Procession'],
+      confidence: 'verified',
+      from: {
+        id: '567-1308-1981-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Anointed Procession'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Terror of the Peaks'],
+      confidence: 'verified',
+      from: {
+        id: '360-1110-1981',
+        cards: ['Darien, King of Kjeldor', 'Terror of the Peaks', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Alhammarret\'s Archive'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-4435-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul Warden', 'Alhammarret\'s Archive'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Mondrak, Glory Dominus', 'Aetherflux Reservoir', 'Platinum Angel'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-4365-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Mondrak, Glory Dominus', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Intruder Alarm', 'Peregrine Drake'],
+      confidence: 'verified',
+      from: {
+        id: '1636-3641-3821',
+        cards: ['Distinguished Conjurer', 'Intruder Alarm', 'Peregrine Drake'],
+      },
+      swap: { out: 'Distinguished Conjurer', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Distinguished Conjurer and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ', and the loop reads nothing else off either. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Distinguished Conjurer and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite lifegain triggers',
+        'Infinite lifegain', 'Infinite untap of creatures',
+        'Infinite mana creatures you control can produce',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Rhox Faithmender'],
+      confidence: 'verified',
+      from: {
+        id: '567-1071-1981-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Rhox Faithmender'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Famished Paladin', 'Elemental Mastery'],
+      confidence: 'verified',
+      from: {
+        id: '262-360-3957',
+        cards: ['Famished Paladin', 'Elemental Mastery', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens with haste', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Boon Reflection'],
+      confidence: 'verified',
+      from: {
+        id: '567-1841-1981-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Boon Reflection'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Drogskol Reaver', 'Nadir Kraken', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '360-444-1722-2034',
+        cards: ['Drogskol Reaver', 'Nadir Kraken', 'Ashnod\'s Altar', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite card draw', 'Infinite draw triggers',
+        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite creature ETB', 'Near-infinite lifegain',
+        'Near-infinite lifegain triggers', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Famished Paladin', 'Splinter Twin'],
+      confidence: 'verified',
+      from: {
+        id: '360-3957-4702',
+        cards: ['Famished Paladin', 'Splinter Twin', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite lifegain', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Pandemonium'],
+      confidence: 'verified',
+      from: {
+        id: '360-1981-2584',
+        cards: ['Darien, King of Kjeldor', 'Pandemonium', 'Soul Warden'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Elesh Norn, Mother of Machines', 'Aetherflux Reservoir', 'Platinum Angel'],
+      confidence: 'verified',
+      from: {
+        id: '567-1770-1981-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Elesh Norn, Mother of Machines', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Ratchet, Field Medic // Ratchet, Rescue Racer', 'Preston, the Vanisher', 'Ephemerate'],
+      confidence: 'verified',
+      from: {
+        id: '360-4605-5118-5144',
+        cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Preston, the Vanisher', 'Soul Warden', 'Ephemerate'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite creature LTB',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Panharmonicon'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-2397-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Panharmonicon'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Ratchet, Field Medic // Ratchet, Rescue Racer', 'Preston, the Vanisher'],
+      confidence: 'verified',
+      from: {
+        id: '3641-4605-5118',
+        cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Preston, the Vanisher', 'Distinguished Conjurer'],
+      },
+      swap: { out: 'Distinguished Conjurer', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Distinguished Conjurer and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ', and the loop reads nothing else off either. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Distinguished Conjurer and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite creature LTB',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Doubling Season'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-4591-4740-4772',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Doubling Season'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Parallel Lives'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-2557-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Parallel Lives'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Primal Vigor'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-3129-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Primal Vigor'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Yawgmoth, Thran Physician', 'Hapatra, Vizier of Poisons', 'Anointed Procession'],
+      confidence: 'verified',
+      from: {
+        id: '1308-2228-2741-4279',
+        cards: ['Yawgmoth, Thran Physician', 'Hapatra, Vizier of Poisons', 'Anointed Procession', 'Essence Warden'],
+      },
+      swap: { out: 'Essence Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Essence Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Essence Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Essence Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite card draw', 'Near-infinite -1/-1 counters', 'Near-infinite creature tokens',
+        'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite lifegain',
+        'Near-infinite lifegain triggers', 'Near-infinite creature LTB',
+        'Near-infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Ghave, Guru of Spores', 'Carnival of Souls', 'Panharmonicon'],
+      confidence: 'verified',
+      from: {
+        id: '360-2397-2530-5189',
+        cards: ['Ghave, Guru of Spores', 'Carnival of Souls', 'Soul Warden', 'Panharmonicon'],
+      },
+      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Trudge Garden', 'Mana Echoes'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2308-2440',
+        cards: ['Trudge Garden', 'Mana Echoes', 'Ajani\'s Welcome'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Ajani\'s Welcome and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Ajani\'s Welcome says "a creature you control" and is an enchantment, so the "another" is the only difference and no creature here is the lifegainer. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Ajani\'s Welcome and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite colorless mana', 'Infinite creature tokens', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Wall of Limbs', 'Animation Module', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-3708',
+        cards: ['Wall of Limbs', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Ajani\'s Welcome and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Ajani\'s Welcome says "a creature you control" and is an enchantment, so the "another" is the only difference and no creature here is the lifegainer. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Ajani\'s Welcome and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Ageless Entity', 'Animation Module', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1874-2034-3490-4159',
+        cards: ['Ageless Entity', 'Animation Module', 'Ajani\'s Welcome', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Ajani\'s Welcome and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Ajani\'s Welcome says "a creature you control" and is an enchantment, so the "another" is the only difference and no creature here is the lifegainer. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Ajani\'s Welcome and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Virtue of Knowledge // Vantress Visions'],
+      confidence: 'verified',
+      from: {
+        id: '567-1418-1981-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Virtue of Knowledge // Vantress Visions'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Day of the Dragons', 'Demon of Fate\'s Design', 'Enchanted Evening', 'Cloudstone Curio'],
+      confidence: 'verified',
+      from: {
+        id: '1462-2232-2413-2768-2999',
+        cards: ['Day of the Dragons', 'Demon of Fate\'s Design', 'Enchanted Evening', 'Cloudstone Curio', 'Impassioned Orator'],
+      },
+      swap: { out: 'Impassioned Orator', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Impassioned Orator and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ', and the loop reads nothing else off either. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Impassioned Orator and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite sacrifice triggers',
+        'Infinite storm count',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Trudge Garden', 'Intruder Alarm'],
+      confidence: 'verified',
+      from: {
+        id: '1636-1874-2308',
+        cards: ['Trudge Garden', 'Intruder Alarm', 'Ajani\'s Welcome'],
+      },
+      swap: { out: 'Ajani\'s Welcome', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Ajani\'s Welcome and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Ajani\'s Welcome says "a creature you control" and is an enchantment, so the "another" is the only difference and no creature here is the lifegainer. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Ajani\'s Welcome and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain',
+        'Infinite lifegain triggers', 'Infinite mana creatures you control can produce',
+        'Infinite untap of creatures',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Animation Module', 'Scion of the Swarm', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '567-2161-3490-4050',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Phyrexian Altar', 'Soul\'s Attendant'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite creature ETB', 'Infinite lifegain', 'Infinite lifegain triggers',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Animation Module', 'Scion of the Swarm', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '567-2161-3490-4659',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Krark-Clan Ironworks', 'Soul\'s Attendant'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Animation Module', 'Scion of the Swarm', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '567-2034-2161-3490',
+        cards: ['Animation Module', 'Scion of the Swarm', 'Ashnod\'s Altar', 'Soul\'s Attendant'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colorless mana',
+        'Infinite creature tokens', 'Infinite death triggers', 'Infinite creature ETB',
+        'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB',
+        'Infinite sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Chatterfang, Squirrel General'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-3000-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Chatterfang, Squirrel General'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Adrix and Nev, Twincasters'],
+      confidence: 'verified',
+      from: {
+        id: '567-851-1981-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Adrix and Nev, Twincasters'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
+    {
+      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Yarok, the Desecrated'],
+      confidence: 'verified',
+      from: {
+        id: '567-1981-2499-4591-4740',
+        cards: ['Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Soul\'s Attendant', 'Yarok, the Desecrated'],
+      },
+      swap: { out: 'Soul\'s Attendant', in: 'Prosperous Innkeeper', inId: 4716 },
+      why: 'Soul\'s Attendant and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
+        + ' — Soul\'s Attendant sees any creature entering, not only yours, and this loop only ever enters your own. '
+        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul\'s Attendant and not with Prosperous Innkeeper.',
+      produces: [
+        'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
