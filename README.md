@@ -565,8 +565,25 @@ rather than 4. So the page reports a **floor** and never a verdict.
 
 **The check is a label and five pips**, under Colour identity and built from the same geometry.
 Ruled-out brackets are struck through, the floor is filled, open ones are outlined — three states,
-because "could be this" is not a milder version of either. **Everything else is one hover, focus or
-tap away**, reachable three ways because a phone has no hover.
+because "could be this" is not a milder version of either. **Everything else is one press or one
+hover away.**
+
+**The button's own state is the only thing that closes it, so it is the only thing that opens it
+apart from a real mouse hover.** It opened three ways once — hover, `:focus-within` and
+`aria-expanded` — and `:focus-within` made it *unclosable*: a press leaves focus on the button, so
+the second press set `aria-expanded="false"` and the panel did not move. On a phone that is the end
+of the road, with no pointer to move away and no Escape key in reach, and the button was announcing
+itself as collapsed over an open panel. A keyboard now opens it by *activating* the button rather
+than by arriving at it; the links inside stay reachable because Tab walks into a panel that follows
+its button in the DOM. The hover half is behind `@media (hover: hover)`, since a touch browser holds
+`:hover` on whatever was tapped last and would restore the same stuck panel through the other
+selector.
+
+**A dispatched press is not a press.** `element.click()` moves no focus, so `verify`'s harness had
+been pressing a control that never held focus and `closesOnSecondPress` passed for the whole life of
+the bug. It focuses first now, and the phone project in `e2e/deck.spec.js` drives real input under
+`hover: none`. What a mouse does is asserted separately: after a second click the cursor is still on
+the pips, so the panel is legitimately still up and moving away is what closes it.
 
 The pips are `aria-hidden` — five numbered circles read out as "1 2 3 4 5" is worse than nothing — so
 the button carries the whole answer as its accessible name.

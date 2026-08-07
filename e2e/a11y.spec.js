@@ -120,10 +120,12 @@ test('what the page opens on press is clean', async ({ page }) => {
   await page.getByRole('button', { name: 'Interchangeable' }).click();
   await expectClean(page);
 
-  // The bracket explanation goes last, and stays open. It is a real popover —
-  // absolutely positioned, z-index 20 — so anything pressed after it lands on it
-  // instead. A second press does not close it either: it is opened by hover and
-  // focus in CSS, and after a click the pointer is still on the control.
+  // The bracket explanation goes last, because it is a real popover — absolutely
+  // positioned, z-index 20 — so anything pressed after it lands on it instead. It
+  // is left open on purpose: axe is being asked about the panel, and a second press
+  // now genuinely puts it away (see e2e/deck.spec.js). This comment used to say a
+  // second press did not close it, stated as a fact about the CSS rather than as the
+  // bug it was — a phone had no way at all to dismiss it.
   await page.locator('.bracket-scale').click();
   await expect(page.locator('#bracket-why')).toBeVisible();
   await expectClean(page);

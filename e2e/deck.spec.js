@@ -151,6 +151,48 @@ test('cutting a card removes it and searches again', async ({ page }) => {
     .not.toHaveValue(new RegExp(card.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });
 
+// A press opens the bracket explanation and a second press has to put it away
+// again, which is the only way a phone has: there is no pointer to move off the
+// control and no Escape key to reach for. It stayed open through both presses for
+// as long as the panel existed — `aria-expanded` went back to `false` and
+// `.bracket-wrap:focus-within` held it open anyway, because the press leaves focus
+// on the button. Two states in the CSS, one of them unreachable, and the button
+// announced itself as collapsed over an open panel.
+//
+// Driven with the real input rather than `element.click()`: this is exactly the
+// difference between the two, and it is why `closesOnSecondPress` in
+// verify-layout.js passed for the whole life of the bug. A dispatched click does
+// not move focus, so the harness only ever exercised the state a reader is never in.
+test('a second press puts the bracket explanation away', async ({ page }) => {
+  await pasteDeck(page);
+  await search(page);
+
+  const pips = page.locator('.bracket-scale');
+  const why = page.locator('#bracket-why');
+  await expect(why).toBeHidden();
+
+  await pips.click();
+  await expect(why).toBeVisible();
+  await expect(pips).toHaveAttribute('aria-expanded', 'true');
+
+  await pips.click();
+  // Both halves, because they disagreed: the attribute is what a screen reader is
+  // told and the panel is what everyone else sees, and only one of them changed.
+  await expect(pips).toHaveAttribute('aria-expanded', 'false');
+
+  // What happens to the panel itself depends on the pointer, and the two cases are
+  // asserted apart rather than reduced to whichever is weaker. With a mouse the
+  // cursor is still sitting on the pips after the click, so the hover rule is
+  // legitimately holding the panel open and moving away is what closes it. With no
+  // hover at all — the phone project — the press is the only signal there is, and
+  // the panel has to be gone the moment the attribute says it is.
+  if (await page.evaluate(() => window.matchMedia('(hover: hover)').matches)) {
+    await expect(why).toBeVisible();
+    await page.mouse.move(0, 0);
+  }
+  await expect(why).toBeHidden();
+});
+
 test('a section stays closed across a search', async ({ page }) => {
   await pasteDeck(page);
   await search(page);
