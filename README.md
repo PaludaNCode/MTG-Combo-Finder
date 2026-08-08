@@ -738,6 +738,36 @@ follow the iframe, and full Chrome silently clamps `--window-size` to 500px. It 
 clock** and has the page POST its verdict back — under `--virtual-time-budget`, `caches.open()` and a
 worker's `fetch` both return promises that never settle.
 
+### The panel captions are capped, and what widening the page would not fix
+
+A caption sits under every panel heading, and uncapped it was the **only** thing in its panel
+using the full width: measured at 1920px the caption ran to **1042px** while the widest row ink
+stopped at **676px**, so it read as a different kind of block rather than as an introduction to
+the rows. In characters that is **96 a line at 1440px and 102 at 1920px** — the map's is 554
+characters of it — against the **62ch** this project had already chosen twice for its other prose
+(`.tier-note`, `.unclassified p`). It is capped at 62ch now, on `.panel-note` itself.
+
+**That cap was here once and was reverted, and the reason it was reverted is the reason it is on
+the class.** It had been applied to two of the three captions and not the map's, along with a
+smaller `font-size`; beside an uncapped one those two read as narrower, smaller text for no reason
+a reader could see, and that drift was worse than the measure it fixed. On the shared class all of
+them narrow together, `captionDrift()` is what says so, and the `font-size` half is not part of
+this — that was what made the capped captions read as a different kind of text. Only wide screens
+change: a 768px window puts the same caption at 67ch, under the cap, unaltered.
+`CAPTION_MAX_CH` in `tools/verify-layout.js` fails the run at 75, proved by removing the cap and
+watching it report 95.
+
+Two things that look like wasted desktop width and are not worth changing, both measured before
+being ruled out:
+
+- **The 12rem number gutter leaves 170px empty** beside a count whose ink is 17px. Reclaiming it
+  buys nothing: the card's column already ends **439px short** of its own right edge at 1920px, so
+  the row would gain space it is not using. The gutter is sized for the worst split it can draw —
+  `0 official · 1889 unofficial`, 177px — and `npm run verify` prints that sum every run.
+- **`max-width: 1500px` leaves 420px of a 1920px screen empty**, and 1060px at 2560px. Raising it
+  would widen a results column whose content stops at 676px of the 1074px it already has. The cap
+  is not what is limiting the page; the row is as wide as it wants to be.
+
 ### Light and dark, from one set of tokens
 
 Dark is the base. A `:root\[data-theme='light'\]` block **restates the tokens and nothing else** — every

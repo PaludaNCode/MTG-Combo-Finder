@@ -427,6 +427,17 @@ loosely.
   carry its own piece** or the line stops at it. **The gutter draws none of it** and spans the rows
   rather than sizing one; `verify` fails if a `border-right` reappears, since a second line at the
   same x is invisible and undoes the whole thing. README § *Where the second number goes*.
+- **A panel caption is capped at 62ch, and the cap has been reverted once.** Uncapped it ran to
+  **96 characters a line at 1440px and 102 at 1920px**, and was the only thing in its panel using
+  the full width — 1042px against row ink stopping at 676px. It went the first time because it
+  reached two of the three captions and not the map's, and that drift is worse than the measure;
+  on the shared class they narrow together. **The `font-size` half of that old rule is what made
+  them read as a different kind of text — do not bring it back** → `CAPTION_MAX_CH` in
+  `verify-layout.js` fails at 75, proved. README § *The panel captions are capped*.
+- **Two desktop gaps that look like bugs and are not**, both with a number: the 12rem gutter leaves
+  **170px** empty beside 17px of ink, and reclaiming it buys nothing because the card's column
+  already stops **439px** short at 1920px; and `max-width: 1500px` leaves 420px of a 1920px screen,
+  which raising would only widen a column whose content ends at 676px of 1074px.
 - **A translucent fill is a contrast bug waiting for a background to move.** The result chips were a
   10%-alpha tint; on `--panel` that measured 4.97:1 in the light theme and on the `--panel-2` a nested
   combo sits on, 4.19:1 — a fail. They are flat `--win-fill` / `--decisive-fill` tokens now, the same
