@@ -9,6 +9,46 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/syntax-check.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(npm run test:ui:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run verify:*)",
+      "Bash(npm run check:readme:*)",
+      "Bash(npm run prove:*)",
+      "Bash(npm run shot:*)",
+      "Bash(node --check:*)",
+      "Bash(node --test:*)",
+      "Bash(node tools/prove-check.js:*)",
+      "Bash(node tools/try-deck.js:*)",
+      "Bash(node tools/deck-cards.js:*)",
+      "Bash(node tools/deck-gaps.js:*)",
+      "Bash(node tools/combos-with.js:*)",
+      "Bash(node tools/template-users.js:*)",
+      "Bash(node tools/lookup-card.js:*)",
+      "Bash(node tools/substitution-scope.js:*)",
+      "Bash(node tools/sweep-impact.js:*)",
+      "Bash(node tools/check-branch-rules.js:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git fetch:*)"
     ]
   },
   "outputStyle": "Terse"
