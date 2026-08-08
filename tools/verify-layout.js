@@ -2973,26 +2973,19 @@ function captionDrift(notes) {
         wrong.push(`${want.length} commanders drew on ${t.tops} line(s)`);
       }
       if (!t.first) wrong.push('the commanders are not the first row of the summary box');
-      // Both halves of the trade, each asserted where it applies. Above 24rem of content
-      // the name is in the value column with the pips and the figures — one x, or the top
-      // row is the only one in the box that does not line up. Below it the key sizes to
-      // its own text so the name fits on one line, and it is EXPECTED to sit left of that
-      // column: 145px against 187px on a 390px phone.
+      // ONE X, AT EVERY WIDTH. The name shares the column the pips and the figures start
+      // in — 587px against 587px on a laptop, 187px against 187px on a phone — and the
+      // phone half is the one worth having a check for, because the way it goes wrong is
+      // a rule that gives this row its own key width to save it a line. That shipped, and
+      // it read as the only ragged row in the box.
       //
-      // The narrow half is checked by the LINE, not by the x, and that is not a
-      // refinement — it is the assertion this had wrong first time round. Taking the
-      // narrow rule away does not put the name back in the column: the value block wraps
-      // underneath the key instead, at 25px, which is further left still and satisfied
-      // "the name is left of the column" perfectly. Proved by breaking it, which is the
-      // only reason the mistake was found.
-      const aligned = t.lefts.values.length === 1 && t.lefts.name === t.lefts.values[0];
-      if (t.lefts.inner >= 384 && !aligned) {
+      // This runs at both widths deliberately: a version checking only the wide box let
+      // the narrow case drift, and "the name is left of the column" — the assertion that
+      // replaced it — is satisfied by the BROKEN layout too, since a value block that
+      // wraps under its label sits further left still. Proved by breaking it.
+      if (t.lefts.values.length !== 1 || t.lefts.name !== t.lefts.values[0]) {
         wrong.push(`the name starts at ${t.lefts.name}px and the other values at `
           + `${JSON.stringify(t.lefts.values)} in a ${t.lefts.inner}px box`);
-      }
-      if (t.lefts.inner < 384 && t.lefts.name >= (t.lefts.values[0] || 0)) {
-        wrong.push(`the name starts at ${t.lefts.name}px in a ${t.lefts.inner}px box, `
-          + 'inside the value column the narrow rule exists to leave');
       }
       if (!t.lefts.beside) {
         wrong.push('the names are stacked under their label rather than beside it — the value '
@@ -3773,7 +3766,14 @@ function captionDrift(notes) {
       }
       // Nothing wraps. A row twice the height of its neighbours is the failure the box
       // exists to avoid, and it is invisible in a screenshot of a short fixture deck.
-      const wrapped = summary.rows.filter((r) => r.lines > 1).map((r) => r.key);
+      //
+      // Except the commander row, and only that one: its value is a card name, the one
+      // value in this box that cannot be shortened, and it is deliberately kept in the
+      // value column at every width even when that costs it a second line on a narrow
+      // phone — see style.css. Held to its x instead, in the two-commanders runs below.
+      // Asked by "has names" rather than by the label, so it stays right if the label is
+      // ever reworded.
+      const wrapped = summary.rows.filter((r) => r.lines > 1 && !r.names.length).map((r) => r.key);
       if (wrapped.length) {
         problems.push(`${JSON.stringify(wrapped)} wrapped in a ${summary.column}px box`);
       }

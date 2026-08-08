@@ -1304,19 +1304,23 @@ reads as one long name at the width this box narrows to. Repeating `COMMANDER` d
 make it the only key in the box that ever appeared twice, so the names stack in the value column and
 the label follows the count — `COMMANDERS` over two.
 
-**A card name is the one value here that cannot be shortened**, which is why it gets a rule the
-numbers do not: behind the 9.5rem key column a 325px phone box leaves 163px and *Kinnan, Bonder
-Prodigy* wrapped, so under 24rem of content the key sizes to its own text on this row alone. That
-threshold is the longest real name rather than a tidy number — 162px of key and gap plus about 205px
-for *Chatterfang, Squirrel General* — and it splits the two common phones (325px and 363px inside)
-from the stacked tablet at 690px.
+**The name keeps the value column at every width, and it is the row that pays for that.** 587px
+against 587px on a laptop, 187px against 187px on a phone. A card name is the one value in this box
+that cannot be shortened, so behind the 9.5rem key column a 325px phone box leaves it 163px and a
+long commander takes two lines — *Chatterfang, Squirrel General* does, *Kinnan, Bonder Prodigy* does
+on the narrowest phones and not on a 412px one. Nothing is hidden and nothing overflows; the row is
+as tall as the name. This row is therefore the one exemption from the box's no-wrapping rule, and it
+is held to its x instead.
 
-**So the name is in the value column on a wide box and left of it on a phone** — 587px against 587px
-at a 968px content width, 145px against 187px at 325px. Both halves are checked, and the narrow one
-is checked by the *line* rather than by the x: taking that rule away does not put the name back in
-the column, it wraps the whole value block under the label at 25px, which is further left still and
-satisfies "left of the column" perfectly. The check that caught that is whether the names sit beside
-their label or under it.
+There was a version that gave this row its own key width below 24rem so the name always fitted on
+one line. It bought that with the only ragged row in the box — the name starting at 145px while
+every figure and pip started at 187px — and the column is the point of a row per fact, so it went.
+
+**Two flex traps sit behind that**, both met and both measured. Flex line-breaking uses an item's
+content width and only shrinks items after placing them, so a name wider than the space left moves
+to its own line *before* shrink is considered: the whole block lands under the label at 25px. A zero
+flex-basis fixes that, and `min-width: 0` is still needed on top of it so the text inside breaks
+rather than pushing the row wider than the box.
 
 **Nothing at all when the list declared none**, which is the common branch: a pasted decklist usually
 does not say. `verify` runs the same deck with the marker and without, and a partner pair at both

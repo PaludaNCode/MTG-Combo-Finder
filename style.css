@@ -430,35 +430,42 @@ button:disabled { opacity: .6; cursor: wait; }
    name — the single-name case is the common one, and a rule that only applies to decks
    with partners is a rule nobody looks at again.
 
-   `min-width: 0` because this is a flex item holding text that must be allowed to wrap:
-   without it a long name pushes the row wider than the box instead of breaking, which
-   is invisible until somebody runs a card with a comma and a title in it. */
+   `flex: 1 1 0` and `min-width: 0` are what keep it IN the value column when the name is
+   wider than the column has left. They are not the same guard and both are needed:
+
+   - flex line breaking uses an item's hypothetical size — its content width — and only
+     shrinks items once they are placed on a line. A name whose natural width is over the
+     space left therefore moves to its own line *before* shrink is ever considered, and
+     the whole block lands under the label at the row's left edge, 25px against a value
+     column at 187px. A zero basis means it never asks for more than it is given.
+   - `min-width: 0` then lets the text inside break, instead of pushing the row wider than
+     the box — invisible until somebody runs a card with a comma and a title in it. */
 .summary-names {
   display: flex;
   flex-direction: column;
+  flex: 1 1 0;
   min-width: 0;
   color: var(--text);
   font-weight: 600;
 }
 
-/* A card name is the one value in this box that cannot be shortened, and it is far
-   wider than a two-digit number: behind the 9.5rem key column a 325px phone box leaves
-   163px, and "Kinnan, Bonder Prodigy" needs more than that — it wrapped, which is the
-   double-height row this box replaced a one-line strip to avoid.
+/* THE NAME KEEPS THE VALUE COLUMN AT EVERY WIDTH, INCLUDING A PHONE, AND THAT IS A
+   DECISION WITH A COST — DO NOT "FIX" THE COST BY TAKING THE COLUMN BACK.
 
-   So the key sizes to its own text on this row alone once the box is narrow, the same
-   trade the rule below makes for every key: the name stops lining up with the numbers,
-   and in exchange it fits.
+   This row had a container query that let its key size to its own text below 24rem, so a
+   long name would fit on one line. It bought that with the only ragged row in the box:
+   on a phone the name started at 145px while every figure and pip started at 187px. The
+   column is the whole point of a row per fact, so it wins.
 
-   24rem, measured against the CONTENT box like that rule, and set by the longest name
-   rather than by a tidy number: the fixed column and its gap take 162px, and about
-   205px more is "Chatterfang, Squirrel General" — 367px of content before a real
-   commander stops fitting. Both phones are under it (325px inner at 390px, 363px at a
-   Pixel 7's 412px) and the stacked tablet is well over at 690px, which is the split
-   this wants: a phone gives the name the room, a wide box keeps the column. */
-@container (max-width: 24rem) {
-  .summary-row.is-commanders .summary-key { flex: 0 0 auto; }
-}
+   What that costs, measured: behind the 9.5rem key and its gap a 325px phone box leaves
+   163px, and "Kinnan, Bonder Prodigy" needs more — so on the narrowest phones a long
+   commander takes two lines instead of one. Nothing is hidden and nothing overflows; the
+   row is simply as tall as the name. A 412px phone (363px inside) fits the same name on
+   one line, so this only bites at the bottom of the range.
+
+   Which is why the wrap check in verify-layout.js exempts this row by name and checks its
+   x instead: a card name is the one value in this box that cannot be shortened, so height
+   is the wrong thing to hold it to. */
 
 /* Under 21.5rem of box the fixed key column costs more than it buys, and the number is
    measured rather than rounded to something tidy: a 320px phone leaves a 301px box,

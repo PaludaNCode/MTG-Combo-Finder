@@ -404,22 +404,28 @@ loosely.
 - **The deck summary's top row is the commander, and its value is a stack rather than a number.**
   One line per commander under one key — `COMMANDERS` when there are two — because repeating the key
   would make it the only one in the box drawn twice. It comes from `search.js`'s `commanders`, the
-  same list the pins use, so the box cannot disagree with the rows. **A card name is the one value
-  here that cannot be shortened**: behind the 9.5rem key column a 325px phone box leaves 163px and
-  *Kinnan, Bonder Prodigy* wrapped, so under **24rem of content** the key sizes to its own text on
-  that row alone — the threshold is 162px of key and gap plus ~205px for *Chatterfang, Squirrel
-  General*, which splits both phones (325px and 363px inside) from the stacked tablet at 690px.
+  same list the pins use, so the box cannot disagree with the rows. **The name keeps the value column
+  at every width** — 587px against 587px on a laptop, **187px against 187px on a phone** — and it is
+  **the one row exempt from the box's no-wrapping rule** in exchange: a card name cannot be
+  shortened, so behind the 9.5rem key a 325px phone box leaves it 163px and a long commander takes
+  two lines. A version that gave this row its own key width below 24rem so it always fitted was
+  reverted — it made the only ragged row in the box, the name at 145px against figures at 187px.
   → `verify`'s *two commanders* runs measure the two names' **tops**, since a stack that laid out
-  side by side passes every text assertion. They also pin where the name starts: **587px against
-  587px** on desktop, **145px against 187px** on a phone. `valueLefts` cannot answer that — it reads
-  `.summary-n`, and this is the one row whose value is not a number, so it was the one row free to
-  drift out of the column silently.
+  side by side passes every text assertion, and pin the name's x at both widths. `valueLefts` cannot
+  do it — it reads `.summary-n`, and this is the one row whose value is not a number, so it was the
+  one row free to drift out of the column silently.
+- **Keeping a wide value inside a fixed key column takes `flex: 1 1 0` AND `min-width: 0`**, and the
+  first is the one nobody reaches for: flex line-breaking uses an item's **content** width and only
+  shrinks items once they are placed, so a value wider than the space left moves to its own line
+  *before* shrink is considered — the commander names landed under their label at 25px against a
+  column at 187px. A zero basis stops it asking for more than it is given; `min-width: 0` then lets
+  the text inside break instead of widening the row.
 - **Two ways to get a geometry assertion wrong, both met writing that one, both found by breaking
-  it.** "The name is left of the value column" is satisfied by the *broken* layout too — take the
-  narrow rule away and the value block wraps under the label at 25px, further left still — so the
-  narrow half asks whether the names sit **beside** their label. And equal tops (±2px) failed the
-  **correct** layout: the row centres its items, so against a two-name stack the key sits half a line
-  below the first name by design → compare **overlap**, `name.top < key.bottom`.
+  it.** "The name is left of the value column" is satisfied by the *broken* layout too — a value
+  block that wraps under its label sits further left still — so what is asked is whether the names
+  sit **beside** their label. And equal tops (±2px) failed the **correct** layout: the row centres
+  its items, so against a two-name stack the key sits half a line below the first name by design →
+  compare **overlap**, `name.top < key.bottom`.
 - **`\n` inside a string in `verify-layout.js`'s `HARNESS` is a real newline by the time the browser
   parses it**, which leaves an unterminated string, no verdict, and a run that hangs until the 120s
   cap — write `\\n`, exactly as the `\\d` rule two bullets up. It cost most of an hour: `node --check`
