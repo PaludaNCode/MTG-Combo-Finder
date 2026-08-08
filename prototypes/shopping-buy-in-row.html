@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype C — no basket, buy from the row</title>
+  <!-- Shape C of three, and deliberately the cheapest: no basket, no baseline, no diff,
+       no new state of any kind. A Buy chip joins EDHREC and Scryfall on every suggestion
+       row, and the panel head grows one action that takes the whole suggested list.
+
+       It is here as the control. A and B both cost something real — a panel, or a new
+       overlaying pattern — and neither is worth building unless it beats this. C ships in
+       an afternoon and touches two functions: RenderRows.cardLinks() and the suggestions
+       panel head.
+
+       It also has the two defects that made me write the other two, and both are visible
+       on this page rather than argued about in prose:
+
+         1. The link line is already full. render-suggestions.js says the links and the
+            add button share a line down to about 390px and the button drops below that;
+            a third link is one more thing in that budget. The 390px block near the
+            bottom is what that does.
+         2. "Buy all 15 shown" buys a recommendation, not a decision. The panel is a
+            ranked list of candidates — the reader has chosen none of them. A cart of 15
+            cards nobody picked is the wrong cart, and there is no cheap fix inside this
+            shape, because the shape's whole premise is that nothing remembers what was
+            chosen.
+
+       Rows, counts and alternatives are real — the tuning deck's top suggestions,
+       `node tools/try-deck.js`, 8 Aug 2026. -->
+  <script src="../theme.js"></script>
+  <script src="shopping-cart-links.js" defer></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+    .proto-narrow { max-width: 24rem; border: 1px dashed var(--line); padding: .8rem; border-radius: var(--radius); }
+
+    /* ---- the Buy chip ----------------------------------------------------
+     *
+     * Styled as a link and not as a button, which is the one thing this shape
+     * must get right: EDHREC and Scryfall beside it go and read about the card,
+     * `+ Add to deck` changes the deck, and a third control that looks like the
+     * button but leaves the site would be the worst of the three. So it takes
+     * the anchor's colour and weight, and the store's name is in it — "Buy" on
+     * its own does not say that a tab is about to open somewhere else. */
+    .proto-buy {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted currentColor;
+    }
+    .proto-buy:hover { border-bottom-style: solid; }
+    .proto-buy-store { color: var(--muted); font-size: .85em; }
+
+    /* The panel head's action. Sits beside the count, not in the body, because
+     * it acts on the whole panel — and `.panel-head` is a <button>, so this
+     * cannot be a nested control: it goes in the body's first line instead. */
+    .proto-head-action {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: .5rem;
+      margin: 0 0 .9rem;
+      padding-bottom: .7rem;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .proto-store {
+      display: inline-block;
+      padding: .3rem .6rem;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .82rem;
+      text-decoration: none;
+    }
+    .proto-store:hover { border-color: var(--accent); color: var(--accent); }
+    .proto-store .proto-region { color: var(--muted); font-size: .78em; }
+    .proto-store.is-listonly { border-style: dashed; color: var(--muted); cursor: default; }
+    .proto-primary {
+      padding: .3rem .6rem;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--brass-ink, #12141a);
+      font-size: .82rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .proto-unverified {
+      display: inline-block;
+      margin-left: .3rem;
+      padding: 0 .35rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .7rem;
+      vertical-align: middle;
+    }
+    .proto-built {
+      margin: .8rem 0 0;
+      padding: .5rem .6rem;
+      background: var(--panel-2);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: .72rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      word-break: break-all;
+    }
+    /* Marks the one element on the row that this shape adds, so the diff against
+     * the shipped row is readable at a glance rather than by comparison. */
+    .proto-added-here { outline: 1px dashed var(--accent); outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1>C — no basket, buy from the row</h1>
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+        <span class="icon icon-moon" aria-hidden="true"></span>
+        <span class="icon icon-sun" aria-hidden="true"></span>
+        <span class="theme-label"></span>
+      </button>
+    </div>
+    <p class="tagline">The shipped suggestion row, plus one link. Dashed outline marks what is new.</p>
+  </header>
+
+  <main class="proto-frame">
+
+    <p class="proto-note"><b>Two real suggestion rows.</b> Shipped markup throughout — the gutter, the
+      name, the link line, the alternatives and the disclosure are all
+      <code>render-suggestions.js</code>’s, unchanged. The only addition is the third link.</p>
+
+    <!-- The id and class are the shipped selector, because `#suggestions .panel-body`
+         is what declares `container: rows / inline-size`. Without that ancestor none of
+         the @container rules match and the row renders as its narrowest self at every
+         width — which would make this shape look worse than it is, for a reason that has
+         nothing to do with the shape. -->
+    <div id="suggestions">
+      <div class="panel-body">
+
+        <div class="proto-head-action proto-added-here">
+          <span><b>15 cards</b> worth adding</span>
+          <span class="proto-spacer" style="flex:1"></span>
+          <span data-cart-actions="row-buy-all">
+            <button class="proto-primary" type="button" data-cart-copy>Copy all 15</button>
+          </span>
+        </div>
+
+        <article class="combo suggestion">
+          <div class="row-numbers">
+            <span class="row-total"><span class="sign">+</span>10</span>
+            <span class="row-total-label">combos</span>
+          </div>
+          <div class="row-main">
+            <h3 class="row-name"><span class="card-name">Herd Baloth</span></h3>
+            <p class="card-links">
+              <span class="card-links">
+                <a href="https://edhrec.com/cards/herd-baloth" target="_blank" rel="noopener">EDHREC</a> ·
+                <a href="https://scryfall.com/search?q=%21%22Herd+Baloth%22" target="_blank" rel="noopener">Scryfall</a> ·
+                <a class="proto-buy proto-added-here" href="#" data-buy="Herd Baloth">Buy <span class="proto-buy-store">TCGplayer</span></a>
+              </span>
+              <button class="add-card" type="button">+ Add to deck</button>
+            </p>
+            <p class="sizes">1 × 2-card · 9 × 3-card</p>
+          </div>
+          <details>
+            <summary>Combos this unlocks</summary>
+          </details>
+        </article>
+
+        <article class="combo suggestion">
+          <div class="row-numbers">
+            <span class="row-total"><span class="sign">+</span>7</span>
+            <span class="row-total-label">combos</span>
+          </div>
+          <div class="row-main">
+            <h3 class="row-name"><span class="card-name">Cleric Class</span></h3>
+            <p class="card-links">
+              <span class="card-links">
+                <a href="https://edhrec.com/cards/cleric-class" target="_blank" rel="noopener">EDHREC</a> ·
+                <a href="https://scryfall.com/search?q=%21%22Cleric+Class%22" target="_blank" rel="noopener">Scryfall</a> ·
+                <a class="proto-buy proto-added-here" href="#" data-buy="Cleric Class">Buy <span class="proto-buy-store">TCGplayer</span></a>
+              </span>
+              <button class="add-card" type="button">+ Add to deck</button>
+            </p>
+            <p class="sizes">7 × 3-card</p>
+          </div>
+          <div class="alternatives">
+            <span class="alt-label">or these 3, same combos: </span>
+            <ul class="alt-list">
+              <li>Heliod, Sun-Crowned</li>
+              <li>Spider-Man, Peter Parker</li>
+              <li>The Destined White Mage</li>
+            </ul>
+          </div>
+          <details>
+            <summary>Combos this unlocks</summary>
+          </details>
+        </article>
+
+        <p class="proto-built" data-cart-built></p>
+      </div>
+    </div>
+
+    <p class="proto-note"><b>The alternatives row is where this shape gets awkward.</b> Cleric Class has
+      three interchangeable partners and the panel is telling you to buy <i>one of four</i> cards. A Buy
+      link on the heading card alone quietly recommends the most expensive one as often as the cheapest,
+      and the page has no price data to know which — so the link is on the row that was ranked first for
+      combo count, and nothing on screen says that is not a purchasing recommendation. A basket does not
+      have this problem, because by the time a card is in it the reader has picked which of the four.</p>
+
+    <p class="proto-note"><b>At 390px.</b> The shipped row already drops the add button onto its own line
+      here. The third link joins EDHREC and Scryfall on theirs and pushes the pair to wrap — measure it
+      with <code>npm run verify</code> before believing any drawing of it, including this one, since the
+      thresholds resolve against the row’s own column and not the window.</p>
+
+    <div class="proto-narrow">
+      <div id="suggestions">
+        <div class="panel-body">
+          <article class="combo suggestion">
+            <div class="row-numbers">
+              <span class="row-total"><span class="sign">+</span>10</span>
+              <span class="row-total-label">combos</span>
+            </div>
+            <div class="row-main">
+              <h3 class="row-name"><span class="card-name">Herd Baloth</span></h3>
+              <p class="card-links">
+                <span class="card-links">
+                  <a href="#">EDHREC</a> · <a href="#">Scryfall</a> ·
+                  <a class="proto-buy proto-added-here" href="#">Buy <span class="proto-buy-store">TCGplayer</span></a>
+                </span>
+                <button class="add-card" type="button">+ Add to deck</button>
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <p class="proto-note"><b>What this shape genuinely wins.</b> It works for a reader who never presses
+      <i>+ Add to deck</i> at all — who reads the list, decides in their head, and wants one card. A and
+      B both serve only the reader who takes suggestions through the button, and nobody here knows what
+      share that is, because the page records nothing about how it is used. That is the strongest
+      argument for shipping C first and it is written down in shopping.md rather than left as a feeling.</p>
+
+  </main>
+
+  <script src="shopping-proto.js" defer></script>
+  <script src="shopping-row-buy.js" defer></script>
+</body>
+</html>

@@ -200,6 +200,26 @@ export default [
     rules: RULES,
   },
   {
+    // The prototypes. Browser scripts like the page's own, and linted with the same
+    // rules for the same reason: a `<script>` file's top-level function really does
+    // land on `window`, so no-implicit-globals is reporting a mistake here too.
+    //
+    // They are not the site — `tools/prune-artifact.js` keeps them out of the Pages
+    // artifact, since no page references them — but they are the drawings a design
+    // decision gets made from, and a prototype with a misspelled global that silently
+    // does nothing is a drawing of something that was never true. `PAGE` is included
+    // because a prototype reproduces shipped markup and reaches for the same globals
+    // the real scripts do.
+    files: ['prototypes/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: { ...BROWSER, ...PAGE },
+    },
+    linterOptions: { reportUnusedDisableDirectives: true },
+    rules: { ...RULES, 'no-implicit-globals': 'error' },
+  },
+  {
     // The browser tests. Node files that contain browser code: everything inside
     // a `page.evaluate()` callback is serialised and run in the tab, so `window`
     // and `document` are as real there as `require` is around them. Both sets of
