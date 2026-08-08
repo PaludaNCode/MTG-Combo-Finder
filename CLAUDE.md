@@ -641,6 +641,7 @@ setting before reaching for a rule* — a rule needs remembering, a setting does
 | `commands/prove-check.md` | the break-it-on-purpose ritual, pointed at `npm run prove`. |
 | `commands/deck-deep-dive.md` | the card-research pass, pointed at one deck. |
 | `output-styles/terse.md` | the reporting rule above. |
+| `settings.json` → `permissions.allow` | every check and every read-only tool, so running them costs nothing. **A check that needs a prompt is a check that gets skipped**, and the ones listed here are the whole point of the file above. Nothing that writes is on the list: no `git commit`, no `git push`, no `npm run shot -- --update`-shaped thing, and above all nothing that could reach `main`. |
 
 Both hooks are shell, which is the one thing here nothing can unit-test, so **the decision goes in a
 tool and the hook calls it** wherever there is a decision — and where it cannot, run the script on
