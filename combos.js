@@ -34,6 +34,50 @@
     return set;
   }
 
+  // ---- what this session added to the deck ----------------------------------
+  //
+  // The cards in the deck now that were not in the deck when it arrived. Everything the
+  // shopping panel shows is this list, and it is *derived* on every render rather than
+  // accumulated as somebody presses "+ Add to deck".
+  //
+  // That is the whole design decision and it is worth the paragraph. The alternative —
+  // logging each press — makes a second source of truth over a textarea the reader can
+  // edit by hand, and it desyncs in four ordinary ways with nothing on screen to say so:
+  // a card typed straight into the box is missed, a card deleted by hand stays in the
+  // basket, a reload loses the log, and a shared link arrives with somebody else's log
+  // or none. A diff against the deck as it arrived is right in all four, and costs one
+  // stored field rather than an event for every edit path. It is the same shape
+  // `tools/stamp-assets.js` uses when it reads what the pages reference instead of
+  // keeping a list of assets, and for the same reason.
+  //
+  // Quantity: a name absent from the baseline enters the basket with the quantity the
+  // deck now holds. A name whose *count went up* is not a basket entry — this is a
+  // singleton format, the case is vanishingly rare, and "you added a second Sol Ring"
+  // is a claim about what somebody owns, which this page has never known and must not
+  // guess at. The same caution is why an added card the reader already owns is left for
+  // them to remove rather than inferred away.
+  //
+  // Both arguments are entry lists — `{ quantity, card }`, DeckParser's shape — and the
+  // order of the result follows the current deck, so a basket reads down the decklist
+  // the way the box does.
+  function basketFrom(baseline, current) {
+    // No baseline at all means nothing has arrived yet — the first search of a visit
+    // establishes one. An empty basket is the honest answer, not "everything is new".
+    if (!baseline) return [];
+    const had = deckNameSet(baseline);
+    const seen = new Set();
+    const basket = [];
+    for (const entry of current || []) {
+      const name = entry && (entry.card || entry.name);
+      if (typeof name !== 'string') continue;
+      const key = nameKey(name);
+      if (had.has(key) || seen.has(key)) continue;
+      seen.add(key);
+      basket.push({ quantity: entry.quantity || 1, card: name });
+    }
+    return basket;
+  }
+
   // ---- the published payload's string tables --------------------------------
   //
   // combos.json interns the two fields that repeat: card names in `c` and result
@@ -1784,7 +1828,7 @@
   }
 
   const api = {
-    computeSuggestions, deckNameSet, nameKey, edhrecSlug, scryfallSetQuery, variantCardNames,
+    computeSuggestions, deckNameSet, nameKey, basketFrom, edhrecSlug, scryfallSetQuery, variantCardNames,
     orderComboNames,
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, deckCounts,

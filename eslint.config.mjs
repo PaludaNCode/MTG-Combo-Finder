@@ -101,6 +101,9 @@ const PAGE = {
   DeckIO: 'readonly',
   RenderRows: 'readonly',
   RenderCombos: 'readonly',
+  // Where to buy a card. Read by render-rows.js and render-suggestions.js, and by
+  // neither of them hard: a page without it keeps every panel and loses the Buy links.
+  CartLinks: 'readonly',
   RenderSuggestions: 'readonly',
 };
 
@@ -162,7 +165,7 @@ export default [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js', 'sw.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
       'combo-steps.js', 'steps-source.js', 'view-model.js',
-      'page-dom.js', 'render-map.js', 'deck-io.js',
+      'page-dom.js', 'render-map.js', 'deck-io.js', 'cart-links.js',
       'render-rows.js', 'render-combos.js', 'render-suggestions.js',
     ],
     languageOptions: {

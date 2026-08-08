@@ -367,7 +367,7 @@
     });
   }
 
-  function renderResults(results, deckNames) {
+  function renderResults(results, deckNames, allEntries) {
     $('results').hidden = false;
     const token = ++renderToken;
 
@@ -404,6 +404,7 @@
     // Two textContent writes, so this costs nothing worth measuring.
     $('graph').textContent = '';
     $('suggestions').textContent = '';
+    $('basket').textContent = '';
 
     // Drawn from the same `included` the panel above is — Spellbook's own combos and
     // not the unofficial ones, which is the same line "Combos in your deck" draws, so
@@ -427,6 +428,18 @@
       ), deckNames),
       deckNames,
       results.identity
+    ));
+
+    // Last of the deferred panels, and the only one that is usually absent: it needs
+    // somebody to have added a card first. The basket is derived here rather than kept
+    // — DeckCombos.basketFrom() explains why at length — so it is recomputed from the
+    // deck on every search and cannot drift from the box.
+    afterPaint(token, () => RenderSuggestions.renderBasket(
+      $('basket'),
+      DeckCombos.basketFrom(DeckIO.baselineEntries(), allEntries),
+      included,
+      DeckIO.baselineCombos(),
+      included.length
     ));
   }
 
@@ -723,6 +736,11 @@
       sent: { main: main.length, commanders: commanders.length },
       firstCards: allEntries.slice(0, 5).map((c) => `${c.quantity} ${c.card}`),
     };
+    // What "Cards you've added" is a diff against. A search that neither the add nor the
+    // cut button started is a search on a deck that arrived — pasted, typed, dropped or
+    // opened from a link — so this is where a baseline is set, using the answer the
+    // status line above already needed.
+    DeckIO.captureBaseline(allEntries, Boolean(added || removed));
     try {
       // allEntries is passed so a card credited with a template slot is named
       // the way the decklist spelled it, not as its lowercased lookup key.
@@ -743,7 +761,11 @@
       setStatus((added ? 'Added ' + added + '. ' : '')
         + (removed ? 'Removed ' + removed + '. ' : '')
         + 'Searched ' + (main.length + commanders.length) + ' cards against ' + notes.join('; ') + '.');
-      renderResults(results, deckNames);
+      // Written before renderResults reads it back, and only ever on the search that set
+      // the baseline — see recordBaselineCombos(). This is the "33" in "33 combos → 80",
+      // taken from the search that has just produced it rather than recomputed later.
+      DeckIO.recordBaselineCombos(results.included.length);
+      renderResults(results, deckNames, allEntries);
       renderDataAge(results.meta);
       DeckIO.saveDeck();
       if (unparsed.length) showDiagnostics(null, parsed, 'notice');

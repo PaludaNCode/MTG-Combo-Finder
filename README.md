@@ -23,7 +23,7 @@ branch.
 | --- | --- |
 | [Features](#features) · [Results and ranking](#results-and-ranking) | what the page does; tiers, row order, size breakdowns, collapsing, template slots |
 | [How a combo is executed](#how-a-combo-is-executed) · [The combo map](#the-combo-map) | the steps disclosure and how steps are published; the picture under *Combos in your deck* |
-| [Rendering order](#rendering-order-the-combos-come-first) · [Adding a card](#adding-a-card-and-searching-again) · [Bracket and legality](#classifying-the-decklist-which-bracket-is-it) | why the page yields after the combos; `+ Add to deck`; the five pips, colour identity, bans |
+| [Rendering order](#rendering-order-the-combos-come-first) · [Adding a card](#adding-a-card-and-searching-again) · [Buying them](#buying-the-cards-the-page-recommends) · [Bracket and legality](#classifying-the-decklist-which-bracket-is-it) | why the page yields after the combos; `+ Add to deck`; the basket and the store links; the five pips, colour identity, bans |
 | [Cards and lands](#how-many-cards-and-how-many-of-them-are-lands) | the strip above the results, and the three things it stays silent about |
 | [Layout and the test suites](#layout-and-the-test-suites) · [How it works](#how-it-works) | themes, `verify` vs `test:ui`, what each proves; every file and what it owns |
 | [The published data](#why-the-data-is-published-not-queried-live) | the payload, the worker, caching, the publish gate |
@@ -546,6 +546,65 @@ Commander Spellbook's spelling; the line is whatever the reader pasted, set code
 `DeckCombos.nameKey`, which `parser.js` must not depend on — so a default here would be that rule written
 out a second time, and the failure when the two drifted would be a button that silently removes nothing.
 Nothing matched is reported as an error rather than swallowed, for the same reason.
+
+## Buying the cards the page recommends
+
+Two places, one builder. A **Buy** link joins EDHREC and Scryfall on every suggestion row, and once a
+card has been added, a **Cards you've added** panel lists the basket with **Copy list** and a store
+button. Both go through `cart-links.js`, because a row link and a panel button that built their URLs
+separately would eventually disagree about escaping or about which affiliate id was attached — and the
+one that disagreed would be invisible, since a wrong affiliate link still opens a working store page.
+
+**The basket is derived on every render, never accumulated.** `DeckCombos.basketFrom()` diffs the deck
+against the deck as it arrived; `+ Add to deck` presses are not logged. A log is a second source of
+truth over a textarea the reader can edit by hand, and it is wrong in four ordinary ways with nothing
+on screen to say so: a card typed straight into the box is missed, a card deleted by hand stays, a
+reload loses it, and a shared link arrives carrying somebody else's. The diff is right in all four and
+costs one stored field. **Arrival is defined by exclusion** — the add and cut buttons are the only
+things that edit the deck by themselves, so any other search is a search on a deck that arrived, which
+is an answer `app.js` already had for its status line.
+
+**The per-card counts must never be summed, and the panel is built so they cannot be.** On the
+five-card basket the prototypes were drawn from, the cards sit in 18, 11, 10, 10 and 8 of the deck's
+combos — that totals 57 while the deck gained 47, because a combo naming two of them is counted twice.
+So the caption carries one figure, the deck total before and after, and the rows carry descriptions of
+one card each. The same card also reads **+10** as a suggestion and **in 18** once the basket is full:
+different questions, both true, and the second is the one that is true now.
+
+```bash
+node tools/try-deck.js                    # the deck the measurement comes from
+```
+
+**Affiliate wrapping is a separate step from building the destination**, and the reason is not
+tidiness: the unwrapped URL is what ships while a programme is unapproved, lapsed, or wrong for the
+reader's region. A store link that stops earning is a working feature; a store link that stops working
+is a bug on the page. `AFFILIATE.tcgplayer.enabled` is `false` and the ids are placeholders that
+deliberately do not look real — an id that looks real is an id somebody assumes was checked.
+
+**Only TCGplayer ships, and that is a decision rather than a stub.** Card Kingdom's deck builder may be
+POST-only, and `form-action` does not inherit from `default-src`, so neither page's policy currently
+says what a cross-origin POST does. Cardmarket's want-list import appears to sit behind a login, and a
+button opening a sign-in page is worse than no button because it looks like the feature working.
+Neither is settleable from this sandbox — every store host 403s at CONNECT — so neither ships, and a
+reader outside the US is served by **Copy list**, which is why the copy is the primary action. A
+basket whose link would pass `MAX_URL` refuses rather than truncating: a cart holding four of your six
+cards looks exactly like a cart holding all six.
+
+**Plain `<a href>` links need no CSP change** — navigation is not restricted by either policy — so
+nothing here loosened `default-src 'none'`.
+
+**A `subid` is the only conversion signal this site can have.** The page carries no analytics and
+cannot; a third-party tag would breach its own CSP. Every button names its placement (`row-buy`,
+`basket-panel`) and "which one earns" is answered off the affiliate network's dashboard rather than
+off anything the page records about its readers.
+
+**Prices are absent, and that is a data decision.** `combo-steps.js`'s `pick()` strips
+`prices.tcgplayer` from every published record, so nothing the browser can reach knows what a card
+costs. Bringing them back means the nightly snapshot rather than a live API — `connect-src` stays as
+it is and the page keeps working offline — at the cost of day-stale figures and payload against the
+publish gate's ceiling (`node tools/check-snapshot.js`).
+
+The three shapes this was chosen from, with what each costs, are in `prototypes/shopping.md`.
 
 ## Classifying the decklist: which bracket is it?
 

@@ -144,6 +144,29 @@ for (const theme of ['dark', 'light']) {
   });
 }
 
+// "Cards you've added" is absent until a card is added, so a test that only searches
+// never sees it — which is exactly how the result chips shipped at 4.19:1 on a nested
+// panel that no a11y run had ever opened. Its controls are all new: a quiet Copy button,
+// an outlined store link that leaves the site, and the cut pill borrowed from the panel
+// above. Both themes, because contrast is a property of the theme rather than the markup.
+for (const theme of ['dark', 'light']) {
+  test(`the basket is clean in ${theme}`, async ({ page }) => {
+    await page.goto('/index.html');
+    await page.evaluate((t) => localStorage.setItem('mtg-combo-finder.theme', t), theme);
+    await page.reload();
+    await search(page);
+
+    // Through the page's own button, not by typing into the box: the baseline that
+    // decides what is in this panel is set by a search that no add started, so a deck
+    // edited and re-searched by hand produces an empty basket and a test that would
+    // pass while checking nothing.
+    await page.locator('#suggestions .tab-pane:not([hidden]) .combo.suggestion .add-card').first().click();
+    await expect(page.locator('#basket .panel')).toBeVisible();
+    await expect(page.locator('#basket .basket-row')).toHaveCount(1);
+    await expectClean(page);
+  });
+}
+
 test('the tiers page is clean', async ({ page }) => {
   await page.goto('/tiers.html');
   // The filter row is hidden until the database has loaded and the table is

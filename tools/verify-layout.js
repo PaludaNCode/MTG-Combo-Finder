@@ -2052,6 +2052,10 @@ function runOne(vp) {
           get: function () { widthReads += 1; return widthDesc.get.call(this); },
         });
         if (addBtn) {
+          // Absent before anything is added, which is half the claim "Cards you've added"
+          // makes. A panel that rendered the whole deck would be rows of card names under
+          // a plausible heading and would look entirely correct at a glance.
+          afterAdd.basketBefore = Boolean(doc.querySelector('#basket .panel'));
           addBtn.click();
           // Wait for the count to move rather than for a guessed interval: the whole
           // claim here is "adding a card left the deck holding more combos", so a
@@ -2095,6 +2099,23 @@ function runOne(vp) {
           // follows must not be able to outrun the save.
           const kept = win.localStorage.getItem('mtg-combo-finder.deck');
           afterAdd.kept = kept ? JSON.parse(kept).decklist : '';
+          // …and the other half: present now, holding exactly the card that was added.
+          // Read as text and hrefs rather than as boxes, because what can go wrong here
+          // is a wrong list rather than a wrong layout — an off-by-one in the diff, a
+          // caption quoting the search before the add, or a placeholder affiliate id
+          // reaching a live link, none of which move a single pixel.
+          const bp = doc.querySelector('#basket .panel');
+          afterAdd.basket = bp ? {
+            badge: bp.querySelector('.panel-count').textContent,
+            note: bp.querySelector('.panel-note').textContent,
+            rows: [].map.call(bp.querySelectorAll('.basket-row .basket-name'), function (n) {
+              return n.textContent;
+            }),
+            stores: [].map.call(bp.querySelectorAll('.basket-store'), function (a) {
+              return a.getAttribute('href');
+            }),
+            copy: Boolean(bp.querySelector('.copy-btn')),
+          } : null;
         }
         // Put the real accessor back before anything else measures the page.
         Object.defineProperty(win.Element.prototype, 'clientWidth', widthDesc);
@@ -2826,6 +2847,11 @@ function captionDrift(notes) {
       problems.push('the cards-carrying panel is a second panel again, not the combos panel itself');
     }
     if (v.panels.some((p) => /Bracket check/.test(p.title))) problems.push('the bracket check is a panel again');
+    // Still three and not four: "Cards you've added" is absent until somebody adds one,
+    // which is why it is checked against the add below rather than counted here.
+    if (v.panels.some((p) => /added/i.test(p.title))) {
+      problems.push('the basket panel rendered before anything was added');
+    }
     if (v.panels.some((p) => /slot away/i.test(p.title))) problems.push('the one-slot-away panel is back');
     if (!v.topPiece) {
       problems.push('the combo-pieces overview did not render');
@@ -3629,6 +3655,51 @@ function captionDrift(notes) {
         problems.push(`redrawing the map read clientWidth ${added.widthReads} time(s) during the `
           + 'search — that flushes layout for the whole document; see columnWidth() in render-map.js');
       }
+
+      // ---- "Cards you've added" ------------------------------------------------
+      //
+      // The panel is a diff against the deck as it arrived, and every way that diff can
+      // be wrong produces a panel that looks right: a baseline that never got set offers
+      // the reader the whole deck they already own, a baseline overwritten by the add
+      // offers nothing at all, and a caption reading the search before the add quotes
+      // two numbers that are both real and do not belong together. None of them move a
+      // pixel, so all of them are read as text here.
+      if (added.basketBefore) {
+        problems.push('"Cards you’ve added" was on screen before anything had been added');
+      }
+      const basket = added.basket;
+      if (!basket) {
+        problems.push(`adding ${added.card} did not produce the "Cards you’ve added" panel`);
+      } else {
+        if (basket.rows.length !== 1 || basket.rows[0] !== added.card) {
+          problems.push(`the basket holds ${JSON.stringify(basket.rows)} after adding one card — `
+            + `expected only ${added.card}. A basket listing the whole deck is what a missing `
+            + 'baseline looks like');
+        }
+        if (basket.badge !== String(basket.rows.length)) {
+          problems.push(`the basket badge says ${basket.badge} beside ${basket.rows.length} row(s)`);
+        }
+        // The badge counts cards and the sentence claims combos — that disagreement is
+        // deliberate and is only safe while the sentence says which is which. Same rule
+        // the caption under "Combos in your deck" lives by.
+        if (!/^1 card that was not in the deck you started with/.test(basket.note)) {
+          problems.push(`the basket caption does not say what its badge counts: "${basket.note}"`);
+        }
+        if (basket.note.indexOf(`${added.combosAfter} combos rather than ${added.combosBefore}`) === -1) {
+          problems.push(`the basket caption should carry ${added.combosBefore}→${added.combosAfter}, `
+            + `and reads "${basket.note}"`);
+        }
+        // Copy first: it is the action that works for every reader in every region, and
+        // the one the panel falls back to when a list is too long for a store link.
+        if (!basket.copy) problems.push('the basket has no Copy list button');
+        if (!basket.stores.length) problems.push('the basket offered no store link at all');
+        if (basket.stores.some((href) => !href)) problems.push('a basket store link has no href');
+        // A placeholder id in a live URL is the one failure here that costs money rather
+        // than pixels, and an unwrapped link works perfectly while carrying one.
+        if (basket.stores.some((href) => /PUBLISHER_ID|CAMPAIGN_ID|MEDIA_ID/.test(href || ''))) {
+          problems.push('a placeholder affiliate id reached a live store link');
+        }
+      }
     }
 
     // The decklist is the whole input; losing it on reload is the one thing a
@@ -4002,7 +4073,11 @@ function captionDrift(notes) {
         + `${v.bracket.whileOpen.width}px wide, ${-v.bracket.whileOpen.pastBox}px inside the box`;
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
         + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`
-        + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`;
+        + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`
+        + (v.afterAdd.basket
+          ? `, basket ${v.afterAdd.basket.badge} [${v.afterAdd.basket.rows.join(', ')}]`
+            + ` + ${v.afterAdd.basket.stores.length} store link(s)`
+          : ', no basket');
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
         + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `

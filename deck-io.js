@@ -28,10 +28,59 @@
       localStorage.setItem(DECK_KEY, JSON.stringify({
         decklist: $('decklist').value,
         commanders: $('commanders').value,
+        // Kept with the deck rather than under a key of its own, so the two can never
+        // be restored out of step: a baseline recovered next to a different decklist
+        // would show a basket of cards nobody added. See captureBaseline().
+        baseline: baseline.entries ? { entries: baseline.entries, combos: baseline.combos } : null,
       }));
     } catch (err) {
       /* private mode, or over quota — not worth bothering the reader about */
     }
+  }
+
+  // ---- the deck as it arrived ----------------------------------------------
+  //
+  // What "Cards you've added" is a diff against. Kept beside the decklist and under the
+  // same key, because it is a property of that decklist and a baseline that outlived the
+  // deck it describes would produce a basket of cards nobody added.
+  //
+  // *Arrival* is defined by exclusion, which is what makes it need no new events: the
+  // add and cut buttons are the only things on this page that edit the deck by
+  // themselves, so a search that neither of them started is a search on a deck that
+  // arrived — pasted, typed, dropped, imported from a URL, or opened from a share link.
+  // app.js already distinguishes the two at the top of onSubmit to word its status line,
+  // and passes the same answer here.
+  //
+  // The combo count is recorded at the end of that same search rather than recomputed
+  // later. It is free — the search has just produced it — and it is the number that was
+  // actually on screen, where a recomputation would be a second opinion about the past.
+  const baseline = { entries: null, combos: null };
+
+  // Called before the search runs, with the deck it is about to search. `appEdit` is
+  // true when "+ Add to deck" or "− Remove" started this one, and then the baseline is
+  // left exactly as it was — that press is what the basket is measuring.
+  function captureBaseline(entries, appEdit) {
+    if (appEdit && baseline.entries) return;
+    baseline.entries = (entries || []).map((e) => ({ quantity: e.quantity, card: e.card }));
+    baseline.combos = null;
+  }
+
+  // …and after it, with what that deck turned out to hold. Only ever written for the
+  // search that set the baseline, so a later add cannot overwrite the "before" figure
+  // with an "after" one — which would quietly turn "33 combos → 80" into "80 → 80".
+  function recordBaselineCombos(count) {
+    if (baseline.entries && baseline.combos == null) baseline.combos = count;
+  }
+
+  function baselineEntries() { return baseline.entries; }
+  function baselineCombos() { return baseline.combos; }
+
+  // A deck that is replaced wholesale takes its baseline with it. Called where a new
+  // deck arrives by a route that does not go through a search first — the file drop and
+  // Clear — so a basket cannot survive the deck it was a diff against.
+  function forgetBaseline() {
+    baseline.entries = null;
+    baseline.combos = null;
   }
 
   // base64url, because a decklist is full of newlines and commas and the URL has
@@ -77,6 +126,13 @@
       const saved = JSON.parse(localStorage.getItem(DECK_KEY)) || {};
       if (saved.decklist) $('decklist').value = saved.decklist;
       if (saved.commanders) $('commanders').value = saved.commanders;
+      // Only on this branch. A shared link returns above without touching it, which is
+      // the right answer rather than an oversight: the recipient did not add those
+      // cards, the whole deck arrived, and their basket starts empty.
+      if (saved.baseline && Array.isArray(saved.baseline.entries)) {
+        baseline.entries = saved.baseline.entries;
+        baseline.combos = typeof saved.baseline.combos === 'number' ? saved.baseline.combos : null;
+      }
     } catch (err) {
       /* nothing kept, or junk in there */
     }
@@ -86,6 +142,7 @@
     $('decklist').value = '';
     $('commanders').value = '';
     $('deck-url').value = '';
+    forgetBaseline();
     try {
       localStorage.removeItem(DECK_KEY);
     } catch (err) {
@@ -151,6 +208,11 @@
       // the list; the separate box is only cleared so a previous deck's
       // commanders cannot survive into this one.
       $('commanders').value = '';
+      // Before saveDeck(), not after: the previous deck's baseline is still in memory
+      // at this point and would be written to storage beside a decklist it has nothing
+      // to do with. The next search would replace it anyway — but a reload in between
+      // would not, and would come back showing a basket of cards from another deck.
+      forgetBaseline();
       saveDeck();
       setStatus(DeckView.fileLoaded(file.name, {
         main: parsed.main.length,
@@ -212,6 +274,7 @@
   const api = {
     saveDeck, saveDeckSoon, encodeDeck, decodeDeck, shareLink, restoreDeck, clearDeck,
     useDeckFile, wireDeckFiles,
+    captureBaseline, recordBaselineCombos, baselineEntries, baselineCombos, forgetBaseline,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

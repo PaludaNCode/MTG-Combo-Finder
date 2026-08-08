@@ -988,6 +988,7 @@ button:disabled { opacity: .6; cursor: wait; }
    that works everywhere and silently does not. */
 #unofficial .panel-body,
 #pieces .panel-body,
+#basket .panel-body,
 #suggestions .panel-body { container: rows / inline-size; }
 
 /* And a container per disclosure, because the combo rows moved a column inwards. A
@@ -1126,6 +1127,94 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .remove-card:hover { border-color: var(--error); color: var(--error); background: none; filter: none; }
 .remove-card:focus-visible { outline: 2px solid var(--error); outline-offset: 2px; }
+
+/* ---- buying a card ---------------------------------------------------------
+ *
+ * The Buy link on a suggestion row, third in the line after EDHREC and Scryfall.
+ *
+ * A link and not a pill, which is the whole of its styling decision. It sits between two
+ * anchors that read *about* the card and one button that *changes the deck*, and a third
+ * control shaped like the button but leaving the site would be the worst thing in that
+ * line. So it takes the anchor's colour and the anchor's weight and differs only in the
+ * store's name trailing it — which is doing real work, because "Buy" alone does not say
+ * where.
+ *
+ * The dotted underline is what separates it from its two neighbours without spending a
+ * colour: the accent is already the page's link colour, and a fourth hue in a line that
+ * has to fit a phone would be noise. */
+.buy-link { white-space: nowrap; }
+.buy-store { color: var(--muted); font-size: .85em; }
+
+/* ---- "Cards you've added" --------------------------------------------------
+ *
+ * One line per card, and deliberately not `.combo.suggestion`'s two-column grid. That
+ * row's gutter carries a display-size number because the row is a decision — is this
+ * worth a slot — and by the time a card is in this panel the decision is taken. What is
+ * left is the card, the reason to keep it, and a way out.
+ *
+ * So the count here is muted and tabular rather than large: it is the thing somebody
+ * re-checks before paying, not the thing that makes the case. */
+.basket-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .5rem;
+  padding: .45rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.basket-row:last-of-type { border-bottom: 0; }
+.basket-qty {
+  flex: 0 0 1.5rem;
+  color: var(--muted);
+  font-size: .85rem;
+  font-variant-numeric: tabular-nums;
+}
+.basket-name { flex: 1; min-width: 0; color: var(--text); }
+.basket-in {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+}
+/* Below the row's own threshold the count drops under the name rather than off the end
+ * of it, indented past the quantity so it reads as belonging to the card above. A card
+ * name sharing its line with a number it could be mistaken for is the failure being
+ * avoided — the same reason a suggestion's name gets a line of its own on a phone.
+ * Keyed on the row's container, never the viewport: the panel body is 442px at a 900px
+ * window, where the two columns disagree by 258px. */
+@container rows (max-width: 419px) {
+  .basket-in { flex-basis: 100%; padding-left: 2rem; }
+}
+
+/* Copy first, stores after it, and the order is the argument. The copy works for every
+ * reader in every region for as long as this page exists; a store link works for some
+ * readers in one region for as long as a URL contract nobody here owns keeps holding.
+ * So the copy gets `.copy-btn` — the page's existing quiet button — and the stores are
+ * outlined links that read as leaving. */
+.basket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  margin-top: .8rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--line);
+}
+.basket-store {
+  display: inline-block;
+  padding: .3rem .7rem;
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: .82rem;
+  text-decoration: none;
+}
+.basket-store:hover { border-color: var(--accent); color: var(--accent); }
+.basket-store:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* --muted and not --faint: this sits on --panel, where --faint measures 4.3:1 and
+   fails. --faint is only ever safe on --bg. */
+.basket-toolong { color: var(--muted); font-size: .8rem; }
 
 /* What a suggestion's count is made of: "1 × 2-card, 9 × 3-card". The last line of
    the row, where it used to be squeezed onto the card's own line to save the row a
