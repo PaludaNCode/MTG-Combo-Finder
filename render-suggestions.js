@@ -50,7 +50,7 @@
     // takes its own line below that, which costs height and nothing else. Above
     // 750px of column that whole line moves up beside the name.
     const links = el('p', 'card-links');
-    links.appendChild(RenderRows.cardLinks(first));
+    links.appendChild(RenderRows.cardLinks(first, { buy: true }));
     links.appendChild(RenderRows.addButton(first));
     main.appendChild(links);
 
@@ -126,7 +126,12 @@
   // One of your cards, with the combos it holds together. Same two columns as a
   // suggestion above, and for the same reason: both panels are ranked by the number
   // in the gutter, so both are read down that column.
-  function pieceCard(piece) {
+  // A card of the deck and what it holds up. Used by "Combos in your deck" and, with
+  // `buy`, by "Cards you've added" — one builder, because the two panels are the same
+  // claim about a card and a second copy of this shape would drift from it. `opts.buy`
+  // adds the store link and `opts.quantity` prefixes a count above 1; everything else is
+  // identical, which is the point.
+  function pieceCard(piece, opts) {
     const card = el('article', 'combo suggestion');
 
     // What cutting the card actually costs, which is both halves: a card holding
@@ -136,6 +141,11 @@
 
     const main = el('div', 'row-main');
     const head = el('h3', 'row-name');
+    // Silent at 1, which is every card in a singleton format — a "1 ×" on all of them
+    // would be a column of noise saying nothing. It appears only where the decklist
+    // really does hold more than one, and then it is what the copy and the cart carry.
+    const quantity = opts && opts.quantity;
+    if (quantity > 1) head.appendChild(el('span', 'row-qty', quantity + ' × '));
     head.appendChild(el('span', 'card-name', piece.card));
     main.appendChild(head);
 
@@ -144,10 +154,12 @@
     // it is the cut, which is the decision this panel is ranked by. The stylesheet moves
     // the whole line up beside the name where the column has room, exactly as it does
     // for a suggestion, so both panels' rows keep one shape.
+    //
+    // Through cardLinks() rather than built here: this used to be its own copy of the
+    // EDHREC and Scryfall pair, which is how "Combos in your deck" was the one panel a
+    // change to that line never reached.
     const links = el('p', 'card-links');
-    links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(piece.card), 'EDHREC'));
-    links.appendChild(document.createTextNode(' · '));
-    links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + piece.card + '"'), 'Scryfall'));
+    links.appendChild(RenderRows.cardLinks(piece.card, { buy: Boolean(opts && opts.buy) }));
     links.appendChild(RenderRows.removeButton(piece.card));
     main.appendChild(links);
 
@@ -160,6 +172,13 @@
     if (sizes) main.appendChild(sizes);
 
     card.appendChild(main);
+
+    // A card in no combo at all has no disclosure — only the basket can produce one,
+    // since every row of "Combos in your deck" is a card that holds at least one up.
+    // An empty `<details>` labelled "The combos it holds together" is a control that
+    // opens onto nothing, which reads as a page that failed rather than as a card that
+    // bought you nothing yet; the row's own 0 says that already.
+    if (!piece.combos.length) return card;
 
     const details = el('details');
     details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
@@ -264,7 +283,7 @@
   // big number is the size of a decision — is this worth a slot — and the decision is
   // already taken by the time a card is in here. What is left to say is the card, the
   // reason it is still worth keeping, and a way to take it back out.
-  function renderBasket(container, basket, included, before, after) {
+  function renderBasket(container, basket, included, unofficial, before, after) {
     container.textContent = '';
     if (!basket || !basket.length) return;
 
@@ -274,28 +293,42 @@
     const body = panel(container, 'basket', 'Cards you’ve added', note && note.count);
     body.appendChild(el('p', 'panel-note', note.sentence));
 
-    // How many of the deck's combos each added card is in. Counted here off `included`
-    // rather than taken from the suggestion that offered the card: those two are
-    // different questions and differ by a lot once the basket holds more than one card —
-    // a card offered as "+10" can be in 18 combos afterwards, because the others brought
-    // combos it also appears in. This is the number "Combos in your deck" would show,
-    // which is the one that is true now.
-    const inCombos = (name) => {
-      const key = DeckCombos.nameKey(name);
-      return (included || []).filter((c) => DeckCombos.variantCardNames(c)
-        .some((n) => DeckCombos.nameKey(n) === key)).length;
-    };
+    const rows = basketPieces(basket, included, unofficial);
+    const quantities = new Map(basket.map((e) => [DeckCombos.nameKey(e.card), e.quantity]));
+    rows.forEach((piece) => body.appendChild(
+      pieceCard(piece, { buy: true, quantity: quantities.get(DeckCombos.nameKey(piece.card)) })
+    ));
 
-    basket.forEach((entry) => {
-      const row = el('div', 'basket-row');
-      row.appendChild(el('span', 'basket-qty', String(entry.quantity)));
-      row.appendChild(el('span', 'basket-name', entry.card));
-      row.appendChild(el('span', 'basket-in', DeckView.basketRowNote(inCombos(entry.card))));
-      row.appendChild(RenderRows.removeButton(entry.card, 'Remove'));
-      body.appendChild(row);
-    });
+    // The copy and the cart follow the rows rather than the decklist, so what somebody
+    // pastes into a store is in the order they just read. `basketFrom()` still hands
+    // this back in deck order — that is the diff's contract and where its test is — and
+    // the ranking is this panel's business, the same way "Combos in your deck" ranks.
+    body.appendChild(basketActions(rows.map((piece) => ({
+      quantity: quantities.get(DeckCombos.nameKey(piece.card)) || 1,
+      card: piece.card,
+    }))));
+  }
 
-    body.appendChild(basketActions(basket));
+  // The basket's cards as the same `piece` objects "Combos in your deck" is built from,
+  // so both panels count a card the same way and neither can drift.
+  //
+  // **Both halves, official and ours.** comboPieces() merges them and numberGutter()
+  // splits the total back out on the row — a card holding up two of Spellbook's combos
+  // and four of ours reads 6, then "2 official · 4 unofficial" underneath. Counting only
+  // the published half would under-report the newest rows this project writes itself.
+  //
+  // A card in nothing at all is absent from comboPieces entirely, and is kept here with
+  // a zero: it is still in the basket, still costs money, and still wants a way out. It
+  // sorts last, which is also the order somebody would want to reconsider them in.
+  function basketPieces(basket, included, unofficial) {
+    const wanted = new Set(basket.map((e) => DeckCombos.nameKey(e.card)));
+    const pieces = DeckCombos.comboPieces(included || [], unofficial || [])
+      .filter((p) => wanted.has(DeckCombos.nameKey(p.card)));
+    const found = new Set(pieces.map((p) => DeckCombos.nameKey(p.card)));
+    const barren = basket
+      .filter((e) => !found.has(DeckCombos.nameKey(e.card)))
+      .map((e) => ({ card: e.card, count: 0, unofficial: 0, combos: [] }));
+    return pieces.concat(barren);
   }
 
   // Copy first, stores second, and that ordering is the argument rather than a default.

@@ -68,8 +68,14 @@
   // …and after it, with what that deck turned out to hold. Only ever written for the
   // search that set the baseline, so a later add cannot overwrite the "before" figure
   // with an "after" one — which would quietly turn "33 combos → 80" into "80 → 80".
-  function recordBaselineCombos(count) {
-    if (baseline.entries && baseline.combos == null) baseline.combos = count;
+  //
+  // Both halves, kept apart. The basket's caption names Spellbook's combos and ours
+  // separately rather than summing them, so one number here could not answer it — and a
+  // caption that counted only the published half contradicted its own rows.
+  function recordBaselineCombos(official, ours) {
+    if (baseline.entries && baseline.combos == null) {
+      baseline.combos = { official: official, ours: ours || 0 };
+    }
   }
 
   function baselineEntries() { return baseline.entries; }
@@ -131,7 +137,14 @@
       // cards, the whole deck arrived, and their basket starts empty.
       if (saved.baseline && Array.isArray(saved.baseline.entries)) {
         baseline.entries = saved.baseline.entries;
-        baseline.combos = typeof saved.baseline.combos === 'number' ? saved.baseline.combos : null;
+        // A visit from before the count became a pair has a bare number in here, and a
+        // number reaching basketNote() as `before` would read `.official` off it as
+        // undefined and drop the whole delta silently. Normalised on the way in, where
+        // it is one line, rather than guarded at every reader.
+        const kept = saved.baseline.combos;
+        baseline.combos = kept && typeof kept === 'object'
+          ? { official: kept.official, ours: kept.ours || 0 }
+          : (typeof kept === 'number' ? { official: kept, ours: 0 } : null);
       }
     } catch (err) {
       /* nothing kept, or junk in there */

@@ -648,23 +648,38 @@ button:disabled { opacity: .6; cursor: wait; }
  * whose rows those are. All three use this class, so the page has one kind of caption
  * rather than three that drifted apart in the order they were written.
  *
- * It declares almost nothing, and that is the point — the shape is the panel's. This
- * carried `max-width: 62ch` and `font-size: .92rem` for a while, on the argument that an
- * unconstrained line in a 967px panel runs to about 130 characters. True, and beside the
- * map's caption three panels up it made the two it applied to read as smaller, narrower
- * text for no reason a reader could see, which is the worse of the two problems. The map's
- * caption is the oldest and longest of them and sets the shape: full width, body size.
+ * It declares almost nothing, and that is the point — the shape is the panel's.
+ *
+ * **The measure is capped, and the reason the last attempt at that was reverted is the
+ * reason this one is on the class.** `max-width: 62ch` and `font-size: .92rem` were here
+ * for a while, applied to two of the three captions; beside the map's, three panels up,
+ * they read as smaller narrower text for no reason a reader could see, and that drift was
+ * the worse of the two problems. The measure itself was never the objection — it was
+ * called out as real and left alone. On the shared class all four captions narrow by the
+ * same amount, so there is nothing to drift against, and captionDrift() below is what
+ * says so rather than this comment.
+ *
+ * 62ch because the page already declares exactly that twice — `.tier-note` and
+ * `.unclassified p` — and a third measure would be a third opinion about the same
+ * question. What it is worth: the caption ran to 96 characters at 1440px and 102 at
+ * 1920px, against the 62 this project had already chosen for its other prose, and the
+ * map's is 554 characters of it. Only wide screens were affected — a 768px window puts
+ * the same caption at 67ch, under the cap and unchanged.
+ *
+ * `font-size` is deliberately NOT part of this. That half of the old rule is what made
+ * the two capped captions read as a different kind of text; the width alone does not.
  *
  * --muted rather than --faint: --faint is only safe on --bg and these sit on a panel, and a
  * sentence a badge cannot be understood without is not decoration. See
  * DeckView.deckCombosNote() for the one under "Combos in your deck".
  *
- * `npm run verify` measures the three against each other at every viewport — captionDrift()
+ * `npm run verify` measures them against each other at every viewport — captionDrift()
  * — so a rule that reaches one of them and not the others reddens a run rather than only
  * looking wrong. */
 .panel-note {
   color: var(--muted);
   line-height: 1.5;
+  max-width: 62ch;
 }
 
 .combo {
@@ -1147,43 +1162,21 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* ---- "Cards you've added" --------------------------------------------------
  *
- * One line per card, and deliberately not `.combo.suggestion`'s two-column grid. That
- * row's gutter carries a display-size number because the row is a decision — is this
- * worth a slot — and by the time a card is in this panel the decision is taken. What is
- * left is the card, the reason to keep it, and a way out.
+ * The rows are `.combo.suggestion`, built by the same pieceCard() that draws "Combos in
+ * your deck", so they need no layout rules of their own — the gutter, the border-left
+ * down the card's column and every container threshold are already theirs. That is the
+ * whole reason the panel is built from that function rather than from a list: a second
+ * row shape would be a second set of these rules, drifting.
  *
- * So the count here is muted and tabular rather than large: it is the thing somebody
- * re-checks before paying, not the thing that makes the case. */
-.basket-row {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: .5rem;
-  padding: .45rem 0;
-  border-bottom: 1px solid var(--line);
-}
-.basket-row:last-of-type { border-bottom: 0; }
-.basket-qty {
-  flex: 0 0 1.5rem;
+ * What is left here is the quantity and the actions bar.
+ *
+ * The quantity is silent at 1, which is every card in a singleton format, so this only
+ * ever draws where the decklist really holds more than one. Muted and tabular, ahead of
+ * the name, because it qualifies the name rather than competing with it. */
+.row-qty {
   color: var(--muted);
-  font-size: .85rem;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
-}
-.basket-name { flex: 1; min-width: 0; color: var(--text); }
-.basket-in {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: .8rem;
-  font-variant-numeric: tabular-nums;
-}
-/* Below the row's own threshold the count drops under the name rather than off the end
- * of it, indented past the quantity so it reads as belonging to the card above. A card
- * name sharing its line with a number it could be mistaken for is the failure being
- * avoided — the same reason a suggestion's name gets a line of its own on a phone.
- * Keyed on the row's container, never the viewport: the panel body is 442px at a 900px
- * window, where the two columns disagree by 258px. */
-@container rows (max-width: 419px) {
-  .basket-in { flex-basis: 100%; padding-left: 2rem; }
 }
 
 /* Copy first, stores after it, and the order is the argument. The copy works for every

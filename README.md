@@ -564,12 +564,30 @@ costs one stored field. **Arrival is defined by exclusion** — the add and cut 
 things that edit the deck by themselves, so any other search is a search on a deck that arrived, which
 is an answer `app.js` already had for its status line.
 
-**The per-card counts must never be summed, and the panel is built so they cannot be.** On the
-five-card basket the prototypes were drawn from, the cards sit in 18, 11, 10, 10 and 8 of the deck's
-combos — that totals 57 while the deck gained 47, because a combo naming two of them is counted twice.
-So the caption carries one figure, the deck total before and after, and the rows carry descriptions of
-one card each. The same card also reads **+10** as a suggestion and **in 18** once the basket is full:
+**The rows are `pieceCard()`'s, the same shape *Combos in your deck* draws** — a count in the gutter,
+the card, EDHREC and Scryfall and Buy beside it, the size pills, and the combos folded away
+underneath. One builder for both panels, because they are the same claim about a card and a second
+copy of that shape would drift from it. Building the basket this way is also what deleted *Combos in
+your deck*'s private copy of the EDHREC/Scryfall pair, which had made it the one panel a change to
+that line never reached.
+
+**The gutter counts both halves**, Spellbook's and ours, split underneath the way every row on this
+page splits it. The one deck here where that matters is `unofficialAlmost`: the card completing its
+row reads **1 combo · 0 official · 1 unofficial**, and a gutter counting only the published half would
+read 0 → `e2e/deck.spec.js`, since no other fixture has an unofficial combo to lose.
+
+**The per-card counts must never be summed.** On the five-card basket the prototypes were drawn from,
+the cards sit in 18, 11, 10, 10 and 8 of the deck's combos — that totals 57 while the deck gained 47,
+because a combo naming two of them is counted twice. So the deck-level figure lives in the caption and
+nowhere else. The same card also reads **+10** as a suggestion and **in 18** once the basket is full:
 different questions, both true, and the second is the one that is true now.
+
+**The caption carries both halves too, and never adds them.** It said *"this deck still has 0 combos —
+none of them changed that"* directly above a row reading *1 combo · 0 official · 1 unofficial* — a
+caption contradicting its own rows, in the one case the unofficial panel exists to serve. Where there
+are any of ours it names the two separately, as `deckCombosNote()` does one panel up; where there are
+none, which is most decks, it says "combos" and stays short. Summing them would count an unofficial
+row as published data, which is the rule the whole panel rests on.
 
 ```bash
 node tools/try-deck.js                    # the deck the measurement comes from
@@ -719,6 +737,36 @@ The layout test loads the page in a **sized iframe** rather than resizing the wi
 follow the iframe, and full Chrome silently clamps `--window-size` to 500px. It also runs on the **real
 clock** and has the page POST its verdict back — under `--virtual-time-budget`, `caches.open()` and a
 worker's `fetch` both return promises that never settle.
+
+### The panel captions are capped, and what widening the page would not fix
+
+A caption sits under every panel heading, and uncapped it was the **only** thing in its panel
+using the full width: measured at 1920px the caption ran to **1042px** while the widest row ink
+stopped at **676px**, so it read as a different kind of block rather than as an introduction to
+the rows. In characters that is **96 a line at 1440px and 102 at 1920px** — the map's is 554
+characters of it — against the **62ch** this project had already chosen twice for its other prose
+(`.tier-note`, `.unclassified p`). It is capped at 62ch now, on `.panel-note` itself.
+
+**That cap was here once and was reverted, and the reason it was reverted is the reason it is on
+the class.** It had been applied to two of the three captions and not the map's, along with a
+smaller `font-size`; beside an uncapped one those two read as narrower, smaller text for no reason
+a reader could see, and that drift was worse than the measure it fixed. On the shared class all of
+them narrow together, `captionDrift()` is what says so, and the `font-size` half is not part of
+this — that was what made the capped captions read as a different kind of text. Only wide screens
+change: a 768px window puts the same caption at 67ch, under the cap, unaltered.
+`CAPTION_MAX_CH` in `tools/verify-layout.js` fails the run at 75, proved by removing the cap and
+watching it report 95.
+
+Two things that look like wasted desktop width and are not worth changing, both measured before
+being ruled out:
+
+- **The 12rem number gutter leaves 170px empty** beside a count whose ink is 17px. Reclaiming it
+  buys nothing: the card's column already ends **439px short** of its own right edge at 1920px, so
+  the row would gain space it is not using. The gutter is sized for the worst split it can draw —
+  `0 official · 1889 unofficial`, 177px — and `npm run verify` prints that sum every run.
+- **`max-width: 1500px` leaves 420px of a 1920px screen empty**, and 1060px at 2560px. Raising it
+  would widen a results column whose content stops at 676px of the 1074px it already has. The cap
+  is not what is limiting the page; the row is as wide as it wants to be.
 
 ### Light and dark, from one set of tokens
 

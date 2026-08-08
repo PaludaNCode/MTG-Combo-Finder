@@ -374,10 +374,22 @@ loosely.
   and it offers the reader the whole deck they already own**, as rows of card names under a plausible
   heading → `npm run verify`, both proved by breaking them.
 - **The per-card combo counts in that panel cannot be summed** — 18+11+10+10+8 = 57 on a basket whose
-  deck gained **47**, because combos overlap. The caption carries the deck total before and after and
-  nothing else; a panel adding its own rows up would be wrong by ten and look sound
-  → `test/basket.test.js`. The same card also reads `+10` as a suggestion and `in 18` once the basket
-  is full: different questions, and only the second is true now.
+  deck gained **47**, because combos overlap. The deck-level figure is the caption's and nowhere else;
+  a panel adding its own rows up would be wrong by ten and look sound → `test/basket.test.js`. The same
+  card also reads `+10` as a suggestion and `in 18` once the basket is full: different questions, and
+  only the second is true now.
+- **Its rows are `pieceCard()`'s, and both panels' counts are official + ours.** One builder for
+  *Combos in your deck* and the basket — building the basket is what deleted the former's private copy
+  of the EDHREC/Scryfall line, which had made it the one panel a change there never reached. **The
+  caption counts both halves as well**, and said `still 0 combos — none of them changed that` over a
+  row reading `1 combo · 0 official · 1 unofficial` when it did not. **Neither ever sums them**: that
+  would count an unofficial row as published data. Only `unofficialAlmost` exposes any of this —
+  every other fixture has no unofficial combo to lose → `e2e/deck.spec.js`, proved by breaking both.
+- **`cardLinks()`'s Buy link is opt-in, and that is a rule about who the card belongs to.** It shipped
+  default-on for two days and was wrong in two places: beside the Game Changers in the bracket
+  explanation, and on the legality line, where it offered to sell the reader a card **banned in the
+  deck they had just pasted**. Suggestions, their alternatives and the basket pass `{ buy: true }`;
+  everything else is a card already in the deck.
 - **An affiliate id is never part of building a store URL** — `wrap()` is a separate step, so an
   unapproved or lapsed programme costs revenue rather than breaking the button. `enabled: false`
   ships. **A placeholder id reaching a live link is checked for**, in `verify` and in
@@ -415,6 +427,17 @@ loosely.
   carry its own piece** or the line stops at it. **The gutter draws none of it** and spans the rows
   rather than sizing one; `verify` fails if a `border-right` reappears, since a second line at the
   same x is invisible and undoes the whole thing. README § *Where the second number goes*.
+- **A panel caption is capped at 62ch, and the cap has been reverted once.** Uncapped it ran to
+  **96 characters a line at 1440px and 102 at 1920px**, and was the only thing in its panel using
+  the full width — 1042px against row ink stopping at 676px. It went the first time because it
+  reached two of the three captions and not the map's, and that drift is worse than the measure;
+  on the shared class they narrow together. **The `font-size` half of that old rule is what made
+  them read as a different kind of text — do not bring it back** → `CAPTION_MAX_CH` in
+  `verify-layout.js` fails at 75, proved. README § *The panel captions are capped*.
+- **Two desktop gaps that look like bugs and are not**, both with a number: the 12rem gutter leaves
+  **170px** empty beside 17px of ink, and reclaiming it buys nothing because the card's column
+  already stops **439px** short at 1920px; and `max-width: 1500px` leaves 420px of a 1920px screen,
+  which raising would only widen a column whose content ends at 676px of 1074px.
 - **A translucent fill is a contrast bug waiting for a background to move.** The result chips were a
   10%-alpha tint; on `--panel` that measured 4.97:1 in the light theme and on the `--panel-2` a nested
   combo sits on, 4.19:1 — a fail. They are flat `--win-fill` / `--decisive-fill` tokens now, the same

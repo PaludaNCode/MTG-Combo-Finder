@@ -217,6 +217,24 @@ function captionBoxes(win, doc) {
       // from a margin something else may be collapsing.
       gapBelow: next ? Math.round(next.getBoundingClientRect().top - r.bottom) : null,
       lines: Math.round(r.height / parseFloat(cs.lineHeight)),
+      // How long the line actually is in characters, which is the thing the cap on this
+      // class exists to hold down and the thing a pixel width cannot tell you -- 631px is
+      // a comfortable measure at this size and a cramped one two sizes up.
+      //
+      // Probed rather than computed from the font size: a "ch" is the width of a zero in
+      // whatever font the system actually resolved, and this page asks for system-ui and
+      // takes what it gets. A hidden span of 100 zeroes in the caption's own font is the
+      // only honest way to ask.
+      ch: (function () {
+        const probe = doc.createElement('span');
+        probe.textContent = new Array(101).join('0');
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+        probe.style.font = cs.font || (cs.fontSize + ' ' + cs.fontFamily);
+        p.appendChild(probe);
+        const one = probe.getBoundingClientRect().width / 100;
+        probe.remove();
+        return one ? Math.round(r.width / one) : null;
+      }()),
     };
   }).filter(Boolean);
 }
@@ -2105,12 +2123,28 @@ function runOne(vp) {
           // caption quoting the search before the add, or a placeholder affiliate id
           // reaching a live link, none of which move a single pixel.
           const bp = doc.querySelector('#basket .panel');
+          const bpRow = bp ? bp.querySelector('.combo.suggestion') : null;
           afterAdd.basket = bp ? {
             badge: bp.querySelector('.panel-count').textContent,
             note: bp.querySelector('.panel-note').textContent,
-            rows: [].map.call(bp.querySelectorAll('.basket-row .basket-name'), function (n) {
-              return n.textContent;
-            }),
+            // The rows are pieceCard()'s, the same shape "Combos in your deck" draws, so
+            // they are read by that selector rather than by one of their own — which is
+            // the assertion as much as the measurement: a basket that grew a row shape
+            // of its own would report nothing here and say so.
+            rows: [].map.call(bp.querySelectorAll('.combo.suggestion > .row-main .card-name'),
+              function (n) { return n.textContent; }),
+            // The number in the gutter, and the split under it. Both halves count: a
+            // card holding up combos of ours only would read 0 without the second.
+            total: bpRow && bpRow.querySelector('.row-total')
+              ? bpRow.querySelector('.row-total').textContent : '',
+            totalLabel: bpRow && bpRow.querySelector('.row-total-label')
+              ? bpRow.querySelector('.row-total-label').textContent : '',
+            split: bpRow && bpRow.querySelector('.row-split')
+              ? bpRow.querySelector('.row-split').getAttribute('aria-label') : '',
+            links: bpRow
+              ? [].map.call(bpRow.querySelectorAll('.row-main .card-links a'),
+                function (a) { return a.textContent.trim(); })
+              : [],
             stores: [].map.call(bp.querySelectorAll('.basket-store'), function (a) {
               return a.getAttribute('href');
             }),
@@ -2535,11 +2569,31 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 //
 // A pixel of tolerance on the width rather than equality: these resolve against each
 // panel's own metrics and need only agree to the eye.
+// The longest line a caption may run to, in characters.
+//
+// 75 is the top of the range typography has agreed on for a century, and the cap in
+// style.css asks for 62 — so this is not a restatement of that rule, it is the width at
+// which somebody should be made to argue. Uncapped, these ran to **96 characters at 1440px
+// and 102 at 1920px**, and the map's caption is 554 characters of that.
+//
+// It is a check and not a comment because the cap has been removed once already. It went
+// because it reached two of the three captions and not the map's, and the drift that
+// created was worse than the measure it fixed — captionDrift() below is what makes that
+// mistake impossible to repeat quietly, and this is what stops the fix being reverted
+// along with it.
+const CAPTION_MAX_CH = 75;
+
 function captionDrift(notes) {
   const seen = notes || [];
   if (seen.length < 2) return [];
   const first = seen[0];
   const wrong = [];
+  for (const n of seen) {
+    if (n.ch && n.ch > CAPTION_MAX_CH) {
+      wrong.push(`the ${n.panel} caption runs to ${n.ch} characters a line, over ${CAPTION_MAX_CH} `
+        + '(see the max-width on .panel-note, and the note beside CAPTION_MAX_CH)');
+    }
+  }
   for (const n of seen.slice(1)) {
     if (n.left !== first.left) {
       wrong.push(`the ${n.panel} and ${first.panel} captions start at different x `
@@ -2641,7 +2695,7 @@ function captionDrift(notes) {
       } else {
         console.log(`ok   ${v.name} — ${u.rows} row [${u.badge}] ${u.cards.join(' + ')}, `
           + `${u.chips} results, cited to ${u.href.split('/combo/')[1]}, published panel empty, `
-          + `${notes.length} captions at x=${notes[0].left}px × ${notes[0].width}px ${notes[0].size}, `
+          + `${notes.length} captions at x=${notes[0].left}px × ${notes[0].width}px (${notes[0].ch}ch) ${notes[0].size}, `
           + `margins ${notes[0].marginTop}/${notes[0].marginBottom}, `
           + `${notes.map((n) => n.panel + ' ' + n.lines + ' line(s), ' + n.gapBelow + 'px above its rows').join('; ')}`);
       }
@@ -3689,6 +3743,41 @@ function captionDrift(notes) {
           problems.push(`the basket caption should carry ${added.combosBefore}→${added.combosAfter}, `
             + `and reads "${basket.note}"`);
         }
+        // The caption must not contradict the rows under it. The gutter counts both
+        // halves, so a caption counting only the published one said "still 0 combos"
+        // over a row reading "1 combo" — on the one deck here where an added card's
+        // combos are entirely ours. This deck has none, so the check that catches that
+        // case is in e2e/deck.spec.js where a deck with unofficial rows can be driven;
+        // what is checkable here is that the two never disagree about zero.
+        if (/still 0 combos/.test(basket.note) && basket.total !== '0') {
+          problems.push(`the basket caption says "still 0 combos" over a row reading ${basket.total}`);
+        }
+        // The row is "Combos in your deck"'s row: a number in the gutter with the word
+        // under it, and the reading links beside the name. Checked because "looks like
+        // the panel above" is the requirement, and a row that quietly stopped carrying
+        // its gutter would still render a perfectly good card name.
+        if (!/^\d+$/.test(basket.total)) {
+          problems.push(`the basket row's gutter reads "${basket.total}" rather than a count`);
+        }
+        if (!/combos?/i.test(basket.totalLabel)) {
+          problems.push(`the basket row's gutter is unlabelled: "${basket.totalLabel}"`);
+        }
+        // The count is both halves. A split appears only where the card has some of
+        // each, so its absence is not a failure — but where it is drawn its two numbers
+        // have to add up to the total above them, or the row is two claims disagreeing.
+        if (basket.split) {
+          const halves = basket.split.match(/\d+/g) || [];
+          const sum = halves.reduce((n, x) => n + Number(x), 0);
+          if (String(sum) !== basket.total) {
+            problems.push(`the basket row splits ${basket.total} into "${basket.split}", which sums to ${sum}`);
+          }
+        }
+        // EDHREC, Scryfall and Buy — the reading links the panel above carries, plus the
+        // one this panel exists for.
+        if (!['EDHREC', 'Scryfall', 'Buy'].every((l) => basket.links.some((a) => a.startsWith(l)))) {
+          problems.push(`the basket row's links are ${JSON.stringify(basket.links)}, `
+            + 'expected EDHREC, Scryfall and Buy');
+        }
         // Copy first: it is the action that works for every reader in every region, and
         // the one the panel falls back to when a list is too long for a store link.
         if (!basket.copy) problems.push('the basket has no Copy list button');
@@ -4076,7 +4165,10 @@ function captionDrift(notes) {
         + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`
         + (v.afterAdd.basket
           ? `, basket ${v.afterAdd.basket.badge} [${v.afterAdd.basket.rows.join(', ')}]`
-            + ` + ${v.afterAdd.basket.stores.length} store link(s)`
+            + ` gutter ${v.afterAdd.basket.total} ${v.afterAdd.basket.totalLabel.toLowerCase()}`
+            + (v.afterAdd.basket.split ? ` (${v.afterAdd.basket.split})` : '')
+            + `, links ${v.afterAdd.basket.links.join('/')}`
+            + `, ${v.afterAdd.basket.stores.length} store link(s)`
           : ', no basket');
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
         + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
