@@ -695,8 +695,49 @@ already-allocated contrast budget invisibly. `--faint` is the token for text bel
 could never reach — the Playwright suite is what noticed that a map card's press target is its dot
 rather than the middle of its label box.
 
+**A dispatched press is not a press, and the difference is focus.** `element.click()` fires the
+handler and moves nothing, so anything keyed on `:focus`, `:focus-within` or `:hover` is untouched by
+it. That is not a detail: the bracket explanation could not be closed on any real device for the whole
+life of the panel — `:focus-within` held it open while `aria-expanded` went back to `false` — and
+`verify`'s own `closesOnSecondPress` passed the entire time, because the button it pressed never held
+focus. It calls `focus()` first now. **Anything about a control's state belongs on the right, and
+`verify` should press only to reach geometry it cannot otherwise see.**
+
+**And a control that opens something has to be measured open.** Every rect inside a closed
+`<details>` is 0, and every assertion about one passes. `verify` opens each combo disclosure before it
+measures, and the bracket panel is read inside a single press that collects everything only visible
+while it is up.
+
 Both drive the real files against the same deck in `test/fixtures/dataset.js`. One fixture, because a
 case added to one copy and not the other is a claim only half the tests make.
+
+### Proving a check, and looking at the page
+
+Two small tools that exist because the same manual ritual kept being performed by hand.
+
+**`npm run prove`** breaks a check on purpose, confirms it goes red, and puts the file back —
+`tools/prove-check.js`. The rule it serves is the oldest one in `CLAUDE.md`: *a check nobody has seen
+fail is a check nobody has seen work.* Doing it by hand is four steps and the last one matters most,
+because the fix being demonstrated is usually still uncommitted, so a restore that quietly does not
+happen loses the work and leaves a tree that looks finished. The tool holds a copy on disk as well as
+in memory, restores in a `finally`, and verifies byte for byte before reporting. It refuses three
+things that each look like a successful demonstration: a break that changed no bytes, a break command
+that exited non-zero, and a restore that did not verify. What "reverted" means stays a judgement —
+putting one selector back is a different claim from deleting the rule — so the break is a shell
+command you write. It cannot tell you the check was green beforehand; run it yourself first.
+
+**`npm run shot`** photographs a selector at a device profile — `e2e/shot.spec.js`. Both harnesses
+report numbers, and neither answers *does that read right*. It **registers no tests unless `SHOT` is
+set**, rather than using `test.skip()`: a skipped test still moves the count `test:ui` reports and
+reads as something switched off instead of a tool.
+
+```bash
+SHOT_SELECTOR='.deck-summary' SHOT_PROJECT=phone npm run shot   # -> test-results/shot-phone.png
+SHOT_OPEN='.bracket-scale' npm run shot                          # press something first
+```
+
+`SHOT_PROJECT` is an environment variable and not a flag because `npm run shot -- --project=phone`
+silently does nothing: the `npx -c '…'` form swallows anything after it, and both profiles run.
 
 ### The numbers in this file are checked
 

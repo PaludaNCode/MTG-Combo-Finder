@@ -30,6 +30,8 @@ npm run test:ui           # Playwright + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
                           # --graduated out.json = rows Spellbook now publishes
 npm run check:readme      # the README's countable numbers still match the files
+npm run prove -- --files <f> --break "<sh>" --check "<cmd>"   # watch a new check go red, safely
+SHOT_SELECTOR=… SHOT_PROJECT=phone npm run shot                # photograph a selector; SHOT_OPEN presses first
 
 node tools/fetch-combos.js out.json [steps/]      # --no-steps skips the 103,737 files
 node tools/fetch-combos.js out.json --fixture test/fixtures/export.json   # no network
@@ -126,6 +128,8 @@ logic is unit-testable without a DOM.
 | `research-log.js` | — | **not page data.** Swept cards, what each pass found, the text it read |
 | `tools/scryfall-bulk.js` | — | picking a bulk file and streaming cards out of it — no cache logic |
 | `tools/sweep-impact.js` | — | which of a sweep's changes land on a card this repo cites |
+| `tools/prove-check.js` | — | breaking a check on purpose and, above all, putting the file back |
+| `e2e/shot.spec.js` | — | **not a test.** Photographs a selector; registers nothing unless `SHOT` is set |
 
 - `research-log.js` breaks that shape — never loaded by a browser, so plain CommonJS, linted with
   the tools → `test/lint-config.test.js` fails if a script matches no lint block.
@@ -302,7 +306,30 @@ loosely.
   twice, `17+7` narrow and `17 official · 7 unofficial` wide. → `visibleTextIn()`.
 - **`boundingBox()` coordinates do not scroll** → `locator.click({ position })`.
 - **A check nobody has seen fail is a check nobody has seen work.** Break every new one on purpose
-  and watch it go red; every entry above once passed while measuring nothing.
+  and watch it go red; every entry above once passed while measuring nothing. **`npm run prove` is
+  that ritual with the dangerous step taken out** — the fix being demonstrated is usually still
+  uncommitted, so a revert that quietly stays reverted loses it and leaves a tree that looks
+  finished. It restores in a `finally`, verifies byte for byte, and refuses three things that each
+  look like a successful demonstration: a break that changed no bytes, a break command that exited
+  non-zero, and a restore that did not verify. **It cannot tell you the check was green first** —
+  run it yourself, or a check that was already red will read as proved. `/prove-check`.
+- **A control that opens something must be measured OPEN, and pressed with focus.** Both halves have
+  shipped bugs. Every rect inside a closed `<details>` is 0 and every assertion about one passes;
+  and **`element.click()` moves no focus**, so anything keyed on `:focus`, `:focus-within` or
+  `:hover` is untouched by a dispatched press. The bracket explanation could not be closed on any
+  real device for the entire life of the panel — `:focus-within` held it open while `aria-expanded`
+  went back to `false` — and `verify`'s `closesOnSecondPress` passed throughout, pressing a button
+  that never held focus. It calls `focus()` first now. **State belongs in `test:ui`**, which drives
+  real input; `verify` presses only to reach geometry it cannot otherwise see.
+- **A syntax error is caught at the edit now, not at the next thing you run** —
+  `.claude/hooks/syntax-check.sh` runs `node --check` on every edited `.js` and blocks with the
+  parse error. It exists because the `HARNESS` backtick trap two sections up was walked into inside
+  the first edit of the session that documented it, and what came back was a `SyntaxError` from
+  `npm run verify` pointing at a line of ordinary prose. **Its own first version was broken on every
+  path** — an apostrophe in an English comment closed the single-quoted shell string, so it exited 2
+  on *every* edit, including files it is meant to ignore. The node program lives in a quoted heredoc
+  now. Shell in a hook is as untestable as shell in a workflow: run it, on every branch, or it does
+  not work.
 
 ### Data shapes
 
@@ -553,12 +580,25 @@ loosely.
 **Check it yourself, then say what you checked.** A claim with a command behind it beats a
 confident sentence, and most rules in this file exist because something untested read as fine.
 
-**Never confirm a deploy from the Actions API** — `actions_list` returns ~395 KB a call, and
-**scoping it does not save you**: one workflow with `per_page: 3` still came back 136 KB and had to
-be read off disk with `python3 -c` instead. Name the SHA that went out and point at the footer:
-deploys are asynchronous and do not need waiting on. To ask *why a run failed*, go straight to
-`get_job_logs` with the job id — `failed_only` plus a `run_id` works too, and `tail_lines` under a
-few hundred returns the cleanup epilogue rather than the failure.
+**Never confirm a deploy from the Actions API** — `actions_list` with `list_workflow_runs` returns
+~395 KB a call, and **scoping it does not save you**: one workflow with `per_page: 3` still came back
+136 KB and had to be read off disk with `python3 -c` instead. Name the SHA that went out and point at
+the footer: deploys are asynchronous and do not need waiting on. To ask *why a run failed*, go
+straight to `get_job_logs` with the job id — `failed_only` plus a `run_id` works too, and
+`tail_lines` under a few hundred returns the cleanup epilogue rather than the failure.
+
+**It is the *method* that is expensive, not the tool, and no permission rule can tell them apart.**
+`list_workflow_jobs` on the same `actions_list` tool is small and is the one to reach for; a `deny`
+entry in `.claude/settings.json` would take both. `get_workflow_run` is nearly as heavy as
+`list_workflow_runs` and was called once out of habit — it carries the whole repository object twice
+and the head commit's full message. **So this rule has no check behind it and cannot have one**,
+which by this file's own standard means it will be broken again; it already has been, minutes after
+being read.
+
+**Watching a PR's CI: use `list_workflow_jobs`, not `get_check_runs`.** The check-runs endpoint
+serves stale state — it reported a job `in_progress` for six minutes after it had finished, which
+was then reported to the user as a stuck job. `list_workflow_jobs` was fresh on both occasions it
+was asked. A run's own `updated_at` lags its jobs too, which is the older half of this same trap.
 
 **And you cannot read the footer from here.** `paludancode.github.io` is 403 at CONNECT like every
 other blocked host — `raw.githubusercontent.com` is the only one allowed — and the deploy publishes
@@ -590,6 +630,21 @@ pasted into chat, because the commit is the diff. `.claude/output-styles/terse.m
 rule as an output style, on by default via `.claude/settings.json`, and it names the four
 things terseness does **not** reach: code comments, the README, commit bodies, and any
 caveat that changes what somebody would do.
+
+**What is in `.claude/`, and why each of them is a setting rather than a rule.** *Reach for a
+setting before reaching for a rule* — a rule needs remembering, a setting does not:
+
+| | |
+|---|---|
+| `hooks/session-start.sh` | realigns `main` to `origin/main`, points git at `.githooks`. The fossil-`main` rule was documented for weeks and only stopped biting when it became a hook. |
+| `hooks/syntax-check.sh` | `node --check` on every edited `.js`, blocking. The `HARNESS` backtick trap is warned about twice in this file and was still walked into on the first edit of a session. |
+| `commands/prove-check.md` | the break-it-on-purpose ritual, pointed at `npm run prove`. |
+| `commands/deck-deep-dive.md` | the card-research pass, pointed at one deck. |
+| `output-styles/terse.md` | the reporting rule above. |
+
+Both hooks are shell, which is the one thing here nothing can unit-test, so **the decision goes in a
+tool and the hook calls it** wherever there is a decision — and where it cannot, run the script on
+every branch by hand. `syntax-check.sh` failed on all five of its paths on the first attempt.
 
 **A closing report, in order:** what changed and where the reasoning lives (a `README §`, an issue
 number) · what was run and what it said, in real numbers rather than "tests pass" · what was
