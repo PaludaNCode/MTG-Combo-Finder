@@ -2,8 +2,11 @@ const test = require('node:test');
 const assert = require('node:assert');
 const {
   parseDecklist, parseLine, fromMoxfield, fromArchidekt, parseDeckUrl, describeLoadFailure,
-  acceptDeckFile, looksLikeText,
+  acceptDeckFile, looksLikeText, mergeCommandZone,
 } = require('../parser.js');
+// The rule the page passes in, so the test asks the question the page asks rather
+// than a lookalike of it.
+const { nameKey } = require('../combos.js');
 
 test('parseLine: plain name', () => {
   assert.deepStrictEqual(parseLine('Sol Ring'),
@@ -367,6 +370,99 @@ test('zone: duplicates fold together rather than doubling up', () => {
   assert.strictEqual(parsed.main.find((e) => e.card === 'Card 1').quantity, 2);
 });
 
+// ---- one card, one entry ---------------------------------------------------
+//
+// A commander repeated in the deck is what several sites export and what a reader
+// produces by hand, and every consumer concatenates the two lists — so the repeat
+// is a card counted twice: a 100-card deck reporting 101 searched, and a command
+// zone of two entries that are one commander.
+
+test('zone: a commander repeated under the deck heading is one card, not two', () => {
+  const parsed = parseDecklist(
+    'Commander\n1 Kinnan, Bonder Prodigy\n\nDeck\n1 Kinnan, Bonder Prodigy\n1 Sol Ring'
+  );
+  // The command-zone copy is the one kept — it is what carries `commander: true`,
+  // which the legality check reads colour identity off.
+  assert.deepStrictEqual(parsed.commanders.map((e) => e.card), ['Kinnan, Bonder Prodigy']);
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring']);
+});
+
+test('zone: a *CMDR* line is not also a deck card', () => {
+  const parsed = parseDecklist('1 Kinnan, Bonder Prodigy *CMDR*\n1 Kinnan, Bonder Prodigy\n1 Sol Ring');
+  assert.deepStrictEqual(parsed.commanders.map((e) => e.card), ['Kinnan, Bonder Prodigy']);
+  assert.deepStrictEqual(parsed.main.map((e) => e.card), ['Sol Ring']);
+});
+
+// Quantity is not summed across the two boards: a commander in the zone plus a
+// second copy in the 99 is not a legal deck, and "2 Kinnan" would be a claim about
+// what somebody owns — the same caution basketFrom() applies to a count going up.
+test('zone: the deck copy is dropped rather than added to the commander', () => {
+  const parsed = parseDecklist('Commander\n1 Kinnan, Bonder Prodigy\n\nDeck\n2 Kinnan, Bonder Prodigy');
+  assert.deepStrictEqual(parsed.commanders, [{ card: 'Kinnan, Bonder Prodigy', quantity: 1 }]);
+  assert.deepStrictEqual(parsed.main, []);
+});
+
+// The dedupe runs after the deck-sized-zone fold, not before it: that branch empties
+// the command zone, so running first would leave a hundred cards deduped against
+// themselves — which is to say, deleted.
+test('zone: a deck pasted under a Commander heading keeps every card', () => {
+  const parsed = parseDecklist(bigZone(20));
+  assert.strictEqual(parsed.main.length, 20);
+  assert.strictEqual(parsed.commanders.length, 0);
+});
+
+// The whole reason mergeCommandZone takes the rule as an argument: the commander box
+// and the pasted list are typed separately, so this is exactly how the repeat arrives.
+test('zone: the caller decides which spellings are the same card', () => {
+  const zone = [{ card: 'Ashnod’s Altar', quantity: 1 }];
+  const main = [{ card: "Ashnod's Altar", quantity: 1 }, { card: 'Sol Ring', quantity: 1 }];
+  const strict = mergeCommandZone(zone, main, nameKey);
+  assert.deepStrictEqual(strict.main.map((e) => e.card), ['Sol Ring']);
+  // Folded only by case, the curly apostrophe is a different card and both survive —
+  // which is the parser's own weaker rule, stated rather than assumed.
+  const loose = mergeCommandZone(zone, main, (n) => String(n).toLowerCase());
+  assert.strictEqual(loose.main.length, 2);
+});
+
+test('zone: two sources naming the same commander produce one', () => {
+  const merged = mergeCommandZone(
+    [{ card: 'Kinnan, Bonder Prodigy', quantity: 1 }, { card: 'Kinnan, Bonder Prodigy', quantity: 1 }],
+    [{ card: 'Sol Ring', quantity: 1 }],
+    nameKey
+  );
+  assert.deepStrictEqual(merged.commanders, [{ card: 'Kinnan, Bonder Prodigy', quantity: 1 }]);
+});
+
+// Required, not defaulted — removeDeckCard's reason. A default here would be
+// DeckCombos.nameKey written out a second time in the one file that must not
+// depend on combos.js, and the two drifting apart is silent.
+test('zone: merging without a name-matching rule is refused', () => {
+  assert.throws(() => mergeCommandZone([], [], undefined), /name-matching rule/);
+});
+
+// A payload that carries the commander in both boards is the same card twice once
+// the two lists are written into the two boxes.
+test('moxfield: a commander in the mainboard too is not a second card', () => {
+  const deck = fromMoxfield({
+    commanders: { 'Kinnan, Bonder Prodigy': { quantity: 1 } },
+    mainboard: { 'Kinnan, Bonder Prodigy': { quantity: 1 }, 'Sol Ring': { quantity: 1 } },
+  });
+  assert.deepStrictEqual(deck.commanders.map((e) => e.card), ['Kinnan, Bonder Prodigy']);
+  assert.deepStrictEqual(deck.main.map((e) => e.card), ['Sol Ring']);
+});
+
+test('archidekt: a commander listed twice is not a second card', () => {
+  const deck = fromArchidekt({
+    cards: [
+      { quantity: 1, categories: ['Commander'], card: { oracleCard: { name: 'Kinnan, Bonder Prodigy' } } },
+      { quantity: 1, categories: ['Ramp'], card: { oracleCard: { name: 'Kinnan, Bonder Prodigy' } } },
+      { quantity: 1, categories: ['Ramp'], card: { oracleCard: { name: 'Sol Ring' } } },
+    ],
+  });
+  assert.deepStrictEqual(deck.commanders.map((e) => e.card), ['Kinnan, Bonder Prodigy']);
+  assert.deepStrictEqual(deck.main.map((e) => e.card), ['Sol Ring']);
+});
+
 // MTGO marks its sideboard per line, so the main deck never formally ends and the
 // insertion point has to notice the prefix on its own.
 test('add: an MTGO list takes the card above its SB: lines', () => {
@@ -538,8 +634,9 @@ const { removeDeckCard } = require('../parser.js');
 
 // The page's rule, passed in rather than defaulted: the name on the button is
 // Commander Spellbook's spelling and the line is whatever was pasted. This is
-// DeckCombos.nameKey, required so the two can never drift apart unnoticed.
-const { nameKey } = require('../combos.js');
+// DeckCombos.nameKey — imported at the top of the file, beside the command-zone
+// merge that takes it for the same reason — required so the two can never drift
+// apart unnoticed.
 const removed = (text, name) => removeDeckCard(text, name, nameKey);
 
 test('remove: the line goes, quantity and all', () => {

@@ -703,8 +703,20 @@
     const typed = commanderParsed.main.concat(commanderParsed.commanders);
     // Commanders are still read, because they are cards in the deck and combos
     // use them. They no longer decide the deck's colours — the cards do.
-    let commanders = typed.concat(parsed.commanders);
-    let main = parsed.main;
+    //
+    // Merged rather than concatenated, because the same card reaches this line from
+    // two boxes that neither parse can see the other half of: the commander typed in
+    // its own box is very often also the "*CMDR*" line in the pasted export, or just
+    // a plain line among the 99. Left as a concat it is one card in the deck twice —
+    // two command-zone entries against the 12-commander limit, and a 100-card deck
+    // whose status line says it searched 101. DeckCombos.nameKey rather than the
+    // parser's own fold: these two boxes are typed separately, so an accent or a
+    // curly apostrophe is exactly how the repeat arrives.
+    const zone = DeckParser.mergeCommandZone(
+      typed.concat(parsed.commanders), parsed.main, DeckCombos.nameKey
+    );
+    let commanders = zone.commanders;
+    let main = zone.main;
 
     if (!main.length && !commanders.length) {
       setStatus('No card names found in that decklist. Paste one card per line, e.g. "1 Sol Ring".', true);
