@@ -829,7 +829,9 @@ because the fix being demonstrated is usually still uncommitted, so a restore th
 happen loses the work and leaves a tree that looks finished. The tool holds a copy on disk as well as
 in memory, restores in a `finally`, and verifies byte for byte before reporting. It refuses three
 things that each look like a successful demonstration: a break that changed no bytes, a break command
-that exited non-zero, and a restore that did not verify. What "reverted" means stays a judgement —
+that exited non-zero, and a restore that did not verify. **`--expect <regex>` adds the fourth** and is
+worth passing every time — without it the tool reads an exit code and nothing else, so a check
+reddened for an unrelated reason is reported as proved. What "reverted" means stays a judgement —
 putting one selector back is a different claim from deleting the rule — so the break is a shell
 command you write. It cannot tell you the check was green beforehand; run it yourself first.
 

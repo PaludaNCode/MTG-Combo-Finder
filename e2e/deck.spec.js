@@ -193,6 +193,28 @@ test('a second press puts the bracket explanation away', async ({ page }) => {
   await expect(why).toBeHidden();
 });
 
+// The other half of the same rule, and the one that would come back quietly: arriving
+// at the control must not open it. `.bracket-wrap:focus-within` was removed to make the
+// test above pass, and putting it back would restore a page where *leaving* the pips is
+// the only way to shut the panel — which on a phone means never. Keyboard focus rather
+// than a press, because a press is the thing that is allowed to open it.
+//
+// This lives here and not in verify-layout.js. It is state, and it needs focus that a
+// dispatched event does not carry — CLAUDE.md, "A control that opens something must be
+// measured OPEN, and pressed with focus".
+test('arriving at the bracket pips does not open the explanation', async ({ page }) => {
+  await pasteDeck(page);
+  await search(page);
+
+  const pips = page.locator('.bracket-scale');
+  await pips.focus();
+  await expect(pips).toBeFocused();
+  await expect(page.locator('#bracket-why')).toBeHidden();
+  // And it still says what it is, so a screen reader arriving here is told the truth
+  // about a panel that is genuinely shut.
+  await expect(pips).toHaveAttribute('aria-expanded', 'false');
+});
+
 test('a section stays closed across a search', async ({ page }) => {
   await pasteDeck(page);
   await search(page);

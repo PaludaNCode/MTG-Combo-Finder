@@ -47,11 +47,32 @@ test('red on the break and restored is the only pass', () => {
   assert.equal(verdict({ restored: true, changed: true, checkFailed: true }).ok, true);
 });
 
+test('a failure that does not say the expected thing is refused', () => {
+  // The hole the exit code alone leaves: something went red, and this is the only way
+  // to know it was the right something.
+  const v = verdict({ restored: true, brokeCleanly: true, changed: true, checkFailed: true, expected: '170px', matched: false });
+  assert.equal(v.ok, false);
+  assert.match(v.why, /unrelated reason/);
+});
+
+test('a failure that says the expected thing passes, and says so', () => {
+  const v = verdict({ restored: true, brokeCleanly: true, changed: true, checkFailed: true, expected: '170px', matched: true });
+  assert.equal(v.ok, true);
+  assert.match(v.why, /170px/);
+});
+
+test('--expect is optional and its absence never fails a run', () => {
+  // `expected: null, matched: false` is the no-flag case, and it must not read as an
+  // unmatched expectation.
+  assert.equal(verdict({ restored: true, brokeCleanly: true, changed: true, checkFailed: true, expected: null, matched: false }).ok, true);
+});
+
 test('the files list is collected, and a stray argument is refused', () => {
-  const args = parseArgs(['--files', 'a.css', 'b.js', '--break', 'x', '--check', 'y']);
+  const args = parseArgs(['--files', 'a.css', 'b.js', '--break', 'x', '--check', 'y', '--expect', 'z']);
   assert.deepEqual(args.files, ['a.css', 'b.js']);
   assert.equal(args.break, 'x');
   assert.equal(args.check, 'y');
+  assert.equal(args.expect, 'z');
   // Not a warning. A misspelled option that silently dropped the file list would mean
   // nothing gets restored.
   assert.throws(() => parseArgs(['--flies', 'a.css']), /unknown option/);
@@ -113,4 +134,34 @@ test('a check that stays green with the fix reverted is reported as a failure', 
 
 test('a missing file is refused before anything is written', () => {
   assert.equal(main(['--files', 'no/such/file.css', '--break', 'true', '--check', 'true']), 2);
+});
+
+test('--expect is matched against the real output, end to end', () => {
+  withScratch((file) => {
+    const args = (expected) => [
+      '--files', file,
+      '--break', `node -e "require('fs').writeFileSync(process.argv[1],'BROKEN\\n')" ${file}`,
+      // Prints a recognisable line and fails, the way a real check does.
+      '--check', `node -e "console.log('FAIL the list starts 540px in');process.exit(1)"`,
+      '--expect', expected,
+    ];
+    assert.equal(main(args('540px')), 0, 'a matching expectation passes');
+    assert.equal(main(args('170px')), 1, 'a failure about something else is refused');
+    assert.equal(fs.readFileSync(file, 'utf8'), 'FIXED\n');
+  });
+});
+
+test('a --expect that is not a regex is an operator error, not a silent no-match', () => {
+  withScratch((file) => {
+    const code = main([
+      '--files', file,
+      '--break', `node -e "require('fs').writeFileSync(process.argv[1],'BROKEN\\n')" ${file}`,
+      '--check', 'false',
+      '--expect', '(unclosed',
+    ]);
+    // 2, the usage code — swallowing it as "no match" would report a broken flag as a
+    // broken check, which sends the reader to the wrong file.
+    assert.equal(code, 2);
+    assert.equal(fs.readFileSync(file, 'utf8'), 'FIXED\n');
+  });
 });

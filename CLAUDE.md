@@ -30,7 +30,7 @@ npm run test:ui           # Playwright + axe a11y (desktop + phone)
 npm run verify:unofficial # every unofficial row still cites a real published combo
                           # --graduated out.json = rows Spellbook now publishes
 npm run check:readme      # the README's countable numbers still match the files
-npm run prove -- --files <f> --break "<sh>" --check "<cmd>"   # watch a new check go red, safely
+npm run prove -- --files <f> --break "<sh>" --check "<cmd>" [--expect <re>]  # watch a check go red, safely
 SHOT_SELECTOR=… SHOT_PROJECT=phone npm run shot                # photograph a selector; SHOT_OPEN presses first
 
 node tools/fetch-combos.js out.json [steps/]      # --no-steps skips the 103,737 files
@@ -322,15 +322,18 @@ loosely.
   went back to `false` — and `verify`'s `closesOnSecondPress` passed throughout, pressing a button
   that never held focus. It calls `focus()` first now. **State belongs in `test:ui`**, which drives
   real input; `verify` presses only to reach geometry it cannot otherwise see.
-- **A syntax error is caught at the edit now, not at the next thing you run** —
-  `.claude/hooks/syntax-check.sh` runs `node --check` on every edited `.js` and blocks with the
-  parse error. It exists because the `HARNESS` backtick trap two sections up was walked into inside
-  the first edit of the session that documented it, and what came back was a `SyntaxError` from
-  `npm run verify` pointing at a line of ordinary prose. **Its own first version was broken on every
-  path** — an apostrophe in an English comment closed the single-quoted shell string, so it exited 2
-  on *every* edit, including files it is meant to ignore. The node program lives in a quoted heredoc
-  now. Shell in a hook is as untestable as shell in a workflow: run it, on every branch, or it does
-  not work.
+- **A syntax error is caught at the edit, and again before a push** — `.claude/hooks/syntax-check.sh`
+  runs `node --check` on a `.js` written through **Edit or Write** and blocks with the parse error.
+  **That is not every `.js`**: a file written with `cat > x.js <<'EOF'` fires no such hook, and three
+  were written exactly that way in the session that added it, so `.githooks/pre-push` sweeps every
+  tracked `.js` as the backstop. A claim wider than its check is the thing this file keeps getting
+  caught by, so the two sentences are kept apart deliberately. The hook exists because the `HARNESS`
+  backtick trap two sections up was walked into inside the first edit of the session that documented
+  it, and what came back was a `SyntaxError` from `npm run verify` pointing at a line of ordinary
+  prose. **Its own first version was broken on every path** — an apostrophe in an English comment
+  closed the single-quoted shell string, so it exited 2 on *every* edit, including files it is meant
+  to ignore. The node program lives in a quoted heredoc now. Shell in a hook is as untestable as
+  shell in a workflow: run it, on every branch, or it does not work.
 
 ### Data shapes
 
@@ -679,7 +682,7 @@ setting before reaching for a rule* — a rule needs remembering, a setting does
 | | |
 |---|---|
 | `hooks/session-start.sh` | realigns `main` to `origin/main`, points git at `.githooks`. The fossil-`main` rule was documented for weeks and only stopped biting when it became a hook. |
-| `hooks/syntax-check.sh` | `node --check` on every edited `.js`, blocking. The `HARNESS` backtick trap is warned about twice in this file and was still walked into on the first edit of a session. |
+| `hooks/syntax-check.sh` | `node --check` on a `.js` written through Edit or Write, blocking. Not files written through Bash — `.githooks/pre-push` sweeps every tracked `.js` for those. |
 | `commands/prove-check.md` | the break-it-on-purpose ritual, pointed at `npm run prove`. |
 | `commands/deck-deep-dive.md` | the card-research pass, pointed at one deck. |
 | `output-styles/terse.md` | the reporting rule above. |

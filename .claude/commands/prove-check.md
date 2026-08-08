@@ -31,24 +31,29 @@ Prefer a string replacement over a line number — line numbers move under you.
 npm run prove -- \
   --files style.css \
   --break "node -e \"const f='style.css',s=require('fs').readFileSync(f,'utf8');require('fs').writeFileSync(f,s.replace('FIXED','BROKEN'))\"" \
-  --check "npm run verify"
+  --check "npm run verify" \
+  --expect "170px"
 ```
 
 - `--files` is the **restore list**. Every file the break touches goes here, listed rather
   than inferred — guessing what to put back is how uncommitted work gets lost.
+- **`--expect` is what makes this a proof rather than a coin flip.** Give it a number or a
+  phrase from the failure you are expecting. Without it the tool reads an exit code, so a
+  check reddened by an unrelated break passes. Pass it whenever the expected failure has a
+  figure in it, which is nearly always.
 - The tool holds a copy on disk as well as in memory, restores in a `finally`, and verifies
   the restore byte for byte before it reports anything.
 
-It refuses three things that all look like a successful demonstration: a break that changed
+It refuses four things that all look like a successful demonstration: a break that changed
 no bytes (usually a search string that stopped matching), a break command that exited
-non-zero (half applied, so the check measured a state nobody designed), and a restore that
-did not verify.
+non-zero (half applied, so the check measured a state nobody designed), a restore that did
+not verify, and — with `--expect` — a failure that never said the expected thing.
 
 ## 3. Read what went red
 
-The tool prints the failure lines. **Check they are the right ones.** A check going red for
-an unrelated reason is the failure mode this whole ritual exists to catch, and the tool
-cannot tell one FAIL from another — it only knows the exit code.
+The tool prints the failure lines. With `--expect` it has already checked they are the right
+ones; without it, that judgement is yours, and a check going red for an unrelated reason is
+the failure mode this whole ritual exists to catch.
 
 Name the numbers in your report: *"reverted, `verify` reports 170px at 390px and 48px at
 768px, and stays green at 1440"*. The viewport that stayed green is worth saying out loud —
