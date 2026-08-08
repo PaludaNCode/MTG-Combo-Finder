@@ -414,6 +414,13 @@ loosely.
   side by side passes every text assertion, and pin the name's x at both widths. `valueLefts` cannot
   do it — it reads `.summary-n`, and this is the one row whose value is not a number, so it was the
   one row free to drift out of the column silently.
+- **A label centred against a stacked value reads as a heading over it.** `align-items: baseline` on
+  `.summary-row.is-commanders` binds `COMMANDERS` to the **first** name; the box's shared `center`
+  put it in the gap between two. → `verify`, comparing key top against first-name top with 4px of
+  slack: **+1 aligned, +12 on a laptop and +23 on a phone centred**. The version before it asked
+  whether the label's midpoint was inside the first name's *box* — which sounds stricter and passed
+  the layout it was written to reject, because a two-line name makes that box tall enough to contain
+  the centred label. `prove` is the only reason that was caught.
 - **Keeping a wide value inside a fixed key column takes `flex: 1 1 0` AND `min-width: 0`**, and the
   first is the one nobody reaches for: flex line-breaking uses an item's **content** width and only
   shrinks items once they are placed, so a value wider than the space left moves to its own line

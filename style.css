@@ -448,6 +448,16 @@ button:disabled { opacity: .6; cursor: wait; }
   color: var(--text);
   font-weight: 600;
 }
+/* The label belongs to the FIRST commander, not to the middle of the stack. Every other
+   row in this box centres its items, which is right when the value is one line — but
+   against two names it put COMMANDERS in the gap between them, reading as a heading over
+   a group rather than as the label of a row that happens to continue.
+
+   `baseline` and not `flex-start`: the key is .8rem and the names .9rem, so aligning the
+   boxes' tops leaves the label a pixel or two high. Baselines put the two runs of text on
+   the same line, which is what every other row in the box does. Measured either way — key
+   top against first-name top is +1 aligned, +12 on a laptop and +23 on a phone centred. */
+.summary-row.is-commanders { align-items: baseline; }
 
 /* THE NAME KEEPS THE VALUE COLUMN AT EVERY WIDTH, INCLUDING A PHONE, AND THAT IS A
    DECISION WITH A COST — DO NOT "FIX" THE COST BY TAKING THE COLUMN BACK.

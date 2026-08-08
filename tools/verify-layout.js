@@ -1791,11 +1791,24 @@ async function runTwoCommanders(vp) {
             // gave up and wrapped underneath it — both put the name left of the value
             // column, and only one of them is the layout being asked for.
             //
-            // OVERLAP, not equal tops: the row centres its items, so against a two-name
-            // stack the key sits half a line below the first name by design. A tolerance
-            // tight enough to catch the wrap failed the correct layout as well.
+            // OVERLAP, not equal tops: the two runs of text are different sizes, so their
+            // boxes do not start at the same y even when they read as one line.
             beside: Boolean(key && names.length
               && Math.round(rect(names[0]).top) < Math.round(rect(key).bottom)),
+            // And which name it is bound to. The label belongs to the FIRST commander:
+            // centred against a two-name stack it lands in the gap between them, which
+            // reads as a heading over a group rather than as the label of a row.
+            //
+            // Compared at the TOP, with 4px of slack for the two runs being different
+            // sizes — and that number is measured on both layouts rather than picked. Key
+            // top against first-name top: +1 aligned, at either width. Centred it is +12
+            // on a laptop and +23 on a phone, where the first name is two lines tall. An
+            // earlier version asked whether the label's midpoint was inside the first
+            // name's BOX, which sounds stricter and is not: a two-line name makes that box
+            // tall enough to contain the centred label too, so it passed the layout it was
+            // written to reject. It is in this file because prove-check said so.
+            keyBoundToFirst: Boolean(key && names.length
+              && Math.round(rect(key).top) <= Math.round(rect(names[0]).top) + 4),
             values: [...new Set(nums.concat(pip ? [Math.round(rect(pip).left)] : []))],
             // The container query answers to the CONTENT box, so the padding comes off
             // — the same reading the rest of this file compares thresholds against.
@@ -2990,6 +3003,14 @@ function captionDrift(notes) {
       if (!t.lefts.beside) {
         wrong.push('the names are stacked under their label rather than beside it — the value '
           + `block wrapped (name at ${t.lefts.name}px in a ${t.lefts.inner}px box)`);
+      }
+      // The label reads as this row's key, not as a heading over a group of them, and the
+      // difference is one property on one row. Only a two-name deck can tell them apart —
+      // against a single line the centred and the aligned layouts are identical — which is
+      // why it is asserted in this run and not in the main one.
+      if (!t.lefts.keyBoundToFirst) {
+        wrong.push('the label is not on the first commander\'s line — it is centred against '
+          + `the stack (${t.names.length} names)`);
       }
       if (t.overflow > 0) wrong.push(`a commander name hangs ${t.overflow}px out of the box`);
       // The card count is the last release's fix, asserted from a page that declares a

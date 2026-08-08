@@ -1312,9 +1312,21 @@ on the narrowest phones and not on a 412px one. Nothing is hidden and nothing ov
 as tall as the name. This row is therefore the one exemption from the box's no-wrapping rule, and it
 is held to its x instead.
 
+**How long a name has to be before it takes two lines is the width of that column**, measured with a
+probe laid out in the row's own font rather than counted in characters: **178px and about 18
+characters at 390px**, 200px and 21 at a 412px phone, 544px and 63 on a stacked tablet, and 822px at
+1440px — past any real card name, so nothing wraps from a laptop up. Most commanders are longer than
+18 characters, so a phone is where this is visible and the only place it is.
+
 There was a version that gave this row its own key width below 24rem so the name always fitted on
 one line. It bought that with the only ragged row in the box — the name starting at 145px while
 every figure and pip started at 187px — and the column is the point of a row per fact, so it went.
+
+**The label is bound to the first commander, not centred against the stack.** Every other row in the
+box centres its items, which is right when the value is one line; against two names it put
+`COMMANDERS` in the gap between them, reading as a heading over a group rather than as one row's key.
+`align-items: baseline` on that row alone puts the two runs of text on the same line — key top
+against first-name top is +1 aligned, against +12 on a laptop and +23 on a phone centred.
 
 **Two flex traps sit behind that**, both met and both measured. Flex line-breaking uses an item's
 content width and only shrinks items after placing them, so a name wider than the space left moves
