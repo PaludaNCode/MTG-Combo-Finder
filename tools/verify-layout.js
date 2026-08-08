@@ -94,6 +94,10 @@ const VIEWPORTS = [
     deck: 'illegalNoCommander',
     kind: 'legality',
   },
+  // A partner pair, at both widths, because "a line for each" is the request and a
+  // stack is the one thing about this row that a single-commander deck never exercises.
+  { name: 'two commanders', width: 1440, height: 900, kind: 'two-commanders' },
+  { name: 'two commanders (phone)', width: 390, height: 844, kind: 'two-commanders' },
   // Not a layout check: the share link's own round trip. Its encoding is ours,
   // so nothing about it can be taken on trust.
   { name: 'share link', width: 1440, height: 900, kind: 'share' },
@@ -953,6 +957,10 @@ function measure(win, doc) {
         key: visibleText(row.querySelector('.summary-key, .identity-label, .bracket-label')).trim(),
         n: visibleText(row.querySelector('.summary-n')).trim(),
         sub: visibleText(row.querySelector('.summary-sub')).trim(),
+        // The commander row's value is a stack of names rather than a figure, so it has
+        // no .summary-n at all — read separately, or a row naming the wrong card reads
+        // as an empty value and passes.
+        names: [...row.querySelectorAll('.summary-name')].map((n) => visibleText(n).trim()),
         // Rounded to the line: a row that wrapped is twice the height of one that did
         // not, and that is the failure this box replaced a one-line strip to avoid.
         lines: Math.round(row.getBoundingClientRect().height
@@ -1720,6 +1728,108 @@ async function runStamped(vp) {
   }
 }
 
+// A deck with two commanders, which is its own run for the reason the legality one is:
+// declaring a second card in the command zone moves rows into the commander pin's scope,
+// and the main run's pin check is written against one named card. Only the summary box's
+// top row is in scope here.
+//
+// Partners are the whole point — "one line for each" is a claim about geometry, so it is
+// measured rather than read off the DOM: two names, two distinct tops, both inside the
+// box. A stack that silently laid out side by side would pass every text assertion.
+async function runTwoCommanders(vp) {
+  try {
+    const { win, doc } = await load('/index.html', vp.width);
+    win.localStorage.clear();
+    // Palinchron is already in the tuning deck, so declaring it here also runs the deck
+    // through mergeCommandZone() — the card moves to the command zone rather than being
+    // counted in both places, and the card count below has to stay where it was.
+    // Two lines in the commander box. The escape is DOUBLE because this whole function
+    // lives inside the HARNESS template literal: a single one is a real newline by the
+    // time the browser sees the source, which leaves an unterminated string and a page
+    // that never reports — the same trap as writing a regex in here.
+    doc.getElementById('commanders').value = 'Kinnan, Bonder Prodigy\\nPalinchron';
+    doc.getElementById('decklist').value = DECKS.plain;
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await settled(doc, '.combo');
+
+    const box = doc.querySelector('#deck-summary');
+    const row = doc.querySelector('.summary-row.is-commanders');
+    const names = row ? [...row.querySelectorAll('.summary-name')] : [];
+    const rect = (e) => e.getBoundingClientRect();
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      kind: 'two-commanders',
+      two: {
+        key: row ? visibleTextIn(win, row.querySelector('.summary-key')).trim() : '',
+        names: names.map((n) => visibleTextIn(win, n).trim()),
+        // One line each, by the tops of the two names rather than by counting elements.
+        tops: [...new Set(names.map((n) => Math.round(rect(n).top)))].length,
+        // The row is the first thing in the box, which is the whole request: above the
+        // colours, not below them.
+        first: Boolean(box && row && box.firstElementChild
+          && box.firstElementChild.contains(row)),
+        // Nothing hangs out of the box at any width -- a name is the widest value here
+        // and the only one that cannot be shortened.
+        overflow: box && names.length
+          ? Math.round(Math.max(...names.map((n) => rect(n).right)) - rect(box).right)
+          : 0,
+        // Where the name starts, against where every other value starts. The box's own
+        // valueLefts check cannot answer this: it reads .summary-n, and this row has
+        // names instead — so the one row whose value is not a number was the one row
+        // free to drift out of the column with nothing to say so.
+        lefts: (() => {
+          const nums = [...doc.querySelectorAll('.summary-row .summary-n')]
+            .map((n) => Math.round(rect(n).left));
+          const pip = doc.querySelector('.identity-line .pip');
+          const key = row && row.querySelector('.summary-key');
+          return {
+            name: names.length ? Math.round(rect(names[0]).left) : -1,
+            // Whether the label and the names are beside each other rather than stacked.
+            // This is what tells a key that sized to its own text from a value block that
+            // gave up and wrapped underneath it — both put the name left of the value
+            // column, and only one of them is the layout being asked for.
+            //
+            // OVERLAP, not equal tops: the two runs of text are different sizes, so their
+            // boxes do not start at the same y even when they read as one line.
+            beside: Boolean(key && names.length
+              && Math.round(rect(names[0]).top) < Math.round(rect(key).bottom)),
+            // And which name it is bound to. The label belongs to the FIRST commander:
+            // centred against a two-name stack it lands in the gap between them, which
+            // reads as a heading over a group rather than as the label of a row.
+            //
+            // Compared at the TOP, with 4px of slack for the two runs being different
+            // sizes — and that number is measured on both layouts rather than picked. Key
+            // top against first-name top: +1 aligned, at either width. Centred it is +12
+            // on a laptop and +23 on a phone, where the first name is two lines tall. An
+            // earlier version asked whether the label's midpoint was inside the first
+            // name's BOX, which sounds stricter and is not: a two-line name makes that box
+            // tall enough to contain the centred label too, so it passed the layout it was
+            // written to reject. It is in this file because prove-check said so.
+            keyBoundToFirst: Boolean(key && names.length
+              && Math.round(rect(key).top) <= Math.round(rect(names[0]).top) + 4),
+            values: [...new Set(nums.concat(pip ? [Math.round(rect(pip).left)] : []))],
+            // The container query answers to the CONTENT box, so the padding comes off
+            // — the same reading the rest of this file compares thresholds against.
+            inner: Math.round(box.clientWidth
+              - parseFloat(win.getComputedStyle(box).paddingLeft)
+              - parseFloat(win.getComputedStyle(box).paddingRight)),
+          };
+        })(),
+        // The count the last release fixed, asserted from the same page: a commander
+        // named in both boxes is one card.
+        cards: (() => {
+          const cardsRow = [...doc.querySelectorAll('.summary-row.is-cards .summary-n')][0];
+          return cardsRow ? visibleTextIn(win, cardsRow).trim() : '';
+        })(),
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
 // Whether the list is allowed, which needs a deck that is not: the tuning deck is
 // legal, and making it illegal would mean changing its colours, its combos and its
 // ordering — all of which the run above asserts. So this is its own run, like the
@@ -1973,6 +2083,7 @@ function runOne(vp) {
   if (vp.kind === 'stamped') return runStamped(vp);
   if (vp.kind === 'unofficial') return runUnofficial(vp);
   if (vp.kind === 'legality') return runLegality(vp);
+  if (vp.kind === 'two-commanders') return runTwoCommanders(vp);
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:' + vp.height + 'px';
@@ -2857,6 +2968,66 @@ function captionDrift(notes) {
       continue;
     }
 
+    // A partner pair in the command zone. Only the top row of the summary box is in
+    // scope — see runTwoCommanders().
+    if (v.kind === 'two-commanders') {
+      const t = v.two;
+      const wrong = [];
+      // Plural, because the label heads a list. "COMMANDER" over two names is a small
+      // lie, and it is the sort that survives forever because nothing looks broken.
+      if (t.key !== 'Commanders') wrong.push(`the label reads "${t.key}" over ${t.names.length} names`);
+      const want = ['Kinnan, Bonder Prodigy', 'Palinchron'];
+      if (JSON.stringify(t.names) !== JSON.stringify(want)) {
+        wrong.push(`the row names ${JSON.stringify(t.names)}, expected ${JSON.stringify(want)}`);
+      }
+      // A line each. Measured off the tops, so a stack that laid out side by side fails
+      // here rather than passing every text assertion above.
+      if (t.tops !== want.length) {
+        wrong.push(`${want.length} commanders drew on ${t.tops} line(s)`);
+      }
+      if (!t.first) wrong.push('the commanders are not the first row of the summary box');
+      // ONE X, AT EVERY WIDTH. The name shares the column the pips and the figures start
+      // in — 587px against 587px on a laptop, 187px against 187px on a phone — and the
+      // phone half is the one worth having a check for, because the way it goes wrong is
+      // a rule that gives this row its own key width to save it a line. That shipped, and
+      // it read as the only ragged row in the box.
+      //
+      // This runs at both widths deliberately: a version checking only the wide box let
+      // the narrow case drift, and "the name is left of the column" — the assertion that
+      // replaced it — is satisfied by the BROKEN layout too, since a value block that
+      // wraps under its label sits further left still. Proved by breaking it.
+      if (t.lefts.values.length !== 1 || t.lefts.name !== t.lefts.values[0]) {
+        wrong.push(`the name starts at ${t.lefts.name}px and the other values at `
+          + `${JSON.stringify(t.lefts.values)} in a ${t.lefts.inner}px box`);
+      }
+      if (!t.lefts.beside) {
+        wrong.push('the names are stacked under their label rather than beside it — the value '
+          + `block wrapped (name at ${t.lefts.name}px in a ${t.lefts.inner}px box)`);
+      }
+      // The label reads as this row's key, not as a heading over a group of them, and the
+      // difference is one property on one row. Only a two-name deck can tell them apart —
+      // against a single line the centred and the aligned layouts are identical — which is
+      // why it is asserted in this run and not in the main one.
+      if (!t.lefts.keyBoundToFirst) {
+        wrong.push('the label is not on the first commander\'s line — it is centred against '
+          + `the stack (${t.names.length} names)`);
+      }
+      if (t.overflow > 0) wrong.push(`a commander name hangs ${t.overflow}px out of the box`);
+      // The card count is the last release's fix, asserted from a page that declares a
+      // card the decklist also holds: 17, not 18.
+      if (t.cards !== '17') wrong.push(`the deck reads ${t.cards} cards, expected 17`);
+
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        console.log(`ok   ${v.name} @${v.requested}px — "${t.key}" over ${t.names.join(' / ')}, `
+          + `${t.tops} line(s), first row, ${t.cards} cards, name at ${t.lefts.name}px against `
+          + `${JSON.stringify(t.lefts.values)} in ${t.lefts.inner}px inside`);
+      }
+      continue;
+    }
+
     // The share-link run measures a round trip rather than a layout, so it is
     // judged on its own terms.
     if (v.theme) {
@@ -3587,7 +3758,14 @@ function captionDrift(notes) {
     const unread = v.deck === 'misspelled' ? 2 : 0;
     const spells = 7 + (extra - unread);
     const summary = v.deckSummary;
-    const wantRows = [
+    // The commander, above the colours, on the runs whose list said who it is — and
+    // NOTHING at all on the one that did not. The silent branch is the common one: a
+    // pasted decklist usually declares no commander, so a row drawn unconditionally
+    // would be an empty key on most real decks and the author would never see it.
+    const commander = v.deck === 'plain' && !v.commanderBox
+      ? []
+      : [{ key: 'Commander', n: '', sub: '', names: ['Kinnan, Bonder Prodigy'] }];
+    const wantRows = commander.concat([
       { key: 'Colour identity', n: '', sub: '' },
       { key: 'Bracket', n: '', sub: '' },
       { key: 'cards', n: String(17 + extra), sub: '' },
@@ -3596,18 +3774,27 @@ function captionDrift(notes) {
       // the *spells*, because that is where such a card is counted.
       { key: 'spells', n: String(spells), sub: v.deck === 'misspelled' ? '1 MDFC' : '' },
       { key: 'lands', n: '10', sub: '10 basic' },
-    ].concat(unread ? [{ key: 'unread', n: String(unread), sub: 'not in this snapshot' }] : []);
+    ]).concat(unread ? [{ key: 'unread', n: String(unread), sub: 'not in this snapshot' }] : []);
 
     if (!summary.shown) {
       problems.push('no deck summary after a search');
     } else {
-      const got = summary.rows.map((r) => ({ key: r.key, n: r.n, sub: r.sub }));
+      const got = summary.rows.map((r) => (r.names.length
+        ? { key: r.key, n: r.n, sub: r.sub, names: r.names }
+        : { key: r.key, n: r.n, sub: r.sub }));
       if (JSON.stringify(got) !== JSON.stringify(wantRows)) {
         problems.push(`the summary rows read ${JSON.stringify(got)}, expected ${JSON.stringify(wantRows)}`);
       }
       // Nothing wraps. A row twice the height of its neighbours is the failure the box
       // exists to avoid, and it is invisible in a screenshot of a short fixture deck.
-      const wrapped = summary.rows.filter((r) => r.lines > 1).map((r) => r.key);
+      //
+      // Except the commander row, and only that one: its value is a card name, the one
+      // value in this box that cannot be shortened, and it is deliberately kept in the
+      // value column at every width even when that costs it a second line on a narrow
+      // phone — see style.css. Held to its x instead, in the two-commanders runs below.
+      // Asked by "has names" rather than by the label, so it stays right if the label is
+      // ever reworded.
+      const wrapped = summary.rows.filter((r) => r.lines > 1 && !r.names.length).map((r) => r.key);
       if (wrapped.length) {
         problems.push(`${JSON.stringify(wrapped)} wrapped in a ${summary.column}px box`);
       }

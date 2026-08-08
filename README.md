@@ -1291,6 +1291,53 @@ with one typo is 33% unknown and deserves to be told.
 `combos.js` returns facts only; `view-model.js` decides whether any of it is worth saying and how it is
 phrased; `app.js` draws it.
 
+### The commander is the box's top row
+
+Above the colour identity, because the identity is *derived* from the cards and the commander is the
+one thing the reader declared — and the two are read together, the row under it answering "and what
+colours does that make me". `DeckView.commanderRow()` decides whether there is anything to say;
+`search.js` hands over the same list the combo-row pins are drawn from, so the box and the pins
+cannot disagree.
+
+**One line per commander, under a single key.** Partners are two cards, and "A and B" on one line
+reads as one long name at the width this box narrows to. Repeating `COMMANDER` down the left would
+make it the only key in the box that ever appeared twice, so the names stack in the value column and
+the label follows the count — `COMMANDERS` over two.
+
+**The name keeps the value column at every width, and it is the row that pays for that.** 587px
+against 587px on a laptop, 187px against 187px on a phone. A card name is the one value in this box
+that cannot be shortened, so behind the 9.5rem key column a 325px phone box leaves it 163px and a
+long commander takes two lines — *Chatterfang, Squirrel General* does, *Kinnan, Bonder Prodigy* does
+on the narrowest phones and not on a 412px one. Nothing is hidden and nothing overflows; the row is
+as tall as the name. This row is therefore the one exemption from the box's no-wrapping rule, and it
+is held to its x instead.
+
+**How long a name has to be before it takes two lines is the width of that column**, measured with a
+probe laid out in the row's own font rather than counted in characters: **178px and about 18
+characters at 390px**, 200px and 21 at a 412px phone, 544px and 63 on a stacked tablet, and 822px at
+1440px — past any real card name, so nothing wraps from a laptop up. Most commanders are longer than
+18 characters, so a phone is where this is visible and the only place it is.
+
+There was a version that gave this row its own key width below 24rem so the name always fitted on
+one line. It bought that with the only ragged row in the box — the name starting at 145px while
+every figure and pip started at 187px — and the column is the point of a row per fact, so it went.
+
+**The label is bound to the first commander, not centred against the stack.** Every other row in the
+box centres its items, which is right when the value is one line; against two names it put
+`COMMANDERS` in the gap between them, reading as a heading over a group rather than as one row's key.
+`align-items: baseline` on that row alone puts the two runs of text on the same line — key top
+against first-name top is +1 aligned, against +12 on a laptop and +23 on a phone centred.
+
+**Two flex traps sit behind that**, both met and both measured. Flex line-breaking uses an item's
+content width and only shrinks items after placing them, so a name wider than the space left moves
+to its own line *before* shrink is considered: the whole block lands under the label at 25px. A zero
+flex-basis fixes that, and `min-width: 0` is still needed on top of it so the text inside breaks
+rather than pushing the row wider than the box.
+
+**Nothing at all when the list declared none**, which is the common branch: a pasted decklist usually
+does not say. `verify` runs the same deck with the marker and without, and a partner pair at both
+widths — two names, two distinct tops, nothing outside the box.
+
 ### How many cards, and how many of them are lands
 
 The strip above the results — `Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)` — is the

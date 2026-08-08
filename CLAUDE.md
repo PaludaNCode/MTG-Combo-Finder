@@ -401,6 +401,43 @@ loosely.
   command-zone copy wins because it is the one carrying `commander: true`, and quantity is never
   summed across the boards. → `test/parser.test.js` and `verify`'s *desktop (commander in both
   boxes)* run, both proved by breaking them.
+- **The deck summary's top row is the commander, and its value is a stack rather than a number.**
+  One line per commander under one key — `COMMANDERS` when there are two — because repeating the key
+  would make it the only one in the box drawn twice. It comes from `search.js`'s `commanders`, the
+  same list the pins use, so the box cannot disagree with the rows. **The name keeps the value column
+  at every width** — 587px against 587px on a laptop, **187px against 187px on a phone** — and it is
+  **the one row exempt from the box's no-wrapping rule** in exchange: a card name cannot be
+  shortened, so behind the 9.5rem key a 325px phone box leaves it 163px and a long commander takes
+  two lines. A version that gave this row its own key width below 24rem so it always fitted was
+  reverted — it made the only ragged row in the box, the name at 145px against figures at 187px.
+  → `verify`'s *two commanders* runs measure the two names' **tops**, since a stack that laid out
+  side by side passes every text assertion, and pin the name's x at both widths. `valueLefts` cannot
+  do it — it reads `.summary-n`, and this is the one row whose value is not a number, so it was the
+  one row free to drift out of the column silently.
+- **A label centred against a stacked value reads as a heading over it.** `align-items: baseline` on
+  `.summary-row.is-commanders` binds `COMMANDERS` to the **first** name; the box's shared `center`
+  put it in the gap between two. → `verify`, comparing key top against first-name top with 4px of
+  slack: **+1 aligned, +12 on a laptop and +23 on a phone centred**. The version before it asked
+  whether the label's midpoint was inside the first name's *box* — which sounds stricter and passed
+  the layout it was written to reject, because a two-line name makes that box tall enough to contain
+  the centred label. `prove` is the only reason that was caught.
+- **Keeping a wide value inside a fixed key column takes `flex: 1 1 0` AND `min-width: 0`**, and the
+  first is the one nobody reaches for: flex line-breaking uses an item's **content** width and only
+  shrinks items once they are placed, so a value wider than the space left moves to its own line
+  *before* shrink is considered — the commander names landed under their label at 25px against a
+  column at 187px. A zero basis stops it asking for more than it is given; `min-width: 0` then lets
+  the text inside break instead of widening the row.
+- **Two ways to get a geometry assertion wrong, both met writing that one, both found by breaking
+  it.** "The name is left of the value column" is satisfied by the *broken* layout too — a value
+  block that wraps under its label sits further left still — so what is asked is whether the names
+  sit **beside** their label. And equal tops (±2px) failed the **correct** layout: the row centres
+  its items, so against a two-name stack the key sits half a line below the first name by design →
+  compare **overlap**, `name.top < key.bottom`.
+- **`\n` inside a string in `verify-layout.js`'s `HARNESS` is a real newline by the time the browser
+  parses it**, which leaves an unterminated string, no verdict, and a run that hangs until the 120s
+  cap — write `\\n`, exactly as the `\\d` rule two bullets up. It cost most of an hour: `node --check`
+  reads the file *before* the template literal is evaluated, so it parses cleanly, and the error
+  surfaces only as *"The deck page produced no verdict"* with nothing pointing at the line.
 - **The commander pin is marked on the row, and the branch that draws nothing is the common one.**
   `commander: true` is already on the entry, so it needs no field from the snapshot — but a pasted
   list usually declares no commander at all and **neither checked-in fixture deck does**, so the

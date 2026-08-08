@@ -294,6 +294,31 @@
     };
   }
 
+  // The top row of the deck summary: who this deck's commander is. Above the colour
+  // identity because the identity is *derived* from the deck and the commander is the
+  // one thing the reader declared — and because the two are read together, the row
+  // under it being the answer to "and what colours does that make me".
+  //
+  // One line per commander rather than "A and B" on one: partners are two cards, and a
+  // sentence joining them reads as one long name at the width this box narrows to. The
+  // key is drawn once and the names stack under it, so the box keeps one key column —
+  // repeating `COMMANDER` down the left would be the only key in it that ever appeared
+  // twice.
+  //
+  // Pluralised, because the label is a heading over a list and `COMMANDER` over two
+  // names is a small lie the reader has to correct for. Nothing at all when the list
+  // declared none, which is the common branch: a pasted decklist usually does not say,
+  // and an empty row would be the page inventing a question nobody asked.
+  //
+  // Names, not links. Everything else in this box is a fact about the list rather than
+  // an offer to do something with it, and a card already in the deck is not a card to
+  // go and buy — see cardLinks()'s `buy` flag.
+  function commanderRow(commanders) {
+    const names = (commanders || []).filter((n) => typeof n === 'string' && n.trim());
+    if (!names.length) return null;
+    return { key: 'commanders', label: names.length === 1 ? 'Commander' : 'Commanders', names };
+  }
+
   // ---- which bracket the list is in -------------------------------------------
 
   const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
@@ -691,6 +716,7 @@
     rowNumbers,
     bracketProse,
     commanderPin,
+    commanderRow,
     timingSentence,
     fileLoaded,
     fileRefusal,

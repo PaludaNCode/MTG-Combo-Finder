@@ -425,6 +425,58 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .summary-sub { color: var(--muted); font-size: .85em; }
 
+/* The commander row's value is a stack, not a number: one line per commander, so a
+   partner pair reads as two cards rather than as one long name. A column even at one
+   name — the single-name case is the common one, and a rule that only applies to decks
+   with partners is a rule nobody looks at again.
+
+   `flex: 1 1 0` and `min-width: 0` are what keep it IN the value column when the name is
+   wider than the column has left. They are not the same guard and both are needed:
+
+   - flex line breaking uses an item's hypothetical size — its content width — and only
+     shrinks items once they are placed on a line. A name whose natural width is over the
+     space left therefore moves to its own line *before* shrink is ever considered, and
+     the whole block lands under the label at the row's left edge, 25px against a value
+     column at 187px. A zero basis means it never asks for more than it is given.
+   - `min-width: 0` then lets the text inside break, instead of pushing the row wider than
+     the box — invisible until somebody runs a card with a comma and a title in it. */
+.summary-names {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 600;
+}
+/* The label belongs to the FIRST commander, not to the middle of the stack. Every other
+   row in this box centres its items, which is right when the value is one line — but
+   against two names it put COMMANDERS in the gap between them, reading as a heading over
+   a group rather than as the label of a row that happens to continue.
+
+   `baseline` and not `flex-start`: the key is .8rem and the names .9rem, so aligning the
+   boxes' tops leaves the label a pixel or two high. Baselines put the two runs of text on
+   the same line, which is what every other row in the box does. Measured either way — key
+   top against first-name top is +1 aligned, +12 on a laptop and +23 on a phone centred. */
+.summary-row.is-commanders { align-items: baseline; }
+
+/* THE NAME KEEPS THE VALUE COLUMN AT EVERY WIDTH, INCLUDING A PHONE, AND THAT IS A
+   DECISION WITH A COST — DO NOT "FIX" THE COST BY TAKING THE COLUMN BACK.
+
+   This row had a container query that let its key size to its own text below 24rem, so a
+   long name would fit on one line. It bought that with the only ragged row in the box:
+   on a phone the name started at 145px while every figure and pip started at 187px. The
+   column is the whole point of a row per fact, so it wins.
+
+   What that costs, measured: behind the 9.5rem key and its gap a 325px phone box leaves
+   163px, and "Kinnan, Bonder Prodigy" needs more — so on the narrowest phones a long
+   commander takes two lines instead of one. Nothing is hidden and nothing overflows; the
+   row is simply as tall as the name. A 412px phone (363px inside) fits the same name on
+   one line, so this only bites at the bottom of the range.
+
+   Which is why the wrap check in verify-layout.js exempts this row by name and checks its
+   x instead: a card name is the one value in this box that cannot be shortened, so height
+   is the wrong thing to hold it to. */
+
 /* Under 21.5rem of box the fixed key column costs more than it buys, and the number is
    measured rather than rounded to something tidy: a 320px phone leaves a 301px box,
    where 9.5rem of key leaves 130px for the value and both the land aside and the

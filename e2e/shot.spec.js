@@ -28,9 +28,20 @@ if (process.env.SHOT) {
   // A control to press before the picture is taken — the reason this exists at all, since
   // the two things worth photographing in this page's history were both behind one.
   const open = process.env.SHOT_OPEN || '';
+  // The other box. Newline-separated, because that is what the page reads: a partner pair
+  // is two lines, and the summary box's top row cannot be photographed without them.
+  const commanders = process.env.SHOT_COMMANDERS || '';
+  // A width the projects do not have. `desktop` is 1280 and `phone` is a Pixel 7, which
+  // leaves the two sizes most of this page's layout rules are written against — a 1440
+  // laptop and a 1920 desktop — unphotographable without one of these. The project still
+  // decides the device: its scale factor, its touch flag, its user agent.
+  const width = Number(process.env.SHOT_WIDTH) || 0;
+  const height = Number(process.env.SHOT_HEIGHT) || 900;
 
   test('shot', async ({ page }, info) => {
+    if (width) await page.setViewportSize({ width, height });
     await page.goto('/index.html');
+    if (commanders) await page.locator('#commanders').fill(commanders);
     await page.locator('#decklist').fill(deck);
     await page.getByRole('button', { name: 'Find combos' }).click();
     await page.locator('#results').waitFor();
