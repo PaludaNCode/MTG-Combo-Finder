@@ -1184,13 +1184,31 @@ function measure(win, doc) {
   // says WHICH card, which is the whole of what a row-level pin cannot say.
   // (No backticks in here, ever: this is inside HARNESS, a template literal.)
   const commanderPins = (() => {
-      const rows = [...doc.querySelectorAll('#results .combo')];
+      // LEAF ROWS ONLY. A .combo matches a card's row in "Combos in your deck" *and* every
+      // combo row nested inside it, so querySelector for the pin on the outer one finds a
+      // descendant and counts the card as pinned. The first version of this check did
+      // exactly that and reported 14 where the page draws 9 -- and it passed, because both
+      // sides of the assertion were counted the same wrong way. A check that measures the
+      // wrong thing consistently agrees with itself forever.
+      //
+      // (No backticks in here, ever: this is inside HARNESS, a template literal. The pair
+      // that was here parsed as a TAGGED TEMPLATE rather than breaking the file, so
+      // node --check passed it and the syntax hook had nothing to say -- the hook catches
+      // backticks that break parsing, not backticks that happen to form valid nonsense.)
+      const rows = [...doc.querySelectorAll('#results .combo')].filter((r) => !r.querySelector('.combo'));
       const commander = 'Kinnan, Bonder Prodigy';
       const namesIn = (row) => [...row.querySelectorAll('h3 .card-name')].map((n) => n.textContent);
       const withCommander = rows.filter((r) => namesIn(r).some((n) => n === commander));
       const pinned = rows.filter((r) => r.querySelector('.commander-pin'));
+      // Counted off the elements as well as off the rows. If a row ever drew two pins,
+      // or a pin appeared somewhere that is not a combo row at all, the row count alone
+      // would never say so.
+      const elements = doc.querySelectorAll('.commander-pin').length;
+      const box = pinned.length ? pinned[0].querySelector('.commander-pin').getBoundingClientRect() : null;
+      const firstName = pinned.length ? pinned[0].querySelector('h3 .card-name').getBoundingClientRect() : null;
       return {
         pins: pinned.length,
+        elements,
         rowsWithCommander: withCommander.length,
         // Every pinned row really does name the commander. Counted the other way round
         // as well, because "same total" is satisfied by a pin on the wrong row.
@@ -1199,6 +1217,10 @@ function measure(win, doc) {
           ? (pinned[0].querySelector('.commander-pin').getAttribute('title') || '')
           : '',
         label: pinned.length ? pinned[0].querySelector('.commander-pin').textContent : '',
+        // Flush with the card name it is about. The pin sits on its own line under the
+        // names, so an indent would read as belonging to something else.
+        indent: box && firstName ? Math.round(box.left - firstName.left) : null,
+        height: box ? Math.round(box.height) : null,
       };
   })();
 
@@ -3443,8 +3465,18 @@ function captionDrift(notes) {
       if (pin.pins !== pin.rowsWithCommander) {
         problems.push(`${pin.rowsWithCommander} row(s) name the commander and ${pin.pins} carry the pin`);
       }
+      // And one pin per row: counting rows cannot see a row that drew two, or a pin
+      // drawn somewhere that is not a combo row at all.
+      if (pin.elements !== pin.pins) {
+        problems.push(`${pin.pins} row(s) carry a pin and ${pin.elements} pin(s) are on the page`);
+      }
       if (!pin.allPinnedNameIt) problems.push('a commander pin is on a row that does not name the commander');
       if (pin.label !== 'Commander') problems.push(`the commander pin reads "${pin.label}"`);
+      // Flush with the names above it, ±1 for sub-pixel layout. An indented pin reads as
+      // belonging to whatever is to its left rather than to the combo.
+      if (pin.indent === null || Math.abs(pin.indent) > 1) {
+        problems.push(`the commander pin starts ${pin.indent}px in from the card name, not flush with it`);
+      }
       // The row says *that* a commander is in the combo; only the title says *which*,
       // and on a three-card combo that is the difference between a fact and a puzzle.
       if (!/Kinnan, Bonder Prodigy is your commander/.test(pin.named)) {
@@ -4180,7 +4212,8 @@ function captionDrift(notes) {
         + `, ${v.included.badge} combos across ${v.included.rows} cards`
         // Printed on a passing run, both halves of it: the marked deck's count and the
         // unmarked deck's zero are the same claim read from two directions.
-        + `, ${v.commanderPins.pins} commander pin(s)`;
+        + `, ${v.commanderPins.pins} commander pin(s)`
+        + (v.commanderPins.pins ? ` (${v.commanderPins.height}px, +${v.commanderPins.indent}px)` : '');
       // Which branch the rows took, and the width that chose it: the pair is what
       // makes a changed threshold visible in the output rather than only in a failure.
       const legalNote = v.legality.shown
