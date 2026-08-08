@@ -406,10 +406,21 @@ button:disabled { opacity: .6; cursor: wait; }
 .summary-key,
 .deck-summary .identity-label,
 .deck-summary .bracket-label {
-  /* 9.5rem because COLOUR IDENTITY is the longest key and wraps at anything less,
-     which makes one row taller than the other four and the column stop reading as a
-     column. Measured, not guessed: it renders 130px at .8rem/700/.04em. */
-  flex: 0 0 9.5rem;
+  /* Sized to the longest key, which is COLOUR IDENTITY, plus enough slack that a wider
+     fallback font cannot wrap it — a key that wraps makes one row taller than the rest
+     and the column stops reading as a column.
+
+     9rem = 144px against 138px of ink, uppercase, at .8rem/700/.04em. That is the whole
+     budget: COMMANDER is 101px and every other key is 70px or less, so this one label
+     sets the column and there are 6px in hand, not 30.
+
+     MEASURE IT UPPERCASE AND UNWRAPPED. A probe over the DOM text reads "Colour
+     identity" in mixed case and comes back 116px, which suggests a column 20px narrower
+     than this one would fit; and a key that has ALREADY wrapped measures as its widest
+     line, 71px, which reads as roomier still. Both were believed here for a few minutes
+     and 8.5rem shipped as far as `npm run verify`, which failed on nine viewports at
+     once. Widen the element, then measure a Range over it. */
+  flex: 0 0 9rem;
   color: var(--muted);
   font-size: .8rem;
   font-weight: 700;
@@ -437,7 +448,7 @@ button:disabled { opacity: .6; cursor: wait; }
      shrinks items once they are placed on a line. A name whose natural width is over the
      space left therefore moves to its own line *before* shrink is ever considered, and
      the whole block lands under the label at the row's left edge, 25px against a value
-     column at 187px. A zero basis means it never asks for more than it is given.
+     column at 179px. A zero basis means it never asks for more than it is given.
    - `min-width: 0` then lets the text inside break, instead of pushing the row wider than
      the box — invisible until somebody runs a card with a comma and a title in it. */
 .summary-names {
@@ -464,11 +475,11 @@ button:disabled { opacity: .6; cursor: wait; }
 
    This row had a container query that let its key size to its own text below 24rem, so a
    long name would fit on one line. It bought that with the only ragged row in the box:
-   on a phone the name started at 145px while every figure and pip started at 187px. The
+   on a phone the name started at 145px while every figure and pip started at 179px. The
    column is the whole point of a row per fact, so it wins.
 
-   What that costs, measured: behind the 9.5rem key and its gap a 325px phone box leaves
-   163px, and "Kinnan, Bonder Prodigy" needs more — so on the narrowest phones a long
+   What that costs, measured: behind the 9rem key and its gap a 325px phone box leaves
+   186px, and "Kinnan, Bonder Prodigy" needs more — so on the narrowest phones a long
    commander takes two lines instead of one. Nothing is hidden and nothing overflows; the
    row is simply as tall as the name. A 412px phone (363px inside) fits the same name on
    one line, so this only bites at the bottom of the range.
@@ -479,7 +490,7 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* Under 21.5rem of box the fixed key column costs more than it buys, and the number is
    measured rather than rounded to something tidy: a 320px phone leaves a 301px box,
-   where 9.5rem of key leaves 130px for the value and both the land aside and the
+   where 9rem of key leaves 126px for the value and both the land aside and the
    bracket pips wrap — two rows at double the height of the other three. A 390px phone
    leaves 356px and every row fits, so the threshold has to sit between them.
 

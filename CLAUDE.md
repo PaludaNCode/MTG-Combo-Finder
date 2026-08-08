@@ -405,11 +405,11 @@ loosely.
   One line per commander under one key — `COMMANDERS` when there are two — because repeating the key
   would make it the only one in the box drawn twice. It comes from `search.js`'s `commanders`, the
   same list the pins use, so the box cannot disagree with the rows. **The name keeps the value column
-  at every width** — 587px against 587px on a laptop, **187px against 187px on a phone** — and it is
+  at every width** — 579px against 579px on a laptop, **179px against 179px on a phone** — and it is
   **the one row exempt from the box's no-wrapping rule** in exchange: a card name cannot be
-  shortened, so behind the 9.5rem key a 325px phone box leaves it 163px and a long commander takes
+  shortened, so behind the 9rem key a 325px phone box leaves it 186px and a long commander takes
   two lines. A version that gave this row its own key width below 24rem so it always fitted was
-  reverted — it made the only ragged row in the box, the name at 145px against figures at 187px.
+  reverted — it made the only ragged row in the box, the name at 145px against figures at 179px.
   → `verify`'s *two commanders* runs measure the two names' **tops**, since a stack that laid out
   side by side passes every text assertion, and pin the name's x at both widths. `valueLefts` cannot
   do it — it reads `.summary-n`, and this is the one row whose value is not a number, so it was the
@@ -425,7 +425,7 @@ loosely.
   first is the one nobody reaches for: flex line-breaking uses an item's **content** width and only
   shrinks items once they are placed, so a value wider than the space left moves to its own line
   *before* shrink is considered — the commander names landed under their label at 25px against a
-  column at 187px. A zero basis stops it asking for more than it is given; `min-width: 0` then lets
+  column at 179px. A zero basis stops it asking for more than it is given; `min-width: 0` then lets
   the text inside break instead of widening the row.
 - **Two ways to get a geometry assertion wrong, both met writing that one, both found by breaking
   it.** "The name is left of the value column" is satisfied by the *broken* layout too — a value
