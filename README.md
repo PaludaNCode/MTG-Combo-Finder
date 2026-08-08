@@ -1311,6 +1311,13 @@ threshold is the longest real name rather than a tidy number — 162px of key an
 for *Chatterfang, Squirrel General* — and it splits the two common phones (325px and 363px inside)
 from the stacked tablet at 690px.
 
+**So the name is in the value column on a wide box and left of it on a phone** — 587px against 587px
+at a 968px content width, 145px against 187px at 325px. Both halves are checked, and the narrow one
+is checked by the *line* rather than by the x: taking that rule away does not put the name back in
+the column, it wraps the whole value block under the label at 25px, which is further left still and
+satisfies "left of the column" perfectly. The check that caught that is whether the names sit beside
+their label or under it.
+
 **Nothing at all when the list declared none**, which is the common branch: a pasted decklist usually
 does not say. `verify` runs the same deck with the marker and without, and a partner pair at both
 widths — two names, two distinct tops, nothing outside the box.

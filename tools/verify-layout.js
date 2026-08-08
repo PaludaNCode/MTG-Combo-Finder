@@ -1775,6 +1775,35 @@ async function runTwoCommanders(vp) {
         overflow: box && names.length
           ? Math.round(Math.max(...names.map((n) => rect(n).right)) - rect(box).right)
           : 0,
+        // Where the name starts, against where every other value starts. The box's own
+        // valueLefts check cannot answer this: it reads .summary-n, and this row has
+        // names instead — so the one row whose value is not a number was the one row
+        // free to drift out of the column with nothing to say so.
+        lefts: (() => {
+          const nums = [...doc.querySelectorAll('.summary-row .summary-n')]
+            .map((n) => Math.round(rect(n).left));
+          const pip = doc.querySelector('.identity-line .pip');
+          const key = row && row.querySelector('.summary-key');
+          return {
+            name: names.length ? Math.round(rect(names[0]).left) : -1,
+            // Whether the label and the names are beside each other rather than stacked.
+            // This is what tells a key that sized to its own text from a value block that
+            // gave up and wrapped underneath it — both put the name left of the value
+            // column, and only one of them is the layout being asked for.
+            //
+            // OVERLAP, not equal tops: the row centres its items, so against a two-name
+            // stack the key sits half a line below the first name by design. A tolerance
+            // tight enough to catch the wrap failed the correct layout as well.
+            beside: Boolean(key && names.length
+              && Math.round(rect(names[0]).top) < Math.round(rect(key).bottom)),
+            values: [...new Set(nums.concat(pip ? [Math.round(rect(pip).left)] : []))],
+            // The container query answers to the CONTENT box, so the padding comes off
+            // — the same reading the rest of this file compares thresholds against.
+            inner: Math.round(box.clientWidth
+              - parseFloat(win.getComputedStyle(box).paddingLeft)
+              - parseFloat(win.getComputedStyle(box).paddingRight)),
+          };
+        })(),
         // The count the last release fixed, asserted from the same page: a commander
         // named in both boxes is one card.
         cards: (() => {
@@ -2944,6 +2973,31 @@ function captionDrift(notes) {
         wrong.push(`${want.length} commanders drew on ${t.tops} line(s)`);
       }
       if (!t.first) wrong.push('the commanders are not the first row of the summary box');
+      // Both halves of the trade, each asserted where it applies. Above 24rem of content
+      // the name is in the value column with the pips and the figures — one x, or the top
+      // row is the only one in the box that does not line up. Below it the key sizes to
+      // its own text so the name fits on one line, and it is EXPECTED to sit left of that
+      // column: 145px against 187px on a 390px phone.
+      //
+      // The narrow half is checked by the LINE, not by the x, and that is not a
+      // refinement — it is the assertion this had wrong first time round. Taking the
+      // narrow rule away does not put the name back in the column: the value block wraps
+      // underneath the key instead, at 25px, which is further left still and satisfied
+      // "the name is left of the column" perfectly. Proved by breaking it, which is the
+      // only reason the mistake was found.
+      const aligned = t.lefts.values.length === 1 && t.lefts.name === t.lefts.values[0];
+      if (t.lefts.inner >= 384 && !aligned) {
+        wrong.push(`the name starts at ${t.lefts.name}px and the other values at `
+          + `${JSON.stringify(t.lefts.values)} in a ${t.lefts.inner}px box`);
+      }
+      if (t.lefts.inner < 384 && t.lefts.name >= (t.lefts.values[0] || 0)) {
+        wrong.push(`the name starts at ${t.lefts.name}px in a ${t.lefts.inner}px box, `
+          + 'inside the value column the narrow rule exists to leave');
+      }
+      if (!t.lefts.beside) {
+        wrong.push('the names are stacked under their label rather than beside it — the value '
+          + `block wrapped (name at ${t.lefts.name}px in a ${t.lefts.inner}px box)`);
+      }
       if (t.overflow > 0) wrong.push(`a commander name hangs ${t.overflow}px out of the box`);
       // The card count is the last release's fix, asserted from a page that declares a
       // card the decklist also holds: 17, not 18.
@@ -2954,7 +3008,8 @@ function captionDrift(notes) {
         console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
       } else {
         console.log(`ok   ${v.name} @${v.requested}px — "${t.key}" over ${t.names.join(' / ')}, `
-          + `${t.tops} line(s), first row, ${t.cards} cards`);
+          + `${t.tops} line(s), first row, ${t.cards} cards, name at ${t.lefts.name}px against `
+          + `${JSON.stringify(t.lefts.values)} in ${t.lefts.inner}px inside`);
       }
       continue;
     }

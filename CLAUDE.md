@@ -410,7 +410,16 @@ loosely.
   that row alone — the threshold is 162px of key and gap plus ~205px for *Chatterfang, Squirrel
   General*, which splits both phones (325px and 363px inside) from the stacked tablet at 690px.
   → `verify`'s *two commanders* runs measure the two names' **tops**, since a stack that laid out
-  side by side passes every text assertion.
+  side by side passes every text assertion. They also pin where the name starts: **587px against
+  587px** on desktop, **145px against 187px** on a phone. `valueLefts` cannot answer that — it reads
+  `.summary-n`, and this is the one row whose value is not a number, so it was the one row free to
+  drift out of the column silently.
+- **Two ways to get a geometry assertion wrong, both met writing that one, both found by breaking
+  it.** "The name is left of the value column" is satisfied by the *broken* layout too — take the
+  narrow rule away and the value block wraps under the label at 25px, further left still — so the
+  narrow half asks whether the names sit **beside** their label. And equal tops (±2px) failed the
+  **correct** layout: the row centres its items, so against a two-name stack the key sits half a line
+  below the first name by design → compare **overlap**, `name.top < key.bottom`.
 - **`\n` inside a string in `verify-layout.js`'s `HARNESS` is a real newline by the time the browser
   parses it**, which leaves an unterminated string, no verdict, and a run that hangs until the 120s
   cap — write `\\n`, exactly as the `\\d` rule two bullets up. It cost most of an hour: `node --check`
