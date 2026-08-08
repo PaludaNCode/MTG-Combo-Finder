@@ -388,6 +388,19 @@ loosely.
   row reading `1 combo · 0 official · 1 unofficial` when it did not. **Neither ever sums them**: that
   would count an unofficial row as published data. Only `unofficialAlmost` exposes any of this —
   every other fixture has no unofficial combo to lose → `e2e/deck.spec.js`, proved by breaking both.
+- **The command zone and the deck never name the same card**, and the repeat is what ordinary pastes
+  produce: a `Commander` section repeated under `Deck`, or a `*CMDR*` line whose card is *also* typed
+  into the commander box. Neither parse can see the other half, and every consumer concatenates the
+  two lists (`app.js`, `try-deck.js`, `deck-cards.js`, `deck-gaps.js`, `combos-with.js`) → one card
+  counted twice. Nothing renders twice — the panels are built from combos, not from deck entries —
+  so what it shows up as is a **deck summary reading 18 cards on a 17-card deck** and a status line
+  saying the same. `DeckParser.mergeCommandZone()` is the rule, applied by `parseDecklist()`, both
+  site adapters and `app.js`; it **takes the name-matching rule as an argument** for
+  `removeDeckCard()`'s reason, and it runs **after** the deck-sized-zone fold, since that branch
+  empties the zone and running first would dedupe a hundred cards against themselves. The
+  command-zone copy wins because it is the one carrying `commander: true`, and quantity is never
+  summed across the boards. → `test/parser.test.js` and `verify`'s *desktop (commander in both
+  boxes)* run, both proved by breaking them.
 - **The commander pin is marked on the row, and the branch that draws nothing is the common one.**
   `commander: true` is already on the entry, so it needs no field from the snapshot — but a pasted
   list usually declares no commander at all and **neither checked-in fixture deck does**, so the

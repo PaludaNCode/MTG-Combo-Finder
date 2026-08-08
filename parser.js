@@ -302,6 +302,57 @@
     return { text: kept.join('\n'), removed };
   }
 
+  // How this file decides two lines are the same card, everywhere it decides that
+  // without being told: within a board while parsing, and across the two boards
+  // below. Deliberately weaker than DeckCombos.nameKey — see removeDeckCard, which
+  // takes the rule as an argument rather than writing it out a second time here.
+  function plainKey(name) {
+    return String(name || '').trim().toLowerCase();
+  }
+
+  // A card in the command zone is not also a card in the deck, and both halves of
+  // this arrive in ordinary pastes. Several sites export a "Commander" section and
+  // then repeat the card under "Deck"; a Moxfield export marks it "*CMDR*" in the
+  // main board and the reader types the same name into the commander box as well.
+  // Every consumer concatenates the two lists — app.js, try-deck.js, deck-cards.js,
+  // deck-gaps.js, combos-with.js all do — so a repeat is one card counted twice: a
+  // 100-card deck that says it searched 101, and a command zone of two entries that
+  // are one commander.
+  //
+  // The command-zone copy is the one kept, because it is the copy carrying the fact
+  // the rest of the page needs: `commander: true` is what the legality check reads
+  // colour identity off, and what draws the pin on a combo row. The deck copy is
+  // dropped rather than merged — quantity is not summed — since a commander held in
+  // the zone and a second copy in the 99 is not a legal deck, and "2 Chatterfang"
+  // would be a claim about what somebody owns.
+  //
+  // Nothing goes into `skipped`: that list is what the diagnostics panel opens for,
+  // and it means "this line is not in your deck". This card is in the deck — it is
+  // in the command zone — so saying so would be a warning about nothing.
+  //
+  // `key` is required, for removeDeckCard's reason: the page passes
+  // DeckCombos.nameKey because the commander box and the pasted list are typed
+  // separately and fold differently (an accent, a curly apostrophe, a double-faced
+  // card written with one slash), while parseDecklist passes the plainKey it already
+  // used within each board.
+  function mergeCommandZone(commanders, main, key) {
+    if (typeof key !== 'function') {
+      throw new TypeError('mergeCommandZone needs the name-matching rule (DeckCombos.nameKey)');
+    }
+    const zone = [];
+    const inZone = new Set();
+    for (const entry of commanders || []) {
+      const k = key(entry && entry.card);
+      if (!k || inZone.has(k)) continue;
+      inZone.add(k);
+      zone.push(entry);
+    }
+    return {
+      commanders: zone,
+      main: (main || []).filter((entry) => !inZone.has(key(entry && entry.card))),
+    };
+  }
+
   // Parses a full decklist text blob into { commanders, main, skipped } where
   // each card entry is { card, quantity } (the shape Commander Spellbook's
   // find-my-combos endpoint expects) and `skipped` lists what was dropped and
@@ -358,12 +409,12 @@
       // the commander in the main board with "*CMDR*" on it and no heading.
       const board = parsed.commander ? 'commanders' : target;
       const bucket = byName[board];
-      const existing = bucket.get(parsed.name.toLowerCase());
+      const existing = bucket.get(plainKey(parsed.name));
       if (existing) {
         existing.quantity += parsed.quantity;
       } else {
         const entry = { card: parsed.name, quantity: parsed.quantity };
-        bucket.set(parsed.name.toLowerCase(), entry);
+        bucket.set(plainKey(parsed.name), entry);
         (board === 'commanders' ? commanders : main).push(entry);
       }
     }
@@ -375,7 +426,7 @@
     // would filter itself against itself, and the button that adds a card would add a
     // commander. Over DECK_SIZED_RUN cards, the heading loses.
     const intoMain = (name, quantity) => {
-      const key = name.toLowerCase();
+      const key = plainKey(name);
       const existing = byName.main.get(key);
       if (existing) { existing.quantity += quantity; return; }
       const entry = { card: name, quantity };
@@ -387,7 +438,11 @@
       for (const entry of commanders.splice(0)) intoMain(entry.card, entry.quantity);
     }
 
-    return { commanders, main, skipped };
+    // After the fold above, never before it: that branch empties the command zone,
+    // and a deck pasted whole under a "Commander" heading must keep all hundred of
+    // its cards rather than have them deduped against themselves on the way out.
+    const merged = mergeCommandZone(commanders, main, plainKey);
+    return { commanders: merged.commanders, main: merged.main, skipped };
   }
 
   // Extracts { commanders, main } from a Moxfield API deck payload.
@@ -409,10 +464,11 @@
     }
 
     const boards = deck && deck.boards ? deck.boards : deck || {};
-    return {
-      commanders: collect(boards.commanders),
-      main: collect(boards.mainboard),
-    };
+    // Same contract as parseDecklist's: whatever the payload does, a card in the
+    // command zone is not also a card in the deck. These two lists are written
+    // straight into the two boxes, so a repeat here becomes a decklist that has the
+    // commander typed twice — which the next search then counts twice.
+    return mergeCommandZone(collect(boards.commanders), collect(boards.mainboard), plainKey);
   }
 
   // Extracts { commanders, main } from an Archidekt API deck payload
@@ -443,7 +499,8 @@
       target.push({ card: name, quantity: entry.quantity || 1 });
     }
 
-    return { commanders, main };
+    // As in fromMoxfield: the command zone and the deck never name the same card.
+    return mergeCommandZone(commanders, main, plainKey);
   }
 
   // Deck sites we can recognize, and whether a *browser* can read their API.
@@ -563,7 +620,7 @@
   const api = {
     parseDecklist, parseLine, fromMoxfield, fromArchidekt,
     parseDeckUrl, describeLoadFailure, SITES,
-    normalizeHeading, isCategoryHeading, API_LIMITS,
+    normalizeHeading, isCategoryHeading, API_LIMITS, mergeCommandZone,
     mainDeckInsertIndex, addMainDeckCard, removeDeckCard,
     acceptDeckFile, looksLikeText, MAX_DECK_FILE_BYTES, DECK_FILE_EXTENSIONS,
   };

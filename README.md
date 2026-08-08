@@ -517,6 +517,38 @@ filtered against itself. So **a command zone holding more than `DECK_SIZED_RUN =
 command zone**, and its cards fold into the main deck. `test/parser.test.js` pins the threshold from
 both sides rather than deriving it from the constant.
 
+### A commander in both boxes is one card, not two
+
+The command zone and the deck never name the same card. Both halves of that arrive in ordinary
+pastes: several sites export a `Commander` section and then repeat the card under `Deck`, and a
+Moxfield export marks it `*CMDR*` in the main board while the reader types the same name into the
+commander box beside it. Nothing in either parse can see the other half — the two boxes are parsed
+separately, and within one list the two boards keep separate buckets — so the repeat used to survive
+into every consumer, all of which concatenate the command zone onto the deck: `app.js`,
+`try-deck.js`, `deck-cards.js`, `deck-gaps.js`, `combos-with.js`.
+
+**One card counted twice is a wrong number on screen, not a duplicated row.** The panels are built
+from combos rather than from deck entries, so nothing renders twice; what moves is the deck summary
+(`18 cards` on a 17-card deck), the status line under it, and the command zone's own size against
+the endpoint's 12-commander limit.
+
+`DeckParser.mergeCommandZone()` is that rule in one place, applied by `parseDecklist()`, by the two
+site adapters, and by `app.js` where the second box arrives. **The command-zone copy is the one
+kept**, because it is the copy carrying `commander: true` — what the legality check reads colour
+identity off and what draws the pin. The deck copy is dropped rather than merged: quantity is never
+summed across the two boards, since a commander in the zone plus a second copy in the 99 is not a
+legal deck, and `2 Kinnan` would be a claim about what somebody owns. Nothing goes into `skipped`
+either — that list opens the diagnostics panel and means *this line is not in your deck*, and this
+card is in the deck.
+
+**It runs after the deck-sized-zone fold above, never before it.** That branch empties the command
+zone, so running first would dedupe a hundred-card list against itself.
+
+**`mergeCommandZone()` takes the name-matching rule as an argument**, for `removeDeckCard()`'s
+reason: the page passes `DeckCombos.nameKey`, because two separately-typed boxes are exactly how a
+curly apostrophe or an accent arrives, while `parser.js` — the one file that must not depend on
+`combos.js` — passes the weaker fold it already used within a board.
+
 ### Why the same argument does not extend to the sideboard
 
 Tempting, and an earlier version did it. **It does not hold, because this sideboard is not the game's
@@ -703,7 +735,10 @@ panel where the pin silently never appears.
 **The silent branch is the common one.** A pasted list usually declares no commander — neither
 checked-in fixture deck does — and then nothing is drawn, not even an empty element. `verify` runs
 the same deck twice, with the marker and without, and checks both halves: 14 pins against 0. That
-pair is the whole check, because the author is always testing with a marked deck.
+pair is the whole check, because the author is always testing with a marked deck. A third run adds
+the commander box to the unmarked list — the deck declares one and the pins come back, and its card
+count has to stay where the other two runs put it. See [*A commander in both boxes is one card, not
+two*](#a-commander-in-both-boxes-is-one-card-not-two).
 
 **What the pin deliberately does not say is how many cards you still have to draw.** A commander
 starts in the command zone, so Chatterfang + Pitiless Plunderer is a combo that deck assembles by

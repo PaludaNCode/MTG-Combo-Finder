@@ -58,6 +58,14 @@ const VIEWPORTS = [
   // Same deck with the commander marker taken off. Nothing about the output
   // should change: colours are read off the cards either way.
   { name: 'desktop (no marker)', width: 1440, height: 900, deck: 'plain' },
+  // And that same unmarked list with the commander *also* typed into its own box —
+  // the shape a reader produces by hand, and the one two parses cannot see between
+  // them. Every consumer concatenates the command zone onto the deck, so left as a
+  // repeat this is one card counted twice: the deck summary reads 18 cards where the
+  // run above it reads 17, and the status line says it searched 18. Nothing else
+  // about the page may differ from the marked runs — the commander is declared here,
+  // so the pins are drawn.
+  { name: 'desktop (commander in both boxes)', width: 1440, height: 900, deck: 'plain', commanderBox: 'Kinnan, Bonder Prodigy' },
   // And once with Worker taken away from the page, which is the fallback path in
   // app.js — searching in the window instead of beside it. Same output, or the
   // fallback is a branch nobody has ever run.
@@ -1977,7 +1985,9 @@ function runOne(vp) {
         // app.js reads Worker lazily, at the first search, so taking it away
         // after load is enough to send it down the in-page path.
         if (vp.noWorker) delete win.Worker;
-        doc.getElementById('commanders').value = '';
+        // Empty on every run but one: the commander box is a second place the same
+        // card can arrive from, and the parse of each box cannot see the other.
+        doc.getElementById('commanders').value = vp.commanderBox || '';
         doc.getElementById('decklist').value = DECKS[vp.deck];
 
         // What is on screen the first time the browser can paint after a search.
@@ -2205,7 +2215,12 @@ function runOne(vp) {
           resultsHidden: doc.getElementById('results').hidden,
         };
 
-        resolve(Object.assign({ ok: true, name: vp.name, requested: vp.width, deck: vp.deck }, before,
+        resolve(Object.assign({
+          ok: true, name: vp.name, requested: vp.width, deck: vp.deck,
+          // Which run this is has to come back with the numbers: "the deck declared a
+          // commander" is a fact about the boxes, not about DECKS[vp.deck].
+          commanderBox: vp.commanderBox || '',
+        }, before,
           { afterCollapse, expandedChips, resultsHeight, afterAdd, storedDeck, afterClear, firstFrame }));
       } catch (err) {
         resolve({ ok: false, name: vp.name, error: String((err && err.stack) || err) });
@@ -3454,7 +3469,9 @@ function captionDrift(notes) {
     // is the common one and the one an author never sees, because the author is always
     // testing with a marked deck.
     const pin = v.commanderPins;
-    if (v.deck === 'plain') {
+    // Not `deck === 'plain'`: the same unmarked list is also run with the commander
+    // typed into its own box, and that deck has declared one.
+    if (v.deck === 'plain' && !v.commanderBox) {
       if (pin.pins) {
         problems.push(`${pin.pins} combo row(s) claim a commander on a deck that declared none`);
       }
