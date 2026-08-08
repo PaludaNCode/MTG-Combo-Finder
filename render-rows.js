@@ -16,6 +16,10 @@
 
   const Dom = global.PageDom || (typeof require === 'function' ? require('./page-dom.js') : null);
   const { $, el, svg, link, setStatus } = Dom;
+  // Optional on purpose. Every other module here is a hard dependency, but a page that
+  // did not load cart-links.js should lose the Buy links and keep every row — a missing
+  // shop is not a reason for a suggestion list to fail to render.
+  const Cart = global.CartLinks || (typeof require === 'function' ? require('./cart-links.js') : null);
 
   // Where a combo's own page lives. Here rather than in app.js because both renderers
   // link to it and neither should carry its own copy of the URL.
@@ -138,7 +142,38 @@
     links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(name), 'EDHREC'));
     links.appendChild(document.createTextNode(' · '));
     links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + name + '"'), 'Scryfall'));
+    const buy = buyLink(name);
+    if (buy) {
+      links.appendChild(document.createTextNode(' · '));
+      links.appendChild(buy);
+    }
     return links;
+  }
+
+  // Where to buy this one card — a basket of one, built by the same cart-links.js the
+  // "Cards you've added" panel uses, so the two can never disagree about escaping,
+  // quantity or which affiliate id is on them.
+  //
+  // A link and not a button, which is the one thing this has to get right. The two
+  // controls either side of it are an anchor that reads about the card and a button that
+  // *changes the deck*, and a third control that looks like the button but leaves the
+  // site is the worst of the three. It takes the anchor's colour, and the store's name
+  // is in the label: "Buy" alone does not say a tab is about to open somewhere else.
+  //
+  // Returns null when no store can serve the card, so the separator above is not drawn
+  // either — a trailing "·" with nothing after it is what a bare `if` here would leave.
+  function buyLink(name) {
+    if (!Cart) return null;
+    const offer = (Cart.offers([{ quantity: 1, card: name }], 'row-buy') || [])
+      .find((o) => o.href);
+    if (!offer) return null;
+    const a = link(offer.href, 'Buy');
+    a.className = 'buy-link';
+    a.appendChild(el('span', 'buy-store', ' ' + offer.label));
+    const spoken = 'Buy ' + name + ' on ' + offer.label + ' — opens in a new tab';
+    a.title = spoken;
+    a.setAttribute('aria-label', spoken);
+    return a;
   }
 
 
@@ -416,7 +451,7 @@
     return name;
   }
 
-  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, addCardToDeck, addButton, removeCardFromDeck, removeButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, takeAddedNote, takeRemovedNote };
+  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, buyLink, addCardToDeck, addButton, removeCardFromDeck, removeButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, takeAddedNote, takeRemovedNote };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

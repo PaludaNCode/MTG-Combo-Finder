@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype A — the basket as a panel</title>
+  <!-- Shape A of three. A fourth panel in the results flow, "Cards you've added",
+       listing the cards in the box that were not in the deck you pasted.
+
+       The three shapes and what separates them are in prototypes/shopping.md.
+       In one line each: A is a panel in the flow (this file), B is a tray docked to
+       the bottom of the viewport (shopping-basket-tray.html), C is no basket at all
+       and a Buy chip on every row (shopping-buy-in-row.html).
+
+       Everything here is drawn against the real stylesheet, so the panel chrome, the
+       tokens and both themes are the shipped ones. The panel head, `.panel-note` and
+       the row background are shipped classes used unchanged — which is most of the
+       argument for this shape: it costs no new chrome.
+
+       Every number on this page was measured on 8 Aug 2026 against the tuning deck
+       (test/fixtures/deck.txt) with five real suggestions added to it:
+
+           node tools/try-deck.js                      # 98 cards, 33 combos
+           node tools/try-deck.js <deck + 5 cards>      # 103 cards, 80 combos
+
+       The per-card figures (18, 11, 10, 10, 8) are how many of the deck's 80 combos
+       name that card, counted the same way "Combos in your deck" counts. They do NOT
+       sum to 47 — they sum to 57 — and shopping.md § "The number the basket must not
+       show" is why that matters more than it looks.
+
+       Classes are `proto-` prefixed. `.basket` and `.cart` are not taken in style.css
+       today, but `.row`, `.count` and `.name` all are, and one of them already cost an
+       afternoon. -->
+  <script src="../theme.js"></script>
+  <script src="shopping-cart-links.js" defer></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* ---- prototype chrome, same helpers the deck-counts prototypes use ---- */
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+    .proto-narrow { max-width: 24rem; border: 1px dashed var(--line); padding: .8rem; border-radius: var(--radius); }
+
+    /* ---- the basket row --------------------------------------------------
+     *
+     * Deliberately NOT `.combo.suggestion`'s two-column grid. That row's gutter
+     * carries the size of a decision — "+10, is this worth a slot" — and the
+     * decision is already taken by the time a card is in here. What is left to
+     * say is the card's name and a way to take it back out, so the row is one
+     * line and the panel stays short enough to read as a shopping list.
+     *
+     * The count still appears, quietly, on the right: it is the reason the card
+     * is in the basket and the thing somebody re-checks before paying. Muted and
+     * tabular rather than the display-size figure the suggestion gutter uses. */
+    .proto-basket-row {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: .5rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .proto-basket-row:last-of-type { border-bottom: 0; }
+    .proto-qty {
+      flex: 0 0 1.6rem;
+      color: var(--muted);
+      font-size: .85rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .proto-basket-name { flex: 1; min-width: 0; color: var(--text); }
+    .proto-in {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: .8rem;
+      font-variant-numeric: tabular-nums;
+    }
+    /* The price slot. Empty on purpose — see the note in the body and
+     * shopping.md § "Prices are a separate decision with a data cost". */
+    .proto-price {
+      flex: 0 0 4rem;
+      text-align: right;
+      color: var(--faint);
+      font-size: .8rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .proto-drop {
+      flex: 0 0 auto;
+      padding: .15rem .45rem;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: .75rem;
+      cursor: pointer;
+    }
+    .proto-drop:hover { color: var(--text); border-color: var(--line-strong); }
+    .proto-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---- the action row --------------------------------------------------
+     *
+     * Copy list is styled as the primary and the stores as secondaries, which is
+     * the opposite of what a monetised panel would do and is the deliberate
+     * choice: the copy works for every reader, in every region, forever, and the
+     * store links work for some readers, in one region, for as long as a URL
+     * contract nobody here has verified keeps holding. */
+    .proto-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+      margin-top: .9rem;
+      padding-top: .8rem;
+      border-top: 1px solid var(--line);
+    }
+    .proto-primary {
+      padding: .4rem .8rem;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--brass-ink, #12141a);
+      font-size: .85rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .proto-primary:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .proto-store {
+      display: inline-block;
+      padding: .4rem .7rem;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .85rem;
+      text-decoration: none;
+    }
+    .proto-store:hover { border-color: var(--accent); color: var(--accent); }
+    .proto-store .proto-region { color: var(--muted); font-size: .78em; }
+    /* A store with no URL contract is not drawn as a link that goes nowhere. */
+    .proto-store.is-listonly { border-style: dashed; color: var(--muted); cursor: default; }
+    .proto-built {
+      margin: .8rem 0 0;
+      padding: .5rem .6rem;
+      background: var(--panel-2);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: .72rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      word-break: break-all;
+    }
+    .proto-unverified {
+      display: inline-block;
+      margin-left: .3rem;
+      padding: 0 .35rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .7rem;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1>A — the basket as a panel</h1>
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+        <span class="icon icon-moon" aria-hidden="true"></span>
+        <span class="icon icon-sun" aria-hidden="true"></span>
+        <span class="theme-label"></span>
+      </button>
+    </div>
+    <p class="tagline">The tuning deck, five suggestions taken: 98 cards and 33 combos became 103 cards and 80.</p>
+  </header>
+
+  <main class="proto-frame">
+
+    <p class="proto-note"><b>The panel, as it would sit under “Cards worth adding”.</b> Shipped chrome
+      throughout — <code>.panel</code>, <code>.panel-head</code>, <code>.panel-count</code> and
+      <code>.panel-note</code> are used unchanged, so this shape adds a panel and no new furniture.
+      It collapses and remembers, like the other three.</p>
+
+    <section class="panel">
+      <button class="panel-head" type="button" aria-expanded="true" aria-controls="panel-basket" title="Collapse">
+        <span class="chev">▸</span>
+        <h2 class="panel-title">Cards you’ve added</h2>
+        <span class="panel-count">5</span>
+      </button>
+      <div class="panel-body" id="panel-basket">
+        <!-- The note carries the only number worth putting at the top: what the whole
+             basket did to the deck. Not a sum of the rows — see the note further down,
+             and shopping.md. The wording follows DeckView's house style, where a count
+             beside a heading has to say what it counts. -->
+        <p class="panel-note">Not in the deck you pasted. With all five in, this deck goes from
+          <b>33 combos to 80</b>.</p>
+
+        <div class="proto-basket-row">
+          <span class="proto-qty">1</span>
+          <span class="proto-basket-name">Herd Baloth</span>
+          <span class="proto-in">in 18 combos</span>
+          <span class="proto-price">—</span>
+          <button class="proto-drop" type="button">Remove</button>
+        </div>
+        <div class="proto-basket-row">
+          <span class="proto-qty">1</span>
+          <span class="proto-basket-name">Ashnod’s Altar</span>
+          <span class="proto-in">in 11 combos</span>
+          <span class="proto-price">—</span>
+          <button class="proto-drop" type="button">Remove</button>
+        </div>
+        <div class="proto-basket-row">
+          <span class="proto-qty">1</span>
+          <span class="proto-basket-name">Cleric Class</span>
+          <span class="proto-in">in 10 combos</span>
+          <span class="proto-price">—</span>
+          <button class="proto-drop" type="button">Remove</button>
+        </div>
+        <div class="proto-basket-row">
+          <span class="proto-qty">1</span>
+          <span class="proto-basket-name">Light of Promise</span>
+          <span class="proto-in">in 10 combos</span>
+          <span class="proto-price">—</span>
+          <button class="proto-drop" type="button">Remove</button>
+        </div>
+        <div class="proto-basket-row">
+          <span class="proto-qty">1</span>
+          <span class="proto-basket-name">Pitiless Plunderer</span>
+          <span class="proto-in">in 8 combos</span>
+          <span class="proto-price">—</span>
+          <button class="proto-drop" type="button">Remove</button>
+        </div>
+
+        <div class="proto-actions" data-cart-actions="basket-panel">
+          <button class="proto-primary" type="button" data-cart-copy>Copy list</button>
+          <!-- Store buttons are appended by shopping-proto.js from the offers
+               shopping-cart-links.js builds, so this page cannot disagree with the other
+               two prototypes about what a Buy button does. -->
+        </div>
+
+        <p class="proto-built" data-cart-built></p>
+      </div>
+    </section>
+
+    <p class="proto-note"><b>The price column is empty, and that is the honest state.</b>
+      <code>combo-steps.js</code>’s <code>pick()</code> strips <code>prices.tcgplayer</code> out of every
+      published record and <code>test/combo-steps.test.js:268</code> asserts the word never appears — so
+      nothing the browser can reach knows what a card costs. The slot is drawn because it is where the
+      figure would go and because its width is the layout question; filling it is a data decision with
+      its own cost, written up in shopping.md.</p>
+
+    <p class="proto-note"><b>Empty is not a panel.</b> With nothing added there is no diff, so this
+      section is absent entirely rather than rendered with a “no cards yet” placeholder — the same way
+      the map and the unofficial panel are absent when they have nothing to say. A reader who has not
+      taken a suggestion should not be shown a shop.</p>
+
+    <p class="proto-note"><b>At 390px</b>, where the row has to give something up. The count and the
+      price go under the name rather than off the end of it; the card name never shares a line with a
+      number it could be confused with.</p>
+
+    <div class="proto-narrow">
+      <section class="panel">
+        <button class="panel-head" type="button" aria-expanded="true" title="Collapse">
+          <span class="chev">▸</span>
+          <h2 class="panel-title">Cards you’ve added</h2>
+          <span class="panel-count">5</span>
+        </button>
+        <div class="panel-body">
+          <p class="panel-note">Not in the deck you pasted. 33 combos → 80.</p>
+          <div class="proto-basket-row" style="flex-wrap: wrap;">
+            <span class="proto-qty">1</span>
+            <span class="proto-basket-name">Herd Baloth</span>
+            <button class="proto-drop" type="button">Remove</button>
+            <span class="proto-in" style="flex-basis: 100%; padding-left: 2.2rem;">in 18 combos</span>
+          </div>
+          <div class="proto-basket-row" style="flex-wrap: wrap;">
+            <span class="proto-qty">1</span>
+            <span class="proto-basket-name">Ashnod’s Altar</span>
+            <button class="proto-drop" type="button">Remove</button>
+            <span class="proto-in" style="flex-basis: 100%; padding-left: 2.2rem;">in 11 combos</span>
+          </div>
+          <div class="proto-actions">
+            <button class="proto-primary" type="button">Copy list</button>
+            <span class="proto-store">TCGplayer</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script src="shopping-proto.js" defer></script>
+</body>
+</html>

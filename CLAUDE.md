@@ -121,7 +121,8 @@ logic is unit-testable without a DOM.
 | `render-combos.js` | `RenderCombos` | a combo as a row + its steps disclosure |
 | `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck* (a row per card), suggestions, unofficial |
 | `render-map.js` | `RenderMap` | the map's drawing half |
-| `deck-io.js` | `DeckIO` | the decklist, the share link, the dropped file |
+| `deck-io.js` | `DeckIO` | the decklist, the share link, the dropped file, **the deck as it arrived** |
+| `cart-links.js` | `CartLinks` | where to buy a card — the store URL, the affiliate wrapper, the subid |
 | `app.js` | — | wiring, the search, bracket and legality lines |
 | `sw.js` | `ServiceWorkerShell` | network-first HTML, cache-first for stamped URLs only |
 | `tiers-page.js` | — | the DOM of `tiers.html` |
@@ -364,6 +365,24 @@ loosely.
   not walked on every search*.
 - **Load order is load-bearing** — `combos.js` reads the tier inventory at load time, `search.js`
   reads `combos.js`. A new script goes into `index.html` **and** `search-worker.js`.
+  `cart-links.js` is the exception and deliberately so: nothing about a search needs a shop, so it is
+  in the page only.
+- **"Cards you've added" is a diff, and every way the diff can be wrong looks right.** It is the deck
+  now minus the deck as it *arrived* — `basketFrom()`, with the baseline in `DeckIO` — and arrival is
+  defined by exclusion: the add and cut buttons are the only things that edit the deck by themselves,
+  so any other search sets the baseline. **Drop that guard and the basket is empty; drop the baseline
+  and it offers the reader the whole deck they already own**, as rows of card names under a plausible
+  heading → `npm run verify`, both proved by breaking them.
+- **The per-card combo counts in that panel cannot be summed** — 18+11+10+10+8 = 57 on a basket whose
+  deck gained **47**, because combos overlap. The caption carries the deck total before and after and
+  nothing else; a panel adding its own rows up would be wrong by ten and look sound
+  → `test/basket.test.js`. The same card also reads `+10` as a suggestion and `in 18` once the basket
+  is full: different questions, and only the second is true now.
+- **An affiliate id is never part of building a store URL** — `wrap()` is a separate step, so an
+  unapproved or lapsed programme costs revenue rather than breaking the button. `enabled: false`
+  ships. **A placeholder id reaching a live link is checked for**, in `verify` and in
+  `test/cart-links.test.js`, because an unwrapped link works perfectly while carrying one.
+  README § *Buying the cards the page recommends*.
 
 ### Layout and CSS
 

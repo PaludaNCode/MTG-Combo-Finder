@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype B — the basket as a docked tray</title>
+  <!-- Shape B of three. The same basket as A, but docked to the bottom of the viewport
+       instead of sitting in the results flow: one line while it is closed, the full list
+       when it is opened.
+
+       What it buys over A: reachability. The results on this page are long — three
+       panels, one of them a row per card of the deck — and a panel at the bottom of that
+       is a panel you have to know is there. The tray is in view the whole time you are
+       taking suggestions, which is exactly when the basket is filling.
+
+       What it costs: this page has no fixed or overlaying UI at all today. Everything
+       scrolls. A tray is a new pattern, it covers content at the bottom of the scroll,
+       and it needs its own answers for focus order, Escape, and the space it steals on
+       a phone in landscape. Those are not fatal, but they are all new work that shape A
+       does not need, and shopping.md § "What a tray costs that a panel does not" is the
+       list.
+
+       Numbers as in shape A, measured 8 Aug 2026 against the tuning deck plus five
+       taken suggestions: 98 cards and 33 combos → 103 and 80.
+
+       The tray is drawn twice: inside a mock viewport so its geometry can be seen next
+       to the prose, and — via the button — genuinely `position: fixed`, because a docked
+       bar is a thing you have to feel scrolling under to judge. -->
+  <script src="../theme.js"></script>
+  <script src="shopping-cart-links.js" defer></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+
+    /* ---- the mock viewport ------------------------------------------------
+     *
+     * A box with its own scroll and `position: relative`, so the tray can be
+     * absolutely positioned against it and behave the way it would against the
+     * real viewport — including covering what scrolls under it, which is the
+     * whole thing being judged. */
+    .proto-viewport {
+      position: relative;
+      height: 22rem;
+      overflow-y: auto;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: .8rem;
+    }
+    .proto-filler { color: var(--muted); font-size: .85rem; line-height: 1.7; }
+
+    /* ---- the tray --------------------------------------------------------
+     *
+     * `--panel` rather than `--bg` so it reads as a surface sitting above the
+     * page, plus a top border and a shadow — the only shadow anywhere in this
+     * project, and the reason is that this is the only element that overlaps
+     * something. Without it the tray and the content it covers look like one
+     * column and the covering reads as a rendering fault. */
+    .proto-tray {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--panel);
+      border-top: 1px solid var(--line-strong);
+      box-shadow: 0 -8px 24px rgb(0 0 0 / 22%);
+      padding: .6rem .8rem;
+    }
+    body.proto-docked .proto-tray.is-real {
+      position: fixed;
+      z-index: 20;
+    }
+
+    .proto-tray-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .5rem .7rem;
+    }
+    /* The summary is the whole tray while it is closed, so it carries the two
+     * things worth a permanent line: how many cards, and what they did. The
+     * count of cards is the shopping number; the combo figure is the reason. */
+    .proto-tray-count {
+      font-weight: 650;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .proto-tray-why { color: var(--muted); font-size: .85rem; }
+    .proto-tray-spacer { flex: 1; min-width: 0; }
+
+    .proto-toggle {
+      padding: .3rem .6rem;
+      background: none;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .82rem;
+      cursor: pointer;
+    }
+    .proto-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .proto-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* The list only exists when the tray is open. Collapsed it is `hidden`,
+     * not zero-height: every rect inside a closed container is 0 and an
+     * assertion about one passes against a box the browser never laid out —
+     * the trap CLAUDE.md records under "A control that opens something must be
+     * measured OPEN". A checker for this shape has to press the toggle first. */
+    .proto-tray-list {
+      margin: .7rem 0 .2rem;
+      max-height: 12rem;
+      overflow-y: auto;
+    }
+    .proto-tray-row {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: .35rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .proto-tray-row:last-child { border-bottom: 0; }
+    .proto-qty { flex: 0 0 1.4rem; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+    .proto-basket-name { flex: 1; min-width: 0; color: var(--text); font-size: .9rem; }
+    .proto-in { flex: 0 0 auto; color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+    .proto-drop {
+      flex: 0 0 auto;
+      padding: .1rem .4rem;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: .72rem;
+      cursor: pointer;
+    }
+    .proto-drop:hover { color: var(--text); border-color: var(--line-strong); }
+
+    .proto-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+    }
+    .proto-primary {
+      padding: .35rem .7rem;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--brass-ink, #12141a);
+      font-size: .82rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .proto-primary:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+    .proto-store {
+      display: inline-block;
+      padding: .35rem .6rem;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .82rem;
+      text-decoration: none;
+    }
+    .proto-store:hover { border-color: var(--accent); color: var(--accent); }
+    .proto-store .proto-region { color: var(--muted); font-size: .78em; }
+    .proto-store.is-listonly { border-style: dashed; color: var(--muted); cursor: default; }
+    .proto-unverified {
+      display: inline-block;
+      margin-left: .3rem;
+      padding: 0 .35rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .7rem;
+      vertical-align: middle;
+    }
+    .proto-built {
+      margin: .6rem 0 0;
+      padding: .4rem .5rem;
+      background: var(--panel-2);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: .7rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      word-break: break-all;
+    }
+    /* Room for the real docked tray, so the footer of this page is not the thing
+     * it permanently covers. On the shipped page this is the same problem and the
+     * same fix: the body needs bottom padding equal to the closed tray. */
+    body.proto-docked { padding-bottom: 6rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1>B — the basket as a docked tray</h1>
+      <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+        <span class="icon icon-moon" aria-hidden="true"></span>
+        <span class="icon icon-sun" aria-hidden="true"></span>
+        <span class="theme-label"></span>
+      </button>
+    </div>
+    <p class="tagline">The same five cards as shape A, kept in view instead of kept in the flow.</p>
+  </header>
+
+  <main class="proto-frame">
+
+    <p class="proto-note"><b>Closed, over scrolling content.</b> One line: how many cards, what they did
+      to the deck, and the two actions. Scroll the box — the tray stays and the results run under it.</p>
+
+    <div class="proto-viewport">
+      <p class="proto-filler">…Scurry Oak — in 18 combos<br>Basking Broodscale — in 15 combos<br>
+        Cauldron Familiar — in 14 combos<br>Essence Warden — in 14 combos<br>
+        Prosperous Innkeeper — in 14 combos<br>Soul Warden — in 14 combos<br>
+        Archangel of Thune — in 10 combos<br>Chatterfang, Squirrel General — in 9 combos<br>
+        Samwise Gamgee — in 8 combos<br>Warren Soultrader — in 8 combos<br>
+        Viscera Seer — in 6 combos<br>Heroic Feast — in 7 combos<br>
+        Spike Feeder — in 5 combos<br>Rosie Cotton of South Lane — in 4 combos<br>
+        Peregrin Took — in 4 combos<br>Academy Manufactor — in 3 combos</p>
+
+      <div class="proto-tray">
+        <div class="proto-tray-bar">
+          <span class="proto-tray-count">5 cards added</span>
+          <span class="proto-tray-why">33 combos → 80</span>
+          <span class="proto-tray-spacer"></span>
+          <button class="proto-toggle" type="button" data-tray-toggle aria-expanded="false">Show list ▴</button>
+          <button class="proto-primary" type="button" data-cart-copy>Copy list</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="proto-note"><b>Open.</b> The list grows upward out of the bar and scrolls at its own
+      height, so a basket of thirty cards cannot eat the viewport. The store buttons appear only here —
+      the closed bar offers Copy list and nothing that leaves the site, so the permanent furniture is
+      never an advert.</p>
+
+    <div class="proto-viewport">
+      <p class="proto-filler">…Herd Baloth — in 18 combos<br>Scurry Oak — in 18 combos<br>
+        Basking Broodscale — in 15 combos<br>Cauldron Familiar — in 14 combos<br>
+        Essence Warden — in 14 combos<br>Prosperous Innkeeper — in 14 combos</p>
+
+      <div class="proto-tray">
+        <div class="proto-tray-list">
+          <div class="proto-tray-row">
+            <span class="proto-qty">1</span><span class="proto-basket-name">Herd Baloth</span>
+            <span class="proto-in">in 18 combos</span><button class="proto-drop" type="button">Remove</button>
+          </div>
+          <div class="proto-tray-row">
+            <span class="proto-qty">1</span><span class="proto-basket-name">Ashnod’s Altar</span>
+            <span class="proto-in">in 11 combos</span><button class="proto-drop" type="button">Remove</button>
+          </div>
+          <div class="proto-tray-row">
+            <span class="proto-qty">1</span><span class="proto-basket-name">Cleric Class</span>
+            <span class="proto-in">in 10 combos</span><button class="proto-drop" type="button">Remove</button>
+          </div>
+          <div class="proto-tray-row">
+            <span class="proto-qty">1</span><span class="proto-basket-name">Light of Promise</span>
+            <span class="proto-in">in 10 combos</span><button class="proto-drop" type="button">Remove</button>
+          </div>
+          <div class="proto-tray-row">
+            <span class="proto-qty">1</span><span class="proto-basket-name">Pitiless Plunderer</span>
+            <span class="proto-in">in 8 combos</span><button class="proto-drop" type="button">Remove</button>
+          </div>
+        </div>
+        <div class="proto-tray-bar">
+          <span class="proto-tray-count">5 cards added</span>
+          <span class="proto-tray-why">33 combos → 80</span>
+          <span class="proto-tray-spacer"></span>
+          <button class="proto-toggle" type="button" aria-expanded="true">Hide list ▾</button>
+        </div>
+        <div class="proto-actions" data-cart-actions="basket-tray" style="margin-top:.6rem;">
+          <button class="proto-primary" type="button" data-cart-copy>Copy list</button>
+        </div>
+        <p class="proto-built" data-cart-built></p>
+      </div>
+    </div>
+
+    <p class="proto-note"><b>Dock it for real.</b> The two boxes above are the geometry; a bar that
+      follows you is a feel, and a mock viewport cannot give you that. This pins the closed tray to the
+      bottom of the window and pads the body by its height — which is the fix the shipped page would
+      also need, or the footer is what the tray permanently covers.</p>
+
+    <p><button class="proto-toggle" type="button" data-dock>Dock the tray to the window</button></p>
+
+    <p class="proto-note"><b>What has no answer yet in this shape.</b> Where the tray sits in focus
+      order (it is last in the DOM and first on the screen); whether Escape closes it; what it does at
+      390px in landscape, where 6rem of a 390×390 viewport is a sixth of the page; and whether it should
+      hide itself while the decklist textarea has focus, since on a phone it and the keyboard want the
+      same space. Shape A needs none of these answered.</p>
+
+    <div class="proto-tray is-real" hidden data-real-tray>
+      <div class="proto-tray-bar">
+        <span class="proto-tray-count">5 cards added</span>
+        <span class="proto-tray-why">33 combos → 80</span>
+        <span class="proto-tray-spacer"></span>
+        <button class="proto-toggle" type="button" data-dock>Undock</button>
+        <button class="proto-primary" type="button" data-cart-copy>Copy list</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="shopping-proto.js" defer></script>
+  <script src="shopping-tray.js" defer></script>
+</body>
+</html>

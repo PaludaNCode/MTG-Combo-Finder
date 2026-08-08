@@ -143,6 +143,61 @@
     };
   }
 
+  // ---- what this session added, and what it bought ----------------------------
+
+  // The caption over "Cards you've added": how many cards, and the one number that says
+  // whether adding them was worth it.
+  //
+  // The badge beside that heading counts **cards** while the sentence talks about
+  // **combos**, which is the disagreement `deckCombosNote()` above exists to handle on
+  // the other panel — a count beside a heading has to say what it counts, or the two
+  // read as the same number disagreeing with itself. So the sentence leads with the card
+  // count in words.
+  //
+  // Only one combo figure is offered, and that is deliberate. Every card in this list
+  // also has a personal count — Herd Baloth is in 18 of the tuning deck's combos — and
+  // those **cannot be added up**: on the five-card basket the prototypes were drawn
+  // from they total 57 while the deck gained 47, because a combo naming two of the
+  // cards is counted by both. A panel that summed its own rows would be wrong by ten
+  // and look arithmetically sound. So the deck total before and after is the claim, and
+  // the per-row numbers are left as what they are — descriptions of one card.
+  //
+  // `before` is null until a search has established a baseline, and then the sentence is
+  // the card count alone rather than a delta against a number nobody measured.
+  function basketNote(cards, before, after) {
+    if (!cards) return null;
+    const combos = (n) => n + ' combo' + (n === 1 ? '' : 's');
+    const what = `${cards} card${cards === 1 ? '' : 's'} that ${cards === 1 ? 'was' : 'were'} `
+      + 'not in the deck you started with';
+
+    if (before == null || after == null) {
+      return { count: cards, sentence: what + '.' };
+    }
+    // Three endings, because "went from 33 to 33" is a sentence that reads as an error
+    // and "went from 33 to 28" is the reader's own doing — they cut something by hand —
+    // and both are worth saying plainly rather than phrasing as a gain.
+    let outcome;
+    if (after > before) {
+      outcome = `this deck has ${combos(after)} rather than ${before}`;
+    } else if (after === before) {
+      outcome = `this deck still has ${combos(after)} — none of them changed that`;
+    } else {
+      outcome = `this deck has ${combos(after)}, down from ${before}`;
+    }
+    return { count: cards, sentence: `${what}. With ${cards === 1 ? 'it' : 'them'} in, ${outcome}.` };
+  }
+
+  // What one basket row says about its card. The same question "Combos in your deck"
+  // answers for every card of the deck, asked again here — the card is in the deck now,
+  // so this is that panel's number and not the "+10" the suggestion carried before it
+  // was added. Those two differ by design and by a lot: Herd Baloth was +10 as a
+  // suggestion and is in 18 once the rest of the basket is in, because the other cards
+  // brought combos it also appears in.
+  function basketRowNote(inCombos) {
+    if (!inCombos) return 'in no combos yet';
+    return 'in ' + inCombos + ' combo' + (inCombos === 1 ? '' : 's');
+  }
+
   // ---- the numbers a row carries, and whose combos they are -------------------
 
   // A result row's numbers sit in a column of their own rather than in the
@@ -591,6 +646,8 @@
     UNKNOWN_LIMIT,
     sizePills,
     deckCombosNote,
+    basketNote,
+    basketRowNote,
     rowNumbers,
     bracketProse,
     timingSentence,

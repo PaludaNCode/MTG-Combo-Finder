@@ -10,6 +10,9 @@
 
   const Dom = global.PageDom || (typeof require === 'function' ? require('./page-dom.js') : null);
   const { el, link, panel } = Dom;
+  // Optional, like it is in render-rows.js: a page without the store module keeps every
+  // panel and loses only the Buy buttons. Copy list needs nothing from it but asText().
+  const Cart = global.CartLinks || (typeof require === 'function' ? require('./cart-links.js') : null);
 
   // A card worth adding. Two columns: its numbers in the gutter, and beside them
   // the card, where to read about it, and what its combos cost to assemble — one
@@ -250,6 +253,94 @@
     pieces.forEach((p) => body.appendChild(pieceCard(p)));
   }
 
+  // "Cards you've added" — the cards in the box that were not in the deck when it
+  // arrived, and where to buy them.
+  //
+  // Absent rather than empty when nothing has been added, which is the same rule the map
+  // and the unofficial panel follow: a reader who has taken no suggestion should not be
+  // shown a shop, and "no cards yet" is a placeholder that says nothing to anybody.
+  //
+  // The rows are one line each and carry no gutter, unlike a suggestion row. That row's
+  // big number is the size of a decision — is this worth a slot — and the decision is
+  // already taken by the time a card is in here. What is left to say is the card, the
+  // reason it is still worth keeping, and a way to take it back out.
+  function renderBasket(container, basket, included, before, after) {
+    container.textContent = '';
+    if (!basket || !basket.length) return;
+
+    const note = DeckView.basketNote(basket.length, before, after);
+    // The badge counts cards while the note talks about combos — the same deliberate
+    // disagreement "Combos in your deck" carries, reconciled the same way, in DeckView.
+    const body = panel(container, 'basket', 'Cards you’ve added', note && note.count);
+    body.appendChild(el('p', 'panel-note', note.sentence));
+
+    // How many of the deck's combos each added card is in. Counted here off `included`
+    // rather than taken from the suggestion that offered the card: those two are
+    // different questions and differ by a lot once the basket holds more than one card —
+    // a card offered as "+10" can be in 18 combos afterwards, because the others brought
+    // combos it also appears in. This is the number "Combos in your deck" would show,
+    // which is the one that is true now.
+    const inCombos = (name) => {
+      const key = DeckCombos.nameKey(name);
+      return (included || []).filter((c) => DeckCombos.variantCardNames(c)
+        .some((n) => DeckCombos.nameKey(n) === key)).length;
+    };
+
+    basket.forEach((entry) => {
+      const row = el('div', 'basket-row');
+      row.appendChild(el('span', 'basket-qty', String(entry.quantity)));
+      row.appendChild(el('span', 'basket-name', entry.card));
+      row.appendChild(el('span', 'basket-in', DeckView.basketRowNote(inCombos(entry.card))));
+      row.appendChild(RenderRows.removeButton(entry.card, 'Remove'));
+      body.appendChild(row);
+    });
+
+    body.appendChild(basketActions(basket));
+  }
+
+  // Copy first, stores second, and that ordering is the argument rather than a default.
+  // The copy works for every reader, in every region, for as long as this page exists —
+  // somebody buying at their local shop, pasting into a spreadsheet, or using a store
+  // cart-links.js has never heard of. A store link works for some readers, in one
+  // region, for as long as a URL contract nobody here controls keeps holding.
+  function basketActions(basket) {
+    const actions = el('div', 'basket-actions');
+
+    const copy = el('button', 'copy-btn', 'Copy list');
+    copy.type = 'button';
+    const spoken = 'Copy all ' + basket.length + ' cards as a decklist';
+    copy.title = spoken;
+    copy.setAttribute('aria-label', spoken);
+    copy.addEventListener('click', () => {
+      navigator.clipboard.writeText(Cart.asText(basket)).then(
+        () => { copy.textContent = 'Copied'; },
+        () => { copy.textContent = 'Press Ctrl+C to copy'; }
+      );
+    });
+    actions.appendChild(copy);
+
+    // A store whose link would be over the URL ceiling reports `href: null`, and is
+    // drawn as a note rather than as a link that goes nowhere. Silently dropping it
+    // would leave a reader with a long basket wondering where the button went.
+    (Cart ? Cart.offers(basket, 'basket-panel') : []).forEach((offer) => {
+      if (!offer.href) {
+        actions.appendChild(el('span', 'basket-toolong',
+          'This list is too long for a ' + offer.label + ' link — use Copy list.'));
+        return;
+      }
+      const a = link(offer.href, 'Buy on ' + offer.label);
+      a.className = 'basket-store';
+      a.appendChild(el('span', 'buy-store', ' ' + offer.region));
+      const label = 'Buy all ' + basket.length + ' cards on ' + offer.label
+        + ' — opens in a new tab';
+      a.title = label;
+      a.setAttribute('aria-label', label);
+      actions.appendChild(a);
+    });
+
+    return actions;
+  }
+
   function renderSuggestions(container, onColour, offColour, deckNames, identity) {
     const total = onColour.length + offColour.length;
     const colours = identity && identity.size ? [...identity].join('').toUpperCase() : null;
@@ -328,7 +419,7 @@
   // A commander that *was* given still matters: it is part of the deck, so its
   // colours are in here along with everything else's.
 
-  const api = { suggestionCard, pieceCard, renderUnofficial, renderPieces, renderSuggestions };
+  const api = { suggestionCard, pieceCard, renderUnofficial, renderPieces, renderBasket, renderSuggestions };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

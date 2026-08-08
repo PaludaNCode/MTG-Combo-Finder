@@ -101,6 +101,9 @@ const PAGE = {
   DeckIO: 'readonly',
   RenderRows: 'readonly',
   RenderCombos: 'readonly',
+  // Where to buy a card. Read by render-rows.js and render-suggestions.js, and by
+  // neither of them hard: a page without it keeps every panel and loses the Buy links.
+  CartLinks: 'readonly',
   RenderSuggestions: 'readonly',
 };
 
@@ -162,7 +165,7 @@ export default [
       'app.js', 'combos.js', 'parser.js', 'search.js', 'search-worker.js', 'sw.js',
       'result-tiers.js', 'tiers-page.js', 'theme.js', 'unofficial.js', 'graph.js',
       'combo-steps.js', 'steps-source.js', 'view-model.js',
-      'page-dom.js', 'render-map.js', 'deck-io.js',
+      'page-dom.js', 'render-map.js', 'deck-io.js', 'cart-links.js',
       'render-rows.js', 'render-combos.js', 'render-suggestions.js',
     ],
     languageOptions: {
@@ -198,6 +201,26 @@ export default [
     },
     linterOptions: { reportUnusedDisableDirectives: true },
     rules: RULES,
+  },
+  {
+    // The prototypes. Browser scripts like the page's own, and linted with the same
+    // rules for the same reason: a `<script>` file's top-level function really does
+    // land on `window`, so no-implicit-globals is reporting a mistake here too.
+    //
+    // They are not the site — `tools/prune-artifact.js` keeps them out of the Pages
+    // artifact, since no page references them — but they are the drawings a design
+    // decision gets made from, and a prototype with a misspelled global that silently
+    // does nothing is a drawing of something that was never true. `PAGE` is included
+    // because a prototype reproduces shipped markup and reaches for the same globals
+    // the real scripts do.
+    files: ['prototypes/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: { ...BROWSER, ...PAGE },
+    },
+    linterOptions: { reportUnusedDisableDirectives: true },
+    rules: { ...RULES, 'no-implicit-globals': 'error' },
   },
   {
     // The browser tests. Node files that contain browser code: everything inside

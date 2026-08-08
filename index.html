@@ -143,6 +143,10 @@
              scratch by every search, so adding a card moves the map too. -->
         <div id="graph"></div>
         <div id="suggestions"></div>
+        <!-- The cards in the box that were not in the deck when it arrived, and where
+             to buy them. Last, because it is the step after taking a suggestion, and
+             absent entirely until somebody has taken one. -->
+        <div id="basket"></div>
       </section>
     </div>
   </main>
@@ -193,6 +197,10 @@
        built from — mana pips, result chips, the + Add to deck button — and the two
        renderers above it draw the panels. In dependency order, though only page-dom.js
        is read at load time. -->
+  <!-- Where to buy a card, which both the row's Buy link and the "Cards you've added"
+       panel ask. Before the two renderers that read it at call time, and never loaded by
+       search-worker.js — nothing about a search needs to know about a shop. -->
+  <script src="cart-links.js"></script>
   <script src="render-rows.js"></script>
   <script src="render-combos.js"></script>
   <script src="render-suggestions.js"></script>
