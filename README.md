@@ -49,6 +49,8 @@ branch.
 - **Which bracket the list is in** — five pips under the colour identity. A floor, never a verdict, with
   the reasoning and the unchecked criteria one hover away. Beside it, **whether the list is *allowed***:
   off-identity cards and Commander bans, and nothing at all when there is neither.
+- **A combo that uses your commander says so** — a `Commander` pin on the row, on the combos naming a
+  card you put in the command zone. Nothing at all if your list never said who your commander is.
 - **Interchangeable cards are one decision, not many.** On a real 99-card deck that took 141 suggestions
   to 81. **Compare all N on Scryfall** opens a whole choice on one page.
 - **It works with the network off**, **cards it did not recognise are named**, suggestions **split by
@@ -677,6 +679,41 @@ page passed while this was live.
 **"Two-card infinite combo" means a two-card line that wins**, by the same written-down inventory the
 result chips use. Basalt Monolith + Rings of Brighthearth loops all day and wins nothing. A filled
 template slot counts as one of the two cards.
+
+### A combo that uses your commander
+
+A `Commander` pin on the combo row, drawn on the rows naming a card the list put in the command
+zone. It costs nothing to know: `commander: true` is already on the entry, from either the
+`*CMDR*`-style marker the parser reads or the commander box, so this is the deck's own claim about
+itself and needs no field from the snapshot.
+
+**Measured before it was built, because the objection was that it would mark everything.** On the
+Chatterfang deck it marks **11 of 233** rows; on the tuning deck with Kinnan declared, **0 of 33**.
+Quiet on one real deck and useful on the other, which is the shape a marker has to have if it is
+not to become wallpaper. 66 of that deck's 247 suggestions unlock a combo naming the commander, so
+the suggestions panel is where the signal is densest.
+
+**The fact is marked on the row, not handed to the renderers.** `markCommanders()` in `combos.js`
+tags each expanded row, because the alternative was threading a set through six renderer signatures
+— `suggestionCard`, `pieceCard`, `renderPieces`, `renderUnofficial`, `renderBasket`,
+`renderSuggestions` — none of which is otherwise interested in commanders and every one of which is
+a place to forget it. Every result list in `search.js` goes through it; a list missed there is a
+panel where the pin silently never appears.
+
+**The silent branch is the common one.** A pasted list usually declares no commander — neither
+checked-in fixture deck does — and then nothing is drawn, not even an empty element. `verify` runs
+the same deck twice, with the marker and without, and checks both halves: 14 pins against 0. That
+pair is the whole check, because the author is always testing with a marked deck.
+
+**What the pin deliberately does not say is how many cards you still have to draw.** A commander
+starts in the command zone, so Chatterfang + Pitiless Plunderer is a combo that deck assembles by
+drawing *one* card while its size pill reads `2-card` — the same as a combo needing both halves
+found. That was drawn as variant C in `prototypes/commander-combos.md` and is not what shipped; if
+the pin ever reads as inert, that measurement is where to start.
+
+Commander Spellbook's export also carries **`mustBeCommander`** per card and `tools/fetch-combos.js`
+drops it — a published combo is `{ c, p, i }`. *This combo only works if that card is your
+commander* is a stronger, different claim needing a payload field, and is not made here.
 
 ### Whether the list is allowed is a different question from how strong it is
 

@@ -263,6 +263,37 @@
     };
   }
 
+  // ---- a combo that uses your commander ---------------------------------------
+
+  // The pin on a combo row that names a card the deck put in the command zone.
+  // Returns null when there is nothing to say, which is the common case and the one
+  // most likely to be got wrong: a pasted list usually declares no commander at all
+  // — neither checked-in fixture deck does — and the author is always testing with a
+  // marked one. No commander, no field on the row, no pin, no gap where one would go.
+  //
+  // The label is one word because that is the whole claim. What it does NOT say is
+  // how many cards you still have to draw, which is the number a deck builder acts
+  // on: a commander starts in the command zone, so Chatterfang + Pitiless Plunderer
+  // is a combo this deck assembles by drawing ONE card while its size pill reads
+  // `2-card`, the same as a combo needing both halves found. That was drawn as
+  // variant C in prototypes/commander-combos.md and is not what shipped; if the pin
+  // ever reads as inert, that measurement is where to start rather than here.
+  //
+  // `title` names the card, because the pin is on the row rather than on the name and
+  // a three-card combo gives a reader no way to tell which one is free. Two
+  // commanders are both named — partners are a pair, and picking one would be a
+  // claim about which mattered.
+  function commanderPin(commanders) {
+    const names = (commanders || []).filter((n) => typeof n === 'string' && n.trim());
+    if (!names.length) return null;
+    return {
+      label: 'Commander',
+      title: names.length === 1
+        ? `${names[0]} is your commander, so this combo always has it available`
+        : `${names.join(' and ')} are your commanders, so this combo always has them available`,
+    };
+  }
+
   // ---- which bracket the list is in -------------------------------------------
 
   const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
@@ -659,6 +690,7 @@
     basketNote,
     rowNumbers,
     bracketProse,
+    commanderPin,
     timingSentence,
     fileLoaded,
     fileRefusal,

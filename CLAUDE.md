@@ -388,6 +388,16 @@ loosely.
   row reading `1 combo · 0 official · 1 unofficial` when it did not. **Neither ever sums them**: that
   would count an unofficial row as published data. Only `unofficialAlmost` exposes any of this —
   every other fixture has no unofficial combo to lose → `e2e/deck.spec.js`, proved by breaking both.
+- **The commander pin is marked on the row, and the branch that draws nothing is the common one.**
+  `commander: true` is already on the entry, so it needs no field from the snapshot — but a pasted
+  list usually declares no commander at all and **neither checked-in fixture deck does**, so the
+  silent half is what a reader normally sees and the half an author never tests. `verify` runs the
+  same deck with the `*CMDR*` marker and without: **14 pins against 0**, and both were proved by
+  breaking them. It marks 11 of 233 rows on the Chatterfang deck and 0 of 33 on the tuning deck —
+  measured before it was built, because the objection was that it would mark everything.
+  `markCommanders()` tags the row rather than handing a set to six renderer signatures, so a result
+  list missed in `search.js` is a panel where the pin silently never appears.
+  README § *A combo that uses your commander*.
 - **`cardLinks()`'s Buy link is opt-in, and that is a rule about who the card belongs to.** It shipped
   default-on for two days and was wrong in two places: beside the Game Changers in the bracket
   explanation, and on the legality line, where it offered to sell the reader a card **banned in the

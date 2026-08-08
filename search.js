@@ -268,6 +268,14 @@
     ).filter((row) => row.needs);
     const inColour = (row) => DeckCombos.withinIdentity(row, matched.identity);
 
+    // Which of these rows use a card the deck put in the command zone. Marked on the
+    // rows rather than handed to the renderers, because six of them would have to
+    // carry a set none of them is otherwise interested in — see markCommanders() in
+    // combos.js. Every list a combo row is drawn from goes through it; a list missed
+    // here is a panel where the pin silently never appears.
+    const commanders = DeckCombos.commanderNames(entries);
+    const marked = (list) => DeckCombos.markCommanders(list, commanders);
+
     return {
       meta: {
         updatedAt: data.updatedAt || null,
@@ -296,14 +304,14 @@
       // and the identity map are both part of the dataset, and the dataset stays in
       // the worker. Facts only; the page decides what is worth saying.
       legality: DeckCombos.legalityCheck(data, entries),
-      included,
-      unofficial: unofficial.map(DeckCombos.expand),
+      included: marked(included),
+      unofficial: marked(unofficial.map(DeckCombos.expand)),
       // Split on colour the same way the published near-misses are, so a card the
       // deck could not legally run lands behind the same tab either way.
-      unofficialAlmost: nearly.filter(inColour).map(DeckCombos.expand),
-      unofficialAlmostByAddingColors: nearly.filter((r) => !inColour(r)).map(DeckCombos.expand),
-      almostIncluded: matched.almostIncluded.map(DeckCombos.expand),
-      almostIncludedByAddingColors: matched.almostIncludedByAddingColors.map(DeckCombos.expand),
+      unofficialAlmost: marked(nearly.filter(inColour).map(DeckCombos.expand)),
+      unofficialAlmostByAddingColors: marked(nearly.filter((r) => !inColour(r)).map(DeckCombos.expand)),
+      almostIncluded: marked(matched.almostIncluded.map(DeckCombos.expand)),
+      almostIncludedByAddingColors: marked(matched.almostIncludedByAddingColors.map(DeckCombos.expand)),
     };
   }
 

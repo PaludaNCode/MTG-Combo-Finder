@@ -1173,6 +1173,35 @@ function measure(win, doc) {
   //
   // ranking is the panel's own order, which is the gutter: most combos carried first.
   // It was the whole point of ranking these rows and nothing else on the page states it.
+  // The commander pin, across every combo row on the page rather than just this
+  // panel's -- it is drawn by comboCard(), which four panels use, and a list missed
+  // in search.js would show up as a pin on some panels and not others.
+  //
+  // Read as three numbers, because they fail apart. One is how many rows carry the
+  // pin, the next is how many rows name a card the deck put in the command zone, and
+  // they have to be equal: a pin on a row without one is a false claim, and a row with
+  // one and no pin is the feature silently not working. The third is whether the title
+  // says WHICH card, which is the whole of what a row-level pin cannot say.
+  // (No backticks in here, ever: this is inside HARNESS, a template literal.)
+  const commanderPins = (() => {
+      const rows = [...doc.querySelectorAll('#results .combo')];
+      const commander = 'Kinnan, Bonder Prodigy';
+      const namesIn = (row) => [...row.querySelectorAll('h3 .card-name')].map((n) => n.textContent);
+      const withCommander = rows.filter((r) => namesIn(r).some((n) => n === commander));
+      const pinned = rows.filter((r) => r.querySelector('.commander-pin'));
+      return {
+        pins: pinned.length,
+        rowsWithCommander: withCommander.length,
+        // Every pinned row really does name the commander. Counted the other way round
+        // as well, because "same total" is satisfied by a pin on the wrong row.
+        allPinnedNameIt: pinned.every((r) => namesIn(r).some((n) => n === commander)),
+        named: pinned.length
+          ? (pinned[0].querySelector('.commander-pin').getAttribute('title') || '')
+          : '',
+        label: pinned.length ? pinned[0].querySelector('.commander-pin').textContent : '',
+      };
+  })();
+
   const includedPanel = doc.querySelector('#pieces .panel');
   const included = {
     badge: includedPanel ? (includedPanel.querySelector('.panel-count') || {}).textContent || null : null,
@@ -1458,6 +1487,7 @@ function measure(win, doc) {
     sizes,
     dividers,
     included,
+    commanderPins,
     map,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
@@ -3395,6 +3425,32 @@ function captionDrift(notes) {
     if (!inc.note.includes(`carried by ${inc.rows} of your card`)) {
       problems.push(`the panel draws ${inc.rows} cards and its note does not say so: "${inc.note}"`);
     }
+    // The commander pin, and the branch that has to stay silent beside it. This deck runs
+    // twice — with the *CMDR* marker and without — and the pair is what makes both halves
+    // checkable: the same cards, the same combos, and the only difference is whether the
+    // list said who the commander is. A pasted list usually does not, so the silent half
+    // is the common one and the one an author never sees, because the author is always
+    // testing with a marked deck.
+    const pin = v.commanderPins;
+    if (v.deck === 'plain') {
+      if (pin.pins) {
+        problems.push(`${pin.pins} combo row(s) claim a commander on a deck that declared none`);
+      }
+    } else {
+      if (!pin.rowsWithCommander) {
+        problems.push('no combo row on this page names the commander, so the pin is being checked against nothing');
+      }
+      if (pin.pins !== pin.rowsWithCommander) {
+        problems.push(`${pin.rowsWithCommander} row(s) name the commander and ${pin.pins} carry the pin`);
+      }
+      if (!pin.allPinnedNameIt) problems.push('a commander pin is on a row that does not name the commander');
+      if (pin.label !== 'Commander') problems.push(`the commander pin reads "${pin.label}"`);
+      // The row says *that* a commander is in the combo; only the title says *which*,
+      // and on a three-card combo that is the difference between a fact and a puzzle.
+      if (!/Kinnan, Bonder Prodigy is your commander/.test(pin.named)) {
+        problems.push(`the commander pin does not name the card: "${pin.named}"`);
+      }
+    }
     // All three captions on one page, measured against each other. The map draws here, so
     // this is the run where the full set is available — see captionDrift().
     const captions = inc.notes || [];
@@ -4121,7 +4177,10 @@ function captionDrift(notes) {
       const groupNote = `grouped: ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
-        + `, ${v.included.badge} combos across ${v.included.rows} cards`;
+        + `, ${v.included.badge} combos across ${v.included.rows} cards`
+        // Printed on a passing run, both halves of it: the marked deck's count and the
+        // unmarked deck's zero are the same claim read from two directions.
+        + `, ${v.commanderPins.pins} commander pin(s)`;
       // Which branch the rows took, and the width that chose it: the pair is what
       // makes a changed threshold visible in the output rather than only in a failure.
       const legalNote = v.legality.shown

@@ -179,7 +179,31 @@
       header.appendChild(slot);
     });
 
+    // A combo one of whose cards is in your command zone. Directly under the names it
+    // is about and above everything else on the row, because it changes how the names
+    // are read: a card you always have is not a card you are waiting for.
+    //
+    // `variant.commanders` is put there by markCommanders() in combos.js and is absent
+    // — not empty — on every row of a deck that declared no commander, which is the
+    // common case for a pasted list. DeckView.commanderPin() returns null for it and
+    // nothing is drawn, not even the element.
     card.appendChild(header);
+
+    const pin = DeckView.commanderPin(variant.commanders);
+    if (pin) {
+      const line = el('p', 'combo-commander');
+      const chip = el('span', 'commander-pin', pin.label);
+      // The row says *that* a commander is in it; the title says *which*, because a
+      // three-card combo gives a reader no way to tell. Not colour and not an icon:
+      // the pin carries its own word, so it survives greyscale and a reader who cannot
+      // tell the tints apart — the same rule the mana pips follow.
+      chip.title = pin.title;
+      line.appendChild(chip);
+      // A sibling of the heading and not a child of it: an <h3> may hold phrasing
+      // content only, and a <p> inside one is invalid markup that browsers silently
+      // reparent — which moves the pin somewhere nobody chose.
+      card.appendChild(line);
+    }
 
     if ((variant.fills || []).length) {
       const filled = el('p', 'fills');
