@@ -425,6 +425,41 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 .summary-sub { color: var(--muted); font-size: .85em; }
 
+/* The commander row's value is a stack, not a number: one line per commander, so a
+   partner pair reads as two cards rather than as one long name. A column even at one
+   name — the single-name case is the common one, and a rule that only applies to decks
+   with partners is a rule nobody looks at again.
+
+   `min-width: 0` because this is a flex item holding text that must be allowed to wrap:
+   without it a long name pushes the row wider than the box instead of breaking, which
+   is invisible until somebody runs a card with a comma and a title in it. */
+.summary-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* A card name is the one value in this box that cannot be shortened, and it is far
+   wider than a two-digit number: behind the 9.5rem key column a 325px phone box leaves
+   163px, and "Kinnan, Bonder Prodigy" needs more than that — it wrapped, which is the
+   double-height row this box replaced a one-line strip to avoid.
+
+   So the key sizes to its own text on this row alone once the box is narrow, the same
+   trade the rule below makes for every key: the name stops lining up with the numbers,
+   and in exchange it fits.
+
+   24rem, measured against the CONTENT box like that rule, and set by the longest name
+   rather than by a tidy number: the fixed column and its gap take 162px, and about
+   205px more is "Chatterfang, Squirrel General" — 367px of content before a real
+   commander stops fitting. Both phones are under it (325px inner at 390px, 363px at a
+   Pixel 7's 412px) and the stacked tablet is well over at 690px, which is the split
+   this wants: a phone gives the name the room, a wide box keeps the column. */
+@container (max-width: 24rem) {
+  .summary-row.is-commanders .summary-key { flex: 0 0 auto; }
+}
+
 /* Under 21.5rem of box the fixed key column costs more than it buys, and the number is
    measured rather than rounded to something tidy: a 320px phone leaves a 301px box,
    where 9.5rem of key leaves 130px for the value and both the land aside and the

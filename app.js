@@ -60,6 +60,23 @@
     }
   }
 
+  // The commander, at the top of the deck summary. One row, one name per line — the
+  // stack is the value, so the box keeps a single key column however many partners a
+  // deck runs. Whether there is anything to say, and what the label reads, are both
+  // DeckView.commanderRow()'s.
+  function renderCommanders(container, commanders) {
+    container.textContent = '';
+    const part = DeckView.commanderRow(commanders);
+    if (!part) return;
+
+    const row = el('p', 'summary-row is-' + part.key);
+    row.appendChild(el('span', 'summary-key', part.label));
+    const names = el('span', 'summary-names');
+    part.names.forEach((name) => names.appendChild(el('span', 'summary-name', name)));
+    row.appendChild(names);
+    container.appendChild(row);
+  }
+
   function renderIdentity(container, identity) {
     container.textContent = '';
     // An empty set is colourless — a real identity, worth showing as {C}. Null
@@ -372,14 +389,15 @@
     const token = ++renderToken;
 
     renderUnrecognized($('unrecognized'), results.unrecognized);
-    // Colour identity and the bracket first — what the deck *is* — then its contents.
-    // All three go in one box, which is hidden when every one of them rendered nothing:
+    // The commander, then colour identity and the bracket — what the deck *is* — then
+    // its contents. All four go in one box, hidden when every one of them drew nothing:
     // an empty frame reads as a panel that failed rather than as a question the data
     // could not answer.
+    renderCommanders($('deck-commanders'), results.commanders);
     renderIdentity($('identity'), results.identity);
     renderBracket($('bracket'), results.bracket);
     renderDeckCounts($('deck-counts'), results.deckCounts);
-    $('deck-summary').hidden = !['identity', 'bracket', 'deck-counts']
+    $('deck-summary').hidden = !['deck-commanders', 'identity', 'bracket', 'deck-counts']
       .some((id) => $(id).childElementCount);
     renderLegality($('legality'), results.legality);
 

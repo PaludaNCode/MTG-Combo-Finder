@@ -283,6 +283,11 @@
         source: diagnostics.source || null,
       },
       identity: matched.identity,
+      // Who the deck said its commander is, for the top row of the deck summary. The
+      // same list the pins are drawn from — one answer to that question, not two, and
+      // a panel disagreeing with the row above it is exactly the kind of quiet wrong
+      // this file keeps a single source for.
+      commanders,
       // Which pasted cards the snapshot has never heard of. Worked out here for the
       // same reason the bracket is: the identity map is part of the dataset and the
       // dataset stays in the worker. Facts only — the page decides whether they are

@@ -28,9 +28,13 @@ if (process.env.SHOT) {
   // A control to press before the picture is taken — the reason this exists at all, since
   // the two things worth photographing in this page's history were both behind one.
   const open = process.env.SHOT_OPEN || '';
+  // The other box. Newline-separated, because that is what the page reads: a partner pair
+  // is two lines, and the summary box's top row cannot be photographed without them.
+  const commanders = process.env.SHOT_COMMANDERS || '';
 
   test('shot', async ({ page }, info) => {
     await page.goto('/index.html');
+    if (commanders) await page.locator('#commanders').fill(commanders);
     await page.locator('#decklist').fill(deck);
     await page.getByRole('button', { name: 'Find combos' }).click();
     await page.locator('#results').waitFor();

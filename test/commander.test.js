@@ -82,3 +82,41 @@ test('the pin names which card, because the row cannot', () => {
   // which of them mattered.
   assert.match(two.title, /Thrasios, Triton Hero and Tymna the Weaver are your commanders/);
 });
+
+// ---- and the row at the top of the deck summary ----------------------------
+//
+// Who the deck's commander is, above the colour identity it produces. Same silent
+// branch as the pin, for the same reason: a pasted list usually declares none.
+
+test('the summary row says nothing when no commander was declared', () => {
+  assert.equal(DeckView.commanderRow(undefined), null);
+  assert.equal(DeckView.commanderRow([]), null);
+  assert.equal(DeckView.commanderRow(['', '  ']), null);
+});
+
+test('one commander, one line, singular label', () => {
+  const row = DeckView.commanderRow(['Kinnan, Bonder Prodigy']);
+  assert.equal(row.label, 'Commander');
+  assert.deepEqual(row.names, ['Kinnan, Bonder Prodigy']);
+});
+
+// A line each rather than "A and B": partners are two cards, and joining them reads as
+// one long name at the width this box narrows to. The label follows the count, because
+// it heads a list and "COMMANDER" over two names is the kind of small lie nothing on
+// the page would ever correct.
+test('partners are two lines under a plural label', () => {
+  const row = DeckView.commanderRow(['Thrasios, Triton Hero', 'Tymna the Weaver']);
+  assert.equal(row.label, 'Commanders');
+  assert.deepEqual(row.names, ['Thrasios, Triton Hero', 'Tymna the Weaver']);
+});
+
+// The order is the deck's, not this function's: commanderNames() reads down the entry
+// list, and a row that sorted them would disagree with the pin's title on a partner
+// pair for no reason anybody could see.
+test('the names keep the order the deck gave them', () => {
+  const names = commanderNames([
+    { card: 'Tymna the Weaver', commander: true },
+    { card: 'Thrasios, Triton Hero', commander: true },
+  ]);
+  assert.deepEqual(DeckView.commanderRow(names).names, ['Tymna the Weaver', 'Thrasios, Triton Hero']);
+});

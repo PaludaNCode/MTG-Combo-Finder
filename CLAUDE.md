@@ -401,6 +401,21 @@ loosely.
   command-zone copy wins because it is the one carrying `commander: true`, and quantity is never
   summed across the boards. → `test/parser.test.js` and `verify`'s *desktop (commander in both
   boxes)* run, both proved by breaking them.
+- **The deck summary's top row is the commander, and its value is a stack rather than a number.**
+  One line per commander under one key — `COMMANDERS` when there are two — because repeating the key
+  would make it the only one in the box drawn twice. It comes from `search.js`'s `commanders`, the
+  same list the pins use, so the box cannot disagree with the rows. **A card name is the one value
+  here that cannot be shortened**: behind the 9.5rem key column a 325px phone box leaves 163px and
+  *Kinnan, Bonder Prodigy* wrapped, so under **24rem of content** the key sizes to its own text on
+  that row alone — the threshold is 162px of key and gap plus ~205px for *Chatterfang, Squirrel
+  General*, which splits both phones (325px and 363px inside) from the stacked tablet at 690px.
+  → `verify`'s *two commanders* runs measure the two names' **tops**, since a stack that laid out
+  side by side passes every text assertion.
+- **`\n` inside a string in `verify-layout.js`'s `HARNESS` is a real newline by the time the browser
+  parses it**, which leaves an unterminated string, no verdict, and a run that hangs until the 120s
+  cap — write `\\n`, exactly as the `\\d` rule two bullets up. It cost most of an hour: `node --check`
+  reads the file *before* the template literal is evaluated, so it parses cleanly, and the error
+  surfaces only as *"The deck page produced no verdict"* with nothing pointing at the line.
 - **The commander pin is marked on the row, and the branch that draws nothing is the common one.**
   `commander: true` is already on the entry, so it needs no field from the snapshot — but a pasted
   list usually declares no commander at all and **neither checked-in fixture deck does**, so the

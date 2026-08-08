@@ -1291,6 +1291,30 @@ with one typo is 33% unknown and deserves to be told.
 `combos.js` returns facts only; `view-model.js` decides whether any of it is worth saying and how it is
 phrased; `app.js` draws it.
 
+### The commander is the box's top row
+
+Above the colour identity, because the identity is *derived* from the cards and the commander is the
+one thing the reader declared — and the two are read together, the row under it answering "and what
+colours does that make me". `DeckView.commanderRow()` decides whether there is anything to say;
+`search.js` hands over the same list the combo-row pins are drawn from, so the box and the pins
+cannot disagree.
+
+**One line per commander, under a single key.** Partners are two cards, and "A and B" on one line
+reads as one long name at the width this box narrows to. Repeating `COMMANDER` down the left would
+make it the only key in the box that ever appeared twice, so the names stack in the value column and
+the label follows the count — `COMMANDERS` over two.
+
+**A card name is the one value here that cannot be shortened**, which is why it gets a rule the
+numbers do not: behind the 9.5rem key column a 325px phone box leaves 163px and *Kinnan, Bonder
+Prodigy* wrapped, so under 24rem of content the key sizes to its own text on this row alone. That
+threshold is the longest real name rather than a tidy number — 162px of key and gap plus about 205px
+for *Chatterfang, Squirrel General* — and it splits the two common phones (325px and 363px inside)
+from the stacked tablet at 690px.
+
+**Nothing at all when the list declared none**, which is the common branch: a pasted decklist usually
+does not say. `verify` runs the same deck with the marker and without, and a partner pair at both
+widths — two names, two distinct tops, nothing outside the box.
+
 ### How many cards, and how many of them are lands
 
 The strip above the results — `Deck  98 cards · 62 spells · 36 lands (16 basic · 20 nonbasic)` — is the
