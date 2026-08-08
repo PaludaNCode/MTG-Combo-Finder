@@ -1412,6 +1412,37 @@ button:disabled { opacity: .6; cursor: wait; }
 .fills { margin: .15rem 0 .3rem; font-size: .85rem; color: var(--muted); }
 .fills .card-name { color: var(--text); font-weight: 600; }
 
+/* ---- a combo that uses your commander ----
+ *
+ * Drawn only on the rows where a card of the combo is in the deck's command zone, which
+ * is 11 of the Chatterfang deck's 233 and 0 of the tuning deck's 33 — measured before it
+ * was built, because the objection was that it would mark everything.
+ * prototypes/commander-combos.md has the rest, including the variant that also prints
+ * how many cards you still have to draw, which is NOT what shipped.
+ *
+ * Directly under the names, above the results: it changes how the names are read, and a
+ * card you always have is not a card you are waiting for.
+ *
+ * ITS COLOURS ARE .tab-count's, DELIBERATELY, AND NOT A NEW PAIRING — --brass-ink on
+ * solid --accent is already on screen in both themes and already covered by
+ * e2e/a11y.spec.js. Flat rather than a tint, because these land on --panel in one panel
+ * and --panel-2 in a nested one, and a translucent fill is a contrast bug waiting for a
+ * background to move. Never colour alone either: the pin carries its own word, so it
+ * survives greyscale and a reader who cannot tell the tints apart. */
+.combo-commander { margin: .2rem 0 .1rem; }
+.commander-pin {
+  display: inline-block;
+  padding: .05rem .45rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--brass-ink);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* There was a dashed variant of the pill above for a slot a combo was *short* of,
    plus the rules for the rows that showed them. They went with the "One slot away"
    panel: every slot on the page now is a slot the deck fills. */

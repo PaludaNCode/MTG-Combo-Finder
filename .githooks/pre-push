@@ -25,6 +25,45 @@ set -uo pipefail
 
 remote="${1:-origin}"
 
+# ---- every .js about to leave this machine parses -------------------------------------
+#
+# .claude/hooks/syntax-check.sh catches this at the edit, which is where it is cheapest,
+# but it is a PostToolUse hook on Edit/Write and a file written with `cat > x.js <<'EOF'`
+# fires none of those. Three .js files were written exactly that way in the session that
+# added the hook, so "every edited .js is checked" was wider than the truth — and a claim
+# wider than its check is the thing this repository keeps getting caught by.
+#
+# This is the backstop: nothing unparseable leaves the machine, however it was written.
+# It duplicates CI's first step on purpose. CI finds it after a push, in the words of
+# whatever ran next; this finds it before, naming the file.
+#
+# Tracked files only, and only .js — eslint.config.mjs is ESM and `node --check` parses a
+# bare .js as CommonJS, so an .mjs would fail here for being correct.
+if command -v node >/dev/null 2>&1; then
+  unparseable=''
+  while IFS= read -r js; do
+    [ -f "$js" ] || continue
+    node --check "$js" 2>/dev/null || unparseable="$unparseable  $js"$'\n'
+  done <<EOF
+$(git ls-files '*.js' 2>/dev/null || true)
+EOF
+  if [ -n "$unparseable" ]; then
+    cat >&2 <<MSG
+
+pre-push: refusing to push — these files do not parse:
+
+$unparseable
+  Run 'node --check <file>' for the error. If one of them is tools/verify-layout.js,
+  most of that file is inside the HARNESS template literal and a backtick in a comment
+  ends it early.
+
+  See CLAUDE.md, "Tests, and what a tool says about itself".
+
+MSG
+    exit 1
+  fi
+fi
+
 # Only interested in a force. Git does not pass the flags, so they are read from the command
 # line of the git process that invoked this hook. Best-effort by design: if this cannot be
 # read the hook stays silent rather than blocking an ordinary push.

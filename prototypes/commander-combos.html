@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — combos with your commander</title>
+  <!-- Four ways of saying "this combo uses your commander", drawn against the real
+       stylesheet so the tokens, the panel chrome and both themes are the shipped ones.
+       Only the rules for the new chip are inline, because that is what is being decided.
+
+       THE RECOMMENDATION IS C. The reasoning and every number are in
+       prototypes/commander-combos.md; the short version is that a combo's size is a
+       property of the combo and "cards you still have to draw" is a property of your
+       deck, so they are two facts and want two pieces of vocabulary. B merges them and
+       breaks the breakdown sums.
+
+       The rows are real: Chatterfang, Squirrel General as the commander, and the eleven
+       combos out of 233 that name him. Chatterfang + Pitiless Plunderer is the one combo
+       in the deck you assemble by drawing a single card, and the page prints it today as
+       "2-card" — identical to a 2-card combo where you must find both halves. That row is
+       the whole argument, so it leads every variant.
+
+       Nothing references this file, so tools/prune-artifact.js deletes the directory out
+       of the Pages artifact — see its header. It is not wired to the live renderers, so a
+       change in render-rows.js does not show up here. -->
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* ---- the new vocabulary -----------------------------------------------
+     *
+     * The chip borrows .size's geometry so it sits on the same line as the size
+     * pills without inventing a second rhythm.
+     *
+     * ITS COLOURS ARE .tab-count's, DELIBERATELY, AND NOT A NEW PAIRING:
+     * --brass-ink on solid --accent is already on screen in both themes and is
+     * already covered by e2e/a11y.spec.js. The first draft of this file invented
+     * `var(--brass-fill, transparent)` — a token that does not exist, so it fell
+     * back to transparent and left accent-coloured text making a contrast claim
+     * nothing here had measured. A prototype is not in the a11y suite, so an
+     * unverified pairing in one is a number that gets believed and then shipped.
+     *
+     * Flat, never a tint: CLAUDE.md, "A translucent fill is a contrast bug waiting
+     * for a background to move" — these land on --panel in one panel and --panel-2
+     * in another. And never colour alone: each chip carries its own words, so the
+     * marking survives greyscale and a reader who cannot tell the tints apart. */
+    .cmdr-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .1rem .45rem;
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--brass-ink);
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    /* The commander's own name inside a combo heading (variant D). A word, not an
+       icon: the mana pips are drawn here and checked for having no text, and a glyph
+       with no text alternative beside a card name is the opposite of that rule. */
+    .cmdr-name-mark {
+      margin-left: .35rem;
+      padding: 0 .3rem;
+      border-radius: 4px;
+      border: 1px solid var(--line-strong);
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    /* Prototype chrome only — none of this is proposed. */
+    body { max-width: 860px; }
+    .proto-note {
+      margin: 0 0 1rem;
+      padding: .6rem .9rem;
+      border-left: 3px solid var(--accent);
+      background: var(--panel);
+      border-radius: var(--radius);
+      font-size: .9rem;
+      color: var(--muted);
+    }
+    .proto-note b { color: var(--text); }
+    .proto-h { margin: 2rem 0 .4rem; font-size: 1rem; }
+    .proto-verdict { font-size: .85rem; color: var(--muted); margin: .3rem 0 .8rem; }
+    .proto-win { color: var(--text); font-weight: 700; }
+    .proto-row {
+      padding: .55rem .9rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      margin: .35rem 0;
+    }
+    .proto-cards { color: var(--text); font-weight: 600; font-size: .95rem; }
+    .proto-pills { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .35rem; align-items: center; }
+    .proto-quiet { color: var(--muted); font-size: .85rem; }
+  </style>
+</head>
+<body>
+
+<p class="proto-note">
+  <b>Prototype — combos with your commander.</b> Chatterfang, Squirrel General, and the
+  <b>11 of 233</b> combos in that deck which name him. Measurements and the argument are in
+  <b>prototypes/commander-combos.md</b>. <b>C is the recommendation.</b> Nothing here is wired to
+  the live renderers.
+</p>
+
+<h2 class="proto-h">A — a Commander pin</h2>
+<p class="proto-verdict">True, and inert. It names the card without saying why a deck builder
+  should care, and the row's number is unchanged — so a combo you assemble by drawing one card
+  still reads as costing two.</p>
+
+<div class="proto-row">
+  <div class="proto-cards">Chatterfang, Squirrel General + Pitiless Plunderer</div>
+  <div class="proto-pills">
+    <span class="size">2-card</span>
+    <span class="cmdr-chip">Commander</span>
+  </div>
+</div>
+<div class="proto-row">
+  <div class="proto-cards">Ghave, Guru of Spores + Ashnod's Altar + Chatterfang, Squirrel General</div>
+  <div class="proto-pills">
+    <span class="size">3-card</span>
+    <span class="cmdr-chip">Commander</span>
+  </div>
+</div>
+
+<h2 class="proto-h">B — the size pill becomes what it costs you</h2>
+<p class="proto-verdict">The honest number, in the wrong place. A combo's size is true for
+  everybody; <em>cards you still have to draw</em> is true only for this deck. Merging them makes a
+  pill that is summed and counted across panels into a deck-dependent figure, and the size
+  breakdown under a suggestion has to add up to the total beside it.</p>
+
+<div class="proto-row">
+  <div class="proto-cards">Chatterfang, Squirrel General + Pitiless Plunderer</div>
+  <div class="proto-pills">
+    <span class="size is-easiest">draw 1</span>
+  </div>
+</div>
+<div class="proto-row">
+  <div class="proto-cards">Ghave, Guru of Spores + Ashnod's Altar + Chatterfang, Squirrel General</div>
+  <div class="proto-pills">
+    <span class="size">draw 2</span>
+  </div>
+</div>
+
+<h2 class="proto-h">C — both facts, kept apart <span class="proto-win">(recommended)</span></h2>
+<p class="proto-verdict">The size pill stays what it has always been. The new chip appears only on
+  the 5% of rows where the deck changes the answer, and says the thing a builder acts on. On the
+  other 222 rows nothing is added.</p>
+
+<div class="proto-row">
+  <div class="proto-cards">Chatterfang, Squirrel General + Pitiless Plunderer</div>
+  <div class="proto-pills">
+    <span class="size">2-card</span>
+    <span class="cmdr-chip">1 to draw</span>
+  </div>
+</div>
+<div class="proto-row">
+  <div class="proto-cards">Ghave, Guru of Spores + Ashnod's Altar + Chatterfang, Squirrel General</div>
+  <div class="proto-pills">
+    <span class="size">3-card</span>
+    <span class="cmdr-chip">2 to draw</span>
+  </div>
+</div>
+<div class="proto-row">
+  <div class="proto-cards">Basalt Monolith + Rings of Brighthearth</div>
+  <div class="proto-pills">
+    <span class="size">2-card</span>
+    <span class="proto-quiet">— no commander in it, so nothing is added</span>
+  </div>
+</div>
+
+<h2 class="proto-h">D — C, plus the commander marked in the heading</h2>
+<p class="proto-verdict">The clearest, and the most new surface. Worth it only if C reads as
+  unattributed — a chip saying <em>2 to draw</em> beside a 3-card combo invites the question
+  <em>which one is free?</em>, and this answers it. A word rather than a crown: the mana pips are
+  drawn here and checked for carrying no text, and an icon with no text alternative beside a card
+  name is the opposite of that rule.</p>
+
+<div class="proto-row">
+  <div class="proto-cards">Chatterfang, Squirrel General<span class="cmdr-name-mark">Commander</span> + Pitiless Plunderer</div>
+  <div class="proto-pills">
+    <span class="size">2-card</span>
+    <span class="cmdr-chip">1 to draw</span>
+  </div>
+</div>
+<div class="proto-row">
+  <div class="proto-cards">Ghave, Guru of Spores + Ashnod's Altar + Chatterfang, Squirrel General<span class="cmdr-name-mark">Commander</span></div>
+  <div class="proto-pills">
+    <span class="size">3-card</span>
+    <span class="cmdr-chip">2 to draw</span>
+  </div>
+</div>
+
+<h2 class="proto-h">The branch that has to stay silent</h2>
+<p class="proto-verdict">Neither checked-in fixture deck declares a commander, and a pasted list
+  usually will not either — the parser only knows one when the export marks it. With no commander
+  declared, every variant above draws exactly this, which is what the page draws today.</p>
+
+<div class="proto-row">
+  <div class="proto-cards">Chatterfang, Squirrel General + Pitiless Plunderer</div>
+  <div class="proto-pills">
+    <span class="size">2-card</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1116,12 +1116,13 @@ function measure(win, doc) {
     // (No backticks in here, ever: this is inside HARNESS, a template literal.)
     whileOpen: (() => {
       if (!scaleButton || !whyPanel) return null;
-      // FOCUS IT FIRST, because a real press does. element.click() dispatches an event
-      // and moves nothing, so this harness pressed a control that never held focus --
-      // and that is the whole reason closesOnSecondPress below passed for as long as
-      // the panel existed. A CSS rule keyed on :focus-within held the panel open
-      // through the second press, on every device, and nothing here was in a position
-      // to notice. A dispatched press is not a press until focus goes with it.
+      // FOCUS IT FIRST, because a real press does, and the geometry below is measured
+      // in whatever state that leaves. element.click() dispatches an event and moves
+      // nothing, so this harness used to press a control that never held focus -- which
+      // is how a panel that could not be closed on any real device passed its own close
+      // check for the whole life of the panel. That check has moved to e2e/deck.spec.js
+      // where real input lives; the focus stays here, because a panel measured in a
+      // state no reader is ever in is a measurement of nothing.
       scaleButton.focus();
       scaleButton.click();
       const r = whyPanel.getBoundingClientRect();
@@ -1140,27 +1141,13 @@ function measure(win, doc) {
         pastBox: box ? Math.round(r.right - box.getBoundingClientRect().right) : null,
         pastWindow: Math.round(r.right - doc.documentElement.clientWidth),
       };
-      scaleButton.click(); // put it back, so nothing measured after this sees it open
+      // Put it back, so nothing measured after this sees it open. Blurred as well as
+      // pressed: the focus above was borrowed to reach the geometry, and leaving it on
+      // the control would hand every later measurement a page in a state the reader is
+      // not in.
+      scaleButton.click();
+      scaleButton.blur();
       return out;
-    })(),
-    // Read with focus still on the button, which is where the second press leaves it.
-    // This is the state a phone reader is stuck in and the one thing that has to hold:
-    // there is no pointer to move away and no Escape key within reach.
-    closesOnSecondPress: Boolean(whyPanel) && win.getComputedStyle(whyPanel).display === 'none',
-    // And the attribute agrees with the panel. They disagreed: false over an open
-    // panel, so a screen reader was told "collapsed" about something on screen.
-    saysClosed: Boolean(scaleButton) && scaleButton.getAttribute('aria-expanded') === 'false',
-    // Focus alone must not open it. This is the rule that was removed to fix the close,
-    // so it is the one that would quietly come back -- and a page where arriving at the
-    // control opens the panel is a page where leaving the control is the only way to
-    // shut it, which is the bug again.
-    opensOnFocusAlone: (() => {
-      if (!scaleButton || !whyPanel) return null;
-      scaleButton.blur();
-      scaleButton.focus();
-      const open = win.getComputedStyle(whyPanel).display !== 'none';
-      scaleButton.blur();
-      return open;
     })(),
   };
   // After the literal rather than in it, because it reads a sibling key: the press
@@ -1186,6 +1173,57 @@ function measure(win, doc) {
   //
   // ranking is the panel's own order, which is the gutter: most combos carried first.
   // It was the whole point of ranking these rows and nothing else on the page states it.
+  // The commander pin, across every combo row on the page rather than just this
+  // panel's -- it is drawn by comboCard(), which four panels use, and a list missed
+  // in search.js would show up as a pin on some panels and not others.
+  //
+  // Read as three numbers, because they fail apart. One is how many rows carry the
+  // pin, the next is how many rows name a card the deck put in the command zone, and
+  // they have to be equal: a pin on a row without one is a false claim, and a row with
+  // one and no pin is the feature silently not working. The third is whether the title
+  // says WHICH card, which is the whole of what a row-level pin cannot say.
+  // (No backticks in here, ever: this is inside HARNESS, a template literal.)
+  const commanderPins = (() => {
+      // LEAF ROWS ONLY. A .combo matches a card's row in "Combos in your deck" *and* every
+      // combo row nested inside it, so querySelector for the pin on the outer one finds a
+      // descendant and counts the card as pinned. The first version of this check did
+      // exactly that and reported 14 where the page draws 9 -- and it passed, because both
+      // sides of the assertion were counted the same wrong way. A check that measures the
+      // wrong thing consistently agrees with itself forever.
+      //
+      // (No backticks in here, ever: this is inside HARNESS, a template literal. The pair
+      // that was here parsed as a TAGGED TEMPLATE rather than breaking the file, so
+      // node --check passed it and the syntax hook had nothing to say -- the hook catches
+      // backticks that break parsing, not backticks that happen to form valid nonsense.)
+      const rows = [...doc.querySelectorAll('#results .combo')].filter((r) => !r.querySelector('.combo'));
+      const commander = 'Kinnan, Bonder Prodigy';
+      const namesIn = (row) => [...row.querySelectorAll('h3 .card-name')].map((n) => n.textContent);
+      const withCommander = rows.filter((r) => namesIn(r).some((n) => n === commander));
+      const pinned = rows.filter((r) => r.querySelector('.commander-pin'));
+      // Counted off the elements as well as off the rows. If a row ever drew two pins,
+      // or a pin appeared somewhere that is not a combo row at all, the row count alone
+      // would never say so.
+      const elements = doc.querySelectorAll('.commander-pin').length;
+      const box = pinned.length ? pinned[0].querySelector('.commander-pin').getBoundingClientRect() : null;
+      const firstName = pinned.length ? pinned[0].querySelector('h3 .card-name').getBoundingClientRect() : null;
+      return {
+        pins: pinned.length,
+        elements,
+        rowsWithCommander: withCommander.length,
+        // Every pinned row really does name the commander. Counted the other way round
+        // as well, because "same total" is satisfied by a pin on the wrong row.
+        allPinnedNameIt: pinned.every((r) => namesIn(r).some((n) => n === commander)),
+        named: pinned.length
+          ? (pinned[0].querySelector('.commander-pin').getAttribute('title') || '')
+          : '',
+        label: pinned.length ? pinned[0].querySelector('.commander-pin').textContent : '',
+        // Flush with the card name it is about. The pin sits on its own line under the
+        // names, so an indent would read as belonging to something else.
+        indent: box && firstName ? Math.round(box.left - firstName.left) : null,
+        height: box ? Math.round(box.height) : null,
+      };
+  })();
+
   const includedPanel = doc.querySelector('#pieces .panel');
   const included = {
     badge: includedPanel ? (includedPanel.querySelector('.panel-count') || {}).textContent || null : null,
@@ -1471,6 +1509,7 @@ function measure(win, doc) {
     sizes,
     dividers,
     included,
+    commanderPins,
     map,
     width: win.innerWidth,
     overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
@@ -2735,8 +2774,14 @@ function captionDrift(notes) {
           if (legal.listBelowClaim === null || legal.listBelowClaim < 0) {
             wrong.push(`the card list is level with the claim rather than under it (${legal.listBelowClaim}px)`);
           }
-          if (legal.listIndent === null || legal.listIndent !== 0) {
-            wrong.push(`the card list starts ${legal.listIndent}px in from the label, not at it — `
+          // ±1, like every other tolerance in this file, and stated so a reader knows it
+          // is deliberate: sub-pixel layout at another device pixel ratio turns a
+          // perfectly aligned list into a 1 and an exact `!== 0` would redden a correct
+          // page. The failure being caught is 540px, not a rounding.
+          if (legal.listIndent === null) {
+            wrong.push('the card list could not be measured against its label');
+          } else if (Math.abs(legal.listIndent) > 1) {
+            wrong.push(`the card list starts ${legal.listIndent}px in from the label, not at it (±1px allowed) — `
               + 'it is sharing a line with the sentence instead of taking one of its own');
           }
         }
@@ -3402,6 +3447,42 @@ function captionDrift(notes) {
     if (!inc.note.includes(`carried by ${inc.rows} of your card`)) {
       problems.push(`the panel draws ${inc.rows} cards and its note does not say so: "${inc.note}"`);
     }
+    // The commander pin, and the branch that has to stay silent beside it. This deck runs
+    // twice — with the *CMDR* marker and without — and the pair is what makes both halves
+    // checkable: the same cards, the same combos, and the only difference is whether the
+    // list said who the commander is. A pasted list usually does not, so the silent half
+    // is the common one and the one an author never sees, because the author is always
+    // testing with a marked deck.
+    const pin = v.commanderPins;
+    if (v.deck === 'plain') {
+      if (pin.pins) {
+        problems.push(`${pin.pins} combo row(s) claim a commander on a deck that declared none`);
+      }
+    } else {
+      if (!pin.rowsWithCommander) {
+        problems.push('no combo row on this page names the commander, so the pin is being checked against nothing');
+      }
+      if (pin.pins !== pin.rowsWithCommander) {
+        problems.push(`${pin.rowsWithCommander} row(s) name the commander and ${pin.pins} carry the pin`);
+      }
+      // And one pin per row: counting rows cannot see a row that drew two, or a pin
+      // drawn somewhere that is not a combo row at all.
+      if (pin.elements !== pin.pins) {
+        problems.push(`${pin.pins} row(s) carry a pin and ${pin.elements} pin(s) are on the page`);
+      }
+      if (!pin.allPinnedNameIt) problems.push('a commander pin is on a row that does not name the commander');
+      if (pin.label !== 'Commander') problems.push(`the commander pin reads "${pin.label}"`);
+      // Flush with the names above it, ±1 for sub-pixel layout. An indented pin reads as
+      // belonging to whatever is to its left rather than to the combo.
+      if (pin.indent === null || Math.abs(pin.indent) > 1) {
+        problems.push(`the commander pin starts ${pin.indent}px in from the card name, not flush with it`);
+      }
+      // The row says *that* a commander is in the combo; only the title says *which*,
+      // and on a three-card combo that is the difference between a fact and a puzzle.
+      if (!/Kinnan, Bonder Prodigy is your commander/.test(pin.named)) {
+        problems.push(`the commander pin does not name the card: "${pin.named}"`);
+      }
+    }
     // All three captions on one page, measured against each other. The map draws here, so
     // this is the run where the full set is available — see captionDrift().
     const captions = inc.notes || [];
@@ -3605,28 +3686,30 @@ function captionDrift(notes) {
     if (!bracket.closed) problems.push('the bracket explanation is on screen without being asked for');
     if (!bracket.opensOnPress) problems.push('pressing the bracket scale did not open the explanation');
     // The only way a phone has of putting it away, and it did not work: focus stays on
-    // the button after a press, and a CSS rule keyed on that held the panel open while
-    // aria-expanded went back to false. Three assertions because they are three
-    // different mistakes — the panel, what the button says about it, and the rule that
-    // caused it, which is the one that could come back without either of the others.
-    if (!bracket.closesOnSecondPress) {
-      problems.push('a second press did not close the bracket explanation again — a phone has no other way to put it away');
-    }
-    if (!bracket.saysClosed) problems.push('the pips still announce themselves as expanded after a second press');
-    if (bracket.opensOnFocusAlone) {
-      problems.push('focusing the pips opens the explanation, so leaving them is the only way to close it');
-    }
-    // And that opening it does not cost the reader the page. An absolutely positioned
-    // panel hanging off a control two paddings into the window is the one thing here
-    // that can widen the document, and a document wider than the screen is not a
-    // scrollbar on a phone — it is the browser zooming everything out to fit, which is
-    // how this was reported. Three numbers because they go red in that order: past the
-    // box first on a desktop, past the window next, document overflow last.
+    // Opening it must not cost the reader the page. An absolutely positioned panel
+    // hanging off a control two paddings into the window is the one thing here that can
+    // widen the document, and a document wider than the screen is not a scrollbar on a
+    // phone — it is the browser zooming everything out to fit, which is how this was
+    // reported. Three numbers because they go red in that order: past the box first on a
+    // desktop, past the window next, document overflow last.
+    //
+    // Whether the panel *closes* is not asked here any more. It is state, it needs a
+    // press with real focus behind it, and `a second press puts the bracket explanation
+    // away` in e2e/deck.spec.js is where that now lives — see CLAUDE.md, "A control that
+    // opens something must be measured OPEN, and pressed with focus". This file kept
+    // three assertions about it for exactly one commit, which is one commit of
+    // disagreeing with its own rule.
     const open = bracket.whileOpen;
     if (!open) {
       problems.push('the bracket explanation was never measured open');
     } else {
-      if (open.pastBox > 1) {
+      // `null` is "not measured", never "fits fine". `null > 1` is false, so the old
+      // form waved a run through in which .deck-summary had gone missing entirely — and
+      // then printed `-null` as `0px inside the box`, a figure nobody took. Absent is
+      // not false; it is a failure, the same way test/branch-rules.test.js treats it.
+      if (open.pastBox === null) {
+        problems.push('the bracket explanation could not be measured against the summary box — .deck-summary was not found');
+      } else if (open.pastBox > 1) {
         problems.push(`the open bracket explanation is ${open.pastBox}px wider than the summary box it explains `
           + `(${open.width}px) — bound it to the line it hangs off, never to the viewport`);
       }
@@ -4126,7 +4209,11 @@ function captionDrift(notes) {
       const groupNote = `grouped: ${v.grouped.altGroups.length} suggestion choice(s)${compareNote}`;
       const mixedRow = v.sizes.find((r) => r.pills.length > 1) || v.sizes[0];
       const sizeNote = `sizes ${JSON.stringify(mixedRow.pills)} unlocking [${mixedRow.unlockSizes.join(',')}]`
-        + `, ${v.included.badge} combos across ${v.included.rows} cards`;
+        + `, ${v.included.badge} combos across ${v.included.rows} cards`
+        // Printed on a passing run, both halves of it: the marked deck's count and the
+        // unmarked deck's zero are the same claim read from two directions.
+        + `, ${v.commanderPins.pins} commander pin(s)`
+        + (v.commanderPins.pins ? ` (${v.commanderPins.height}px, +${v.commanderPins.indent}px)` : '');
       // Which branch the rows took, and the width that chose it: the pair is what
       // makes a changed threshold visible in the output rather than only in a failure.
       const legalNote = v.legality.shown
@@ -4159,7 +4246,15 @@ function captionDrift(notes) {
         // The panel's width and the room it has left, printed in a passing run: the whole
         // bug was that it read fine and measured 123px off the screen, and the bound is
         // the box now rather than the window, so what the box gives it is worth seeing.
-        + `${v.bracket.whileOpen.width}px wide, ${-v.bracket.whileOpen.pastBox}px inside the box`;
+        //
+        // The room is printed only if it was measured. `-null` is `-0` and renders as
+        // "0px inside the box", which is a figure nobody took wearing the authority of
+        // one — the same mistake as the assertion above, in the half of the output a
+        // reader actually reads on a green run.
+        + `${v.bracket.whileOpen.width}px wide, `
+        + (v.bracket.whileOpen.pastBox === null
+          ? 'room in the box not measured'
+          : `${-v.bracket.whileOpen.pastBox}px inside the box`);
       const addNote = `+${v.afterAdd.card} took combos ${v.afterAdd.combosBefore}→${v.afterAdd.combosAfter}`
         + ` and the map ${v.afterAdd.mapBefore}→${v.afterAdd.mapAfter} cards`
         + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`

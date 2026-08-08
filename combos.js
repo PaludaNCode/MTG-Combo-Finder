@@ -34,6 +34,53 @@
     return set;
   }
 
+  // ---- which of the deck's cards are commanders -----------------------------
+  //
+  // `commander: true` is put on an entry by app.js, from either the `*CMDR*`-style
+  // marker the parser reads or the commander box beside the decklist. So this is the
+  // deck's own claim about itself and needs nothing from the dataset — which is what
+  // makes the whole feature free.
+  //
+  // MEASURED BEFORE IT WAS BUILT, because the objection was that it would mark
+  // everything: on the Chatterfang deck it marks 11 of 233 rows, and on the tuning
+  // deck with Kinnan declared, 0 of 33. prototypes/commander-combos.md has the rest.
+  //
+  // A list rather than a set, because the caller wants the *names*: the marker says
+  // which card, and a set of folded keys cannot spell one back.
+  function commanderNames(deckEntries) {
+    const seen = new Set();
+    const names = [];
+    for (const e of deckEntries || []) {
+      if (!e || !e.commander || typeof e.card !== 'string') continue;
+      const key = nameKey(e.card);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      names.push(e.card);
+    }
+    return names;
+  }
+
+  // Mark each row with the commanders it names, so the fact travels with the row it
+  // is about. The alternative was threading a set through six renderer signatures —
+  // suggestionCard, pieceCard, renderPieces, renderUnofficial, renderBasket,
+  // renderSuggestions — none of which is otherwise interested in commanders, and
+  // every one of which is a place to forget it.
+  //
+  // Applied to the *expanded* rows, and it mutates them: `expand()` produces a fresh
+  // object per row, so there is nothing shared to corrupt. `commanders` is left
+  // undefined rather than set to `[]` on a row that names none, so the renderer's
+  // test is the presence of the field and a deck with no commander declared produces
+  // no field anywhere — which is the branch that has to draw nothing at all.
+  function markCommanders(variants, names) {
+    const keys = new Set((names || []).map(nameKey));
+    if (!keys.size) return variants || [];
+    for (const v of variants || []) {
+      const named = variantCardNames(v).filter((n) => keys.has(nameKey(n)));
+      if (named.length) v.commanders = named;
+    }
+    return variants || [];
+  }
+
   // ---- what this session added to the deck ----------------------------------
   //
   // The cards in the deck now that were not in the deck when it arrived. Everything the
@@ -1829,6 +1876,7 @@
 
   const api = {
     computeSuggestions, deckNameSet, nameKey, basketFrom, edhrecSlug, scryfallSetQuery, variantCardNames,
+    commanderNames, markCommanders,
     orderComboNames,
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, deckCounts,

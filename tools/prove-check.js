@@ -25,10 +25,18 @@
 // is a different claim from deleting the rule — and a tool that guessed would be proving
 // its own guess.
 //
-// It cannot tell you the check was green *before* the break, either; that would mean
-// running it twice and doubling the slowest thing in the repository. Run the check
-// yourself first. A check that was already red goes red again here and this tool will
-// happily call that a pass, which is the one hole in it.
+// A fourth refusal is opt-in, because it needs something only the operator knows: with
+// `--expect <regex>` the failing output has to *say* the expected thing. Without it this
+// tool reads an exit code and nothing else, so a check reddened by an unrelated break —
+// the exact mistake the ritual exists to catch — reads as a successful demonstration.
+// Pass it whenever the expected failure has a number or a phrase in it, which is almost
+// always. It was left out of the first version and the gap was covered by prose telling
+// the reader to eyeball the output, which is the shape of every rule here that broke.
+//
+// It cannot tell you the check was green *before* the break; that would mean running it
+// twice and doubling the slowest thing in the repository. Run the check yourself first.
+// A check that was already red goes red again here and this tool will happily call that
+// a pass, which is the hole `--expect` narrows and does not close.
 'use strict';
 
 const fs = require('node:fs');
@@ -44,7 +52,7 @@ const { execSync } = require('node:child_process');
 // tree is wrong, and saying "proved" over a lost fix would be the worst thing it could
 // print. Then "nothing changed", because a check that never met the break says nothing
 // about the break. The check's own exit code is read last.
-function verdict({ restored, brokeCleanly, changed, checkFailed }) {
+function verdict({ restored, brokeCleanly, changed, checkFailed, expected, matched }) {
   if (!restored) {
     return { ok: false, why: 'THE FILES WERE NOT RESTORED — the working tree is still broken. Restore it by hand before doing anything else.' };
   }
@@ -60,16 +68,29 @@ function verdict({ restored, brokeCleanly, changed, checkFailed }) {
   if (!checkFailed) {
     return { ok: false, why: 'the check passed with the fix reverted, so it is not watching what it claims to watch' };
   }
-  return { ok: true, why: 'the check failed with the fix reverted and passed once it was back' };
+  // Last, because it only refines a failure that already happened — but it is the
+  // difference between "something went red" and "the right thing went red", which is
+  // the mistake the whole ritual exists to catch. Without --expect this tool reads an
+  // exit code and nothing else, so a check reddened by an unrelated break passes.
+  if (expected && !matched) {
+    return { ok: false, why: `the check failed, but nothing in its output matched ${JSON.stringify(expected)} — it may have gone red for an unrelated reason` };
+  }
+  return {
+    ok: true,
+    why: expected
+      ? `the check failed with the fix reverted, said ${JSON.stringify(expected)}, and passed once it was back`
+      : 'the check failed with the fix reverted and passed once it was back',
+  };
 }
 
 function parseArgs(argv) {
-  const out = { files: [], break: null, check: null };
+  const out = { files: [], break: null, check: null, expect: null };
   let key = null;
   for (const arg of argv) {
     if (arg === '--files') { key = 'files'; continue; }
     if (arg === '--break') { key = 'break'; continue; }
     if (arg === '--check') { key = 'check'; continue; }
+    if (arg === '--expect') { key = 'expect'; continue; }
     if (arg.startsWith('--')) throw new Error(`unknown option ${arg}`);
     if (key === 'files') out.files.push(arg);
     else if (key) { out[key] = arg; key = null; }
@@ -87,7 +108,10 @@ const USAGE = `usage: node tools/prove-check.js \\
             list, and guessing what to put back is how work gets lost.
   --break   a shell command that undoes the fix. Yours to write — see the note at the
             top of this file for why it is not computed.
-  --check   the check that must go red. Judged on its exit code.`;
+  --check   the check that must go red. Judged on its exit code.
+  --expect  a regex the failing output must contain. Optional, and the only thing that
+            tells "the right check went red" from "something went red" -- without it an
+            unrelated failure reads as a successful demonstration.`;
 
 function main(argv) {
   let args;
@@ -151,7 +175,20 @@ function main(argv) {
   }
 
   const restored = args.files.every((f) => fs.readFileSync(f).equals(snapshot.get(f)));
-  const result = verdict({ restored, brokeCleanly, changed, checkFailed });
+  // Built here rather than in verdict(), which stays pure data in and verdict out: a
+  // bad regex is an operator mistake and should say so, not be swallowed as "no match".
+  let matched = false;
+  if (args.expect) {
+    let re;
+    try {
+      re = new RegExp(args.expect);
+    } catch (err) {
+      console.error(`prove-check: --expect is not a valid regex: ${err.message}`);
+      return 2;
+    }
+    matched = re.test(checkOutput);
+  }
+  const result = verdict({ restored, brokeCleanly, changed, checkFailed, expected: args.expect, matched });
 
   // The failure lines, not the whole run: a red `verify` prints one line per viewport and
   // the useful part is which of them went red and what they said. Silence here with an ok
