@@ -1,0 +1,1 @@
+{"id":"890-1978-4893","description":"Activate Palladium Myr by tapping it, adding {C}{C}.\nActivate Voltaic Construct by paying {1}, untapping Palladium Myr.\nRepeat.","uses":[{"name":"Voltaic Construct","zoneLocations":["B"]},{"name":"Palladium Myr","zoneLocations":["B"],"cardState":"without summoning sickness"},{"name":"Training Grounds","zoneLocations":["B"]}]}

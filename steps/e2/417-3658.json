@@ -1,0 +1,1 @@
+{"id":"417-3658","description":"Gravity Sphere causes all creatures to lose flying.\nForm of the Dragon prevents non-flying creatures from attacking you, and since no creatures can have flying, no creatures can attack you.","uses":[{"name":"Gravity Sphere","zoneLocations":["B"]},{"name":"Form of the Dragon","zoneLocations":["B"]}]}

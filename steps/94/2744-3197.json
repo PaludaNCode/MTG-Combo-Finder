@@ -1,0 +1,1 @@
+{"id":"2744-3197","manaNeeded":"{3}{G}{G}","description":"Cast Herd Baloth by paying {3}{G}{G}.\nCathars' Crusade triggers, putting a +1/+1 counter each creature you control.\nHerd Baloth triggers, putting a green Beast token onto the battlefield.\nRepeat from step 2.","uses":[{"name":"Herd Baloth","zoneLocations":["H"]},{"name":"Cathars' Crusade","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"905-3140","description":"Activate Soltari Guerrillas by paying {0}, targeting any creature.\nHorobi triggers, destroying that creature.\nRepeat.\nYou may also repeat this loop whenever a creature enters the battlefield.","uses":[{"name":"Horobi, Death's Wail","zoneLocations":["B"]},{"name":"Soltari Guerrillas","zoneLocations":["B"]}]}

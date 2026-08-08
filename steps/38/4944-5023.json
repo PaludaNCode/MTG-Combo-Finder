@@ -1,0 +1,1 @@
+{"id":"4944-5023","description":"Activate Valki by paying {0}.\nCrackdown Construct triggers, giving itself +1/+1 until end of turn.\nRepeat.","uses":[{"name":"Valki, God of Lies // Tibalt, Cosmic Impostor","zoneLocations":["B"]},{"name":"Crackdown Construct","zoneLocations":["B"]}]}

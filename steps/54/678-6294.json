@@ -1,0 +1,1 @@
+{"id":"678-6294","description":"Cast Marketback Walker by paying {0}.\nMarketback Walker enters the battlefield and dies as a state-based action due to having 0 toughness.\nEnduring Renewal triggers, returning Marketback Walker from your graveyard to your hand.\nRepeat.","uses":[{"name":"Enduring Renewal","zoneLocations":["B"]},{"name":"Marketback Walker","zoneLocations":["H"]}]}

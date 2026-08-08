@@ -1,0 +1,1 @@
+{"id":"589-1017","notablePrerequisites":"Wizard Class is level three.\nYou have a way to draw a card.","description":"Draw a card.\nWizard Class triggers, putting a +1/+1 counter on Fathom Mage.\nFathom Mage triggers, causing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Fathom Mage","zoneLocations":["B"]},{"name":"Wizard Class","zoneLocations":["B"]}]}

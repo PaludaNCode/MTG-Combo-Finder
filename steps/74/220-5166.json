@@ -1,0 +1,1 @@
+{"id":"220-5166","description":"Deal damage to Brash Taunter.\nBrash Taunter triggers, dealing damage to an opponent.\nGuilty Conscience triggers, dealing damage to Brash Taunter.\nRepeat from step 2.","uses":[{"name":"Guilty Conscience","zoneLocations":["B"],"cardState":"attached to Brash Taunter"},{"name":"Brash Taunter","zoneLocations":["B"]}]}

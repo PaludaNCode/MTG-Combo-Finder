@@ -1,0 +1,1 @@
+{"id":"148-2353","notablePrerequisites":"Keen Sense attached to Niv-Mizzet.\nYou have a way to draw a card.","description":"Draw a card.\nNiv-Mizzet triggers, dealing 1 damage to an opponent.\nKeen Sense triggers, allowing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Niv-Mizzet, Parun","zoneLocations":["B"]},{"name":"Keen Sense","zoneLocations":["B"]}]}

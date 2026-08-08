@@ -1,0 +1,1 @@
+{"id":"95-1022","description":"Declare Lord Xander as an attacker, triggering its ability, causing an opponent to mill a number of cards equal to half their library, rounded down, times two due to Bruvac.","uses":[{"name":"Bruvac the Grandiloquent","zoneLocations":["B"]},{"name":"Lord Xander, the Collector","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

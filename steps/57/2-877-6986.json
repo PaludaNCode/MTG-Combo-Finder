@@ -1,0 +1,1 @@
+{"id":"2-877-6986","description":"Cast Ancestral Statue by paying {0}.\nWhen Ancestral Statue enters, it triggers, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Morophon, the Boundless","zoneLocations":["B"],"cardState":"with \"Golem\" chosen"},{"name":"Ancestral Statue","zoneLocations":["H"]},{"name":"Leyline of Mutation","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"17-2452","description":"Cast Lava Zombie by paying {0}.\nLava Zombie enters the battlefield, returning itself to your hand.\nRepeat.","uses":[{"name":"Lava Zombie","zoneLocations":["H"]},{"name":"Rooftop Storm","zoneLocations":["B"]}]}

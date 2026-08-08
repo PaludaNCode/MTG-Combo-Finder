@@ -1,0 +1,1 @@
+{"id":"4971-6092","notablePrerequisites":"You have a way to draw a card.","description":"Draw a card.\nNiv-Mizzet, the Firemind triggers, dealing 1 damage to an opponent.\nNiv-Mizzet, Visionary triggers, causing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Niv-Mizzet, Visionary","zoneLocations":["B"]},{"name":"Niv-Mizzet, the Firemind","zoneLocations":["B"]}]}

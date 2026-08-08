@@ -1,0 +1,1 @@
+{"id":"2034-4385","description":"Activate Sliver Queen by paying {2}, creating a 1/1 Sliver token.\nActivate Ashnod's Altar by sacrificing the Sliver token, adding {C}{C}.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Ashnod's Altar","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"1636-2205","manaNeeded":"{G} from creature sources","notablePrerequisites":"Imperious Perfect does not have summoning sickness.","description":"Pay {G} and tap Imperious Perfect to create a 1/1 Elf.\nThe Elf enters untapping all creatures you control.\nRepeat.","uses":[{"name":"Intruder Alarm","zoneLocations":["B"]},{"name":"Imperious Perfect","zoneLocations":["B"]}]}

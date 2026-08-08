@@ -1,0 +1,1 @@
+{"id":"2484-4560","manaNeeded":"{7}{R} at most","description":"Cast Blasphemous Act by paying at most {7}{R}, dealing 13 damage to each creature and causing you to gain life equal to the damage dealt this way due to Soulfire Grand Master.","uses":[{"name":"Soulfire Grand Master","zoneLocations":["B"]},{"name":"Blasphemous Act","zoneLocations":["H"]}]}

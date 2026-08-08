@@ -1,0 +1,1 @@
+{"id":"525-1749","description":"Activate Vampire Hexmage by sacrificing it, removing all counters from Divine Intervention.\nDivine Intervention triggers, causing the game to end in a draw.","uses":[{"name":"Divine Intervention","zoneLocations":["B"]},{"name":"Vampire Hexmage","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"4067-5028","description":"Activate Arcanis by tapping it, causing you to draw three cards.\nActivate Mind Over Matter by discarding a card, untapping Arcanis.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Arcanis the Omnipotent","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

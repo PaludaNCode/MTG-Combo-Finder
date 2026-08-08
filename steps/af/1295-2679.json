@@ -1,0 +1,1 @@
+{"id":"1295-2679","manaNeeded":"{1}{W}{U}{U}","notablePrerequisites":"There are no white cards in library.","description":"Activate Sacred Guide for {1}{W}, exiling your library.\nCast Thassa's Oracle, winning the game on ETB.","uses":[{"name":"Sacred Guide","zoneLocations":["B"]},{"name":"Thassa's Oracle","zoneLocations":["H"]}]}

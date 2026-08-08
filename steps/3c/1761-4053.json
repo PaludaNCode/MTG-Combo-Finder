@@ -1,0 +1,1 @@
+{"id":"1761-4053","description":"Whenever damage would be dealt to you, Delaying Shield prevents the damage.\nDelay counters cannot be placed on Delaying Shield due to Solemnity.","uses":[{"name":"Delaying Shield","zoneLocations":["B"]},{"name":"Solemnity","zoneLocations":["B"]}]}
