@@ -97,27 +97,31 @@
       card.appendChild(alt);
     }
 
-    const details = el('details');
-    details.appendChild(el('summary', null, 'Combos this unlocks'));
-    // One list, ours and Spellbook's together, ordered by groupSuggestions() — the same
-    // shape "Combos in your deck" above draws. Ours used to sit under a heading of
-    // their own beneath the published ones; each row says whose it is now, which leaves
-    // the order free to put a row of ours beside the family it belongs to.
-    //
-    // The card being suggested is the one this deck does not hold. Read per variant
-    // rather than taken from the group: a group of interchangeable cards has a different
-    // one of them in each of its combos. It must agree with the lead the list was sorted
-    // under, which is why both come from the same rule.
-    const shortOf = (v) => DeckCombos.variantCardNames(v)
-      .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
-    // …and the card that varies between these rows goes last, so the list reads as
-    // one shape: the card you would add, the cards it works with, then the piece
-    // this row swaps. Worked out over the list as drawn, since that is what the
-    // reader is comparing — which is now the whole list rather than half of it.
-    const trails = DeckCombos.interchangeableIn(group.combos);
-    group.combos.forEach((v) => details.appendChild(
-      RenderCombos.comboCard(v, deckNames, shortOf(v), trails.get(v))
-    ));
+    // Built on first open — see RenderRows.lazyDetails(). This list is the larger half
+    // of what the page draws: one row per combo the card would unlock, across every
+    // suggestion, and on a real deck that is tens of thousands of nodes nobody has asked
+    // to see.
+    const details = RenderRows.lazyDetails('Combos this unlocks', (into) => {
+      // One list, ours and Spellbook's together, ordered by groupSuggestions() — the same
+      // shape "Combos in your deck" above draws. Ours used to sit under a heading of
+      // their own beneath the published ones; each row says whose it is now, which leaves
+      // the order free to put a row of ours beside the family it belongs to.
+      //
+      // The card being suggested is the one this deck does not hold. Read per variant
+      // rather than taken from the group: a group of interchangeable cards has a different
+      // one of them in each of its combos. It must agree with the lead the list was sorted
+      // under, which is why both come from the same rule.
+      const shortOf = (v) => DeckCombos.variantCardNames(v)
+        .find((n) => !deckNames || !deckNames.has(DeckCombos.nameKey(n)));
+      // …and the card that varies between these rows goes last, so the list reads as
+      // one shape: the card you would add, the cards it works with, then the piece
+      // this row swaps. Worked out over the list as drawn, since that is what the
+      // reader is comparing — which is now the whole list rather than half of it.
+      const trails = DeckCombos.interchangeableIn(group.combos);
+      group.combos.forEach((v) => into.appendChild(
+        RenderCombos.comboCard(v, deckNames, shortOf(v), trails.get(v))
+      ));
+    });
     card.appendChild(details);
 
     return card;
@@ -180,18 +184,23 @@
     // bought you nothing yet; the row's own 0 says that already.
     if (!piece.combos.length) return card;
 
-    const details = el('details');
-    details.appendChild(el('summary', null, piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together'));
-    // The card whose combos these are leads every row, and what differs between them
-    // goes last — the same shape the suggestion above uses, for the same reason.
-    //
-    // `steps: true`, unlike the suggestion's list: these are combos the deck can actually
-    // do, and this is the only place on the page one is drawn. See comboCard() in
-    // render-combos.js for what that costs.
-    const trails = DeckCombos.interchangeableIn(piece.combos);
-    piece.combos.forEach((v) => details.appendChild(
-      RenderCombos.comboCard(v, null, piece.card, trails.get(v), { steps: true })
-    ));
+    // Built on first open, like the suggestion's list — and this is the more expensive
+    // of the two, because `steps: true` gives every row a disclosure of its own.
+    const details = RenderRows.lazyDetails(
+      piece.count === 1 ? 'The combo it is part of' : 'The combos it holds together',
+      (into) => {
+        // The card whose combos these are leads every row, and what differs between them
+        // goes last — the same shape the suggestion above uses, for the same reason.
+        //
+        // `steps: true`, unlike the suggestion's list: these are combos the deck can
+        // actually do, and this is the only place on the page one is drawn. See
+        // comboCard() in render-combos.js for what that costs.
+        const trails = DeckCombos.interchangeableIn(piece.combos);
+        piece.combos.forEach((v) => into.appendChild(
+          RenderCombos.comboCard(v, null, piece.card, trails.get(v), { steps: true })
+        ));
+      }
+    );
     card.appendChild(details);
 
     return card;

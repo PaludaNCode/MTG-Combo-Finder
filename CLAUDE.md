@@ -353,6 +353,19 @@ loosely.
 - **The steps tree has no manifest, so CI computes one.** The id *is* the URL and a 404 reads as
   "none recorded", which is also why a wrong tree is invisible: the reader is told there are no
   steps and believes it. → `tools/check-snapshot.js --steps`, against `StepsSource.pathFor()`.
+- **A combo row is built when its card's disclosure is opened, not before** —
+  `RenderRows.lazyDetails()`. Both panels list one row per combo per card, and building them all up
+  front was **87,299 DOM nodes against 11,467**, 5,179ms to first paint against 2,096ms, and
+  **8,755–13,589ms for every "+ Add to deck" against ~1,100ms** — measured on a 100-card deck against
+  the live database in desktop Chromium. On a phone viewport throttled 4×, which is where the report came
+  from, that press was **37–40 SECONDS against 5.2–6.4s**, and first paint 19,857ms against 6,324ms. **The search is not the
+  slow half and never was**: the same run reports `ready in 1.2s (download 0.4s · parse 0.3s · match
+  0.4s)`. It listens for `toggle`, not a click, because a disclosure is also opened by keyboard and by
+  a test setting `.open = true` — and that event is a **task**, so anything measuring the contents must
+  yield first (`verify` waits 80ms). **An eagerly-built page looks identical**, so the only check that
+  can see it is `verify` counting rows inside *closed* disclosures and requiring zero → proved by
+  making it eager again. Anything looking for a row must open its card first: that is why
+  `openCombo()` in `e2e/deck.spec.js` opens every one.
 - **The database is indexed, not walked.** `matchDeck()` and `standInRows()` go through
   `candidateCombos()`, which reads a card → combo-positions index kept on the combos array in a
   `WeakMap` — `matchDeck` 71.1ms → 5.4ms and `standInRows` 78.4ms → 10.2ms on the standing deck, identical

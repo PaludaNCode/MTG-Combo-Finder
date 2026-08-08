@@ -2025,6 +2025,13 @@ async function runSuggested(vp) {
     doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
     await settled(doc, '#suggestions .combo');
 
+    // The lists inside a suggestion are built on first open — see lazyDetails() in
+    // render-rows.js. Everything below reads those rows, so they have to exist first, and
+    // the toggle event is a task rather than a microtask: the wait is not optional.
+    [...doc.querySelectorAll('#suggestions .combo.suggestion > details')]
+      .forEach(function (d) { d.open = true; });
+    await new Promise((r) => setTimeout(r, 80));
+
     const pane = doc.querySelector('#suggestions .tab-pane:not([hidden])');
     const ours = pane ? pane.querySelectorAll('.row-split .ours') : [];
     const row = ours.length ? ours[0].closest('.combo') : null;
@@ -2138,12 +2145,27 @@ function runOne(vp) {
         win.DeckCombos.comboPieces = comboPieces0;
 
         // Open every card's combos before anything is measured. This is not a
-        // convenience: a combo row is only drawn inside one of these disclosures now, and
-        // a row inside a closed one has no geometry at all — every rect is 0. Left shut,
-        // the heading-shape, chip-colour, pill-inset and divider checks would all read
-        // boxes the browser never laid out, agree with themselves, and pass. Opened once
-        // here rather than per check so every one of them measures the same page.
-        [...doc.querySelectorAll('#pieces .combo.suggestion > details')]
+        // convenience, and it now does two jobs. A combo row is only drawn inside one of
+        // these disclosures, and a row inside a closed one has no geometry at all — every
+        // rect is 0. Left shut, the heading-shape, chip-colour, pill-inset and divider
+        // checks would all read boxes the browser never laid out, agree with themselves,
+        // and pass. Opened once here rather than per check so every one of them measures
+        // the same page.
+        //
+        // AND the rows do not exist until it happens: both panels build their lists on
+        // first open, because building them all up front was 87,299 DOM nodes and 8-13
+        // seconds an "+ Add to deck" on a real deck. Both panels are opened here for that
+        // reason — the suggestions half was missed when the change went in and nine
+        // viewports said "a suggestion (+3) listed no combos", which is the check doing
+        // its job. The 80ms is what makes it work: the toggle event is a task, not a
+        // microtask, so the rows do not exist on the line after this one.
+        //
+        // Counted BEFORE they are opened, and asserted to be zero: that is the whole
+        // performance property, and nothing else on the page would look wrong if it came
+        // back. A closed disclosure holding its rows renders identically to one that
+        // builds them on demand.
+        const rowsBeforeOpen = doc.querySelectorAll('#pieces details .combo, #suggestions details .combo').length;
+        [...doc.querySelectorAll('#pieces .combo.suggestion > details, #suggestions .combo.suggestion > details')]
           .forEach(function (d) { d.open = true; });
         await new Promise((r) => setTimeout(r, 80));
 
@@ -2327,7 +2349,7 @@ function runOne(vp) {
         };
 
         resolve(Object.assign({
-          ok: true, name: vp.name, requested: vp.width, deck: vp.deck,
+          ok: true, name: vp.name, requested: vp.width, deck: vp.deck, rowsBeforeOpen,
           // Which run this is has to come back with the numbers: "the deck declared a
           // commander" is a fact about the boxes, not about DECKS[vp.deck].
           commanderBox: vp.commanderBox || '',
@@ -3743,6 +3765,16 @@ function captionDrift(notes) {
       }
     } else if (unknown.shown) {
       problems.push(`a clean deck was told ${unknown.names.length} of its cards are unrecognized`);
+    }
+
+    // NOTHING INSIDE A CLOSED DISCLOSURE. Both panels build their combo lists the first
+    // time a card is opened, and this is the only check that can tell: a page that builds
+    // them all up front looks exactly the same, it is just 87,299 DOM nodes instead of
+    // 11,467 and 8-13 seconds an add instead of one. Read before the opener above runs,
+    // so it measures the page as a reader first receives it.
+    if (v.rowsBeforeOpen) {
+      problems.push(`${v.rowsBeforeOpen} combo row(s) were built inside closed disclosures — `
+        + 'the lists are supposed to be built on first open');
     }
 
     // THE DECK SUMMARY. One box, five rows: colours and bracket first — what the deck

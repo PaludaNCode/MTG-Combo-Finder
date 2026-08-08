@@ -494,6 +494,43 @@ the token of the render that booked it, because **+ Add to deck** fires a search
 `tools/verify-layout.js` asserts in both directions — the answer is in that first frame, and the other
 panels are not.
 
+### A combo row is built when its card is opened, not before
+
+The lists inside *Combos in your deck* and *Suggested additions* are the largest thing on the page by a
+wide margin: one row per combo, per card, and every one of them was built up front and hidden inside a
+closed `<details>`.
+
+**Measured on a 100-card deck against the live database**, twice: in desktop Chromium, and on a phone
+viewport with the CPU throttled 4×, which is the case the complaint came from.
+
+| | eager | on first open |
+| --- | --- | --- |
+| DOM nodes | **87,299** | **11,467** |
+| first paint, desktop | 5,179ms | 2,096ms |
+| every `+ Add to deck`, desktop | 8,755–13,589ms | ~1,100ms |
+| first paint, phone at 4× | **19,857ms** | **6,324ms** |
+| every `+ Add to deck`, phone at 4× | **37,002–40,667ms** | **5,242–6,350ms** |
+| opening one card, phone at 4× | 13,777ms | 2,919ms |
+
+A phone spent **forty seconds** on every press of a button, which is the whole report; and the work that
+remains is now paid where a reader asked for it, opening one card.
+
+**The search was never the slow half.** The same run reports `ready in 1.2s (download 0.4s · parse 0.3s ·
+match 0.4s)`: the worker had finished long before the page had. And `+ Add to deck` re-runs the whole
+render, which is why the complaint that produced this was about adding cards rather than about the first
+search.
+
+`RenderRows.lazyDetails()` is the whole mechanism — a `<details>` that builds its contents on the first
+`toggle` and never again. It listens for the event rather than a click on the summary because a
+disclosure is also opened by keyboard, by find-in-page, and by a test setting `.open = true`; only the
+event covers all four. It fires as a *task*, so anything measuring the contents has to yield first.
+
+**What checks it is `verify`, and it is the only thing that can**: a page that builds the rows eagerly
+looks identical. It counts the rows inside closed disclosures before opening anything and requires zero
+— proved by making the build eager again, which reddens nine viewports with `28 combo row(s) were built
+inside closed disclosures`. The same change made `openCombo()` in `e2e/deck.spec.js` open every card
+first: a card can no longer be found by a link inside its own list.
+
 ## Adding a card, and searching again
 
 **+ Add to deck** writes `1 <card>` into the decklist, keeps the list, and submits the form. **− Remove**,
