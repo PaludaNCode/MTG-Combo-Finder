@@ -564,12 +564,30 @@ costs one stored field. **Arrival is defined by exclusion** — the add and cut 
 things that edit the deck by themselves, so any other search is a search on a deck that arrived, which
 is an answer `app.js` already had for its status line.
 
-**The per-card counts must never be summed, and the panel is built so they cannot be.** On the
-five-card basket the prototypes were drawn from, the cards sit in 18, 11, 10, 10 and 8 of the deck's
-combos — that totals 57 while the deck gained 47, because a combo naming two of them is counted twice.
-So the caption carries one figure, the deck total before and after, and the rows carry descriptions of
-one card each. The same card also reads **+10** as a suggestion and **in 18** once the basket is full:
+**The rows are `pieceCard()`'s, the same shape *Combos in your deck* draws** — a count in the gutter,
+the card, EDHREC and Scryfall and Buy beside it, the size pills, and the combos folded away
+underneath. One builder for both panels, because they are the same claim about a card and a second
+copy of that shape would drift from it. Building the basket this way is also what deleted *Combos in
+your deck*'s private copy of the EDHREC/Scryfall pair, which had made it the one panel a change to
+that line never reached.
+
+**The gutter counts both halves**, Spellbook's and ours, split underneath the way every row on this
+page splits it. The one deck here where that matters is `unofficialAlmost`: the card completing its
+row reads **1 combo · 0 official · 1 unofficial**, and a gutter counting only the published half would
+read 0 → `e2e/deck.spec.js`, since no other fixture has an unofficial combo to lose.
+
+**The per-card counts must never be summed.** On the five-card basket the prototypes were drawn from,
+the cards sit in 18, 11, 10, 10 and 8 of the deck's combos — that totals 57 while the deck gained 47,
+because a combo naming two of them is counted twice. So the deck-level figure lives in the caption and
+nowhere else. The same card also reads **+10** as a suggestion and **in 18** once the basket is full:
 different questions, both true, and the second is the one that is true now.
+
+**The caption carries both halves too, and never adds them.** It said *"this deck still has 0 combos —
+none of them changed that"* directly above a row reading *1 combo · 0 official · 1 unofficial* — a
+caption contradicting its own rows, in the one case the unofficial panel exists to serve. Where there
+are any of ours it names the two separately, as `deckCombosNote()` does one panel up; where there are
+none, which is most decks, it says "combos" and stays short. Summing them would count an unofficial
+row as published data, which is the rule the whole panel rests on.
 
 ```bash
 node tools/try-deck.js                    # the deck the measurement comes from

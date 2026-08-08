@@ -438,8 +438,11 @@
       $('basket'),
       DeckCombos.basketFrom(DeckIO.baselineEntries(), allEntries),
       included,
+      // Both halves, so an added card's number counts the rows this project writes as
+      // well as Spellbook's — the same pair "Combos in your deck" above is built from.
+      results.unofficial || [],
       DeckIO.baselineCombos(),
-      included.length
+      { official: included.length, ours: (results.unofficial || []).length }
     ));
   }
 
@@ -764,7 +767,7 @@
       // Written before renderResults reads it back, and only ever on the search that set
       // the baseline — see recordBaselineCombos(). This is the "33" in "33 combos → 80",
       // taken from the search that has just produced it rather than recomputed later.
-      DeckIO.recordBaselineCombos(results.included.length);
+      DeckIO.recordBaselineCombos(results.included.length, (results.unofficial || []).length);
       renderResults(results, deckNames, allEntries);
       renderDataAge(results.meta);
       DeckIO.saveDeck();

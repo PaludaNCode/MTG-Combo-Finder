@@ -409,3 +409,47 @@ test('the same file can be chosen twice', async ({ page }) => {
   await page.locator('#deck-file').setInputFiles(file);
   await expect(page.locator('#decklist')).toHaveValue(/Basalt Monolith/);
 });
+
+// The basket's number counts both halves — Spellbook's combos and ours.
+//
+// It needs the one deck where an added card's combos are *entirely* unofficial:
+// `unofficialAlmost` is one card short of a row of ours and of nothing else, so the
+// card that completes it carries a count no published data would produce. Every other
+// fixture here has no unofficial combos at all, so on any of them a basket counting
+// only the published half would read exactly the same and this would pass measuring
+// nothing — the same reason WIDTHS carries a phone run of this deck in verify-layout.js.
+//
+// Driven through the page's own button rather than by typing the card in, because the
+// baseline that decides what is in the basket is set by a search that no add started.
+test('the basket counts our combos as well as Spellbook’s', async ({ page }) => {
+  await pasteDeck(page, DECKS.unofficialAlmost);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+  await expect(page.locator('#results')).toBeVisible();
+  // Not the shared search() helper, which waits on "#pieces .combo": this deck holds no
+  // *complete* combo at all, so that panel legitimately renders its empty line and the
+  // wait would time out. The suggestions are what this deck has, and they are built a
+  // frame after the combos, so this is the wait that means "the page is finished".
+  const suggestion = page.locator('#suggestions .tab-pane:not([hidden]) .combo.suggestion').first();
+  await expect(suggestion).toBeVisible();
+
+  await suggestion.locator('.add-card').first().click();
+  const row = page.locator('#basket .combo.suggestion').first();
+  await expect(row).toBeVisible();
+
+  // The total is the sum, and the split under it is whose. Read as the spoken label
+  // rather than as text: the split is in the DOM twice, "0 official · 1 unofficial"
+  // wide and a bare "0+1" narrow, and only one of them is showing at any width.
+  await expect(row.locator('.row-total')).toHaveText('1');
+  await expect(row.locator('.row-split')).toHaveAttribute('aria-label', /1 unofficial/);
+
+  // …and the row is the one "Combos in your deck" draws, links and all.
+  await expect(row.locator('.row-main .card-links a')).toHaveText([/EDHREC/, /Scryfall/, /Buy/]);
+
+  // The caption has to agree with the row above it. Counting only the published half
+  // put "this deck still has 0 combos — none of them changed that" directly over a row
+  // reading "1 combo · 0 official · 1 unofficial", which is the page contradicting
+  // itself in exactly the case the unofficial rows exist for.
+  const note = page.locator('#basket .panel-note');
+  await expect(note).not.toContainText('none of them changed that');
+  await expect(note).toContainText('1 of ours');
+});

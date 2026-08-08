@@ -162,7 +162,7 @@ for (const theme of ['dark', 'light']) {
     // pass while checking nothing.
     await page.locator('#suggestions .tab-pane:not([hidden]) .combo.suggestion .add-card').first().click();
     await expect(page.locator('#basket .panel')).toBeVisible();
-    await expect(page.locator('#basket .basket-row')).toHaveCount(1);
+    await expect(page.locator('#basket .combo.suggestion')).toHaveCount(1);
     await expectClean(page);
   });
 }

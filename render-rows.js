@@ -137,12 +137,22 @@
   }
 
 
-  function cardLinks(name) {
+  // Where to read about a card, and — only where it makes sense — where to buy it.
+  //
+  // **`buy` is opt-in, and that is the whole of the decision.** A Buy link belongs on a
+  // card the reader does not have: a suggestion, one of its interchangeable alternatives,
+  // or something in the basket. Everywhere else this function is called the card is
+  // already in the deck, and offering to sell somebody a card they own is at best noise.
+  // It shipped as a default-on for two days and was wrong in two places — beside the
+  // Game Changers in the bracket explanation, and on the legality line, where it offered
+  // to sell the reader a card that is *banned in the deck they just pasted*. Opting in
+  // makes the wrong answer the one somebody has to ask for.
+  function cardLinks(name, opts) {
     const links = el('span', 'card-links');
     links.appendChild(link('https://edhrec.com/cards/' + DeckCombos.edhrecSlug(name), 'EDHREC'));
     links.appendChild(document.createTextNode(' · '));
     links.appendChild(link('https://scryfall.com/search?q=' + encodeURIComponent('!"' + name + '"'), 'Scryfall'));
-    const buy = buyLink(name);
+    const buy = opts && opts.buy ? buyLink(name) : null;
     if (buy) {
       links.appendChild(document.createTextNode(' · '));
       links.appendChild(buy);
@@ -334,7 +344,9 @@
     const cardName = el('span', 'card-name', name);
     cardName.title = name;
     li.appendChild(cardName);
-    li.appendChild(cardLinks(name));
+    // A card the deck does not hold — that is what the alternatives list is — so it
+    // takes the Buy link the suggestion above it carries.
+    li.appendChild(cardLinks(name, { buy: true }));
     li.appendChild(addButton(name, '+ Add'));
     return li;
   }

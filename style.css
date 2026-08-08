@@ -1147,43 +1147,21 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* ---- "Cards you've added" --------------------------------------------------
  *
- * One line per card, and deliberately not `.combo.suggestion`'s two-column grid. That
- * row's gutter carries a display-size number because the row is a decision — is this
- * worth a slot — and by the time a card is in this panel the decision is taken. What is
- * left is the card, the reason to keep it, and a way out.
+ * The rows are `.combo.suggestion`, built by the same pieceCard() that draws "Combos in
+ * your deck", so they need no layout rules of their own — the gutter, the border-left
+ * down the card's column and every container threshold are already theirs. That is the
+ * whole reason the panel is built from that function rather than from a list: a second
+ * row shape would be a second set of these rules, drifting.
  *
- * So the count here is muted and tabular rather than large: it is the thing somebody
- * re-checks before paying, not the thing that makes the case. */
-.basket-row {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: .5rem;
-  padding: .45rem 0;
-  border-bottom: 1px solid var(--line);
-}
-.basket-row:last-of-type { border-bottom: 0; }
-.basket-qty {
-  flex: 0 0 1.5rem;
+ * What is left here is the quantity and the actions bar.
+ *
+ * The quantity is silent at 1, which is every card in a singleton format, so this only
+ * ever draws where the decklist really holds more than one. Muted and tabular, ahead of
+ * the name, because it qualifies the name rather than competing with it. */
+.row-qty {
   color: var(--muted);
-  font-size: .85rem;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
-}
-.basket-name { flex: 1; min-width: 0; color: var(--text); }
-.basket-in {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: .8rem;
-  font-variant-numeric: tabular-nums;
-}
-/* Below the row's own threshold the count drops under the name rather than off the end
- * of it, indented past the quantity so it reads as belonging to the card above. A card
- * name sharing its line with a number it could be mistaken for is the failure being
- * avoided — the same reason a suggestion's name gets a line of its own on a phone.
- * Keyed on the row's container, never the viewport: the panel body is 442px at a 900px
- * window, where the two columns disagree by 258px. */
-@container rows (max-width: 419px) {
-  .basket-in { flex-basis: 100%; padding-left: 2rem; }
 }
 
 /* Copy first, stores after it, and the order is the argument. The copy works for every

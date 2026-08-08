@@ -164,38 +164,48 @@
   //
   // `before` is null until a search has established a baseline, and then the sentence is
   // the card count alone rather than a delta against a number nobody measured.
+  // `before` and `after` are `{ official, ours }` pairs, and taking both halves is not
+  // decoration — it is the fix for a caption that contradicted its own rows. The rows
+  // count both, the way every row on this page does, so a caption counting only the
+  // published half read **"this deck still has 0 combos — none of them changed that"**
+  // directly above a row saying **1 combo · 0 official · 1 unofficial**. Photographed on
+  // the `unofficialAlmost` fixture, which is the one deck here where an added card's
+  // combos are entirely ours.
+  //
+  // They are still never *summed*. An unofficial row is not published data, and "this
+  // deck has 14 combos" would be counting it as though it were — the rule the whole
+  // unofficial panel rests on. So where there are any of ours the sentence names the two
+  // separately, exactly as `deckCombosNote()` does one panel up; where there are none —
+  // which is most decks — it says "combos" and stays short.
   function basketNote(cards, before, after) {
     if (!cards) return null;
     const combos = (n) => n + ' combo' + (n === 1 ? '' : 's');
     const what = `${cards} card${cards === 1 ? '' : 's'} that ${cards === 1 ? 'was' : 'were'} `
       + 'not in the deck you started with';
 
-    if (before == null || after == null) {
+    if (!before || !after || before.official == null || after.official == null) {
       return { count: cards, sentence: what + '.' };
     }
-    // Three endings, because "went from 33 to 33" is a sentence that reads as an error
-    // and "went from 33 to 28" is the reader's own doing — they cut something by hand —
-    // and both are worth saying plainly rather than phrasing as a gain.
+
     let outcome;
-    if (after > before) {
-      outcome = `this deck has ${combos(after)} rather than ${before}`;
-    } else if (after === before) {
-      outcome = `this deck still has ${combos(after)} — none of them changed that`;
+    if (before.ours || after.ours) {
+      // "(was N)" rather than three phrasings per half: with two halves that is nine
+      // sentences, and the one nobody writes a test for is the one that reads wrong.
+      outcome = `this deck has ${combos(after.official)} published by Commander Spellbook `
+        + `(was ${before.official}) and ${after.ours} of ours (was ${before.ours})`;
+    } else if (after.official > before.official) {
+      outcome = `this deck has ${combos(after.official)} rather than ${before.official}`;
+    } else if (after.official === before.official) {
+      // "went from 33 to 33" reads as an arithmetic error rather than as the useful fact
+      // it is, which is that the reader has bought nothing.
+      outcome = `this deck still has ${combos(after.official)} — none of them changed that`;
     } else {
-      outcome = `this deck has ${combos(after)}, down from ${before}`;
+      // Reachable: the basket holds only additions, but the reader can cut cards by hand
+      // in the same sitting, and phrasing that as a gain would be the page lying about
+      // their own edit.
+      outcome = `this deck has ${combos(after.official)}, down from ${before.official}`;
     }
     return { count: cards, sentence: `${what}. With ${cards === 1 ? 'it' : 'them'} in, ${outcome}.` };
-  }
-
-  // What one basket row says about its card. The same question "Combos in your deck"
-  // answers for every card of the deck, asked again here — the card is in the deck now,
-  // so this is that panel's number and not the "+10" the suggestion carried before it
-  // was added. Those two differ by design and by a lot: Herd Baloth was +10 as a
-  // suggestion and is in 18 once the rest of the basket is in, because the other cards
-  // brought combos it also appears in.
-  function basketRowNote(inCombos) {
-    if (!inCombos) return 'in no combos yet';
-    return 'in ' + inCombos + ' combo' + (inCombos === 1 ? '' : 's');
   }
 
   // ---- the numbers a row carries, and whose combos they are -------------------
@@ -647,7 +657,6 @@
     sizePills,
     deckCombosNote,
     basketNote,
-    basketRowNote,
     rowNumbers,
     bracketProse,
     timingSentence,

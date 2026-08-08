@@ -2105,12 +2105,28 @@ function runOne(vp) {
           // caption quoting the search before the add, or a placeholder affiliate id
           // reaching a live link, none of which move a single pixel.
           const bp = doc.querySelector('#basket .panel');
+          const bpRow = bp ? bp.querySelector('.combo.suggestion') : null;
           afterAdd.basket = bp ? {
             badge: bp.querySelector('.panel-count').textContent,
             note: bp.querySelector('.panel-note').textContent,
-            rows: [].map.call(bp.querySelectorAll('.basket-row .basket-name'), function (n) {
-              return n.textContent;
-            }),
+            // The rows are pieceCard()'s, the same shape "Combos in your deck" draws, so
+            // they are read by that selector rather than by one of their own — which is
+            // the assertion as much as the measurement: a basket that grew a row shape
+            // of its own would report nothing here and say so.
+            rows: [].map.call(bp.querySelectorAll('.combo.suggestion > .row-main .card-name'),
+              function (n) { return n.textContent; }),
+            // The number in the gutter, and the split under it. Both halves count: a
+            // card holding up combos of ours only would read 0 without the second.
+            total: bpRow && bpRow.querySelector('.row-total')
+              ? bpRow.querySelector('.row-total').textContent : '',
+            totalLabel: bpRow && bpRow.querySelector('.row-total-label')
+              ? bpRow.querySelector('.row-total-label').textContent : '',
+            split: bpRow && bpRow.querySelector('.row-split')
+              ? bpRow.querySelector('.row-split').getAttribute('aria-label') : '',
+            links: bpRow
+              ? [].map.call(bpRow.querySelectorAll('.row-main .card-links a'),
+                function (a) { return a.textContent.trim(); })
+              : [],
             stores: [].map.call(bp.querySelectorAll('.basket-store'), function (a) {
               return a.getAttribute('href');
             }),
@@ -3689,6 +3705,41 @@ function captionDrift(notes) {
           problems.push(`the basket caption should carry ${added.combosBefore}→${added.combosAfter}, `
             + `and reads "${basket.note}"`);
         }
+        // The caption must not contradict the rows under it. The gutter counts both
+        // halves, so a caption counting only the published one said "still 0 combos"
+        // over a row reading "1 combo" — on the one deck here where an added card's
+        // combos are entirely ours. This deck has none, so the check that catches that
+        // case is in e2e/deck.spec.js where a deck with unofficial rows can be driven;
+        // what is checkable here is that the two never disagree about zero.
+        if (/still 0 combos/.test(basket.note) && basket.total !== '0') {
+          problems.push(`the basket caption says "still 0 combos" over a row reading ${basket.total}`);
+        }
+        // The row is "Combos in your deck"'s row: a number in the gutter with the word
+        // under it, and the reading links beside the name. Checked because "looks like
+        // the panel above" is the requirement, and a row that quietly stopped carrying
+        // its gutter would still render a perfectly good card name.
+        if (!/^\d+$/.test(basket.total)) {
+          problems.push(`the basket row's gutter reads "${basket.total}" rather than a count`);
+        }
+        if (!/combos?/i.test(basket.totalLabel)) {
+          problems.push(`the basket row's gutter is unlabelled: "${basket.totalLabel}"`);
+        }
+        // The count is both halves. A split appears only where the card has some of
+        // each, so its absence is not a failure — but where it is drawn its two numbers
+        // have to add up to the total above them, or the row is two claims disagreeing.
+        if (basket.split) {
+          const halves = basket.split.match(/\d+/g) || [];
+          const sum = halves.reduce((n, x) => n + Number(x), 0);
+          if (String(sum) !== basket.total) {
+            problems.push(`the basket row splits ${basket.total} into "${basket.split}", which sums to ${sum}`);
+          }
+        }
+        // EDHREC, Scryfall and Buy — the reading links the panel above carries, plus the
+        // one this panel exists for.
+        if (!['EDHREC', 'Scryfall', 'Buy'].every((l) => basket.links.some((a) => a.startsWith(l)))) {
+          problems.push(`the basket row's links are ${JSON.stringify(basket.links)}, `
+            + 'expected EDHREC, Scryfall and Buy');
+        }
         // Copy first: it is the action that works for every reader in every region, and
         // the one the panel falls back to when a list is too long for a store link.
         if (!basket.copy) problems.push('the basket has no Copy list button');
@@ -4076,7 +4127,10 @@ function captionDrift(notes) {
         + `, strip "${v.afterAdd.countsBefore}" → "${v.afterAdd.countsAfter}"`
         + (v.afterAdd.basket
           ? `, basket ${v.afterAdd.basket.badge} [${v.afterAdd.basket.rows.join(', ')}]`
-            + ` + ${v.afterAdd.basket.stores.length} store link(s)`
+            + ` gutter ${v.afterAdd.basket.total} ${v.afterAdd.basket.totalLabel.toLowerCase()}`
+            + (v.afterAdd.basket.split ? ` (${v.afterAdd.basket.split})` : '')
+            + `, links ${v.afterAdd.basket.links.join('/')}`
+            + `, ${v.afterAdd.basket.stores.length} store link(s)`
           : ', no basket');
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `
         + `(${v.map.tiers.join(',')}) + ${v.map.swapEdges} interchangeable, counts `
