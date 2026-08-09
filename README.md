@@ -494,6 +494,46 @@ the token of the render that booked it, because **+ Add to deck** fires a search
 `tools/verify-layout.js` asserts in both directions — the answer is in that first frame, and the other
 panels are not.
 
+### A combo row is built when its card is opened, not before
+
+The lists inside *Combos in your deck* and *Suggested additions* are the largest thing on the page by a
+wide margin: one row per combo, per card, and every one of them was built up front and hidden inside a
+closed `<details>`.
+
+**Measured on a 100-card deck against the live database**, on a phone viewport with the CPU throttled 4×
+— the case the report came from — and on an unthrottled desktop:
+
+| | eager | on first open |
+| --- | --- | --- |
+| DOM nodes | **106,983** | **12,108** |
+| first search, phone at 4× | 5,506ms | **3,957ms** |
+| every `+ Add to deck`, phone at 4× | 9,721–16,639ms | **2,024–3,510ms** |
+| first search, desktop | 1,372ms | 1,176ms |
+| every `+ Add to deck`, desktop | 2,606–2,912ms | **425–474ms** |
+
+**The search was never the slow half.** The worker reports `ready in 1.2s (download 0.4s · parse 0.3s ·
+match 0.4s)` on the first search and holds the database in memory afterwards, so an add's whole round trip
+to it is ~260ms at 4×. `+ Add to deck` re-runs the render, which is why the complaint was about adding
+cards rather than about the first search.
+
+**MEASURE THIS FROM INSIDE THE PAGE, NOT THROUGH THE HARNESS.** The first version of the numbers above
+was taken with Playwright locators and `waitForFunction` around each press, and reported 37–40 seconds an
+add. A CPU profile of that run put **26% of the samples in `visitNode`** — Playwright's own actionability
+checks walking a 107,000-node DOM under throttling. The ratio survived; the absolute figures did not. What
+replaced it starts a clock in a click listener and stops it at the end of the last panel, and drives the
+press with `element.click()` so nothing queries the page while it works.
+
+`RenderRows.lazyDetails()` is the whole mechanism — a `<details>` that builds its contents on the first
+`toggle` and never again. It listens for the event rather than a click on the summary because a
+disclosure is also opened by keyboard, by find-in-page, and by a test setting `.open = true`; only the
+event covers all four. It fires as a *task*, so anything measuring the contents has to yield first.
+
+**What checks it is `verify`, and it is the only thing that can**: a page that builds the rows eagerly
+looks identical. It counts the rows inside closed disclosures before opening anything and requires zero
+— proved by making the build eager again, which reddens nine viewports with `28 combo row(s) were built
+inside closed disclosures`. The same change made `openCombo()` in `e2e/deck.spec.js` open every card
+first: a card can no longer be found by a link inside its own list.
+
 ## Adding a card, and searching again
 
 **+ Add to deck** writes `1 <card>` into the decklist, keeps the list, and submits the form. **− Remove**,
@@ -1304,23 +1344,23 @@ reads as one long name at the width this box narrows to. Repeating `COMMANDER` d
 make it the only key in the box that ever appeared twice, so the names stack in the value column and
 the label follows the count — `COMMANDERS` over two.
 
-**The name keeps the value column at every width, and it is the row that pays for that.** 587px
-against 587px on a laptop, 187px against 187px on a phone. A card name is the one value in this box
-that cannot be shortened, so behind the 9.5rem key column a 325px phone box leaves it 163px and a
+**The name keeps the value column at every width, and it is the row that pays for that.** 579px
+against 579px on a laptop, 179px against 179px on a phone. A card name is the one value in this box
+that cannot be shortened, so behind the 9rem key column a 325px phone box leaves it 186px and a
 long commander takes two lines — *Chatterfang, Squirrel General* does, *Kinnan, Bonder Prodigy* does
 on the narrowest phones and not on a 412px one. Nothing is hidden and nothing overflows; the row is
 as tall as the name. This row is therefore the one exemption from the box's no-wrapping rule, and it
 is held to its x instead.
 
 **How long a name has to be before it takes two lines is the width of that column**, measured with a
-probe laid out in the row's own font rather than counted in characters: **178px and about 18
-characters at 390px**, 200px and 21 at a 412px phone, 544px and 63 on a stacked tablet, and 822px at
+probe laid out in the row's own font rather than counted in characters: **186px and about 19
+characters at 390px**, 208px and 22 at a 412px phone, 552px and 64 on a stacked tablet, and 830px at
 1440px — past any real card name, so nothing wraps from a laptop up. Most commanders are longer than
-18 characters, so a phone is where this is visible and the only place it is.
+19 characters, so a phone is where this is visible and the only place it is.
 
 There was a version that gave this row its own key width below 24rem so the name always fitted on
 one line. It bought that with the only ragged row in the box — the name starting at 145px while
-every figure and pip started at 187px — and the column is the point of a row per fact, so it went.
+every figure and pip started at 179px — and the column is the point of a row per fact, so it went.
 
 **The label is bound to the first commander, not centred against the stack.** Every other row in the
 box centres its items, which is right when the value is one line; against two names it put
@@ -1375,9 +1415,10 @@ work — at `.75rem` the full line still wraps. Rows cost height, all of it dire
 page is for: **149px** for five rows against **22px** for the line. Nothing is hidden at any width in
 exchange.
 
-The keys hold a **9.5rem column**, which is what `COLOUR IDENTITY` needs at `.8rem`; under **24rem of
-box** — a 320px phone leaves 301px — they size to their own text instead, because a fixed column there
-leaves 130px for the value and two of the five rows wrap to double height. `verify` checks every row is
+The keys hold a **9rem column**, which is `COLOUR IDENTITY` at `.8rem` — **138px of ink in 144px**,
+and every other key is 101px or less, so that one label sets the width and there are 6px in hand.
+Under **24rem of box** — a 320px phone leaves 301px — they size to their own text instead, because a
+fixed column there leaves 126px for the value and two of the five rows wrap to double height. `verify` checks every row is
 one line, that the keys share one x, and that the figures share one x while the column is fixed.
 
 **Three claims, three ways to be silent rather than wrong**, all of them the rule

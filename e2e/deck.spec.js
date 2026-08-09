@@ -24,11 +24,20 @@ async function search(page) {
 
 // A combo row lives inside one of your cards now, so getting at one is two steps:
 // find the card that carries the combo, then open it. Returns the row itself.
+// Opening the card whose list holds a given combo, and handing back that row.
+//
+// Every card's disclosure is opened, in order, rather than the one the row is in —
+// because until a disclosure has been opened its rows do not exist, so a card cannot be
+// found by a link inside it. See lazyDetails() in render-rows.js for why the page is
+// built that way; the deck here is the fixture's, so this is a handful of clicks.
 async function openCombo(page, hrefFragment) {
+  const summaries = page.locator('#pieces .panel-body > .combo.suggestion > details > summary');
+  const count = await summaries.count();
+  for (let i = 0; i < count; i += 1) await summaries.nth(i).click();
+
   const card = page.locator('#pieces .panel-body > .combo.suggestion')
     .filter({ has: page.locator(`a[href*="${hrefFragment}"]`) })
     .first();
-  await card.locator('> details > summary').click();
   return card.locator('details > .combo')
     .filter({ has: page.locator(`a[href*="${hrefFragment}"]`) })
     .first();

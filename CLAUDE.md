@@ -353,6 +353,26 @@ loosely.
 - **The steps tree has no manifest, so CI computes one.** The id *is* the URL and a 404 reads as
   "none recorded", which is also why a wrong tree is invisible: the reader is told there are no
   steps and believes it. → `tools/check-snapshot.js --steps`, against `StepsSource.pathFor()`.
+- **A combo row is built when its card's disclosure is opened, not before** —
+  `RenderRows.lazyDetails()`. Both panels list one row per combo per card, and building them all up
+  front was **106,983 DOM nodes against 12,108** on a 100-card deck against the live database. Every
+  "+ Add to deck" was **2,606–2,912ms against 425–474ms** on a desktop and **9,721–16,639ms against
+  2,024–3,510ms** on a phone viewport throttled 4×, which is where the report came from. **The search is
+  not the slow half and never was**: the worker holds the database in memory, so an add's whole round
+  trip to it is ~260ms at 4×. **The search is not the
+  slow half and never was**: the same run reports `ready in 1.2s (download 0.4s · parse 0.3s · match
+  0.4s)`. It listens for `toggle`, not a click, because a disclosure is also opened by keyboard and by
+  a test setting `.open = true` — and that event is a **task**, so anything measuring the contents must
+  yield first (`verify` waits 80ms). **An eagerly-built page looks identical**, so the only check that
+  can see it is `verify` counting rows inside *closed* disclosures and requiring zero → proved by
+  making it eager again. Anything looking for a row must open its card first: that is why
+  `openCombo()` in `e2e/deck.spec.js` opens every one.
+- **Time the page from inside the page.** The first version of those numbers came through Playwright
+  locators and `waitForFunction`, and said 37–40s an add; a CPU profile put **26% of the samples in
+  `visitNode`** — the harness's own actionability checks walking a 107,000-node DOM under throttling. The
+  ratio survived, the absolute figures did not, and they had already been written into the README. Start a
+  clock in a click listener, stop it at the end of the last panel, and drive the press with
+  `element.click()` so nothing queries the page while it is working.
 - **The database is indexed, not walked.** `matchDeck()` and `standInRows()` go through
   `candidateCombos()`, which reads a card → combo-positions index kept on the combos array in a
   `WeakMap` — `matchDeck` 71.1ms → 5.4ms and `standInRows` 78.4ms → 10.2ms on the standing deck, identical
@@ -405,11 +425,11 @@ loosely.
   One line per commander under one key — `COMMANDERS` when there are two — because repeating the key
   would make it the only one in the box drawn twice. It comes from `search.js`'s `commanders`, the
   same list the pins use, so the box cannot disagree with the rows. **The name keeps the value column
-  at every width** — 587px against 587px on a laptop, **187px against 187px on a phone** — and it is
+  at every width** — 579px against 579px on a laptop, **179px against 179px on a phone** — and it is
   **the one row exempt from the box's no-wrapping rule** in exchange: a card name cannot be
-  shortened, so behind the 9.5rem key a 325px phone box leaves it 163px and a long commander takes
+  shortened, so behind the 9rem key a 325px phone box leaves it 186px and a long commander takes
   two lines. A version that gave this row its own key width below 24rem so it always fitted was
-  reverted — it made the only ragged row in the box, the name at 145px against figures at 187px.
+  reverted — it made the only ragged row in the box, the name at 145px against figures at 179px.
   → `verify`'s *two commanders* runs measure the two names' **tops**, since a stack that laid out
   side by side passes every text assertion, and pin the name's x at both widths. `valueLefts` cannot
   do it — it reads `.summary-n`, and this is the one row whose value is not a number, so it was the
@@ -425,7 +445,7 @@ loosely.
   first is the one nobody reaches for: flex line-breaking uses an item's **content** width and only
   shrinks items once they are placed, so a value wider than the space left moves to its own line
   *before* shrink is considered — the commander names landed under their label at 25px against a
-  column at 187px. A zero basis stops it asking for more than it is given; `min-width: 0` then lets
+  column at 179px. A zero basis stops it asking for more than it is given; `min-width: 0` then lets
   the text inside break instead of widening the row.
 - **Two ways to get a geometry assertion wrong, both met writing that one, both found by breaking
   it.** "The name is left of the value column" is satisfied by the *broken* layout too — a value

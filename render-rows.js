@@ -450,6 +450,38 @@
   // Set when + Add to deck was pressed and read exactly once, by the render that follows
   // the re-search it triggers. A getter that clears is the honest shape for that: the note
   // belongs to one render and leaving it set would repeat it on the next one.
+  // A disclosure whose contents are built the first time it opens, and never again.
+  //
+  // THIS IS THE PAGE'S BIGGEST PERFORMANCE DECISION AND IT IS WORTH THE PARAGRAPH.
+  // Every combo a card holds up is a row, and both panels draw one list per card: on a
+  // 100-card deck holding 464 combos that was 87,299 DOM nodes, of which 83,000 sat
+  // inside disclosures nobody had opened. Measured against the live database on a
+  // desktop: 5.2s to first paint and 8.7–13.6s for every press of "+ Add to deck",
+  // which re-runs the whole render. With the rows built on demand the same deck lands
+  // at 13,126 nodes, 2.1s and about 1s an add — and a phone is several times worse than
+  // any of those numbers, which is where the report came from.
+  //
+  // `toggle` rather than a click on the summary: the disclosure is opened by keyboard,
+  // by a click anywhere on the summary, by find-in-page in some browsers, and by a test
+  // setting `.open = true`. Only the event covers all four. It fires asynchronously —
+  // a task, not a microtask — so anything measuring the contents must yield first, which
+  // `verify` already did for its own reasons.
+  //
+  // Built once: `open` toggles both ways and a rebuild on every close-and-open would
+  // trade a slow first render for a slow every-time one, and would throw away the state
+  // of the steps disclosures nested inside.
+  function lazyDetails(summaryText, build) {
+    const details = el('details');
+    details.appendChild(el('summary', null, summaryText));
+    let built = false;
+    details.addEventListener('toggle', () => {
+      if (built || !details.open) return;
+      built = true;
+      build(details);
+    });
+    return details;
+  }
+
   function takeAddedNote() {
     const name = addedNote;
     addedNote = null;
@@ -463,7 +495,7 @@
     return name;
   }
 
-  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, buyLink, addCardToDeck, addButton, removeCardFromDeck, removeButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, takeAddedNote, takeRemovedNote };
+  const api = { SPELLBOOK_COMBO_URL, ALTERNATIVES_SHOWN, manaPips, resultChips, alphabetical, comboCardNames, cardLinks, buyLink, addCardToDeck, addButton, removeCardFromDeck, removeButton, sizeRow, alternativeItem, cardsOnScryfall, numberGutter, lazyDetails, takeAddedNote, takeRemovedNote };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
