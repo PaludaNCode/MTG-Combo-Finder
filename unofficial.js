@@ -13253,6 +13253,362 @@
         'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
       ],
     },
+    // ---- Guide of Souls, against Impassioned Orator ---------------------------
+    //
+    // The two read the same clause word for word — "Whenever another creature you
+    // control enters, you gain 1 life" — and Guide of Souls adds "and get {E}", which
+    // is a second thing it does rather than a change to the first. Spellbook publishes
+    // the Orator in 35 shapes it does not publish Guide of Souls in; three of those are
+    // already here or already published under another pairing, and these are the rest.
+    //
+    // An earlier pass — "Prosperous Innkeeper, and the peer that gains life twice a
+    // lap" — ruled Guide of Souls OUT of that sweep, and the reason it gives is about
+    // the wrong direction: the loops Guide of Souls is *published* in (Aethergeode
+    // Miner, Decoction Module, Aether Refinery) spend the energy rather than the life,
+    // so it does not score as a lifegain peer. That is a fact about its own combos, not
+    // about whether it fills the slot in somebody else's, and the slot it fills here is
+    // the Orator's exactly. See research-log.js for the pass that re-opened it.
+    {
+      cards: ["Archangel of Thune", "Guide of Souls", "Herd Baloth"],
+      confidence: 'derived',
+      from: {
+        id: "2919-2999-3197",
+        cards: ["Archangel of Thune", "Impassioned Orator", "Herd Baloth"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on creatures you control"],
+    },
+    {
+      cards: ["Archangel of Thune", "Guide of Souls", "Scurry Oak"],
+      confidence: 'derived',
+      from: {
+        id: "2919-2999-4186",
+        cards: ["Archangel of Thune", "Impassioned Orator", "Scurry Oak"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on creatures you control"],
+    },
+    {
+      cards: ["Basking Broodscale", "Cleric Class", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "104-2999-5641",
+        cards: ["Basking Broodscale", "Cleric Class", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite +1/+1 counters on a creature", "Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite death triggers", "Infinite colorless mana"],
+    },
+    {
+      cards: ["Basking Broodscale", "Guide of Souls", "Spider-Man, Peter Parker"],
+      confidence: 'derived',
+      from: {
+        id: "2999-5641-6824",
+        cards: ["Basking Broodscale", "Impassioned Orator", "Spider-Man, Peter Parker"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite death triggers", "Infinite colorless mana"],
+    },
+    {
+      cards: ["Basking Broodscale", "Guide of Souls", "Sunbond"],
+      confidence: 'derived',
+      from: {
+        id: "2999-4017-5641",
+        cards: ["Basking Broodscale", "Impassioned Orator", "Sunbond"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite death triggers", "Infinite colorless mana"],
+    },
+    {
+      cards: ["Basking Broodscale", "Heliod, Sun-Crowned", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "1274-2999-5641",
+        cards: ["Basking Broodscale", "Heliod, Sun-Crowned", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite death triggers", "Infinite colorless mana"],
+    },
+    {
+      cards: ["Cleric Class", "Guide of Souls", "Herd Baloth"],
+      confidence: 'derived',
+      from: {
+        id: "104-2999-3197",
+        cards: ["Cleric Class", "Impassioned Orator", "Herd Baloth"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Cleric Class", "Guide of Souls", "Scurry Oak"],
+      confidence: 'derived',
+      from: {
+        id: "104-2999-4186",
+        cards: ["Cleric Class", "Impassioned Orator", "Scurry Oak"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Famished Paladin", "Elemental Mastery", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "262-2999-3957",
+        cards: ["Famished Paladin", "Elemental Mastery", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens with haste", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Famished Paladin", "Presence of Gond", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "1424-2999-3957",
+        cards: ["Famished Paladin", "Presence of Gond", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Famished Paladin", "Splinter Twin", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "2999-3957-4702",
+        cards: ["Famished Paladin", "Splinter Twin", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens with haste", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Guide of Souls", "Herd Baloth", "Spider-Man, Peter Parker"],
+      confidence: 'derived',
+      from: {
+        id: "2999-3197-6824",
+        cards: ["Impassioned Orator", "Herd Baloth", "Spider-Man, Peter Parker"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Guide of Souls", "Herd Baloth", "Sunbond"],
+      confidence: 'derived',
+      from: {
+        id: "2999-3197-4017",
+        cards: ["Impassioned Orator", "Herd Baloth", "Sunbond"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Guide of Souls", "Scurry Oak", "Spider-Man, Peter Parker"],
+      confidence: 'derived',
+      from: {
+        id: "2999-4186-6824",
+        cards: ["Impassioned Orator", "Scurry Oak", "Spider-Man, Peter Parker"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Guide of Souls", "Sunbond", "Scurry Oak"],
+      confidence: 'derived',
+      from: {
+        id: "2999-4017-4186",
+        cards: ["Impassioned Orator", "Sunbond", "Scurry Oak"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Heliod, Sun-Crowned", "Guide of Souls", "Herd Baloth"],
+      confidence: 'derived',
+      from: {
+        id: "1274-2999-3197",
+        cards: ["Heliod, Sun-Crowned", "Impassioned Orator", "Herd Baloth"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Heliod, Sun-Crowned", "Guide of Souls", "Scurry Oak"],
+      confidence: 'derived',
+      from: {
+        id: "1274-2999-4186",
+        cards: ["Heliod, Sun-Crowned", "Impassioned Orator", "Scurry Oak"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens", "Infinite +1/+1 counters on a creature"],
+    },
+    {
+      cards: ["Lurking Roper", "Elemental Mastery", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "262-859-2999",
+        cards: ["Lurking Roper", "Elemental Mastery", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens with haste", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Lurking Roper", "Presence of Gond", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "859-1424-2999",
+        cards: ["Lurking Roper", "Presence of Gond", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Lurking Roper", "Splinter Twin", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "859-2999-4702",
+        cards: ["Lurking Roper", "Splinter Twin", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite creature tokens with haste", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Treebeard, Gracious Host", "Scurry Oak", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "2999-4186-4384",
+        cards: ["Treebeard, Gracious Host", "Scurry Oak", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite +1/+1 counters on a creature", "Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Trudge Garden", "Mana Echoes", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "2308-2440-2999",
+        cards: ["Trudge Garden", "Mana Echoes", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite colorless mana", "Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
+    },
+    {
+      cards: ["Yawgmoth, Thran Physician", "Scurry Oak", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "2999-4186-4279",
+        cards: ["Yawgmoth, Thran Physician", "Scurry Oak", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite card draw", "Infinite draw triggers", "Near-infinite death triggers", "Near-infinite creature ETB", "Near-infinite lifegain triggers", "Near-infinite creature LTB", "Near-infinite creature sacrifice triggers"],
+    },
+    {
+      cards: ["Agatha's Soul Cauldron", "Kiki-Jiki, Mirror Breaker", "Famished Paladin", "Guide of Souls"],
+      confidence: 'derived',
+      from: {
+        id: "618-2999-3957-4613",
+        cards: ["Agatha's Soul Cauldron", "Kiki-Jiki, Mirror Breaker", "Famished Paladin", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\". Every creature entering in this loop is one you control, so the Orator's wider reading is never the difference, and the energy Guide of Souls also gets is spent by nothing here.",
+      produces: ["Infinite copies of most creatures you control with haste", "Infinite creature tokens with haste", "Infinite death triggers", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature LTB", "Infinite creature sacrifice triggers"],
+    },
+    {
+      cards: ["Agatha's Soul Cauldron", "Kiki-Jiki, Mirror Breaker", "Lurking Roper", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "618-859-2999-4613",
+        cards: ["Agatha's Soul Cauldron", "Kiki-Jiki, Mirror Breaker", "Lurking Roper", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite copies of most creatures you control with haste", "Infinite creature tokens with haste", "Infinite death triggers", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature LTB", "Infinite creature sacrifice triggers"],
+    },
+    {
+      cards: ["Agatha's Soul Cauldron", "Myojin of Blooming Dawn", "Zopandrel, Hunger Dominus", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "2966-2999-3253-4613",
+        cards: ["Agatha's Soul Cauldron", "Myojin of Blooming Dawn", "Zopandrel, Hunger Dominus", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite creature tokens", "Infinite death triggers", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature LTB", "Infinite creature sacrifice triggers"],
+    },
+    {
+      cards: ["Animation Module", "Guide of Souls", "Phyrexian Altar", "Heroic Feast"],
+      confidence: 'verified',
+      from: {
+        id: "2999-3490-4050-7743",
+        cards: ["Animation Module", "Impassioned Orator", "Phyrexian Altar", "Heroic Feast"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite +1/+1 counters on creatures you control", "Infinite creature ETB", "Infinite creature LTB", "Infinite death triggers", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature sacrifice triggers"],
+    },
+    {
+      cards: ["Darien, King of Kjeldor", "Phyrexian Vindicator", "Catapult Squad", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "1981-2999-4416-6740",
+        cards: ["Darien, King of Kjeldor", "Phyrexian Vindicator", "Catapult Squad", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite tapped creature tokens"],
+    },
+    {
+      cards: ["Oloro, Ageless Ascetic", "Nadir Kraken", "Ashnod's Altar", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "1722-2034-2999-3583",
+        cards: ["Oloro, Ageless Ascetic", "Nadir Kraken", "Ashnod's Altar", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite card draw", "Infinite draw triggers", "Near-infinite +1/+1 counters on a creature", "Near-infinite death triggers", "Near-infinite creature ETB", "Near-infinite lifegain", "Near-infinite lifegain triggers", "Near-infinite lifeloss", "Near-infinite creature LTB", "Near-infinite creature sacrifice triggers"],
+    },
+    {
+      cards: ["Stormfront Riders", "Mana Echoes", "Defiler of Faith", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "2440-2999-3399-4399",
+        cards: ["Stormfront Riders", "Mana Echoes", "Defiler of Faith", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite creature LTB", "Infinite creature ETB", "Infinite colorless mana", "Infinite lifegain triggers", "Infinite lifegain", "Infinite creature tokens"],
+    },
+    {
+      cards: ["Day of the Dragons", "Demon of Fate's Design", "Enchanted Evening", "Cloudstone Curio", "Guide of Souls"],
+      confidence: 'verified',
+      from: {
+        id: "1462-2232-2413-2768-2999",
+        cards: ["Day of the Dragons", "Demon of Fate's Design", "Enchanted Evening", "Cloudstone Curio", "Impassioned Orator"],
+      },
+      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
+      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
+      produces: ["Infinite death triggers", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite storm count"],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
