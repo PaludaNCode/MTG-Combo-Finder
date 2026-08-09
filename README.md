@@ -2270,6 +2270,14 @@ and there is no branch to read it off, since Pages deploys from an artifact. Wit
 deploy, **"the deploy job is green" now carries what reading the footer used to**, and is the one case
 where a job's conclusion is enough on its own.
 
+**Which a session still does not go and read, and that is the settled answer rather than an oversight.**
+Reading a job's conclusion needs its run id, and the only call that hands one over for a push-triggered
+run ignores `per_page` — 30 runs and 388 KB when 1 was asked for (9 Aug 2026). A pull request has a cheap
+route and a deploy has none, so **the session names the SHA and stops**; a failed deploy is found by the
+next session or by whoever is looking at the page. That costs something real, because a failed deploy
+burns its commit and only a new commit on `main` can replace it. CLAUDE.md § *Reporting what you did*
+has the two calls that do work, and issue #220 has the measurements.
+
 **The layout check measures the deployed line, not the one it serves.** Locally the footer reads `Build
 local · not deployed`, twenty characters shorter, and measuring that would pass a footer that overflows in
 production and nowhere else. `DEPLOYED_BUILD_LINE` in `tools/verify-layout.js` holds the real line and both
