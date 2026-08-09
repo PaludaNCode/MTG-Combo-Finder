@@ -2650,6 +2650,76 @@ const PASSES = [
       + 'Sunbond) and the peer whose output is the engine (Shilgengar’s Blood, Thermopod’s '
       + '{R}, the Eldrazi Spawn’s {C}). A deck that produces no new rows is a covered deck.',
   },
+  {
+    subject: 'Guide of Souls, Blasting Station and Gravecrawler — and a rule-out re-opened',
+    cards: ['Guide of Souls', 'Impassioned Orator', 'Blasting Station', 'Gravecrawler',
+      'Soul Warden', 'Essence Warden'],
+    cardIds: [5870, 2999, 413, 2413, 360, 2919],
+    date: '2026-08-09',
+    read: {
+      "Guide of Souls": "Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter). Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a flying counter on target attacking creature. It becomes an Angel in addition to its other types. Creature — Human Cleric 1/2 for {W}.",
+      "Impassioned Orator": "Whenever another creature you control enters, you gain 1 life. Creature — Human Cleric 2/2 for {1}{W}.",
+      "Blasting Station": "{T}, Sacrifice a creature: This artifact deals 1 damage to any target. Whenever a creature enters, you may untap this artifact. Artifact for {3}.",
+      "Gravecrawler": "This creature can't block. You may cast this card from your graveyard as long as you control a Zombie. Creature — Zombie 2/1 for {B}.",
+      "Soul Warden": "Whenever another creature enters, you gain 1 life. Creature — Human Cleric 1/1 for {W}.",
+      "Essence Warden": "Whenever another creature enters, you gain 1 life. Creature — Elf Shaman 1/1 for {G}.",
+    },
+    method: 'Asked for by name rather than found by score. For each subject: the peer whose '
+      + 'wording matches, then every published shape naming that peer and not the subject, '
+      + 'minus what is published under the pairing already and minus what this file already '
+      + 'holds. Card text for every card in every surviving shape came from card-text.json, '
+      + 'and the published steps of nine of them were fetched from the steps/ tree to see what '
+      + 'the peer is actually doing in the loop.',
+    proposed: 1640,
+    examined: 35,
+    kept: 31,
+    ruledOut: [
+      {
+        reason: 'GUIDE OF SOULS WAS RULED OUT ONCE FOR THE WRONG DIRECTION, AND THIS PASS PUTS '
+          + 'IT BACK. "Prosperous Innkeeper, and the peer that gains life twice a lap" dropped it '
+          + 'with: the loops it is published in — Aethergeode Miner, Decoction Module, Aether '
+          + 'Refinery — spend the energy, not the life. That is true, and it is a fact about the '
+          + 'combos Guide of Souls is already in. It is not the substitution question, which runs '
+          + 'the other way: can it fill the slot in somebody else\'s loop. Its lifegain clause is '
+          + 'Impassioned Orator\'s word for word — "whenever another creature you control enters, '
+          + 'you gain 1 life" — including the "you control" that separates the Orator from Soul '
+          + 'Warden and Essence Warden, and both cards are Human Clerics, so nothing keying on '
+          + 'type or on whose creature entered can tell them apart. The energy is a second '
+          + 'ability, not a change to the first.',
+        count: 0,
+      },
+      {
+        reason: 'BLASTING STATION AND GRAVECRAWLER ARE NOT REFUSED HERE — THEY ARE NOT DONE. '
+          + 'Against free sacrifice outlets, Blasting Station proposes 868 unpublished shapes and '
+          + 'Gravecrawler 737, and neither number is a queue of owed rows: an outlet carries '
+          + 'riders that decide whether it fits a given loop, which is the caveat '
+          + 'tools/substitution-scope.js already states about exactly this pair of cards. '
+          + '"Viscera Seer, and what a free sacrifice outlet is actually interchangeable with" '
+          + 'swept that space on 2026-08-07 — 2,709 proposed, 43 examined, 26 kept — and both '
+          + 'cards were read in it. What is unread is the rest of those 1,605 shapes, and reading '
+          + 'them is a pass of its own rather than a footnote to this one. Recorded so that the '
+          + 'next person sees an unfinished sweep rather than a finished one.',
+        count: 1605,
+      },
+      {
+        reason: 'ONE SHAPE DROPPED FOR ITS ID RATHER THAN ITS CARDS: Invisible Woman, Sue Storm + '
+          + 'Guide of Souls + Heroic Feast. The Orator version is published and its steps read '
+          + 'correctly, but Spellbook\'s id for it is 2999-7690-7743--165, and a negative segment '
+          + 'fails the citation format every row in unofficial.js is checked against. The row is '
+          + 'sound and the citation is not printable, so it is left out rather than the check '
+          + 'loosened.',
+        count: 1,
+        sets: [['Invisible Woman, Sue Storm', 'Guide of Souls', 'Heroic Feast']],
+      },
+    ],
+    notes: 'The nine rows whose published steps were fetched carry `verified`; the other 22 are '
+      + '`derived` — both halves published, the pairing reasoned from the two cards. Every one of '
+      + 'those nine steps files uses the Orator for one thing and one thing only: a creature you '
+      + 'control enters, you gain 1 life. The exotic end of the list is where that mattered — Day '
+      + 'of the Dragons returns your own exiled creatures, Stormfront Riders bounces and remakes '
+      + 'your own Soldiers, Oloro/Nadir Kraken makes your own Tentacles — so the Orator\'s wider '
+      + '"any creature" reading is never what the loop rests on, and Guide of Souls fits each.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
