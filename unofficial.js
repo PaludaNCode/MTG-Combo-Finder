@@ -15057,6 +15057,258 @@
       why: 'Bloodsoaked Champion pays {1}{B} to return itself from the graveyard, but only if you attacked this turn; Gravecrawler pays {B} to CAST itself from the graveyard, and needs a Zombie instead — which this combo already holds, because Carrion Feeder is a Zombie. Gwenna’s two mana is restricted to creature spells and to abilities of creature sources, and a Gravecrawler cast from the graveyard is a creature spell. Cheaper than the Champion’s return and with no raid to satisfy.',
       produces: ['Infinite +1/+1 counters on a creature', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
     },
+    // ---- Blade of the Bloodchief, against Sadistic Glee ------------------------
+    //
+    // The slot is "a creature dying becomes a +1/+1 counter on a creature you pick".
+    // 80 cards in card-text.json turn a creature dying into a +1/+1 counter and only 8
+    // put it anywhere but on themselves, which is what makes this a family of three:
+    //
+    //   Sadistic Glee  63 published  Aura, {B}       "Whenever a creature dies, put a
+    //                                                 +1/+1 counter on enchanted creature."
+    //   Blade          55 published  Equipment, {1}   the same sentence, plus a Vampire
+    //                                                 rider, plus Equip {1}
+    //   Ghost Lantern  24 published  Equipment, {1}   the same sentence narrowed to
+    //                                                 creatures YOU control
+    //
+    // GHOST LANTERN PROPOSED 24 AND YIELDED NOTHING: every shape it is published in
+    // already has a Blade twin published beside it. The gap is Sadistic Glee's, and it
+    // is one slot deep — Spellbook enumerated the sacrifice outlet against the Aura and
+    // stopped four outlets in against the Equipment.
+    //
+    // Bhaal, Lord of Murder was dropped as a peer before counting, the way the mana
+    // altars were dropped from the Blasting Station sweep: nontoken creatures only, and
+    // it GOADS what it counters.
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Umbral Collar Zealot'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-6798',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Umbral Collar Zealot sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Umbral Collar Zealot'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-6798',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Umbral Collar Zealot sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil'],
+    },
+    {
+      cards: ['Evolution Witness', 'Blade of the Bloodchief', 'Wild Cantor'],
+      confidence: 'verified',
+      from: {
+        id: '1497-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Wild Cantor'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: Wild Cantor is sacrificed for mana, and its death is what puts the counter on Evolution Witness — which is what returns it from your graveyard to your hand to be cast again. The mana in and the mana out are equal, so the lap costs nothing either way. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite storm count', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Evolution Witness', 'Blade of the Bloodchief', 'Reckless Barbarian'],
+      confidence: 'verified',
+      from: {
+        id: '1947-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Reckless Barbarian'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: Reckless Barbarian is sacrificed for mana, and its death is what puts the counter on Evolution Witness — which is what returns it from your graveyard to your hand to be cast again. The mana in and the mana out are equal, so the lap costs nothing either way. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite storm count'],
+    },
+    {
+      cards: ['Evolution Witness', 'Blade of the Bloodchief', 'Blood Pet'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3944-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Blood Pet'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: Blood Pet is sacrificed for mana, and its death is what puts the counter on Evolution Witness — which is what returns it from your graveyard to your hand to be cast again. The mana in and the mana out are equal, so the lap costs nothing either way. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite storm count', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-5686',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Shilgengar, Sire of Famine sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite artifact tokens', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite Blood tokens'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-5686',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Shilgengar, Sire of Famine sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite artifact tokens', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite Blood tokens'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-3967',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Yahenni, Undying Partisan sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-2082-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Woe Strider'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Woe Strider sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Viscera Seer'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2292-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Viscera Seer'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Viscera Seer sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-5231',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Thermopod sacrifices, and that creature dying is what puts the next counter on Herd Baloth. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite red mana', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2438-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Carrion Feeder sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2511-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Bloodflow Connoisseur sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2921-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Bartolomé del Presidio sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3967-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Yahenni, Undying Partisan sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-2082-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Woe Strider'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Woe Strider sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Viscera Seer'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2292-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Viscera Seer sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-5231',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Thermopod sacrifices, and that creature dying is what puts the next counter on Scurry Oak. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite red mana', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2438-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Carrion Feeder sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2511-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Bloodflow Connoisseur sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2921-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Bartolomé del Presidio sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite creature sacrifice triggers'],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
