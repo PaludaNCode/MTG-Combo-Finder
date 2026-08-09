@@ -1757,6 +1757,12 @@ Death's Oasis + Deathrender is one shape with five. Rows carry `verified` only w
 published steps were fetched, and `derived` where the decision came from the family's shape. **Use
 `derived` rather than reading loosely and claiming `verified`** — that is what it is for.
 
+**Both halves of that split are counted by `check:readme`, and were not until 9 Aug 2026.** The total
+beside them was checked from the day it was written, so the split rotted where nothing looked: it read
+*533 verified and 67 derived* against **638** rows, wrong by 38 and adding up to a number the same
+sentence contradicted. A breakdown of a checked total is the cheapest check in this file to add and the
+easiest to believe you already added.
+
 `test/unofficial.test.js` enforces the shape of both halves — every row cites a real combo id, every swap
 is genuinely one card in and one out against the cited combo, and every row gives a reason; every rule
 names something other than itself and says why. A row that cannot say where it came from cannot ship.
@@ -1843,8 +1849,8 @@ Manufactor's only peer sits at a jaccard of 0.05, which the 0.90 bar will never 
 is a ratio. *Read the pair count, not the score, for a card this widely published.*
 
 **Which makes the log a record of the cards somebody asked about, and nothing wider.**
-`tools/substitution-scope.js` points the same method at every card: at the strict bar, **1,779
-interchangeable pairs implying 4,835 combos Spellbook has not published**. Those are candidates, not owed
+`tools/substitution-scope.js` points the same method at every card: at the strict bar, **1,785
+interchangeable pairs implying 4,844 combos Spellbook has not published**. Those are candidates, not owed
 rows. **1,509 candidates have been read.**
 
 **A rule-out can also be written as cards, and then a tool can act on it** — a rule-out may carry `sets`,
