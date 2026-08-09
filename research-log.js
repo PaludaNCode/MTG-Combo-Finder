@@ -3073,6 +3073,233 @@ const PASSES = [
       + 'the only reason the third one is trusted, because 126 of its keeps were read '
       + 'and 6 of them were wrong.',
   },
+  {
+    subject: 'Blade of the Bloodchief against Sadistic Glee and Ghost Lantern',
+    cards: [
+      'Blade of the Bloodchief', 'Sadistic Glee', 'Ghost Lantern // Bind Spirit',
+      'Bhaal, Lord of Murder', 'Herd Baloth', 'Scurry Oak', 'Evolution Witness',
+      'Umbral Collar Zealot', 'Bartolomé del Presidio', 'Thermopod', 'Wild Cantor',
+      'Blood Pet',
+    ],
+    cardIds: [1988, 2082, 4455, 3602, 3197, 4186, 5660, 6798, 2921, 5231, 1497, 3944],
+    date: '2026-08-09',
+    read: {
+      'Blade of the Bloodchief': 'Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead. Equip {1} Artifact — Equipment for {1}.',
+      'Sadistic Glee': 'Enchant creature Whenever a creature dies, put a +1/+1 counter on enchanted creature. Enchantment — Aura for {B}.',
+      'Ghost Lantern // Bind Spirit': 'Whenever a creature you control dies, put a +1/+1 counter on equipped creature. Equip {1} Artifact — Equipment // Return target creature card from your graveyard to your hand. (Then exile this card. You may cast the artifact later from exile.) Instant — Adventure for {B} // {1}{B}.',
+      'Bhaal, Lord of Murder': 'As long as your life total is less than or equal to half your starting life total, Bhaal has indestructible. Whenever another nontoken creature you control dies, put a +1/+1 counter on target creature and goad it. Legendary Creature — God 4/4 for {2}{B}{R}{G}.',
+      'Herd Baloth': 'Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 green Beast creature token. Creature — Beast 4/4 for {3}{G}{G}.',
+      'Scurry Oak': 'Evolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.) Whenever one or more +1/+1 counters are put on this creature, you may create a 1/1 green Squirrel creature token. Creature — Treefolk 1/2 for {2}{G}.',
+      'Evolution Witness': '{1}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.) Whenever one or more +1/+1 counters are put on this creature, return target permanent card from your graveyard to your hand. Creature — Elf Shaman Mutant 2/1 for {2}{G}.',
+      'Umbral Collar Zealot': 'Sacrifice another creature or artifact: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.) Creature — Human Cleric 3/2 for {1}{B}.',
+      'Bartolomé del Presidio': 'Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. Legendary Creature — Vampire Knight 2/1 for {W}{B}.',
+      'Thermopod': '{S}: This creature gains haste until end of turn. ({S} can be paid with one mana from a snow source.) Sacrifice a creature: Add {R}. Snow Creature — Slug 4/3 for {4}{R}.',
+      'Wild Cantor': '({R/G} can be paid with either {R} or {G}.) Sacrifice this creature: Add one mana of any color. Creature — Human Druid 1/1 for {R/G}.',
+      'Blood Pet': 'Sacrifice this creature: Add {B}. Creature — Thrull 1/1 for {B}.',
+    },
+    method: 'PEERS FROM CARD TEXT, BECAUSE THE SCORE PROPOSES NOTHING AT ALL. '
+      + 'tools/substitution-scope.js at 0.75/3 — looser than the bar the README quotes — '
+      + 'returns no pair naming this card, which is the Academy Manufactor case again: a '
+      + 'jaccard is a ratio and these families are too wide for it. So the slot was '
+      + 'written down instead — "a creature dying becomes a +1/+1 counter on a creature '
+      + 'you pick" — and card-text.json was read for it: 80 cards turn a creature dying '
+      + 'into a +1/+1 counter, 8 of them put it anywhere other than on themselves, and 3 '
+      + 'of those 8 are published at all. Then every combo naming a peer, with the peer '
+      + 'swapped for Blade, minus what is published, minus what is already a row, minus '
+      + 'the subsumed — and the 21 that survived were read against the peer\'s published '
+      + 'steps, all 21, which is the whole of the reading and took one pass because every '
+      + 'one of them uses the Aura for a single sentence.',
+    proposed: 87,
+    examined: 21,
+    kept: 21,
+    ruledOut: [
+      {
+        reason: 'SIXTY OF THE 87 ARE ALREADY PUBLISHED WITH BLADE IN THEM, AND THE SPLIT '
+          + 'IS THE FINDING. All 24 of Ghost Lantern // Bind Spirit\'s combos have a Blade '
+          + 'twin beside them — Spellbook has finished that family and there is nothing '
+          + 'owed. 36 of Sadistic Glee\'s 63 do too. What is left is one slot deep: '
+          + 'Spellbook enumerated the sacrifice outlet against the Aura across nine '
+          + 'outlets and stopped four in against the Equipment.',
+        count: 60,
+      },
+      {
+        reason: 'SIX ARE ALREADY ROWS IN unofficial.js, four from the Ghave deck-gaps pass '
+          + 'and two written the same day as this one — Herd Baloth and Scurry Oak with '
+          + 'Blasting Station, which arrive by two different routes (Goblin Bombardment → '
+          + 'Blasting Station, and Sadistic Glee → Blade) and are one row either way.',
+        count: 6,
+      },
+      {
+        reason: 'BHAAL, LORD OF MURDER WAS DROPPED AS A PEER BEFORE COUNTING, on the same '
+          + 'reasoning that dropped Ashnod\'s Altar and Phyrexian Altar from the Blasting '
+          + 'Station sweep: it is not the same card with a different cost. "Whenever '
+          + 'another NONTOKEN creature you control dies" misses every one of these loops, '
+          + 'whose dying creature is a token, and it GOADS the creature it counters, which '
+          + 'is a second ability the loops never asked for. 41 published combos not '
+          + 'counted as proposals.',
+        count: 41,
+      },
+      {
+        reason: 'NOTHING WAS SUBSUMED, which is worth recording because it usually is. '
+          + 'Subsumption took four fifths of the Gravecrawler list; here it took none, '
+          + 'because Blade\'s own 55 combos and Sadistic Glee\'s 63 are the same shapes '
+          + 'with the same card count, not supersets of each other.',
+        count: 0,
+      },
+    ],
+    notes: '21 rows, all `verified`, every one read against the peer\'s published steps. '
+      + 'THE SWAP IS CLEAN IN A WAY MOST ARE NOT: the two cards\' first sentences are '
+      + 'identical, "whenever a creature dies, put a +1/+1 counter on enchanted/equipped '
+      + 'creature", with the same scope — any creature, not just yours. The Aura/Equipment '
+      + 'difference costs nothing here because no loop kills the creature the counter '
+      + 'lands on; if one did, the Aura would fall off and the Equipment would not, so the '
+      + 'direction only ever runs Blade\'s way. Blade\'s Vampire rider is inert on all 21: '
+      + 'Herd Baloth is a Beast, Scurry Oak a Treefolk, Evolution Witness an Elf Shaman '
+      + 'Mutant — AND IT WOULD NOT MATTER IF ONE WERE A VAMPIRE, because all three read '
+      + '"whenever ONE OR MORE +1/+1 counters are put on this creature", so two counters '
+      + 'is one trigger and one token, exactly as one counter is. Two outlets read '
+      + '"sacrifice another creature OR ARTIFACT" (Umbral Collar Zealot, Bartolomé del '
+      + 'Presidio) and the Blade is an artifact where the Glee was not — an option the '
+      + 'loop never has to take, since sacrificing your own counter engine ends it. '
+      + 'ONLY 4 OF THE 21 NARROW THE COLOUR IDENTITY, which is worth saying because '
+      + '"colourless where the Glee is {B}" sounds like it should carry all of them: 17 '
+      + 'hold a black outlet already. The four that move are Thermopod with each token '
+      + 'maker, and Evolution Witness with Wild Cantor and with Reckless Barbarian — '
+      + 'BRG to RG, a Gruul line where the published one is Jund.',
+  },
+  {
+    subject: 'The counter-on-a-death family, ordered by trigger: Tarrian’s Soulcleaver and Necrosynthesis',
+    cards: [
+      'Tarrian\'s Soulcleaver', 'Necrosynthesis', 'Blade of the Bloodchief', 'Sadistic Glee',
+      'Elenda, the Dusk Rose', 'Puppeteer Clique', 'Murderous Redcap', 'Putrid Goblin',
+      'Ashnod\'s Altar', 'Phyrexian Altar', 'Tayam, Luminous Enigma', 'Krark-Clan Ironworks',
+      'Mycosynth Lattice', 'Encroaching Mycosynth', 'Biotransference', 'Thopter Squadron',
+      'Pentavus', 'Triskelavus', 'Ulasht, the Hate Seed', 'Marath, Will of the Wild',
+      'Ghave, Guru of Spores', 'Evolution Witness',
+    ],
+    cardIds: [5445, 1628, 1988, 2082, 2876, 3020, 1657, 301, 2034, 4050, 687, 4659,
+      3263, 1379, 549, 2762, 1183, 5086, 3192, 1335, 5189, 5660],
+    date: '2026-08-09',
+    read: {
+      'Tarrian\'s Soulcleaver': 'Equipped creature has vigilance. Whenever another artifact or creature is put into a graveyard from the battlefield, put a +1/+1 counter on equipped creature. Equip {2} Legendary Artifact — Equipment for {1}.',
+      'Necrosynthesis': 'Enchant creature Enchanted creature has "Whenever another creature dies, put a +1/+1 counter on this creature." When enchanted creature dies, look at the top X cards of your library, where X is its power. Put one of those cards into your hand and the rest on the bottom of your library in a random order. Enchantment — Aura for {1}{B}.',
+      'Blade of the Bloodchief': 'Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead. Equip {1} Artifact — Equipment for {1}.',
+      'Sadistic Glee': 'Enchant creature Whenever a creature dies, put a +1/+1 counter on enchanted creature. Enchantment — Aura for {B}.',
+      'Elenda, the Dusk Rose': 'Lifelink Whenever another creature dies, put a +1/+1 counter on Elenda. When Elenda dies, create X 1/1 white Vampire creature tokens with lifelink, where X is Elenda\'s power. Legendary Creature — Vampire Knight 1/1 for {2}{W}{B}.',
+      'Puppeteer Clique': 'Flying When this creature enters, put target creature card from an opponent\'s graveyard onto the battlefield under your control. It gains haste. At the beginning of your next end step, exile it. Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner\'s control with a -1/-1 counter on it.) Creature — Faerie Wizard 3/2 for {3}{B}{B}.',
+      'Murderous Redcap': 'When this creature enters, it deals damage equal to its power to any target. Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner\'s control with a -1/-1 counter on it.) Creature — Goblin Assassin 2/2 for {2}{B/R}{B/R}.',
+      'Putrid Goblin': 'Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner\'s control with a -1/-1 counter on it.) Creature — Zombie Goblin 2/2 for {1}{B}.',
+      'Ashnod\'s Altar': 'Sacrifice a creature: Add {C}{C}. Artifact for {3}.',
+      'Phyrexian Altar': 'Sacrifice a creature: Add one mana of any color. Artifact for {3}.',
+      'Tayam, Luminous Enigma': 'Each other creature you control enters with an additional vigilance counter on it. {3}, Remove three counters from among creatures you control: Mill three cards, then return a permanent card with mana value 3 or less from your graveyard to the battlefield. Legendary Creature — Nightmare Beast 3/3 for {1}{W}{B}{G}.',
+      'Krark-Clan Ironworks': 'Sacrifice an artifact: Add {C}{C}. Artifact for {4}.',
+      'Mycosynth Lattice': 'All permanents are artifacts in addition to their other types. All cards that aren\'t on the battlefield, spells, and permanents are colorless. Players may spend mana as though it were mana of any color. Artifact for {6}.',
+      'Encroaching Mycosynth': 'Nonland permanents you control are artifacts in addition to their other types. The same is true for permanent spells you control and nonland permanent cards you own that aren\'t on the battlefield. Artifact for {3}{U}.',
+      'Biotransference': 'Creatures you control are artifacts in addition to their other types. The same is true for creature spells you control and creature cards you own that aren\'t on the battlefield. Whenever you cast an artifact spell, you lose 1 life and create a 2/2 black Necron Warrior artifact creature token. Enchantment for {2}{B}{B}.',
+      'Thopter Squadron': 'Flying This creature enters with three +1/+1 counters on it. {1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Thopter artifact creature token with flying. Activate only as a sorcery. {1}, Sacrifice another Thopter: Put a +1/+1 counter on this creature. Activate only as a sorcery. Artifact Creature — Thopter 0/0 for {5}.',
+      'Pentavus': 'This creature enters with five +1/+1 counters on it. {1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Pentavite artifact creature token with flying. {1}, Sacrifice a Pentavite: Put a +1/+1 counter on this creature. Artifact Creature — Construct 0/0 for {7}.',
+      'Triskelavus': 'Flying This creature enters with three +1/+1 counters on it. {1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Triskelavite artifact creature token with flying. It has "Sacrifice this token: This token deals 1 damage to any target." Artifact Creature — Construct 1/1 for {7}.',
+      'Ulasht, the Hate Seed': 'Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. {1}, Remove a +1/+1 counter from Ulasht: Choose one — • Ulasht deals 1 damage to target creature. • Create a 1/1 green Saproling creature token. Legendary Creature — Hellion Hydra 0/0 for {2}{R}{G}.',
+      'Marath, Will of the Wild': 'Marath enters with a number of +1/+1 counters on it equal to the amount of mana spent to cast it. {X}, Remove X +1/+1 counters from Marath: Choose one — • Put X +1/+1 counters on target creature. X can\'t be 0. • Marath deals X damage to any target. X can\'t be 0. • Create an X/X green Elemental creature token. X can\'t be 0. Legendary Creature — Elemental Beast 0/0 for {R}{G}{W}.',
+      'Ghave, Guru of Spores': 'Ghave enters with five +1/+1 counters on it. {1}, Remove a +1/+1 counter from a creature you control: Create a 1/1 green Saproling creature token. {1}, Sacrifice a creature: Put a +1/+1 counter on target creature. Legendary Creature — Fungus Shaman 0/0 for {2}{W}{B}{G}.',
+      'Evolution Witness': '{1}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.) Whenever one or more +1/+1 counters are put on this creature, return target permanent card from your graveyard to your hand. Creature — Elf Shaman Mutant 2/1 for {2}{G}.',
+    },
+    method: 'The Blade of the Bloodchief entry above named three peers and swept one '
+      + 'direction out of one card. This sweeps the FAMILY, which means ordering the '
+      + 'triggers first, because a swap is sound only where the subject\'s trigger covers '
+      + 'the peer\'s use of it: Ghost Lantern (a creature YOU CONTROL dies) < '
+      + 'Necrosynthesis (ANOTHER creature dies, granted to the enchanted creature) < '
+      + 'Sadistic Glee = Blade (A creature dies) < Tarrian\'s Soulcleaver (ANOTHER '
+      + 'ARTIFACT OR CREATURE put into a graveyard from the battlefield). "Dies" IS "put '
+      + 'into a graveyard from the battlefield", so Tarrian\'s covers every creature death '
+      + 'the rest see and adds artifacts; the only event it misses is the equipped '
+      + 'creature\'s own death, and the Necrosynthesis pass of 5 Aug had already settled '
+      + 'that a counter on a creature which has just died is worth nothing. Then every '
+      + 'combo naming a peer with the peer swapped for the subject, minus published, minus '
+      + 'ours, minus subsumed — and the 63 that survived were read against the peer\'s '
+      + 'published steps, one at a time.',
+    proposed: 330,
+    examined: 63,
+    kept: 57,
+    ruledOut: [
+      {
+        reason: 'TWO HUNDRED AND TWENTY-EIGHT OF THE 330 ARE ALREADY PUBLISHED WITH THE '
+          + 'SUBJECT IN THEM — 141 for Tarrian\'s Soulcleaver, 87 for Necrosynthesis. '
+          + 'Tarrian\'s is published in 78 combos of its own against Blade\'s 55 and '
+          + 'Sadistic Glee\'s 63, so this is not a neglected card; it is a widely published '
+          + 'one whose coverage stops at different places in different shapes.',
+        count: 228,
+      },
+      {
+        reason: 'THIRTY-NINE ARE ALREADY ROWS, all Necrosynthesis, all from the two '
+          + 'Necrosynthesis-against-Sadistic-Glee passes of 2 and 5 Aug 2026. That is the '
+          + 'log doing its job: a family swept a second time from a different direction '
+          + 'meets its own earlier work instead of duplicating it.',
+        count: 39,
+      },
+      {
+        reason: 'ELENDA, THE DUSK ROSE IS THE ONE SHAPE IN EITHER SWEEP WHERE BLADE\'S '
+          + 'VAMPIRE RIDER IS LOAD-BEARING, and it is worth writing down because the Blade '
+          + 'entry above says the rider is inert in all 21 of its rows and that is true '
+          + 'there and false here. Elenda is a Vampire Knight, so the published steps put '
+          + 'THREE +1/+1 counters on her per Vampire token eaten: one from her own trigger '
+          + 'and TWO from Blade. Tarrian\'s Soulcleaver gives one; Necrosynthesis gives '
+          + 'one. The loop grows Elenda\'s power to make more tokens than it spent and '
+          + 'pays commander tax every cycle, so changing 3 to 2 changes the arithmetic the '
+          + 'steps are written on — and a row that quietly slows a loop down is not a row '
+          + 'whose steps anybody re-read.',
+        count: 2,
+        sets: [
+          ['Elenda, the Dusk Rose', 'Phyrexian Altar', 'Tarrian\'s Soulcleaver'],
+          ['Elenda, the Dusk Rose', 'Phyrexian Altar', 'Necrosynthesis'],
+        ],
+      },
+      {
+        reason: 'THE TWO PUPPETEER CLIQUE LOOPS RE-EQUIP EVERY LAP, WHICH MAKES THE EQUIP '
+          + 'COST A LAP COST. Both pair two persist creatures and the +1/+1 counter has to '
+          + 'reach whichever one is carrying the -1/-1, so the Equipment moves between two '
+          + 'bodies twice a lap — the only shapes in either sweep that touch the equip cost '
+          + 'at all. Tarrian\'s Soulcleaver equips for {2} where Blade equips for {1}: the '
+          + 'Phyrexian Altar version makes 2 mana a lap against 4 of equipping and simply '
+          + 'stops, and the Ashnod\'s Altar version makes 4 against 4, so it still loops '
+          + 'but nets nothing and no longer produces the infinite colorless mana it is '
+          + 'published for. THE SECOND IS A JUDGEMENT, NOT AN IMPOSSIBILITY — the loop is '
+          + 'real, it just is not the loop the citation describes, and a later pass may '
+          + 'decide a row with a trimmed result list is better than no row.',
+        count: 2,
+        sets: [
+          ['Phyrexian Altar', 'Tarrian\'s Soulcleaver', 'Puppeteer Clique', 'Murderous Redcap'],
+          ['Ashnod\'s Altar', 'Tarrian\'s Soulcleaver', 'Puppeteer Clique', 'Putrid Goblin'],
+        ],
+      },
+      {
+        reason: 'AND NECROSYNTHESIS FAILS THOSE SAME TWO FOR A COMPLETELY DIFFERENT '
+          + 'REASON: AN AURA CANNOT MOVE. The loop alternates the counter between two '
+          + 'persist creatures, which an Equipment does by being re-equipped and an Aura '
+          + 'cannot do at all — enchant one and the other keeps its -1/-1 counter and '
+          + 'never persists again. Same two card sets, same two subjects\' worth of '
+          + 'proposals, two unrelated failures. It is the clearest case in this file for '
+          + 'why "the same sentence" is not the same card.',
+        count: 2,
+        sets: [
+          ['Phyrexian Altar', 'Necrosynthesis', 'Puppeteer Clique', 'Murderous Redcap'],
+          ['Ashnod\'s Altar', 'Necrosynthesis', 'Puppeteer Clique', 'Putrid Goblin'],
+        ],
+      },
+    ],
+    notes: '57 rows, all `verified`: 44 Tarrian\'s Soulcleaver and 13 Necrosynthesis. '
+      + 'THE ORDERING IS THE WHOLE METHOD HERE and it is what a jaccard cannot give you — '
+      + 'substitution-scope.js proposes nothing for any of these five cards at 0.75/3. '
+      + 'Ghost Lantern // Bind Spirit is in the ordering and is not a subject: it is the '
+      + 'narrowest trigger in the family, so every swap INTO it needs the dying creature '
+      + 'to be one you control, checked per shape rather than declared — left for a pass '
+      + 'that wants to do that reading. The 13 Tayam, Luminous Enigma shapes are the '
+      + 'largest single family kept and the most delicate: three sacrifices a lap, a '
+      + 'persist or undying creature coming back each time, and Tayam\'s ability removing '
+      + 'three counters from among creatures you control — of which the substituted card '
+      + 'supplies exactly one. Tarrian\'s equips Tayam there, where Necrosynthesis '
+      + 'enchanted him, and the counter lands in the same place.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.

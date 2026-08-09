@@ -969,7 +969,7 @@ section about unchecked numbers, and it had already drifted once.
 | claim | counted from |
 | --- | --- |
 | `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 758 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 836 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
@@ -1748,7 +1748,7 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 758 hand-written rows cite a published combo. **668 are `verified` and 90 are `derived`** — the
+All 836 hand-written rows cite a published combo. **746 are `verified` and 90 are `derived`** — the
 sentence above this one said *all of them* were verified until 7 Aug 2026, and the sweep that broke it
 is the one the label was waiting for. Viscera Seer and Carrion Feeder are the two most-published cards
 in the database, and their families are large enough that reading every member's steps individually
@@ -1756,6 +1756,12 @@ buys nothing: the Mortuary + Aluren family is **one** shape with eight interchan
 Death's Oasis + Deathrender is one shape with five. Rows carry `verified` only where that exact combo's
 published steps were fetched, and `derived` where the decision came from the family's shape. **Use
 `derived` rather than reading loosely and claiming `verified`** — that is what it is for.
+
+**Both halves of that split are counted by `check:readme`, and were not until 9 Aug 2026.** The total
+beside them was checked from the day it was written, so the split rotted where nothing looked: it read
+*533 verified and 67 derived* against **638** rows, wrong by 38 and adding up to a number the same
+sentence contradicted. A breakdown of a checked total is the cheapest check in this file to add and the
+easiest to believe you already added.
 
 `test/unofficial.test.js` enforces the shape of both halves — every row cites a real combo id, every swap
 is genuinely one card in and one out against the cited combo, and every row gives a reason; every rule
@@ -1843,9 +1849,9 @@ Manufactor's only peer sits at a jaccard of 0.05, which the 0.90 bar will never 
 is a ratio. *Read the pair count, not the score, for a card this widely published.*
 
 **Which makes the log a record of the cards somebody asked about, and nothing wider.**
-`tools/substitution-scope.js` points the same method at every card: at the strict bar, **1,779
-interchangeable pairs implying 4,835 combos Spellbook has not published**. Those are candidates, not owed
-rows. **1,509 candidates have been read.**
+`tools/substitution-scope.js` points the same method at every card: at the strict bar, **1,785
+interchangeable pairs implying 4,844 combos Spellbook has not published**. Those are candidates, not owed
+rows. **1,593 candidates have been read.**
 
 **A rule-out can also be written as cards, and then a tool can act on it** — a rule-out may carry `sets`,
 the exact combinations it killed, which `tools/deck-gaps.js` drops and prints. **`sets` is always a

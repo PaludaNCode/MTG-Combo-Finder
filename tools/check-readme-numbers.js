@@ -202,6 +202,25 @@ function claims() {
       find: /([\d,]+) query-less templates are recorded/g,
       source: 'templates.json unresolvable',
     },
+    // The confidence split, both halves. The total above was watched and these were
+    // not, so they rotted where nobody could see it: on 9 Aug 2026 the README read
+    // "533 are verified and 67 are derived" against 638 rows, which is 600 — wrong by
+    // 38 and adding up to a number the sentence beside it contradicted. A split that
+    // does not sum to a checked total is the cheapest kind of check to add and the
+    // easiest to notice you never added.
+    {
+      what: 'unofficial rows read against both cards',
+      is: unofficial.COMBOS.filter((r) => r.confidence === 'verified').length,
+      // "**668 are `verified` and 90 are `derived`**"
+      find: /\*\*([\d,]+) are `verified`/g,
+      source: "unofficial.js COMBOS confidence 'verified'",
+    },
+    {
+      what: 'unofficial rows reasoned from a published pairing',
+      is: unofficial.COMBOS.filter((r) => r.confidence === 'derived').length,
+      find: /are `verified` and ([\d,]+) are `derived`\*\*/g,
+      source: "unofficial.js COMBOS confidence 'derived'",
+    },
     {
       what: 'read-only tools listed for answering questions',
       is: listed.length,

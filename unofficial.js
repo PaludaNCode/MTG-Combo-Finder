@@ -15057,6 +15057,917 @@
       why: 'Bloodsoaked Champion pays {1}{B} to return itself from the graveyard, but only if you attacked this turn; Gravecrawler pays {B} to CAST itself from the graveyard, and needs a Zombie instead — which this combo already holds, because Carrion Feeder is a Zombie. Gwenna’s two mana is restricted to creature spells and to abilities of creature sources, and a Gravecrawler cast from the graveyard is a creature spell. Cheaper than the Champion’s return and with no raid to satisfy.',
       produces: ['Infinite +1/+1 counters on a creature', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
     },
+    // ---- Blade of the Bloodchief, against Sadistic Glee ------------------------
+    //
+    // The slot is "a creature dying becomes a +1/+1 counter on a creature you pick".
+    // 80 cards in card-text.json turn a creature dying into a +1/+1 counter and only 8
+    // put it anywhere but on themselves, which is what makes this a family of three:
+    //
+    //   Sadistic Glee  63 published  Aura, {B}       "Whenever a creature dies, put a
+    //                                                 +1/+1 counter on enchanted creature."
+    //   Blade          55 published  Equipment, {1}   the same sentence, plus a Vampire
+    //                                                 rider, plus Equip {1}
+    //   Ghost Lantern  24 published  Equipment, {1}   the same sentence narrowed to
+    //                                                 creatures YOU control
+    //
+    // GHOST LANTERN PROPOSED 24 AND YIELDED NOTHING: every shape it is published in
+    // already has a Blade twin published beside it. The gap is Sadistic Glee's, and it
+    // is one slot deep — Spellbook enumerated the sacrifice outlet against the Aura and
+    // stopped four outlets in against the Equipment.
+    //
+    // Bhaal, Lord of Murder was dropped as a peer before counting, the way the mana
+    // altars were dropped from the Blasting Station sweep: nontoken creatures only, and
+    // it GOADS what it counters.
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Umbral Collar Zealot'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-6798',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Umbral Collar Zealot sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Umbral Collar Zealot'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-6798',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Umbral Collar Zealot'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Umbral Collar Zealot sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite surveil'],
+    },
+    {
+      cards: ['Evolution Witness', 'Blade of the Bloodchief', 'Wild Cantor'],
+      confidence: 'verified',
+      from: {
+        id: '1497-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Wild Cantor'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: Wild Cantor is sacrificed for mana, and its death is what puts the counter on Evolution Witness — which is what returns it from your graveyard to your hand to be cast again. The mana in and the mana out are equal, so the lap costs nothing either way. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite storm count', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Evolution Witness', 'Blade of the Bloodchief', 'Reckless Barbarian'],
+      confidence: 'verified',
+      from: {
+        id: '1947-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Reckless Barbarian'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: Reckless Barbarian is sacrificed for mana, and its death is what puts the counter on Evolution Witness — which is what returns it from your graveyard to your hand to be cast again. The mana in and the mana out are equal, so the lap costs nothing either way. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite storm count'],
+    },
+    {
+      cards: ['Evolution Witness', 'Blade of the Bloodchief', 'Blood Pet'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3944-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Blood Pet'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: Blood Pet is sacrificed for mana, and its death is what puts the counter on Evolution Witness — which is what returns it from your graveyard to your hand to be cast again. The mana in and the mana out are equal, so the lap costs nothing either way. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite storm count', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-5686',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Shilgengar, Sire of Famine sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite artifact tokens', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite Blood tokens'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Shilgengar, Sire of Famine'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-5686',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Shilgengar, Sire of Famine'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Shilgengar, Sire of Famine sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite artifact tokens', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite Blood tokens'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-3967',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Yahenni, Undying Partisan sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-2082-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Woe Strider'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Woe Strider sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Viscera Seer'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2292-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Viscera Seer'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Viscera Seer sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3197-5231',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Thermopod sacrifices, and that creature dying is what puts the next counter on Herd Baloth. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite red mana', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2438-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Carrion Feeder sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2511-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Bloodflow Connoisseur sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Herd Baloth', 'Blade of the Bloodchief', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2921-3197',
+        cards: ['Herd Baloth', 'Sadistic Glee', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 4/4 Beast token is what Bartolomé del Presidio sacrifices, and that creature dying is what puts the next counter on Herd Baloth. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Yahenni, Undying Partisan'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3967-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Yahenni, Undying Partisan'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Yahenni, Undying Partisan sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Woe Strider'],
+      confidence: 'verified',
+      from: {
+        id: '997-2082-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Woe Strider'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Woe Strider sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Viscera Seer'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2292-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Viscera Seer'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Viscera Seer sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4186-5231',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Thermopod sacrifices, and that creature dying is what puts the next counter on Scurry Oak. And it buys a colour: the Glee is {B} and the Blade is colourless, so this line is BRG with the Aura and RG with the Equipment. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite red mana', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2438-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Carrion Feeder sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Bloodflow Connoisseur'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2511-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Bloodflow Connoisseur'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Bloodflow Connoisseur sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Scurry Oak', 'Blade of the Bloodchief', 'Bartolomé del Presidio'],
+      confidence: 'verified',
+      from: {
+        id: '2082-2921-4186',
+        cards: ['Scurry Oak', 'Sadistic Glee', 'Bartolomé del Presidio'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Blade of the Bloodchief', inId: 1988 },
+      why: 'Sadistic Glee and Blade of the Bloodchief are the same sentence — “whenever a creature dies, put a +1/+1 counter on enchanted/equipped creature” — and this loop uses it for one thing: the 1/1 Squirrel token is what Bartolomé del Presidio sacrifices, and that creature dying is what puts the next counter on Scurry Oak. Blade is an Equipment where the Glee is an Aura, which nothing here reads: both attach to a creature you control and put the counter on it, and only the Aura would fall off if that creature died — which this loop never does to it. Blade’s second sentence doubles the counter on a Vampire and nothing here equips one — and it would not matter, because “one or more counters” is one trigger either way.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite creature sacrifice triggers'],
+    },
+    // ---- and the rest of that family: Tarrian's Soulcleaver, Necrosynthesis -----
+    //
+    // The Blade sweep above named three peers and swept one direction. Sweeping the
+    // family instead means ordering the triggers, because a swap is sound only when the
+    // SUBJECT's trigger covers the peer's use:
+    //
+    //   Ghost Lantern   a creature YOU CONTROL dies
+    //   Necrosynthesis  ANOTHER creature dies          (granted to the enchanted creature)
+    //   Sadistic Glee   A creature dies
+    //   Blade           A creature dies                (+ two counters on a Vampire)
+    //   Tarrian's       ANOTHER artifact OR creature put into a graveyard from the
+    //                   battlefield                    (+ Equip {2} rather than {1})
+    //
+    // "Dies" IS "put into a graveyard from the battlefield", so Tarrian's covers every
+    // creature death the others see and adds artifacts on top.
+    //
+    // THREE SHAPES DO NOT SURVIVE AND EACH FAILS DIFFERENTLY — they are the reason this
+    // was read rather than counted, and they are in research-log.js with their sets:
+    //
+    //   Elenda, the Dusk Rose + Phyrexian Altar. The only shape in either sweep where
+    //   BLADE'S VAMPIRE RIDER IS LOAD-BEARING: the published steps put THREE counters on
+    //   Elenda per Vampire, two of them Blade's, and neither substitute gives more than
+    //   one.
+    //
+    //   Puppeteer Clique + Murderous Redcap + Phyrexian Altar, and Puppeteer Clique +
+    //   Putrid Goblin + Ashnod's Altar. These are the only two loops that RE-EQUIP EVERY
+    //   LAP — the +1/+1 counter has to reach whichever persist creature is carrying the
+    //   -1/-1, so the Equipment moves between two bodies. Tarrian's Equip {2} doubles a
+    //   cost that was a lap cost: the Phyrexian Altar version makes 2 mana a lap against
+    //   4 of equipping, and the Ashnod's Altar version breaks even and so stops producing
+    //   the infinite mana it is published for. Necrosynthesis fails the same two for a
+    //   different reason entirely: an Aura cannot move.
+    {
+      cards: ['Unlucky Cabbage Merchant', 'Evolution Witness', 'Krark-Clan Ironworks', 'Phyrexian Altar', 'Tarrian\'s Soulcleaver'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4050-4659-5660-7273',
+        cards: ['Unlucky Cabbage Merchant', 'Evolution Witness', 'Krark-Clan Ironworks', 'Phyrexian Altar', 'Blade of the Bloodchief'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is what makes Evolution Witness return the sacrificed creature to your hand, to be cast and sacrificed again. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite +1/+1 counters on a creature', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite death triggers', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Near-infinite landfall triggers', 'Put all basic lands from your library onto the battlefield tapped'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Thopter Squadron', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2762-5231',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Thopter Squadron', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2762-4050',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Thopter Squadron', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2762-4659',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Thopter Squadron', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2034-2762',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Triskelavus', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1988-5086-5231',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Triskelavus', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4050-5086',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Triskelavus', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4659-5086',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Triskelavus', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2034-5086',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Pentavus', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1183-1988-5231',
+        cards: ['Blade of the Bloodchief', 'Pentavus', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Pentavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Pentavus', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1183-1988-4050',
+        cards: ['Blade of the Bloodchief', 'Pentavus', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Pentavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Pentavus', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '1183-1988-4659',
+        cards: ['Blade of the Bloodchief', 'Pentavus', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Pentavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Pentavus', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1183-1988-2034',
+        cards: ['Blade of the Bloodchief', 'Pentavus', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — the counter is spent straight back: Pentavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Ulasht, the Hate Seed', 'Tarrian\'s Soulcleaver', 'Utopia Mycon'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3192-4214',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Utopia Mycon'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — Ulasht, the Hate Seed removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Ulasht, the Hate Seed', 'Tarrian\'s Soulcleaver', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3192-5231',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — Ulasht, the Hate Seed removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Ulasht, the Hate Seed', 'Tarrian\'s Soulcleaver', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3192-4050',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — Ulasht, the Hate Seed removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Ulasht, the Hate Seed', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2034-3192',
+        cards: ['Ulasht, the Hate Seed', 'Blade of the Bloodchief', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — Ulasht, the Hate Seed removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Marath, Will of the Wild', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1335-1988-2034',
+        cards: ['Marath, Will of the Wild', 'Blade of the Bloodchief', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Blade of the Bloodchief sees here — Marath, Will of the Wild removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Evolution Witness', 'Tarrian\'s Soulcleaver', 'Wild Cantor'],
+      confidence: 'verified',
+      from: {
+        id: '1497-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Wild Cantor'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — the counter is what makes Evolution Witness return the sacrificed creature to your hand, to be cast and sacrificed again. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite storm count', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Evolution Witness', 'Tarrian\'s Soulcleaver', 'Reckless Barbarian'],
+      confidence: 'verified',
+      from: {
+        id: '1947-2082-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Reckless Barbarian'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — the counter is what makes Evolution Witness return the sacrificed creature to your hand, to be cast and sacrificed again. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite +1/+1 counters on a creature', 'Infinite storm count'],
+    },
+    {
+      cards: ['Evolution Witness', 'Tarrian\'s Soulcleaver', 'Blood Pet'],
+      confidence: 'verified',
+      from: {
+        id: '2082-3944-5660',
+        cards: ['Evolution Witness', 'Sadistic Glee', 'Blood Pet'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — the counter is what makes Evolution Witness return the sacrificed creature to your hand, to be cast and sacrificed again. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite storm count', 'Infinite +1/+1 counters on a creature'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Tarrian\'s Soulcleaver', 'Utopia Mycon'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4214-5189',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Utopia Mycon'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — Ghave removes the counter to make a Saproling and the outlet eats the Saproling, so the counter that arrives is the counter that leaves. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Tarrian\'s Soulcleaver', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '2082-5189-5231',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Thermopod'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — Ghave removes the counter to make a Saproling and the outlet eats the Saproling, so the counter that arrives is the counter that leaves. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Tarrian\'s Soulcleaver', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2082-4050-5189',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — Ghave removes the counter to make a Saproling and the outlet eats the Saproling, so the counter that arrives is the counter that leaves. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Ghave, Guru of Spores', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '2034-2082-5189',
+        cards: ['Ghave, Guru of Spores', 'Sadistic Glee', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Sadistic Glee', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Sadistic Glee sees here — Ghave removes the counter to make a Saproling and the outlet eats the Saproling, so the counter that arrives is the counter that leaves. Read off the published steps for the Sadistic Glee version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite colorless mana'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Geralf\'s Messenger'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-5319',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Geralf\'s Messenger'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifeloss', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Stormbound Geist'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-1833-2034',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Stormbound Geist'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Young Wolf'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-3644',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Young Wolf'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Strangleroot Geist'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2012-2034',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Strangleroot Geist'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Pyreheart Wolf'],
+      confidence: 'verified',
+      from: {
+        id: '687-1451-1628-2034',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Pyreheart Wolf'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Butcher Ghoul'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-4350',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Butcher Ghoul'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Wingrattle Scarecrow'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-2111',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Wingrattle Scarecrow'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Restless Apparition'],
+      confidence: 'verified',
+      from: {
+        id: '241-687-1628-2034',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Restless Apparition'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Rendclaw Trow'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-3555',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Rendclaw Trow'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Lesser Masticore'],
+      confidence: 'verified',
+      from: {
+        id: '687-1429-1628-2034',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Lesser Masticore'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Scurry Oak', 'Krark-Clan Ironworks', 'Encroaching Mycosynth'],
+      confidence: 'verified',
+      from: {
+        id: '1379-1628-4186-4659',
+        cards: ['Necrosynthesis', 'Scurry Oak', 'Krark-Clan Ironworks', 'Encroaching Mycosynth'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is what makes Scurry Oak create a token, and Krark-Clan Ironworks can eat that token because everything you control is an artifact. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Herd Baloth', 'Krark-Clan Ironworks', 'Encroaching Mycosynth'],
+      confidence: 'verified',
+      from: {
+        id: '1379-1628-3197-4659',
+        cards: ['Necrosynthesis', 'Herd Baloth', 'Krark-Clan Ironworks', 'Encroaching Mycosynth'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is what makes Herd Baloth create a token, and Krark-Clan Ironworks can eat that token because everything you control is an artifact. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Herd Baloth', 'Krark-Clan Ironworks', 'Biotransference'],
+      confidence: 'verified',
+      from: {
+        id: '549-1628-3197-4659',
+        cards: ['Necrosynthesis', 'Herd Baloth', 'Krark-Clan Ironworks', 'Biotransference'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is what makes Herd Baloth create a token, and Krark-Clan Ironworks can eat that token because everything you control is an artifact. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Scurry Oak', 'Krark-Clan Ironworks', 'Biotransference'],
+      confidence: 'verified',
+      from: {
+        id: '549-1628-4186-4659',
+        cards: ['Necrosynthesis', 'Scurry Oak', 'Krark-Clan Ironworks', 'Biotransference'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is what makes Scurry Oak create a token, and Krark-Clan Ironworks can eat that token because everything you control is an artifact. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Kitchen Finks'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-2086',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Kitchen Finks'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain', 'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Safehold Elite'],
+      confidence: 'verified',
+      from: {
+        id: '687-1628-2034-2620',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Safehold Elite'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tayam, Luminous Enigma', 'Tarrian\'s Soulcleaver', 'Ashnod\'s Altar', 'Putrid Goblin'],
+      confidence: 'verified',
+      from: {
+        id: '301-687-1628-2034',
+        cards: ['Tayam, Luminous Enigma', 'Necrosynthesis', 'Ashnod\'s Altar', 'Putrid Goblin'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is one of the three Tayam removes, and the creature that persists back is what the Altar sacrifices again. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Put a selection of permanant cards from your library and graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Scurry Oak', 'Krark-Clan Ironworks', 'Mycosynth Lattice'],
+      confidence: 'verified',
+      from: {
+        id: '1628-3263-4186-4659',
+        cards: ['Necrosynthesis', 'Scurry Oak', 'Krark-Clan Ironworks', 'Mycosynth Lattice'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is what makes Scurry Oak create a token, and Krark-Clan Ironworks can eat that token because everything you control is an artifact. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Tarrian\'s Soulcleaver', 'Herd Baloth', 'Krark-Clan Ironworks', 'Mycosynth Lattice'],
+      confidence: 'verified',
+      from: {
+        id: '1628-3197-3263-4659',
+        cards: ['Necrosynthesis', 'Herd Baloth', 'Krark-Clan Ironworks', 'Mycosynth Lattice'],
+      },
+      swap: { out: 'Necrosynthesis', in: 'Tarrian\'s Soulcleaver', inId: 5445 },
+      why: 'Tarrian’s Soulcleaver is the widest trigger in this family: “whenever another artifact or creature is put into a graveyard from the battlefield” is what “dies” means for a creature, plus artifacts. It covers every death Necrosynthesis sees here — the counter is what makes Herd Baloth create a token, and Krark-Clan Ironworks can eat that token because everything you control is an artifact. Read off the published steps for the Necrosynthesis version rather than assumed. The one event it misses is the equipped creature’s own death, which no loop here needs and which would be worth nothing if it did. Equip {2} against the published card’s cost is setup, not a lap cost: nothing here re-equips.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Unlucky Cabbage Merchant', 'Evolution Witness', 'Krark-Clan Ironworks', 'Phyrexian Altar', 'Necrosynthesis'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4050-4659-5660-7273',
+        cards: ['Unlucky Cabbage Merchant', 'Evolution Witness', 'Krark-Clan Ironworks', 'Phyrexian Altar', 'Blade of the Bloodchief'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is what makes Evolution Witness return the sacrificed creature to your hand, to be cast and sacrificed again. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite +1/+1 counters on a creature', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite death triggers', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Near-infinite landfall triggers', 'Put all basic lands from your library onto the battlefield tapped'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Thopter Squadron', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2762-5231',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Thopter Squadron', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2762-4050',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Thopter Squadron', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2762-4659',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Thopter Squadron', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2034-2762',
+        cards: ['Blade of the Bloodchief', 'Thopter Squadron', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Thopter Squadron removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Triskelavus', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1988-5086-5231',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Triskelavus', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4050-5086',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Triskelavus', 'Krark-Clan Ironworks'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4659-5086',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Krark-Clan Ironworks'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite colorless mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Triskelavus', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1988-2034-5086',
+        cards: ['Blade of the Bloodchief', 'Triskelavus', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Triskelavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite colorless mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Necrosynthesis', 'Pentavus', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1183-1988-5231',
+        cards: ['Blade of the Bloodchief', 'Pentavus', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — the counter is spent straight back: Pentavus removes it to make a token, and that token is what the outlet sacrifices. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Marath, Will of the Wild', 'Necrosynthesis', 'Thermopod'],
+      confidence: 'verified',
+      from: {
+        id: '1335-1988-5231',
+        cards: ['Marath, Will of the Wild', 'Blade of the Bloodchief', 'Thermopod'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — Marath, Will of the Wild removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Marath, Will of the Wild', 'Necrosynthesis', 'Phyrexian Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1335-1988-4050',
+        cards: ['Marath, Will of the Wild', 'Blade of the Bloodchief', 'Phyrexian Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — Marath, Will of the Wild removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Marath, Will of the Wild', 'Necrosynthesis', 'Ashnod\'s Altar'],
+      confidence: 'verified',
+      from: {
+        id: '1335-1988-2034',
+        cards: ['Marath, Will of the Wild', 'Blade of the Bloodchief', 'Ashnod\'s Altar'],
+      },
+      swap: { out: 'Blade of the Bloodchief', in: 'Necrosynthesis', inId: 1628 },
+      why: 'Necrosynthesis grants the enchanted creature “whenever another creature dies, put a +1/+1 counter on this creature”, where Blade of the Bloodchief keeps the same trigger on the Equipment. They diverge on one event, the counter-bearer’s own death, and a counter on a creature that has just died is worth nothing — Marath, Will of the Wild removes the counter to make a token and the outlet eats it, so the counter that arrives is the counter that leaves. Read off the published steps for the Blade of the Bloodchief version rather than assumed. Blade’s second sentence doubles the counter on a Vampire and nothing here enchants one — and it would not matter, because every engine in this shape spends counters one at a time.',
+      produces: ['Infinite colorless mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
