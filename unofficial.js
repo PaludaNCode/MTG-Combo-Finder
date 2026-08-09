@@ -13609,6 +13609,113 @@
       why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
       produces: ["Infinite death triggers", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite storm count"],
     },
+    // ---- Gravecrawler and Blasting Station, against the sacrifice-loop peers -----
+    //
+    // Both cards were held open by an earlier pass as "unfinished, not refused": against
+    // free sacrifice outlets they proposed 868 and 737 shapes, and a count of candidates
+    // is not a queue of owed rows because an outlet carries riders. These are the rows
+    // that survived reading those riders; the counts and the rule-outs are in
+    // research-log.js.
+    //
+    // GRAVECRAWLER needs a Zombie on the battlefield and {B} every lap, because it is
+    // CAST from the graveyard rather than returned to play. Nether Traitor, the peer
+    // these three cite, pays the same {B} and needs no Zombie — so of 190 shapes only 48
+    // held another Zombie, and only these survived the mana.
+    //
+    // BLASTING STATION taps to sacrifice and untaps only when a creature enters, where
+    // Goblin Bombardment simply sacrifices. Every row here was read off the peer's
+    // published steps to count sacrifices against creatures entering, one lap at a time.
+    {
+      cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Gravecrawler', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '1116-2438-3240-4289',
+        cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Nether Traitor', 'Carrion Feeder'],
+      },
+      swap: { out: 'Nether Traitor', in: 'Gravecrawler', inId: 2577 },
+      why: 'Nether Traitor pays {B} to return itself from the graveyard when another creature dies; Gravecrawler pays {B} to CAST itself from the graveyard while you control a Zombie. Same mana, same lap, and the Zombie is already in this combo — Carrion Feeder is a Zombie. The published steps use the Traitor for one thing, the body that dies and comes back, and the Graveborn token Sek’Kuar makes taps for that {B} through Cryptolith Rite. Gravecrawler being cast rather than returned is the only difference, and nothing here reads it.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Gravecrawler', 'Corpse Blockade'],
+      confidence: 'verified',
+      from: {
+        id: '1116-3240-3623-4289',
+        cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Nether Traitor', 'Corpse Blockade'],
+      },
+      swap: { out: 'Nether Traitor', in: 'Gravecrawler', inId: 2577 },
+      why: 'Nether Traitor pays {B} to return itself from the graveyard when another creature dies; Gravecrawler pays {B} to CAST itself from the graveyard while you control a Zombie. Same mana, same lap, and the Zombie is already in this combo — Corpse Blockade is a Zombie. The published steps use the Traitor for one thing, the body that dies and comes back, and the Graveborn token Sek’Kuar makes taps for that {B} through Cryptolith Rite. Gravecrawler being cast rather than returned is the only difference, and nothing here reads it.',
+      produces: [
+        'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Gravecrawler', 'Phyrexian Ghoul'],
+      confidence: 'verified',
+      from: {
+        id: '924-1116-3240-4289',
+        cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Nether Traitor', 'Phyrexian Ghoul'],
+      },
+      swap: { out: 'Nether Traitor', in: 'Gravecrawler', inId: 2577 },
+      why: 'Nether Traitor pays {B} to return itself from the graveyard when another creature dies; Gravecrawler pays {B} to CAST itself from the graveyard while you control a Zombie. Same mana, same lap, and the Zombie is already in this combo — Phyrexian Ghoul is a Phyrexian Zombie. The published steps use the Traitor for one thing, the body that dies and comes back, and the Graveborn token Sek’Kuar makes taps for that {B} through Cryptolith Rite. Gravecrawler being cast rather than returned is the only difference, and nothing here reads it.',
+      produces: [
+        'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinitely large creature until end of turn', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Crime Novelist', 'Animation Module', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '3490-5147-5346',
+        cards: ['Crime Novelist', 'Animation Module', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: Animation Module creates a Servo every lap, and that Servo entering is the untap. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Jinnie Fay, Jetmir\'s Second', 'Requiem Angel', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '176-2837-5147',
+        cards: ['Jinnie Fay, Jetmir\'s Second', 'Requiem Angel', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: Requiem Angel replaces every non-Spirit that dies with a Cat or a Dog token, so the creature that pays for the next sacrifice is the one the last sacrifice made. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Saffi Eriksdotter', 'Blasting Station', 'Karmic Guide'],
+      confidence: 'verified',
+      from: {
+        id: '2281-4681-5147',
+        cards: ['Saffi Eriksdotter', 'Goblin Bombardment', 'Karmic Guide'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: two creatures enter a lap — Saffi returns Karmic Guide and Karmic Guide returns Saffi — against one sacrifice. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+      ],
+    },
+    {
+      cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Torque', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '486-4853-4917-5147',
+        cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Torque', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: Jan Jansen makes two Construct tokens a lap and the Station sacrifices one of them. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite artifact ETB', 'Infinite artifact tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite tapped creature tokens', 'Infinite tapped Treasure tokens',
+      ],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------

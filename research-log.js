@@ -2654,7 +2654,7 @@ const PASSES = [
     subject: 'Guide of Souls, Blasting Station and Gravecrawler — and a rule-out re-opened',
     cards: ['Guide of Souls', 'Impassioned Orator', 'Blasting Station', 'Gravecrawler',
       'Soul Warden', 'Essence Warden'],
-    cardIds: [5870, 2999, 413, 2413, 360, 2919],
+    cardIds: [5870, 2999, 413, 2577, 360, 2741],
     date: '2026-08-09',
     read: {
       "Guide of Souls": "Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter). Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a flying counter on target attacking creature. It becomes an Angel in addition to its other types. Creature — Human Cleric 1/2 for {W}.",
@@ -2725,7 +2725,7 @@ const PASSES = [
     cards: ['Spike Feeder', 'Walking Ballista', 'Triskelion', 'Deathbringer Thoctar',
       'Luminous Broodmoth', 'Solemnity', 'Mortuary', 'Evolution Witness',
       'Mikaeus, the Unhallowed', 'Phantom Nishoba'],
-    cardIds: [4416, 4053, 4740, 1266, 2018, 3693, 5220, 5660, 2178, 3253],
+    cardIds: [2290, 3693, 1495, 4968, 2018, 4053, 5220, 5660, 628, 1555],
     date: '2026-08-09',
     read: {
       "Spike Feeder": "This creature enters with two +1/+1 counters on it. {2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature. Remove a +1/+1 counter from this creature: You gain 2 life. Creature — Spike 0/0 for {1}{G}{G}.",
@@ -2807,6 +2807,116 @@ const PASSES = [
       + 'was right; what it did not have was the reason, which is that its ability is one of a kind '
       + '— two cards in 34,422 remove a +1/+1 counter for life, and the other one does it with '
       + 'lifelink.',
+  },
+  {
+    subject: 'Gravecrawler and Blasting Station: the sacrifice-outlet sweep that was left open',
+    cards: ['Gravecrawler', 'Blasting Station', 'Nether Traitor', 'Goblin Bombardment',
+      'Bloodghast', 'Reassembling Skeleton', 'Sek\'Kuar, Deathkeeper', 'Cryptolith Rite',
+      'Carrion Feeder', 'Ashes of the Abhorrent', 'Haru, Hidden Talent', 'Requiem Angel',
+      'Animation Module', 'Saffi Eriksdotter', 'Karmic Guide'],
+    cardIds: [2577, 413, 3240, 5147, 5310, 1580, 1116, 4289, 2438, 883, 6879, 176, 3490, 2281, 4681],
+    date: '2026-08-09',
+    read: {
+      "Gravecrawler": "This creature can't block. You may cast this card from your graveyard as long as you control a Zombie. Creature — Zombie 2/1 for {B}.",
+      "Blasting Station": "{T}, Sacrifice a creature: This artifact deals 1 damage to any target. Whenever a creature enters, you may untap this artifact. Artifact for {3}.",
+      "Nether Traitor": "Haste Shadow (This creature can block or be blocked by only creatures with shadow.) Whenever another creature is put into your graveyard from the battlefield, you may pay {B}. If you do, return this card from your graveyard to the battlefield. Creature — Spirit 1/1 for {B}{B}.",
+      "Goblin Bombardment": "Sacrifice a creature: This enchantment deals 1 damage to any target. Enchantment for {1}{R}.",
+      "Bloodghast": "This creature can't block. This creature has haste as long as an opponent has 10 or less life. Landfall — Whenever a land you control enters, you may return this card from your graveyard to the battlefield. Creature — Vampire Spirit 2/1 for {B}{B}.",
+      "Reassembling Skeleton": "{1}{B}: Return this card from your graveyard to the battlefield tapped. Creature — Skeleton Warrior 1/1 for {1}{B}.",
+      "Sek'Kuar, Deathkeeper": "Whenever another nontoken creature you control dies, create a 3/1 black and red Graveborn creature token with haste. Legendary Creature — Orc Shaman 4/3 for {2}{B}{R}{G}.",
+      "Cryptolith Rite": "Creatures you control have \"{T}: Add one mana of any color.\" Enchantment for {1}{G}.",
+      "Carrion Feeder": "This creature can't block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.",
+      "Ashes of the Abhorrent": "Players can't cast spells from graveyards or activate abilities of cards in graveyards. Whenever a creature dies, you gain 1 life. Enchantment for {1}{W}.",
+      "Haru, Hidden Talent": "Whenever another Ally you control enters, earthbend 1. (Target land you control becomes a 0/0 creature with haste that's still a land. Put a +1/+1 counter on it. When it dies or is exiled, return it to the battlefield tapped.) Legendary Creature — Human Peasant Ally 1/1 for {1}{G}.",
+      "Requiem Angel": "Flying Whenever another non-Spirit creature you control dies, create a 1/1 white Spirit creature token with flying. Creature — Angel 5/5 for {5}{W}.",
+      "Animation Module": "Whenever one or more +1/+1 counters are put on a permanent you control, you may pay {1}. If you do, create a 1/1 colorless Servo artifact creature token. {3}, {T}: Choose a counter on target permanent or player. Give that permanent or player another counter of that kind. Artifact for {1}.",
+      "Saffi Eriksdotter": "Sacrifice Saffi Eriksdotter: When target creature is put into your graveyard this turn, return that card to the battlefield. Legendary Creature — Human Scout 2/2 for {G}{W}.",
+      "Karmic Guide": "Flying, protection from black Echo {3}{W}{W} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.) When this creature enters, return target creature card from your graveyard to the battlefield. Creature — Angel Spirit 2/2 for {3}{W}{W}.",
+    },
+    method: 'The pass the Guide of Souls entry left open. Peers taken from card text rather than '
+      + 'score: for Gravecrawler the cards that bring themselves back cheaply (Nether Traitor, '
+      + 'Reassembling Skeleton, Bloodghast, Bloodsoaked Champion), for Blasting Station the free '
+      + 'sacrifice outlets (Goblin Bombardment, Altar of Dementia, Viscera Seer, Carrion Feeder, '
+      + 'Bartolomé del Presidio). Ashnod\'s Altar and Phyrexian Altar were dropped as peers before '
+      + 'counting: they make mana, which is the reason they are in their combos, and Blasting '
+      + 'Station makes none. Then three filters — published already, held here already, and '
+      + 'SUBSUMED by a combo the subject is already in — and then each card\'s own rider.',
+    proposed: 3555,
+    examined: 18,
+    kept: 7,
+    ruledOut: [
+      {
+        reason: 'SUBSUMPTION TOOK 811 OF GRAVECRAWLER\'S 1,002 SWAPS AND 179 OF BLASTING '
+          + 'STATION\'S 2,553. A candidate whose cards are a superset of a combo the subject is '
+          + 'already in is not a gap — Spellbook does not publish strict supersets and neither '
+          + 'does this file. It is the cheapest of the three filters and it is worth running '
+          + 'first: on Gravecrawler it removed four fifths of the list before anything was read.',
+        count: 990,
+      },
+      {
+        reason: 'GRAVECRAWLER IS CAST FROM THE GRAVEYARD, SO IT NEEDS A ZOMBIE AND IT NEEDS {B}. '
+          + 'Its peers need neither: Nether Traitor pays {B} but returns itself with a triggered '
+          + 'ability, Reassembling Skeleton pays {1}{B} for the same, Bloodghast pays nothing and '
+          + 'rides a land drop. Of the 190 shapes left after subsumption, 142 hold no other Zombie '
+          + 'at all, so the card cannot be cast in them, and 38 of the remaining 48 have no mana '
+          + 'for the {B} each lap.',
+        count: 180,
+      },
+      {
+        reason: 'THE SIX HARU, HIDDEN TALENT SHAPES DIE ON LANDFALL. Haru earthbends a land into a '
+          + 'creature and the land returns to the battlefield when it dies, which is a LAND '
+          + 'ENTERING — that is what returns Bloodghast, for free, every lap. Gravecrawler has no '
+          + 'landfall and must be cast for {B}, and none of these six shapes makes mana. The '
+          + 'type-changers in them (Xenograft, Maskwood Nexus, Arcane Adaptation, Conspiracy, '
+          + 'Leyline of Transformation, Rukarumel) are there to make everything an Ally for Haru, '
+          + 'not to make anything a Zombie for Gravecrawler.',
+        count: 6,
+        sets: [['Haru, Hidden Talent', 'Gravecrawler', 'Xenograft', 'Carrion Feeder'],
+          ['Haru, Hidden Talent', 'Gravecrawler', 'Carrion Feeder', 'Rukarumel, Biologist'],
+          ['Haru, Hidden Talent', 'Gravecrawler', 'Maskwood Nexus', 'Carrion Feeder'],
+          ['Haru, Hidden Talent', 'Gravecrawler', 'Carrion Feeder', 'Conspiracy'],
+          ['Haru, Hidden Talent', 'Gravecrawler', 'Carrion Feeder', 'Leyline of Transformation'],
+          ['Haru, Hidden Talent', 'Gravecrawler', 'Arcane Adaptation', 'Carrion Feeder']],
+      },
+      {
+        reason: 'ASHES OF THE ABHORRENT SAYS "PLAYERS CAN\'T CAST SPELLS FROM GRAVEYARDS", WHICH '
+          + 'IS EXACTLY WHAT GRAVECRAWLER DOES. Nether Traitor comes back on a triggered ability '
+          + 'of a card in the graveyard, which the same sentence does not stop — it stops '
+          + 'ACTIVATED abilities and casting. The one shape where the swap fails on the card that '
+          + 'was supposed to be incidental to it.',
+        count: 1,
+        sets: [['Sek\'Kuar, Deathkeeper', 'Warren Soultrader', 'Gravecrawler', 'Ashes of the Abhorrent']],
+      },
+      {
+        reason: 'BLASTING STATION TAPS, AND THE UNTAP IS THE WHOLE QUESTION. Goblin Bombardment '
+          + 'sacrifices for free as often as you like; the Station sacrifices once and untaps only '
+          + 'when a creature enters. Of 1,077 shapes left after subsumption, 981 publish a result '
+          + 'saying a creature enters each lap — which is necessary and NOT sufficient, because '
+          + 'what matters is the count: a lap that sacrifices twice needs two creatures to have '
+          + 'entered. The most-played candidate of all, Slimefoot and Squee + Pitiless Plunderer '
+          + 'at pop 4,081, is exactly that — its published steps open by activating the '
+          + 'Bombardment TWICE before anything enters — and its Spellbook id carries a negative '
+          + 'segment, so it could not be cited even if it worked.',
+        count: 1,
+        sets: [['Slimefoot and Squee', 'Pitiless Plunderer', 'Blasting Station']],
+      },
+      {
+        reason: 'AND THE REST IS UNREAD, WHICH IS THE HONEST WORD FOR IT. 416 Goblin Bombardment '
+          + 'shapes and 561 from the other four outlets survive every filter above and were not '
+          + 'read: deciding one means counting sacrifices against creatures entering in its '
+          + 'published steps, one shape at a time, and eight were read here. The four kept rows '
+          + 'are the ones whose steps were read; the 973 are candidates, not owed rows, and not '
+          + 'refusals either.',
+        count: 973,
+      },
+    ],
+    notes: 'Seven rows, all `verified`: three Gravecrawler shapes citing Nether Traitor, four '
+      + 'Blasting Station shapes citing Goblin Bombardment, every one of them read off the peer\'s '
+      + 'published steps. THE CARD IDS IN THE TWO PREVIOUS ENTRIES WERE WRONG and are fixed in '
+      + 'this commit — they had been written from memory rather than looked up in the payload\'s '
+      + 'cardIds table, and npm run verify:unofficial caught all nine: Gravecrawler was recorded '
+      + 'as 2413 (Day of the Dragons), Spike Feeder as 4416 (Phyrexian Vindicator), and so on. '
+      + 'Two of those entries had already shipped.',
   },
 ];
 
