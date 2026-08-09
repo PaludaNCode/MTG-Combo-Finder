@@ -2720,6 +2720,94 @@ const PASSES = [
       + 'your own Soldiers, Oloro/Nadir Kraken makes your own Tentacles — so the Orator\'s wider '
       + '"any creature" reading is never what the loop rests on, and Guide of Souls fits each.',
   },
+  {
+    subject: 'Spike Feeder, asked again — and the answer is still no peer, with reasons this time',
+    cards: ['Spike Feeder', 'Walking Ballista', 'Triskelion', 'Deathbringer Thoctar',
+      'Luminous Broodmoth', 'Solemnity', 'Mortuary', 'Evolution Witness',
+      'Mikaeus, the Unhallowed', 'Phantom Nishoba'],
+    cardIds: [4416, 4053, 4740, 1266, 2018, 3693, 5220, 5660, 2178, 3253],
+    date: '2026-08-09',
+    read: {
+      "Spike Feeder": "This creature enters with two +1/+1 counters on it. {2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature. Remove a +1/+1 counter from this creature: You gain 2 life. Creature — Spike 0/0 for {1}{G}{G}.",
+      "Walking Ballista": "This creature enters with X +1/+1 counters on it. {4}: Put a +1/+1 counter on this creature. Remove a +1/+1 counter from this creature: It deals 1 damage to any target. Artifact Creature — Construct 0/0 for {X}{X}.",
+      "Triskelion": "This creature enters with three +1/+1 counters on it. Remove a +1/+1 counter from this creature: It deals 1 damage to any target. Artifact Creature — Construct 1/1 for {6}.",
+      "Deathbringer Thoctar": "Whenever another creature dies, you may put a +1/+1 counter on this creature. Remove a +1/+1 counter from this creature: It deals 1 damage to any target. Creature — Zombie Beast 3/3 for {4}{B}{R}.",
+      "Luminous Broodmoth": "Flying Whenever a creature you control without flying dies, return it to the battlefield under its owner's control with a flying counter on it. Creature — Insect 3/4 for {2}{W}{W}.",
+      "Solemnity": "Players can't get counters. Counters can't be put on artifacts, creatures, enchantments, or lands. Enchantment for {2}{W}.",
+      "Mortuary": "Whenever a creature is put into your graveyard from the battlefield, put that card on top of your library. Enchantment for {3}{B}.",
+      "Evolution Witness": "{1}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.) Whenever one or more +1/+1 counters are put on this creature, return target permanent card from your graveyard to your hand. Creature — Elf Shaman Mutant 2/1 for {2}{G}.",
+      "Mikaeus, the Unhallowed": "Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.) Whenever a Human deals damage to you, destroy it. Other non-Human creatures you control get +1/+1 and have undying. (When a creature with undying dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.) Legendary Creature — Zombie Cleric 5/5 for {3}{B}{B}{B}.",
+      "Phantom Nishoba": "Trample This creature enters with seven +1/+1 counters on it. Whenever this creature deals damage, you gain that much life. If damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature. Creature — Cat Beast Spirit 0/0 for {5}{G}{W}.",
+    },
+    method: 'Peers found two ways rather than by score. By TEXT: every card in card-text.json '
+      + 'whose oracle removes a +1/+1 counter and gains life — there are two, and the other is '
+      + 'Phantom Nishoba, whose lifegain is lifelink on damage rather than an activated ability. '
+      + 'By BEHAVIOUR: every card that completes one of Spike Feeder\'s own 83 published shapes '
+      + 'in its place. Then the published steps of all 47 non-damage shapes the top three hold '
+      + 'and Spike Feeder does not were fetched from the steps/ tree and read.',
+    proposed: 777,
+    examined: 47,
+    kept: 0,
+    ruledOut: [
+      {
+        reason: 'THE PEERS TURN A COUNTER INTO DAMAGE AND SPIKE FEEDER TURNS IT INTO LIFE. What '
+          + 'stands in for it in its own shapes is Deathbringer Thoctar (24 of them), Walking '
+          + 'Ballista (19) and Triskelion (19), and all three read "Remove a +1/+1 counter from '
+          + 'this creature: it deals 1 damage to any target". 147 of the 194 two- and three-card '
+          + 'shapes they hold and Spike Feeder does not publish a damage or life-loss result, and '
+          + 'that is the loop\'s output rather than a bonus on it: Vigor and Gatta and Luzzu turn '
+          + 'the damage back into counters, which is the whole engine. Spike Feeder deals no '
+          + 'damage and cannot enter any of them.',
+        count: 147,
+      },
+      {
+        reason: 'OF THE 47 THAT PUBLISH NO DAMAGE RESULT, 17 STILL DEAL DAMAGE IN THE STEPS. The '
+          + 'clearest is Mikaeus, the Unhallowed, the most-played of the lot at pop 11,496: '
+          + 'Mikaeus gives other non-Humans +1/+1 AND undying, so the Ballista is a 1/1 rather '
+          + 'than a 0/0 and does not die when its counters run out — it PINGS ITSELF, which is '
+          + 'what the published steps do. Spike Feeder under Mikaeus is a 1/1 that gains life and '
+          + 'never dies. Agatha\'s Soul Cauldron + Young Wolf is the same shape from the other '
+          + 'end: the Cauldron lends the Ballista\'s damage ability to the Wolf, and the damage '
+          + 'is what kills it.',
+        count: 17,
+        sets: [['Walking Ballista', 'Mikaeus, the Unhallowed'],
+          ['Agatha\'s Soul Cauldron', 'Walking Ballista', 'Young Wolf'],
+          ['Agatha\'s Soul Cauldron', 'Walking Ballista', 'Strangleroot Geist']],
+      },
+      {
+        reason: 'THE 15 THAT DIE TO 0 TOUGHNESS NEED A FREE RECAST, AND SPIKE FEEDER COSTS '
+          + '{1}{G}{G}. Walking Ballista is {X}{X}, so at X=0 it is a 0/0 that can be cast for '
+          + 'nothing, over and over. Mortuary puts the dead creature on top of your library and '
+          + 'Evolution Witness returns it to your hand — both need it cast again every lap, which '
+          + 'is free for the Ballista and three mana for Spike Feeder. Bolas\'s Citadel casting '
+          + 'off the top costs life equal to mana value: nothing for the Ballista, 3 life a lap '
+          + 'against Spike Feeder\'s 2, which is a loop that loses. Emry, Lurker of the Loch casts '
+          + 'ARTIFACT cards from the graveyard and Spike Feeder is a green creature.',
+        count: 14,
+      },
+      {
+        reason: 'ONE SHAPE SURVIVES ON THE CARDS AND IS HELD BACK ANYWAY: Luminous Broodmoth + '
+          + 'Solemnity + Spike Feeder. Solemnity stops the two +1/+1 counters, so Spike Feeder '
+          + 'arrives as a 0/0 and dies to a state-based action; Broodmoth returns it to the '
+          + 'BATTLEFIELD rather than to hand or library, so nothing is recast and the flying '
+          + 'counter is prevented too. It loops, exactly as the Ballista version does. It is not '
+          + 'written because the row could say nothing about Spike Feeder: no counter is ever '
+          + 'removed, no life is ever gained, and the only property used is being a 0/0 that '
+          + 'enters with counters — which the file would then owe to every such creature in the '
+          + 'game. A row whose reasoning does not name what the card does is a row about nothing.',
+        count: 1,
+        sets: [['Luminous Broodmoth', 'Solemnity', 'Spike Feeder']],
+      },
+    ],
+    notes: 'Every engine that turns lifegain into +1/+1 counters is ALREADY published with Spike '
+      + 'Feeder — Archangel of Thune, Heliod, Cleric Class, Light of Promise, Sunbond, Spider-Man, '
+      + 'The Destined White Mage, Heroic Feast, Ajani\'s Pridemate, and Treebeard in eight shapes. '
+      + 'That is the half of the space where it is the natural card, and Spellbook has it covered. '
+      + 'The pass of 2026-08-03 said "the same search for Spike Feeder returned no peer at all" and '
+      + 'was right; what it did not have was the reason, which is that its ability is one of a kind '
+      + '— two cards in 34,422 remove a +1/+1 counter for life, and the other one does it with '
+      + 'lifelink.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.
