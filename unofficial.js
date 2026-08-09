@@ -13609,6 +13609,1454 @@
       why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
       produces: ["Infinite death triggers", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers", "Infinite creature LTB", "Infinite creature sacrifice triggers", "Infinite storm count"],
     },
+    // ---- Gravecrawler and Blasting Station, against the sacrifice-loop peers -----
+    //
+    // Both cards were held open by an earlier pass as "unfinished, not refused": against
+    // free sacrifice outlets they proposed 868 and 737 shapes, and a count of candidates
+    // is not a queue of owed rows because an outlet carries riders. These are the rows
+    // that survived reading those riders; the counts and the rule-outs are in
+    // research-log.js.
+    //
+    // GRAVECRAWLER needs a Zombie on the battlefield and {B} every lap, because it is
+    // CAST from the graveyard rather than returned to play. Nether Traitor, the peer
+    // these three cite, pays the same {B} and needs no Zombie — so of 190 shapes only 48
+    // held another Zombie, and only these survived the mana.
+    //
+    // BLASTING STATION taps to sacrifice and untaps only when a creature enters, where
+    // Goblin Bombardment simply sacrifices. Every row here was read off the peer's
+    // published steps to count sacrifices against creatures entering, one lap at a time.
+    {
+      cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Gravecrawler', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '1116-2438-3240-4289',
+        cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Nether Traitor', 'Carrion Feeder'],
+      },
+      swap: { out: 'Nether Traitor', in: 'Gravecrawler', inId: 2577 },
+      why: 'Nether Traitor pays {B} to return itself from the graveyard when another creature dies; Gravecrawler pays {B} to CAST itself from the graveyard while you control a Zombie. Same mana, same lap, and the Zombie is already in this combo — Carrion Feeder is a Zombie. The published steps use the Traitor for one thing, the body that dies and comes back, and the Graveborn token Sek’Kuar makes taps for that {B} through Cryptolith Rite. Gravecrawler being cast rather than returned is the only difference, and nothing here reads it.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Gravecrawler', 'Corpse Blockade'],
+      confidence: 'verified',
+      from: {
+        id: '1116-3240-3623-4289',
+        cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Nether Traitor', 'Corpse Blockade'],
+      },
+      swap: { out: 'Nether Traitor', in: 'Gravecrawler', inId: 2577 },
+      why: 'Nether Traitor pays {B} to return itself from the graveyard when another creature dies; Gravecrawler pays {B} to CAST itself from the graveyard while you control a Zombie. Same mana, same lap, and the Zombie is already in this combo — Corpse Blockade is a Zombie. The published steps use the Traitor for one thing, the body that dies and comes back, and the Graveborn token Sek’Kuar makes taps for that {B} through Cryptolith Rite. Gravecrawler being cast rather than returned is the only difference, and nothing here reads it.',
+      produces: [
+        'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Gravecrawler', 'Phyrexian Ghoul'],
+      confidence: 'verified',
+      from: {
+        id: '924-1116-3240-4289',
+        cards: ['Sek\'Kuar, Deathkeeper', 'Cryptolith Rite', 'Nether Traitor', 'Phyrexian Ghoul'],
+      },
+      swap: { out: 'Nether Traitor', in: 'Gravecrawler', inId: 2577 },
+      why: 'Nether Traitor pays {B} to return itself from the graveyard when another creature dies; Gravecrawler pays {B} to CAST itself from the graveyard while you control a Zombie. Same mana, same lap, and the Zombie is already in this combo — Phyrexian Ghoul is a Phyrexian Zombie. The published steps use the Traitor for one thing, the body that dies and comes back, and the Graveborn token Sek’Kuar makes taps for that {B} through Cryptolith Rite. Gravecrawler being cast rather than returned is the only difference, and nothing here reads it.',
+      produces: [
+        'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinitely large creature until end of turn', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Crime Novelist', 'Animation Module', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '3490-5147-5346',
+        cards: ['Crime Novelist', 'Animation Module', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: Animation Module creates a Servo every lap, and that Servo entering is the untap. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite +1/+1 counters on a creature', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Jinnie Fay, Jetmir\'s Second', 'Requiem Angel', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '176-2837-5147',
+        cards: ['Jinnie Fay, Jetmir\'s Second', 'Requiem Angel', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: Requiem Angel replaces every non-Spirit that dies with a Cat or a Dog token, so the creature that pays for the next sacrifice is the one the last sacrifice made. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers',
+      ],
+    },
+    {
+      cards: ['Saffi Eriksdotter', 'Blasting Station', 'Karmic Guide'],
+      confidence: 'verified',
+      from: {
+        id: '2281-4681-5147',
+        cards: ['Saffi Eriksdotter', 'Goblin Bombardment', 'Karmic Guide'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: two creatures enter a lap — Saffi returns Karmic Guide and Karmic Guide returns Saffi — against one sacrifice. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
+      ],
+    },
+    {
+      cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Torque', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '486-4853-4917-5147',
+        cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Torque', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters. That rider is what decides these, and this loop feeds it: Jan Jansen makes two Construct tokens a lap and the Station sacrifices one of them. One sacrifice a lap against at least one creature entering a lap, so the Station is untapped every time it is needed — read off the published steps rather than assumed. The 1 damage is the same damage the Bombardment deals.',
+      produces: [
+        'Infinite artifact ETB', 'Infinite artifact tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite tapped creature tokens', 'Infinite tapped Treasure tokens',
+      ],
+    },
+    // ---- Blasting Station, and one more Gravecrawler ---------------------------
+    //
+    // The 973 shapes the entry above left explicitly unread. Deciding one means
+    // counting sacrifices against creatures entering in its published steps, and the
+    // reason it was left is that a REGEX CANNOT DO IT — three classifiers were written
+    // and the first two were wrong in ways that read as working:
+    //
+    //   v1 counted "enters" anywhere in a step.  The thing entering in
+    //      Beifong's Bounty Hunters + Thranduil is a LAND.
+    //   v2 asked whether any card named in the step is a creature.  "When Clown Car
+    //      enters, KOLODIN triggers" names Kolodin, who is one.
+    //
+    // Hand-reading twelve of v2's keeps found five wrong, and v3 — which extracts the
+    // SUBJECT of the entry and checks its type line — was then read against all 124 of
+    // its own. Every row below is one of those readings. The five it still got wrong
+    // are rule-outs in research-log.js, and three of them share a sentence worth
+    // knowing: Hushwing Gryff, Torpor Orb and Tocatli Honor Guard all read "creatures
+    // entering don't cause abilities to trigger", which is the Station's untap.
+    //
+    // The 570 shapes from the other four outlets are still unread, and still logged
+    // as unread.
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Bloodboil Sorcerer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6138',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Bloodboil Sorcerer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Passageway Seer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6145',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Passageway Seer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Vicious Battlerager'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6153',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Vicious Battlerager'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Underdark Explorer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6151',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Underdark Explorer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Aarakocra Sneak'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6135',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Aarakocra Sneak'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Avenging Hunter'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6136',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Avenging Hunter'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Seasoned Dungeoneer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6148',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Seasoned Dungeoneer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'White Plume Adventurer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6154',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'White Plume Adventurer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Ravenloft Adventurer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6146',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Ravenloft Adventurer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Goliath Paladin'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6144',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Goliath Paladin'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Stirring Bard'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6149',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Stirring Bard'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Tomb of Horrors Adventurer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6150',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Tomb of Horrors Adventurer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Caves of Chaos Adventurer'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6139',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Caves of Chaos Adventurer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Undermountain Adventurer'],
+      confidence: 'verified',
+      from: {
+        id: '1008-1619-4605-5147-5542',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Undermountain Adventurer'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Rilsa Rael, Kingpin'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6147',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Rilsa Rael, Kingpin'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Blasting Station', 'Feywild Caretaker'],
+      confidence: 'verified',
+      from: {
+        id: '1619-4605-5147-5542-6143',
+        cards: ['Preston, the Vanisher', 'Delney, Streetwise Lookout', 'Sefris of the Hidden Ways', 'Goblin Bombardment', 'Feywild Caretaker'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston makes token copies of the creature Sefris returned, and the creature Sefris returned enters before the sacrifice — so the Station is already untapped when the lap reaches it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite +1/+1 counters on creatures you control', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite Treasure tokens', 'Infinite card draw', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature sacrifice triggers', 'Near-infinite lifeloss', 'Put all basic lands from your library into your hand', 'Put all creature cards from your library onto the battlefield', 'Return most creature cards from your graveyard onto the battlefield'],
+    },
+    {
+      cards: ['Rakdos, the Muscle', 'Priest of Gix', 'Haunted Crossroads', 'Blasting Station', 'Rowan, Scion of War'],
+      confidence: 'verified',
+      from: {
+        id: '140-586-5147-5258-5618',
+        cards: ['Rakdos, the Muscle', 'Priest of Gix', 'Haunted Crossroads', 'Goblin Bombardment', 'Rowan, Scion of War'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Priest of Gix is exiled off Rakdos and recast every lap, so it enters after each sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Exile your library with the ability to play the exiled cards until your next turn', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite black mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Blasting Station', 'Wormfang Drake', 'Sun Titan'],
+      confidence: 'verified',
+      from: {
+        id: '465-3175-5147',
+        cards: ['Goblin Bombardment', 'Wormfang Drake', 'Sun Titan'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Sun Titan returns from exile and returns Wormfang Drake with it — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite damage', 'Infinite death triggers', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Blasting Station', 'Wormfang Drake', 'Nature\'s Rhythm'],
+      confidence: 'verified',
+      from: {
+        id: '465-4605-5147-7260',
+        cards: ['Preston, the Vanisher', 'Goblin Bombardment', 'Wormfang Drake', 'Nature\'s Rhythm'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston’s token copy of the blinker enters before the Station sacrifices that token, and the nontoken comes back out of exile after it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite recursion of creature cards in your graveyard', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Blasting Station', 'Faceless Butcher', 'Chord of Calling'],
+      confidence: 'verified',
+      from: {
+        id: '3991-4605-5147-7261',
+        cards: ['Preston, the Vanisher', 'Goblin Bombardment', 'Faceless Butcher', 'Chord of Calling'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston’s token copy of the blinker enters before the Station sacrifices that token, and the nontoken comes back out of exile after it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite recursion of creature cards in your graveyard', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Blasting Station', 'Fiend Hunter', 'Nature\'s Rhythm'],
+      confidence: 'verified',
+      from: {
+        id: '1734-4605-5147-7260',
+        cards: ['Preston, the Vanisher', 'Goblin Bombardment', 'Fiend Hunter', 'Nature\'s Rhythm'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston’s token copy of the blinker enters before the Station sacrifices that token, and the nontoken comes back out of exile after it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite recursion of creature cards in your graveyard', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Blasting Station', 'Faceless Butcher', 'Nature\'s Rhythm'],
+      confidence: 'verified',
+      from: {
+        id: '3991-4605-5147-7260',
+        cards: ['Preston, the Vanisher', 'Goblin Bombardment', 'Faceless Butcher', 'Nature\'s Rhythm'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston’s token copy of the blinker enters before the Station sacrifices that token, and the nontoken comes back out of exile after it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite recursion of creature cards in your graveyard', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Blasting Station', 'Fiend Hunter', 'Chord of Calling'],
+      confidence: 'verified',
+      from: {
+        id: '1734-4605-5147-7261',
+        cards: ['Preston, the Vanisher', 'Goblin Bombardment', 'Fiend Hunter', 'Chord of Calling'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston’s token copy of the blinker enters before the Station sacrifices that token, and the nontoken comes back out of exile after it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite recursion of creature cards in your graveyard', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Preston, the Vanisher', 'Blasting Station', 'Wormfang Drake', 'Chord of Calling'],
+      confidence: 'verified',
+      from: {
+        id: '465-4605-5147-7261',
+        cards: ['Preston, the Vanisher', 'Goblin Bombardment', 'Wormfang Drake', 'Chord of Calling'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Preston’s token copy of the blinker enters before the Station sacrifices that token, and the nontoken comes back out of exile after it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite recursion of creature cards in your graveyard', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Saffi Eriksdotter', 'Blasting Station', 'Angel of Indemnity'],
+      confidence: 'verified',
+      from: {
+        id: '2281-5147-5987',
+        cards: ['Saffi Eriksdotter', 'Goblin Bombardment', 'Angel of Indemnity'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here two creatures enter a lap against one sacrifice — Saffi returns the creature and the creature returns Saffi. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Saffi Eriksdotter', 'Sister Hospitaller', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2281-3817-5147',
+        cards: ['Saffi Eriksdotter', 'Sister Hospitaller', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here two creatures enter a lap against one sacrifice — Saffi returns the creature and the creature returns Saffi. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers', 'Infinite lifegain'],
+    },
+    {
+      cards: ['Saffi Eriksdotter', 'Blasting Station', 'Metamorphosis Fanatic'],
+      confidence: 'verified',
+      from: {
+        id: '2281-5147-6132',
+        cards: ['Saffi Eriksdotter', 'Goblin Bombardment', 'Metamorphosis Fanatic'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here two creatures enter a lap against one sacrifice — Saffi returns the creature and the creature returns Saffi. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Saffi Eriksdotter', 'Blasting Station', 'Hero of the Dunes'],
+      confidence: 'verified',
+      from: {
+        id: '2150-2281-5147',
+        cards: ['Saffi Eriksdotter', 'Goblin Bombardment', 'Hero of the Dunes'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here two creatures enter a lap against one sacrifice — Saffi returns the creature and the creature returns Saffi. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Blasting Station', 'Universal Automaton'],
+      confidence: 'verified',
+      from: {
+        id: '930-5147-6871-6879',
+        cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Goblin Bombardment', 'Universal Automaton'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Toph makes the artifact a land, Haru earthbends it, and earthbend returns it to the battlefield when it dies — as the artifact creature it is, which is the creature entering. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite landfall triggers'],
+    },
+    {
+      cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Blasting Station', 'Three Tree Mascot'],
+      confidence: 'verified',
+      from: {
+        id: '5147-6837-6871-6879',
+        cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Goblin Bombardment', 'Three Tree Mascot'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Toph makes the artifact a land, Haru earthbends it, and earthbend returns it to the battlefield when it dies — as the artifact creature it is, which is the creature entering. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite landfall triggers'],
+    },
+    {
+      cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Blasting Station', 'Bloodline Pretender'],
+      confidence: 'verified',
+      from: {
+        id: '3215-5147-6871-6879',
+        cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Goblin Bombardment', 'Bloodline Pretender'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Toph makes the artifact a land, Haru earthbends it, and earthbend returns it to the battlefield when it dies — as the artifact creature it is, which is the creature entering. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite landfall triggers'],
+    },
+    {
+      cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Blasting Station', 'Barkform Harvester'],
+      confidence: 'verified',
+      from: {
+        id: '5147-5795-6871-6879',
+        cards: ['Toph, the First Metalbender', 'Haru, Hidden Talent', 'Goblin Bombardment', 'Barkform Harvester'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Toph makes the artifact a land, Haru earthbends it, and earthbend returns it to the battlefield when it dies — as the artifact creature it is, which is the creature entering. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite landfall triggers'],
+    },
+    {
+      cards: ['Anti-Venom, Horrifying Healer', 'Cloudstone Curio', 'Blasting Station', 'Peregrine Drake'],
+      confidence: 'verified',
+      from: {
+        id: '2232-3821-5147-6843',
+        cards: ['Anti-Venom, Horrifying Healer', 'Cloudstone Curio', 'Goblin Bombardment', 'Peregrine Drake'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Anti-Venom and Peregrine Drake both enter before the lap reaches the sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite storm count'],
+    },
+    {
+      cards: ['Loyal Retainers', 'Karmic Guide', 'Blasting Station', 'Sakashima the Impostor'],
+      confidence: 'verified',
+      from: {
+        id: '804-2533-4681-5147',
+        cards: ['Loyal Retainers', 'Karmic Guide', 'Goblin Bombardment', 'Sakashima the Impostor'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Sakashima enters as a copy of Karmic Guide and brings Loyal Retainers back with it, both before the sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Loyal Retainers', 'Karmic Guide', 'Blasting Station', 'Sakashima of a Thousand Faces'],
+      confidence: 'verified',
+      from: {
+        id: '2533-2719-4681-5147',
+        cards: ['Loyal Retainers', 'Karmic Guide', 'Goblin Bombardment', 'Sakashima of a Thousand Faces'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Sakashima enters as a copy of Karmic Guide and brings Loyal Retainers back with it, both before the sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Metamorphosis Fanatic', 'Blasting Station', 'Wispweaver Angel'],
+      confidence: 'verified',
+      from: {
+        id: '1621-5147-6132',
+        cards: ['Metamorphosis Fanatic', 'Goblin Bombardment', 'Wispweaver Angel'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Metamorphosis Fanatic returns the blinker from your graveyard and the blink puts the Fanatic back — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Metamorphosis Fanatic', 'Blasting Station', 'Restoration Angel'],
+      confidence: 'verified',
+      from: {
+        id: '1090-5147-6132',
+        cards: ['Metamorphosis Fanatic', 'Goblin Bombardment', 'Restoration Angel'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Metamorphosis Fanatic returns the blinker from your graveyard and the blink puts the Fanatic back — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Metamorphosis Fanatic', 'Blasting Station', 'Icewind Stalwart'],
+      confidence: 'verified',
+      from: {
+        id: '4200-5147-6132',
+        cards: ['Metamorphosis Fanatic', 'Goblin Bombardment', 'Icewind Stalwart'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Metamorphosis Fanatic returns the blinker from your graveyard and the blink puts the Fanatic back — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Metamorphosis Fanatic', 'Blasting Station', 'Felidar Guardian'],
+      confidence: 'verified',
+      from: {
+        id: '2781-5147-6132',
+        cards: ['Metamorphosis Fanatic', 'Goblin Bombardment', 'Felidar Guardian'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Metamorphosis Fanatic returns the blinker from your graveyard and the blink puts the Fanatic back — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
+    },
+    {
+      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Thaumatog', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1669-5145-5147-5466',
+        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Thaumatog', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinitely large creature until end of turn'],
+    },
+    {
+      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Phantatog', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '3476-5145-5147-5466',
+        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Phantatog', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinitely large creature until end of turn'],
+    },
+    {
+      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Faith Healer', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '77-5145-5147-5466',
+        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Faith Healer', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers', 'Infinite lifegain'],
+    },
+    {
+      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Auratog', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '435-5145-5147-5466',
+        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Auratog', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinitely large creature until end of turn'],
+    },
+    {
+      cards: ['Dr. Madison Li', 'Decoction Module', 'Thornbite Staff', 'Myr Battlesphere', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2178-3484-4023-4840-5147',
+        cards: ['Dr. Madison Li', 'Decoction Module', 'Thornbite Staff', 'Myr Battlesphere', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Myr Battlesphere returns and makes four Myr tokens, all before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Dr. Madison Li', 'Decoction Module', 'Intruder Alarm', 'Myr Battlesphere', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1636-3484-4023-4840-5147',
+        cards: ['Dr. Madison Li', 'Decoction Module', 'Intruder Alarm', 'Myr Battlesphere', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Myr Battlesphere returns and makes four Myr tokens, all before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite mana creatures you control can produce', 'Infinite creature sacrifice triggers', 'Infinite untap of creatures'],
+    },
+    {
+      cards: ['Grenzo, Dungeon Warden', 'Soldevi Digger', 'Dockside Extortionist', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '49-914-1799-5147',
+        cards: ['Grenzo, Dungeon Warden', 'Soldevi Digger', 'Dockside Extortionist', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Extus, Oriq Overlord // Awaken the Blood Avatar', 'Dualcaster Mage', 'Burnt Offering', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '147-1777-4558-5147',
+        cards: ['Extus, Oriq Overlord // Awaken the Blood Avatar', 'Dualcaster Mage', 'Burnt Offering', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dualcaster Mage is cast fresh every lap and enters before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite black mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers', 'Infinite red mana', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Nim Deathmantle', 'Blasting Station', 'Famished Foragers', 'Yarok, the Desecrated'],
+      confidence: 'verified',
+      from: {
+        id: '2499-4813-5003-5147',
+        cards: ['Nim Deathmantle', 'Goblin Bombardment', 'Famished Foragers', 'Yarok, the Desecrated'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Nim Deathmantle returns Famished Foragers the moment it dies, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite red mana', 'Infinite rummaging', 'Infinite creature sacrifice triggers', 'Infinite self-discard triggers'],
+    },
+    {
+      cards: ['Nim Deathmantle', 'Blasting Station', 'Famished Foragers', 'Virtue of Knowledge // Vantress Visions'],
+      confidence: 'verified',
+      from: {
+        id: '1418-4813-5003-5147',
+        cards: ['Nim Deathmantle', 'Goblin Bombardment', 'Famished Foragers', 'Virtue of Knowledge // Vantress Visions'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Nim Deathmantle returns Famished Foragers the moment it dies, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite red mana', 'Infinite rummaging', 'Infinite creature sacrifice triggers', 'Infinite self-discard triggers'],
+    },
+    {
+      cards: ['Nim Deathmantle', 'Blasting Station', 'Famished Foragers', 'Elesh Norn, Mother of Machines'],
+      confidence: 'verified',
+      from: {
+        id: '1770-4813-5003-5147',
+        cards: ['Nim Deathmantle', 'Goblin Bombardment', 'Famished Foragers', 'Elesh Norn, Mother of Machines'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Nim Deathmantle returns Famished Foragers the moment it dies, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite red mana', 'Infinite rummaging', 'Infinite creature sacrifice triggers', 'Infinite self-discard triggers'],
+    },
+    {
+      cards: ['Nim Deathmantle', 'Blasting Station', 'Famished Foragers', 'Panharmonicon'],
+      confidence: 'verified',
+      from: {
+        id: '2397-4813-5003-5147',
+        cards: ['Nim Deathmantle', 'Goblin Bombardment', 'Famished Foragers', 'Panharmonicon'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Nim Deathmantle returns Famished Foragers the moment it dies, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite red mana', 'Infinite rummaging', 'Infinite creature sacrifice triggers', 'Infinite self-discard triggers'],
+    },
+    {
+      cards: ['Vesperlark', 'Activated Sleeper', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2947-4881-5147',
+        cards: ['Vesperlark', 'Activated Sleeper', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Activated Sleeper returns from your graveyard as a copy of the lark each lap, and that is the creature entering. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Reveillark', 'Activated Sleeper', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '67-4881-5147',
+        cards: ['Reveillark', 'Activated Sleeper', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Activated Sleeper returns from your graveyard as a copy of the lark each lap, and that is the creature entering. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Memnite', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1778-2218-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Memnite', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Ornithopter', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2218-3652-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Ornithopter', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Rograkh, Son of Rohgahh', 'Ronin Warclub', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2218-2459-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Rograkh, Son of Rohgahh', 'Ronin Warclub', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Kobolds of Kher Keep', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2218-4336-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Kobolds of Kher Keep', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Crookshank Kobolds', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2218-3558-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Crookshank Kobolds', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Crimson Kobolds', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '862-2218-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Crimson Kobolds', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Shield Sphere', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2218-3661-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Shield Sphere', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Phyrexian Walker', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1003-2218-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Ronin Warclub', 'Phyrexian Walker', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Rograkh, Son of Rohgahh', 'Sai of the Shinobi', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2459-2644-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Rograkh, Son of Rohgahh', 'Sai of the Shinobi', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Kobolds of Kher Keep', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2644-4336-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Kobolds of Kher Keep', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Crookshank Kobolds', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2644-3558-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Crookshank Kobolds', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Crimson Kobolds', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '862-2644-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Crimson Kobolds', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Shield Sphere', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2644-3661-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Shield Sphere', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Phyrexian Walker', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1003-2644-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Phyrexian Walker', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Scurry Oak', 'Death\'s Presence', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2249-4186-5147',
+        cards: ['Scurry Oak', 'Death\'s Presence', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the counter makes a creature token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Blasting Station', 'Cloudsteel Kirin'],
+      confidence: 'verified',
+      from: {
+        id: '1981-3629-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Cloudsteel Kirin'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the damage Darien takes makes a Soldier token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite creature ETB', 'Infinite damage', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Blasting Station', 'Angel\'s Grace'],
+      confidence: 'verified',
+      from: {
+        id: '1981-1984-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Angel\'s Grace'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the damage Darien takes makes a Soldier token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite creature ETB', 'Infinite damage', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Blasting Station', 'Platinum Angel'],
+      confidence: 'verified',
+      from: {
+        id: '1981-4591-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Platinum Angel'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the damage Darien takes makes a Soldier token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite creature ETB', 'Infinite damage', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Darien, King of Kjeldor', 'Blasting Station', 'Platinum Emperion'],
+      confidence: 'verified',
+      from: {
+        id: '1981-3333-5147',
+        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Platinum Emperion'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the damage Darien takes makes a Soldier token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite creature ETB', 'Infinite damage', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite death triggers'],
+    },
+    {
+      cards: ['Mortuary', 'Experimental Frenzy', 'Priest of Urabrask', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '232-4316-5147-5220',
+        cards: ['Mortuary', 'Experimental Frenzy', 'Priest of Urabrask', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Mortuary puts the creature back on top of your library and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Mortuary', 'Experimental Frenzy', 'Priest of Gix', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '586-4316-5147-5220',
+        cards: ['Mortuary', 'Experimental Frenzy', 'Priest of Gix', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Mortuary puts the creature back on top of your library and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Naru Meha, Master Wizard', 'Thunderous Debut', 'Mortuary', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '141-3331-5147-5220',
+        cards: ['Naru Meha, Master Wizard', 'Thunderous Debut', 'Mortuary', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Mortuary puts the creature back on top of your library and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers', 'Infinite creature sacrifice triggers', 'Put all creature cards from your library onto the battlefield'],
+    },
+    {
+      cards: ['Dualcaster Mage', 'Thunderous Debut', 'Mortuary', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '147-3331-5147-5220',
+        cards: ['Dualcaster Mage', 'Thunderous Debut', 'Mortuary', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Mortuary puts the creature back on top of your library and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers', 'Infinite creature sacrifice triggers', 'Put all creature cards from your library onto the battlefield'],
+    },
+    {
+      cards: ['Mazirek, Kraul Death Priest', 'One with the Kami', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '317-1475-5147',
+        cards: ['Mazirek, Kraul Death Priest', 'One with the Kami', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here One with the Kami turns the death into Spirit tokens, and Mazirek modifies them — the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite +1/+1 counters on creatures you control'],
+    },
+    {
+      cards: ['Ashnod the Uncaring', 'Bonecaller Cleric', 'Dockside Extortionist', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-1075-2068-5147',
+        cards: ['Ashnod the Uncaring', 'Bonecaller Cleric', 'Dockside Extortionist', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Bonecaller Cleric returns itself and Dockside Extortionist to the battlefield each lap — two creatures entering against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Blade of the Bloodchief', 'Scurry Oak', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1988-4186-5147',
+        cards: ['Blade of the Bloodchief', 'Scurry Oak', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the counter makes a creature token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Blade of the Bloodchief', 'Herd Baloth', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1988-3197-5147',
+        cards: ['Blade of the Bloodchief', 'Herd Baloth', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the counter makes a creature token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Éomer, Marshal of Rohan', 'Kari Zev, Skyship Raider', 'Helm of the Host', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1692-1803-3951-5147',
+        cards: ['Éomer, Marshal of Rohan', 'Kari Zev, Skyship Raider', 'Helm of the Host', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Kari Zev makes a Ragavan token as she attacks and the Station sacrifices that token, one per combat phase. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite combat phases', 'Infinite creature tokens with haste', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Warbeast of Gorgoroth', 'Doubling Season', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '4772-5147-5254',
+        cards: ['Warbeast of Gorgoroth', 'Doubling Season', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Army you sacrificed is gone, so Warbeast of Gorgoroth makes a new one each lap — a creature token entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Warbeast of Gorgoroth', 'Drivnod, Carnage Dominus', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '5111-5147-5254',
+        cards: ['Warbeast of Gorgoroth', 'Drivnod, Carnage Dominus', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Army you sacrificed is gone, so Warbeast of Gorgoroth makes a new one each lap — a creature token entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Warbeast of Gorgoroth', 'Teysa Karlov', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '4647-5147-5254',
+        cards: ['Warbeast of Gorgoroth', 'Teysa Karlov', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Army you sacrificed is gone, so Warbeast of Gorgoroth makes a new one each lap — a creature token entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Feldon of the Third Path', 'Dockside Extortionist', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '57-914-2178-5147',
+        cards: ['Feldon of the Third Path', 'Dockside Extortionist', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the token copy enters at the top of every lap, before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Adun Oakenshield', 'Dockside Extortionist', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-2178-3379-5147',
+        cards: ['Adun Oakenshield', 'Dockside Extortionist', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite creature ETB', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Basri\'s Lieutenant', 'Serra Redeemer', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1992-4981-5147',
+        cards: ['Basri\'s Lieutenant', 'Serra Redeemer', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Basri’s Lieutenant replaces the counter-bearing creature with a Knight token, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Nim Deathmantle', 'Dockside Extortionist', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-5003-5147',
+        cards: ['Nim Deathmantle', 'Dockside Extortionist', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Feldon of the Third Path', 'Priest of Urabrask', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '57-232-2178-5147',
+        cards: ['Feldon of the Third Path', 'Priest of Urabrask', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the token copy enters at the top of every lap, before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Feldon of the Third Path', 'Famished Foragers', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '57-2178-4813-5147',
+        cards: ['Feldon of the Third Path', 'Famished Foragers', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the token copy enters at the top of every lap, before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Eligeth, Crossroads Augur', 'The Locust God', 'Norn\'s Wellspring', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1339-1689-2189-5147',
+        cards: ['Eligeth, Crossroads Augur', 'The Locust God', 'Norn\'s Wellspring', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the death draws a card and The Locust God turns that draw into an Insect token — a creature entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite card draw', 'Infinite draw triggers', 'Near-infinite damage', 'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite creature LTB', 'Near-infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Yore-Tiller Nephilim', 'Port Razer', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1548-4034-5147',
+        cards: ['Yore-Tiller Nephilim', 'Port Razer', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Yore-Tiller Nephilim returns Port Razer attacking at the top of every combat phase, before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite combat phases', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite mana creatures you control can produce', 'Infinite creature sacrifice triggers', 'Infinite untap of creatures you control'],
+    },
+    {
+      cards: ['Zask, Skittering Swarmlord', 'Mana Echoes', 'Needlebug', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2409-2440-3781-5147',
+        cards: ['Zask, Skittering Swarmlord', 'Mana Echoes', 'Needlebug', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Needlebug is cast out of your graveyard and enters at the top of every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite colorless mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite self-mill', 'Infinite storm count'],
+    },
+    {
+      cards: ['Gerrard, Weatherlight Hero', 'Molten Echoes', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '238-2506-5147',
+        cards: ['Gerrard, Weatherlight Hero', 'Molten Echoes', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Molten Echoes copies Gerrard as he enters, and the Station sacrifices the token — a creature entering before every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['_____ Goblin', 'Mortuary', 'Conspicuous Snoop', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2240-4829-5147-5220',
+        cards: ['_____ Goblin', 'Mortuary', 'Conspicuous Snoop', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Mortuary puts the creature back on top of your library and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite red mana', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Dockside Extortionist', 'Underworld Breach', 'Grinding Station', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-1368-3698-5147',
+        cards: ['Dockside Extortionist', 'Underworld Breach', 'Grinding Station', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite self-mill', 'Near-infinite colored mana', 'Near-infinite damage', 'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite creature LTB', 'Near-infinite mill', 'Near-infinite creature sacrifice triggers', 'Near-infinite storm count', 'Near-infinite Treasure tokens'],
+    },
+    {
+      cards: ['Combat Celebrant', 'Adarkar Valkyrie', 'Anger', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2105-2857-4068-5147',
+        cards: ['Combat Celebrant', 'Adarkar Valkyrie', 'Anger', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Adarkar Valkyrie returns Combat Celebrant the moment it dies, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite combat phases', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['The Locust God', 'Weatherlight Compleated', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1339-3394-5147',
+        cards: ['The Locust God', 'Weatherlight Compleated', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the death draws a card and The Locust God turns that draw into an Insect token — a creature entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite card draw', 'Infinite draw triggers', 'Near-infinite damage', 'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite creature LTB', 'Near-infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Coating', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '662-4853-4917-5147',
+        cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Coating', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Jan Jansen makes two Construct tokens a lap and the Station sacrifices one of them. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite tapped creature tokens', 'Infinite tapped Treasure tokens'],
+    },
+    {
+      cards: ['Jan Jansen, Chaos Crafter', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2178-4917-5147',
+        cards: ['Jan Jansen, Chaos Crafter', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Jan Jansen makes two Construct tokens a lap and the Station sacrifices one of them. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Fiend Hunter', 'Molten Echoes', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1734-2506-5147',
+        cards: ['Fiend Hunter', 'Molten Echoes', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Molten Echoes copies Fiend Hunter as it enters and the Station sacrifices the token, which brings the nontoken back out of exile. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Havengul Lich', 'Dockside Extortionist', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-3249-5147',
+        cards: ['Havengul Lich', 'Dockside Extortionist', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Dockside Extortionist', 'Decaying Soil', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '401-914-5147',
+        cards: ['Dockside Extortionist', 'Decaying Soil', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Jinnie Fay, Jetmir\'s Second', 'Pitiless Plunderer', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2837-4871-5147',
+        cards: ['Jinnie Fay, Jetmir\'s Second', 'Pitiless Plunderer', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Jinnie Fay turns Pitiless Plunderer’s Treasure into a Cat or a Dog, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Hero\'s Blade', 'Rograkh, Son of Rohgahh', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2459-2834-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Hero\'s Blade', 'Rograkh, Son of Rohgahh', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Bladewing the Risen', 'Changeling Berserker', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '248-3362-5147',
+        cards: ['Bladewing the Risen', 'Changeling Berserker', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Changeling Berserker returns and champions Bladewing at the top of every lap, before the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Gerrard, Weatherlight Hero', 'Loyal Retainers', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '238-2533-5147',
+        cards: ['Gerrard, Weatherlight Hero', 'Loyal Retainers', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Loyal Retainers returns Gerrard, and Gerrard’s own trigger returns the Retainers — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite blinking', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Dockside Extortionist', 'Fool\'s Demise', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-1703-5147',
+        cards: ['Dockside Extortionist', 'Fool\'s Demise', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Ornithopter', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2644-3652-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Ornithopter', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Memnite', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1778-2644-4763-5147',
+        cards: ['Koll, the Forgemaster', 'Sai of the Shinobi', 'Memnite', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Koll returns the {0} creature to your hand and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Crypt Champion', 'Fiend Hunter', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1734-3913-5147',
+        cards: ['Crypt Champion', 'Fiend Hunter', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Crypt Champion comes back out of exile and returns Fiend Hunter with it — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Jinnie Fay, Jetmir\'s Second', 'Black Market Tycoon', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '2178-2837-5147-5309',
+        cards: ['Jinnie Fay, Jetmir\'s Second', 'Black Market Tycoon', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Black Market Tycoon makes a Cat or a Dog at the top of every lap and the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Stimulus Package', 'Pitiless Plunderer', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '397-4871-5147',
+        cards: ['Stimulus Package', 'Pitiless Plunderer', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Stimulus Package makes a Citizen token at the top of every lap and the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['The Locust God', 'Liliana, Dreadhorde General', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1339-1940-5147',
+        cards: ['The Locust God', 'Liliana, Dreadhorde General', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the death draws a card and The Locust God turns that draw into an Insect token — a creature entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite card draw', 'Infinite draw triggers', 'Near-infinite damage', 'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite creature LTB', 'Near-infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Godsire', 'Thornbite Staff', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '1420-2178-5147',
+        cards: ['Godsire', 'Thornbite Staff', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Godsire makes an 8/8 Beast token at the top of every lap and the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Rograkh, Son of Rohgahh', 'Rakdos, Lord of Riots', 'Blasting Station', 'Impact Tremors'],
+      confidence: 'verified',
+      from: {
+        id: '538-2459-2906-5147',
+        cards: ['Rograkh, Son of Rohgahh', 'Rakdos, Lord of Riots', 'Goblin Bombardment', 'Impact Tremors'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Rograkh is recast for {0} every lap and enters before the Station sacrifices him. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
+    },
+    {
+      cards: ['Sun Titan', 'Karmic Guide', 'Animate Dead', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '3175-4681-4812-5147',
+        cards: ['Sun Titan', 'Karmic Guide', 'Animate Dead', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Karmic Guide and Sun Titan both enter over the course of a lap, against the single sacrifice the Station makes. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
+    {
+      cards: ['Ashcloud Phoenix', 'Skirk Alarmist', 'Intruder Alarm', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '144-1636-4319-5147',
+        cards: ['Ashcloud Phoenix', 'Skirk Alarmist', 'Intruder Alarm', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Ashcloud Phoenix returns itself face down when it dies — a face-down permanent is a 2/2 creature, so the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite mana creatures you control can produce', 'Infinite creature sacrifice triggers', 'Infinite untap of creatures'],
+    },
+    {
+      cards: ['Sigil of the New Dawn', 'Dockside Extortionist', 'Blasting Station'],
+      confidence: 'verified',
+      from: {
+        id: '914-5105-5147',
+        cards: ['Sigil of the New Dawn', 'Dockside Extortionist', 'Goblin Bombardment'],
+      },
+      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
+      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Dockside Extortionist enters again every lap, which is the untap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
+      produces: ['Infinite artifact ETB', 'Infinite artifact LTB', 'Infinite artifact sacrifice triggers', 'Infinite artifact tokens', 'Infinite colored mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens'],
+    },
+    {
+      cards: ['Gwenna, Eyes of Gaea', 'Thornbite Staff', 'Gravecrawler', 'Carrion Feeder'],
+      confidence: 'verified',
+      from: {
+        id: '1263-2178-2438-2661',
+        cards: ['Gwenna, Eyes of Gaea', 'Thornbite Staff', 'Bloodsoaked Champion', 'Carrion Feeder'],
+      },
+      swap: { out: 'Bloodsoaked Champion', in: 'Gravecrawler', inId: 2577 },
+      why: 'Bloodsoaked Champion pays {1}{B} to return itself from the graveyard, but only if you attacked this turn; Gravecrawler pays {B} to CAST itself from the graveyard, and needs a Zombie instead — which this combo already holds, because Carrion Feeder is a Zombie. Gwenna’s two mana is restricted to creature spells and to abilities of creature sources, and a Gravecrawler cast from the graveyard is a creature spell. Cheaper than the Champion’s return and with no raid to satisfy.',
+      produces: ['Infinite +1/+1 counters on a creature', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
+    },
   ];
 
   // ---- cards that are another card under a different name --------------------
