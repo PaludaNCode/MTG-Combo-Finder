@@ -715,25 +715,48 @@ loosely.
 **Check it yourself, then say what you checked.** A claim with a command behind it beats a
 confident sentence, and most rules in this file exist because something untested read as fine.
 
-**Never confirm a deploy from the Actions API** — `actions_list` with `list_workflow_runs` returns
-~395 KB a call, and **scoping it does not save you**: one workflow with `per_page: 3` still came back
-136 KB and had to be read off disk with `python3 -c` instead. Name the SHA that went out and point at
-the footer: deploys are asynchronous and do not need waiting on. To ask *why a run failed*, go
-straight to `get_job_logs` with the job id — `failed_only` plus a `run_id` works too, and
-`tail_lines` under a few hundred returns the cleanup epilogue rather than the failure.
+**Watching a PR's CI is two calls, and neither is `list_workflow_runs`:**
 
-**It is the *method* that is expensive, not the tool, and no permission rule can tell them apart.**
-`list_workflow_jobs` on the same `actions_list` tool is small and is the one to reach for; a `deny`
-entry in `.claude/settings.json` would take both. `get_workflow_run` is nearly as heavy as
-`list_workflow_runs` and was called once out of habit — it carries the whole repository object twice
-and the head commit's full message. **So this rule has no check behind it and cannot have one**,
-which by this file's own standard means it will be broken again; it already has been, minutes after
-being read.
+```
+pull_request_read  get_check_runs   -> ~1.5 KB; the run id is in every html_url,
+                                       /actions/runs/<RUN>/job/<JOB>
+actions_list       list_workflow_jobs  resource_id: <RUN>   -> fresh state
+```
 
-**Watching a PR's CI: use `list_workflow_jobs`, not `get_check_runs`.** The check-runs endpoint
-serves stale state — it reported a job `in_progress` for six minutes after it had finished, which
-was then reported to the user as a stuck job. `list_workflow_jobs` was fresh on both occasions it
-was asked. A run's own `updated_at` lags its jobs too, which is the older half of this same trap.
+**Take only the id from the first one.** That endpoint serves stale *state* — it reported a job
+`in_progress` for six minutes after it had finished, and that was passed to the user as a stuck job —
+but **a run id is not state.** It never changes, so reading it from a stale response is sound and the
+freshness question moves to `list_workflow_jobs`, where it is answered. That distinction is the whole
+fix; the rule used to say "not `get_check_runs`" flatly and so named no way of getting the id at all,
+which is why it kept being broken. Issue #220.
+
+**`list_workflow_runs` is the wrong reach because its size is unbounded, not because it is big.**
+`per_page` is **ignored** — measured 9 Aug 2026: `per_page: 1` on `deploy.yml` returned **30 runs,
+388 KB**, and `per_page: 2` on a branch returned all **7** matching, 112 KB. The `branch` and `event`
+filters *are* honoured, so the cost is (runs matching) × ~14 KB and you cannot predict it before
+calling. **A response too big for a tool result is not the bad case** — it spills to disk and costs a
+few hundred tokens to read back with `python3`. The bad case is the middling one that fits, lands
+whole in context, and is never mentioned again. `get_workflow_run` is the same trap for one run: it
+carries the repository object twice and the head commit's full message.
+
+**Deploys are not watched from a session.** Name the SHA that went out; that is the report. The deploy
+verifies itself (below), there is no pull request to hang `get_check_runs` on, and `get_commit` carries
+nothing about runs at `detail: none` (0.7 KB, measured) — so the *only* route to a deploy run id is the
+unbounded call above. **The cost of this rule is that a failed deploy is found by the next session or
+by the user, not by the one that shipped it**, and a failed deploy burns its commit. That is accepted
+deliberately rather than overlooked. If a burnt commit is actually suspected, one filtered
+`list_workflow_runs` is the right price to pay — take it on purpose and say so.
+
+To ask *why a run failed*, go straight to `get_job_logs` with the job id — `failed_only` plus a
+`run_id` works too, and `tail_lines` under a few hundred returns the cleanup epilogue rather than the
+failure.
+
+**No permission rule can express any of this.** The cheap call and the unbounded one are the same
+`actions_list` tool with a different `method`, so a `deny` entry in `.claude/settings.json` takes both.
+**It has no check behind it and cannot have one**, which by this file's own standard means it will be
+broken again — it was broken three times in the session that measured it, twice within two hours of
+being read. Naming the two calls is the mitigation available: a rule that supplies the step it demands
+is harder to walk past than one that only forbids.
 
 **And you cannot read the footer from here.** `paludancode.github.io` is 403 at CONNECT like every
 other blocked host — `raw.githubusercontent.com` is the only one allowed — and the deploy publishes
