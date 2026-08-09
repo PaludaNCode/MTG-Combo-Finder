@@ -355,10 +355,11 @@ loosely.
   steps and believes it. → `tools/check-snapshot.js --steps`, against `StepsSource.pathFor()`.
 - **A combo row is built when its card's disclosure is opened, not before** —
   `RenderRows.lazyDetails()`. Both panels list one row per combo per card, and building them all up
-  front was **87,299 DOM nodes against 11,467**, 5,179ms to first paint against 2,096ms, and
-  **8,755–13,589ms for every "+ Add to deck" against ~1,100ms** — measured on a 100-card deck against
-  the live database in desktop Chromium. On a phone viewport throttled 4×, which is where the report came
-  from, that press was **37–40 SECONDS against 5.2–6.4s**, and first paint 19,857ms against 6,324ms. **The search is not the
+  front was **106,983 DOM nodes against 12,108** on a 100-card deck against the live database. Every
+  "+ Add to deck" was **2,606–2,912ms against 425–474ms** on a desktop and **9,721–16,639ms against
+  2,024–3,510ms** on a phone viewport throttled 4×, which is where the report came from. **The search is
+  not the slow half and never was**: the worker holds the database in memory, so an add's whole round
+  trip to it is ~260ms at 4×. **The search is not the
   slow half and never was**: the same run reports `ready in 1.2s (download 0.4s · parse 0.3s · match
   0.4s)`. It listens for `toggle`, not a click, because a disclosure is also opened by keyboard and by
   a test setting `.open = true` — and that event is a **task**, so anything measuring the contents must
@@ -366,6 +367,12 @@ loosely.
   can see it is `verify` counting rows inside *closed* disclosures and requiring zero → proved by
   making it eager again. Anything looking for a row must open its card first: that is why
   `openCombo()` in `e2e/deck.spec.js` opens every one.
+- **Time the page from inside the page.** The first version of those numbers came through Playwright
+  locators and `waitForFunction`, and said 37–40s an add; a CPU profile put **26% of the samples in
+  `visitNode`** — the harness's own actionability checks walking a 107,000-node DOM under throttling. The
+  ratio survived, the absolute figures did not, and they had already been written into the README. Start a
+  clock in a click listener, stop it at the end of the last panel, and drive the press with
+  `element.click()` so nothing queries the page while it is working.
 - **The database is indexed, not walked.** `matchDeck()` and `standInRows()` go through
   `candidateCombos()`, which reads a card → combo-positions index kept on the combos array in a
   `WeakMap` — `matchDeck` 71.1ms → 5.4ms and `standInRows` 78.4ms → 10.2ms on the standing deck, identical

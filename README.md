@@ -500,25 +500,28 @@ The lists inside *Combos in your deck* and *Suggested additions* are the largest
 wide margin: one row per combo, per card, and every one of them was built up front and hidden inside a
 closed `<details>`.
 
-**Measured on a 100-card deck against the live database**, twice: in desktop Chromium, and on a phone
-viewport with the CPU throttled 4×, which is the case the complaint came from.
+**Measured on a 100-card deck against the live database**, on a phone viewport with the CPU throttled 4×
+— the case the report came from — and on an unthrottled desktop:
 
 | | eager | on first open |
 | --- | --- | --- |
-| DOM nodes | **87,299** | **11,467** |
-| first paint, desktop | 5,179ms | 2,096ms |
-| every `+ Add to deck`, desktop | 8,755–13,589ms | ~1,100ms |
-| first paint, phone at 4× | **19,857ms** | **6,324ms** |
-| every `+ Add to deck`, phone at 4× | **37,002–40,667ms** | **5,242–6,350ms** |
-| opening one card, phone at 4× | 13,777ms | 2,919ms |
+| DOM nodes | **106,983** | **12,108** |
+| first search, phone at 4× | 5,506ms | **3,957ms** |
+| every `+ Add to deck`, phone at 4× | 9,721–16,639ms | **2,024–3,510ms** |
+| first search, desktop | 1,372ms | 1,176ms |
+| every `+ Add to deck`, desktop | 2,606–2,912ms | **425–474ms** |
 
-A phone spent **forty seconds** on every press of a button, which is the whole report; and the work that
-remains is now paid where a reader asked for it, opening one card.
+**The search was never the slow half.** The worker reports `ready in 1.2s (download 0.4s · parse 0.3s ·
+match 0.4s)` on the first search and holds the database in memory afterwards, so an add's whole round trip
+to it is ~260ms at 4×. `+ Add to deck` re-runs the render, which is why the complaint was about adding
+cards rather than about the first search.
 
-**The search was never the slow half.** The same run reports `ready in 1.2s (download 0.4s · parse 0.3s ·
-match 0.4s)`: the worker had finished long before the page had. And `+ Add to deck` re-runs the whole
-render, which is why the complaint that produced this was about adding cards rather than about the first
-search.
+**MEASURE THIS FROM INSIDE THE PAGE, NOT THROUGH THE HARNESS.** The first version of the numbers above
+was taken with Playwright locators and `waitForFunction` around each press, and reported 37–40 seconds an
+add. A CPU profile of that run put **26% of the samples in `visitNode`** — Playwright's own actionability
+checks walking a 107,000-node DOM under throttling. The ratio survived; the absolute figures did not. What
+replaced it starts a clock in a click listener and stops it at the end of the last panel, and drives the
+press with `element.click()` so nothing queries the page while it works.
 
 `RenderRows.lazyDetails()` is the whole mechanism — a `<details>` that builds its contents on the first
 `toggle` and never again. It listens for the event rather than a click on the summary because a
