@@ -2327,6 +2327,20 @@ function runOne(vp) {
               ? [].map.call(bpRow.querySelectorAll('.row-main .card-links a'),
                 function (a) { return a.textContent.trim(); })
               : [],
+            // "Buy TCGplayer" is one link and the store's name is the half that says
+            // where. It shipped with that half grey, under a CSS comment saying it took
+            // the anchor's colour — a rule and its own reason disagreeing, which the
+            // link's text and count both pass straight over. So the two computed colours
+            // are read, and compared below.
+            buyColour: (function () {
+              var buy = bpRow && bpRow.querySelector('.row-main .buy-link');
+              var store = buy && buy.querySelector('.buy-store');
+              if (!buy || !store) return null;
+              return {
+                link: win.getComputedStyle(buy).color,
+                store: win.getComputedStyle(store).color,
+              };
+            }()),
             stores: [].map.call(bp.querySelectorAll('.basket-store'), function (a) {
               return a.getAttribute('href');
             }),
@@ -4097,6 +4111,17 @@ function captionDrift(notes) {
           problems.push(`the basket row's links are ${JSON.stringify(basket.links)}, `
             + 'expected EDHREC, Scryfall and Buy');
         }
+        // And the store's name is part of that link rather than an aside beside it.
+        // Asked as "the same colour as its own anchor" and not "is it the accent",
+        // because the accent moves with the theme and the claim is about the two halves
+        // of one link agreeing — which is what a reader sees.
+        if (!basket.buyColour) {
+          problems.push('the basket row has no Buy link with a store name to read a colour off');
+        } else if (basket.buyColour.link !== basket.buyColour.store) {
+          problems.push(`the Buy link is ${basket.buyColour.link} and the store name after it is `
+            + `${basket.buyColour.store} — the store name is the half that says where, and a `
+            + 'quieter colour reads as disabled text beside an enabled link');
+        }
         // Copy first: it is the action that works for every reader in every region, and
         // the one the panel falls back to when a list is too long for a store link.
         if (!basket.copy) problems.push('the basket has no Copy list button');
@@ -4499,6 +4524,8 @@ function captionDrift(notes) {
             + ` gutter ${v.afterAdd.basket.total} ${v.afterAdd.basket.totalLabel.toLowerCase()}`
             + (v.afterAdd.basket.split ? ` (${v.afterAdd.basket.split})` : '')
             + `, links ${v.afterAdd.basket.links.join('/')}`
+            + (v.afterAdd.basket.buyColour
+              ? ` (store name ${v.afterAdd.basket.buyColour.store})` : '')
             + `, ${v.afterAdd.basket.stores.length} store link(s)`
           : ', no basket');
       const mapNote = `map ${v.map.dots.length} cards / ${v.map.edges} combo lines `

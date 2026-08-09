@@ -1217,11 +1217,25 @@ button:disabled { opacity: .6; cursor: wait; }
  * store's name trailing it — which is doing real work, because "Buy" alone does not say
  * where.
  *
- * The dotted underline is what separates it from its two neighbours without spending a
- * colour: the accent is already the page's link colour, and a fourth hue in a line that
- * has to fit a phone would be noise. */
+ * `color: inherit` on the store's name is that sentence being true. It shipped
+ * `var(--muted)` instead, three lines under a comment saying it took the anchor's
+ * colour, and the two had disagreed since the link was written: on screen "Buy" was gold
+ * and "TCGplayer" was grey, which reads as disabled text beside an enabled link and
+ * greys out exactly the half that says where the tab goes. **Nothing measured it** —
+ * `verify` counted the link and read its text, never its colour → the Buy-link colour
+ * check in verify-layout.js, which compares the two computed values and runs at every
+ * viewport, so the phone is covered by the same assertion rather than a second rule.
+ *
+ * Size, not hue, is what marks the store as the trailing half: .85em against the
+ * anchor's own size. The accent is already the page's link colour and a fourth hue in a
+ * line that has to fit a 390px phone would be noise.
+ *
+ * The class is shared with the basket's own Buy button, where it trails the region
+ * rather than the store, and `inherit` is the better answer there for a second reason:
+ * that button is `--text` and turns `--accent` on hover, so a fixed colour was the one
+ * part of it that stayed put while the rest changed. */
 .buy-link { white-space: nowrap; }
-.buy-store { color: var(--muted); font-size: .85em; }
+.buy-store { color: inherit; font-size: .85em; }
 
 /* ---- "Cards you've added" --------------------------------------------------
  *
