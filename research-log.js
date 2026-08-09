@@ -2918,6 +2918,161 @@ const PASSES = [
       + 'as 2413 (Day of the Dragons), Spike Feeder as 4416 (Phyrexian Vindicator), and so on. '
       + 'Two of those entries had already shipped.',
   },
+  {
+    subject: 'The 973 Blasting Station and Gravecrawler shapes the last pass left unread',
+    cards: [
+      'Blasting Station', 'Goblin Bombardment', 'Hushwing Gryff', 'Torpor Orb',
+      'Tocatli Honor Guard', 'Avenger of Zendikar', 'Mystic Reflection',
+      'Djinn Illuminatus', 'Pact of the Titan', 'Toph, the First Metalbender',
+      'Haru, Hidden Talent', 'Universal Automaton', 'Clown Car',
+      'Thranduil the Strategist', 'Gwenna, Eyes of Gaea', 'Carrion Feeder',
+      'Gravecrawler', 'Bloodsoaked Champion',
+    ],
+    cardIds: [413, 5147, 3194, 3987, 3217, 2567, 1000, 146, 169, 6871, 6879, 930,
+      1643, 7892, 2661, 2438, 2577, 1263],
+    date: '2026-08-09',
+    read: {
+      'Blasting Station': '{T}, Sacrifice a creature: This artifact deals 1 damage to any target. Whenever a creature enters, you may untap this artifact. Artifact for {3}.',
+      'Goblin Bombardment': 'Sacrifice a creature: This enchantment deals 1 damage to any target. Enchantment for {1}{R}.',
+      'Hushwing Gryff': 'Flash Flying Creatures entering don\'t cause abilities to trigger. Creature — Hippogriff 2/1 for {2}{W}.',
+      'Torpor Orb': 'Creatures entering don\'t cause abilities to trigger. Artifact for {2}.',
+      'Tocatli Honor Guard': 'Creatures entering don\'t cause abilities to trigger. Creature — Human Soldier 1/3 for {1}{W}.',
+      'Avenger of Zendikar': 'When this creature enters, create a 0/1 green Plant creature token for each land you control. Landfall — Whenever a land you control enters, you may put a +1/+1 counter on each Plant creature you control. Creature — Elemental 5/5 for {5}{G}{G}.',
+      'Mystic Reflection': 'Choose target nonlegendary creature. The next time one or more creatures or planeswalkers enter this turn, they enter as copies of the chosen creature. Foretell {U} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on a later turn for its foretell cost.) Instant for {1}{U}.',
+      'Djinn Illuminatus': '({U/R} can be paid with either {U} or {R}.) Flying Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. (When you cast it, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Creature — Djinn 3/5 for {5}{U/R}{U/R}.',
+      'Pact of the Titan': 'Create a 4/4 red Giant creature token. At the beginning of your next upkeep, pay {4}{R}. If you don\'t, you lose the game. Instant for {0}.',
+      'Toph, the First Metalbender': 'Nontoken artifacts you control are lands in addition to their other types. (They don\'t gain the ability to {T} for mana.) At the beginning of your end step, earthbend 2. (Target land you control becomes a 0/0 creature with haste that\'s still a land. Put two +1/+1 counters on it. When it dies or is exiled, return it to the battlefield tapped.) Legendary Creature — Human Warrior Ally 3/3 for {1}{R}{G}{W}.',
+      'Haru, Hidden Talent': 'Whenever another Ally you control enters, earthbend 1. (Target land you control becomes a 0/0 creature with haste that\'s still a land. Put a +1/+1 counter on it. When it dies or is exiled, return it to the battlefield tapped.) Legendary Creature — Human Peasant Ally 1/1 for {1}{G}.',
+      'Universal Automaton': 'Changeling (This card is every creature type.) Artifact Creature — Shapeshifter 1/1 for {1}.',
+      'Clown Car': 'When this Vehicle enters, roll X six-sided dice. For each odd result, create a 1/1 white Clown Robot artifact creature token. For each even result, put a +1/+1 counter on this Vehicle. Crew 2 Artifact — Vehicle 1/1 for {X}.',
+      'Thranduil the Strategist': 'Other Elves you control have "{T}: Add {G} or {U}." Landfall — Whenever a land you control enters, create a 1/1 green Elf creature token. Legendary Creature — Elf Noble 4/4 for {3}{G}{U}.',
+      'Gwenna, Eyes of Gaea': '{T}: Add two mana in any combination of colors. Spend this mana only to cast creature spells or activate abilities of creature sources. Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it. Legendary Creature — Elf Druid Scout 2/3 for {2}{G}.',
+      'Carrion Feeder': 'This creature can\'t block. Sacrifice a creature: Put a +1/+1 counter on this creature. Creature — Zombie 1/1 for {B}.',
+      'Gravecrawler': 'This creature can\'t block. You may cast this card from your graveyard as long as you control a Zombie. Creature — Zombie 2/1 for {B}.',
+      'Bloodsoaked Champion': 'This creature can\'t block. Raid — {1}{B}: Return this card from your graveyard to the battlefield. Activate only if you attacked this turn. Creature — Human Warrior 2/1 for {B}.',
+    },
+    method: 'The candidate list of the entry above, re-derived: 1,039 shapes after the '
+      + 'published / already-ours / subsumed / rider filters, with every one of their '
+      + 'published step files fetched. The question each one asks is arithmetic — does '
+      + 'the lap sacrifice more times than a creature enters — and THE ARITHMETIC IS '
+      + 'NOT WHAT A REGEX COUNTS. Three classifiers were written. The first counted '
+      + '"enters" anywhere in a step and kept 284; its very first keep was Beifong\'s '
+      + 'Bounty Hunters + Thranduil, where the thing returning to the battlefield is a '
+      + 'LAND. The second asked whether any card named in the step is a creature and '
+      + 'kept 171; "When Clown Car enters, KOLODIN triggers" names Kolodin, who is a '
+      + 'creature, and Clown Car is an artifact Vehicle that Kolodin animates AFTER it '
+      + 'has entered. Hand-reading twelve of that second list found five wrong — 58% '
+      + 'precision, which is not a classifier, it is a coin. The third extracts the '
+      + 'SUBJECT of the entry ("returning X", "when X enters", "creating a creature '
+      + 'token") and decides against X\'s type line in card-text.json, honours "Repeat '
+      + 'from step N" so setup is not counted as part of the lap, rejects "face-down as '
+      + 'a Forest land" and "causing X to become an artifact creature", and reads '
+      + '"activate four times" as four. It kept 126 — and those 126 were then read, one '
+      + 'shape at a time, which is the only reason this entry claims anything. '
+      + 'ONE SACRIFICE A LAP IS THE BAR, not one sacrifice against one creature: with a '
+      + 'single sacrifice and at least one creature entering, the loop is safe whatever '
+      + 'the order inside the lap is, because the Station enters untapped and lap N\'s '
+      + 'creature pays for lap N+1. Two sacrifices a lap makes the answer depend on the '
+      + 'order, and counting cannot see order.',
+    proposed: 1039,
+    examined: 132,
+    kept: 120,
+    ruledOut: [
+      {
+        reason: 'THE OTHER FOUR OUTLETS ARE STILL UNREAD. 570 of the 1,039 come from '
+          + 'Altar of Dementia, Viscera Seer, Carrion Feeder and Bartolomé del Presidio '
+          + 'rather than Goblin Bombardment. Each of those carries its own rider — the '
+          + 'Altar mills, the Seer scries, the other two grow — so a shape published '
+          + 'with one of them may be published FOR it, and deciding that is a different '
+          + 'reading from this one. Not refused, not done.',
+        count: 570,
+      },
+      {
+        reason: 'THE LAP SACRIFICES MORE THAN ONCE, OR NOTHING THE CLASSIFIER COULD '
+          + 'NAME ENTERS. 261 shapes. Both halves of that sentence are honest about '
+          + 'what they are: a lap with two sacrifices needs the ORDER read, and a lap '
+          + 'where no subject could be extracted needs the step read. Neither is a '
+          + 'refusal and neither is a row — they are the shapes the third classifier '
+          + 'could not decide, and they were not read here.',
+        count: 261,
+      },
+      {
+        reason: 'THE BOMBARDMENT IS NOT ACTIVATED INSIDE THE LAP AT ALL. 38 shapes '
+          + 'whose repeat point comes after the only activation, so the published steps '
+          + 'sacrifice once and loop on something else. That may still be a fine '
+          + 'Blasting Station combo — one sacrifice needs no untap — but the row would '
+          + 'be claiming something the steps do not show, so it was left.',
+        count: 38,
+      },
+      {
+        reason: 'HUSHWING GRYFF, TORPOR ORB AND TOCATLI HONOR GUARD ALL READ '
+          + '"CREATURES ENTERING DON\'T CAUSE ABILITIES TO TRIGGER", AND THE STATION\'S '
+          + 'UNTAP IS AN ABILITY A CREATURE ENTERING CAUSES TO TRIGGER. Goblin '
+          + 'Bombardment does not care — it has no trigger — which is exactly why these '
+          + 'three shapes exist with the Bombardment in them and pass every count. The '
+          + 'third classifier kept all three; a scan of the whole card cache for that '
+          + 'sentence found five cards carrying it and these are the three that appear '
+          + 'in a candidate.',
+        count: 3,
+        sets: [
+          ['Kaya the Inexorable', 'Wormfang Manta', 'Hushwing Gryff', 'Blasting Station'],
+          ['Kaya the Inexorable', 'Wormfang Manta', 'Torpor Orb', 'Blasting Station'],
+          ['Kaya the Inexorable', 'Wormfang Manta', 'Tocatli Honor Guard', 'Blasting Station'],
+        ],
+      },
+      {
+        reason: 'TWO SHAPES MAKE EVERY CREATURE AT ONCE AND THEN SACRIFICE REPEATEDLY. '
+          + 'Avenger of Zendikar under Mystic Reflection makes a token copy of the '
+          + 'Avenger for each land and each of those makes a Plant for each land; Djinn '
+          + 'Illuminatus replicates Pact of the Titan into an arbitrary number of '
+          + 'Giants. Then the published steps say "activate Goblin Bombardment any '
+          + 'number of times". Every one of those creatures enters BEFORE the first '
+          + 'sacrifice, so all the untap triggers resolve against an already-untapped '
+          + 'Station and the Blasting Station version gets exactly one sacrifice. This '
+          + 'is the one rule-out the "one sacrifice a lap" bar does not catch, because '
+          + 'the steps name no count at all.',
+        count: 2,
+        sets: [
+          ['Avenger of Zendikar', 'Mystic Reflection', 'Blasting Station'],
+          ['Djinn Illuminatus', 'Pact of the Titan', 'Blasting Station'],
+        ],
+      },
+      {
+        reason: 'THE GRAVECRAWLER SHAPES STILL CANNOT PAY THE {B}. 43 of the 45 left '
+          + 'have no mana step anywhere in their published steps — the same rider the '
+          + 'entry above ruled 38 out on, applied to the rest. Of the two that do, one '
+          + 'is the Ashes of the Abhorrent shape already ruled out above and one is the '
+          + 'row kept here.',
+        count: 43,
+      },
+      {
+        reason: 'ONE SHAPE PUBLISHES NO STEPS AT ALL, so there is nothing to count.',
+        count: 1,
+      },
+      {
+        reason: 'AND ONE WAS ALREADY RULED OUT, WHICH THE CANDIDATE GENERATOR DID NOT '
+          + 'KNOW. Sek\'Kuar + Warren Soultrader + Gravecrawler + Ashes of the '
+          + 'Abhorrent came back through every filter because tools do not consult '
+          + 'ruledOutSets() when they propose. It is recorded once above and once here '
+          + 'rather than silently dropped, so the count reconciles: 570 + 261 + 38 + 3 '
+          + '+ 2 + 43 + 1 + 1 ruled out, 120 kept, 1,039 proposed.',
+        count: 1,
+        sets: [
+          ['Sek\'Kuar, Deathkeeper', 'Warren Soultrader', 'Gravecrawler', 'Ashes of the Abhorrent'],
+        ],
+      },
+    ],
+    notes: '120 rows, all `verified`: 119 Blasting Station shapes citing Goblin '
+      + 'Bombardment, and one Gravecrawler shape citing Bloodsoaked Champion — Gwenna, '
+      + 'Eyes of Gaea + Thornbite Staff + Carrion Feeder, where Carrion Feeder is the '
+      + 'Zombie Gravecrawler needs and Gwenna\'s mana is restricted to creature spells, '
+      + 'which a Gravecrawler cast from the graveyard is. THE THING WORTH TAKING FROM '
+      + 'THIS PASS IS THAT THE FIRST TWO CLASSIFIERS BOTH READ AS WORKING. Neither '
+      + 'threw, neither produced an obviously silly list, and the only thing that '
+      + 'caught either was opening a steps file and counting by hand — which is also '
+      + 'the only reason the third one is trusted, because 126 of its keeps were read '
+      + 'and 6 of them were wrong.',
+  },
 ];
 
 // Every card any pass has covered, lowercased for lookup the way combos.js does it.

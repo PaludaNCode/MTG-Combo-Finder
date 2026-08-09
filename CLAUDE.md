@@ -238,6 +238,16 @@ skip the narrowing.
 `verified` = somebody read both cards. `derived` = both halves are published and the pairing was
 reasoned. **Use `derived` rather than reading loosely and claiming `verified`.**
 
+- **A classifier over published steps narrows the list; it never decides one.** Step 5 above is the
+  reading, and a regex is not it. Three were written for the Blasting Station sweep — the untap
+  rider is arithmetic, one sacrifice a lap against one creature entering — and the first two were
+  wrong in ways that read as working: v1 counted a *land* returning to the battlefield, v2 counted
+  "when Clown Car enters, **Kolodin** triggers" because Kolodin is a creature. Hand-reading twelve
+  of v2's 171 keeps found **five wrong**; v3 extracted the subject of the entry and checked its type
+  line, and **6 of its 126 keeps were still wrong** when read. There is no check behind this and
+  cannot be: a wrong keep ships as a plausible row. The rule-outs and the three classifiers are in
+  `research-log.js`, "The 973 Blasting Station and Gravecrawler shapes the last pass left unread".
+
 ### Asking the question of one deck
 
 | question | what answers it |
