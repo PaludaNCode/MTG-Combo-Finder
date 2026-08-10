@@ -11047,7 +11047,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Each opponent loses the game', 'Infinite +1/+1 counters on a creature',
+        'Each opponent loses the game',
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
         'Infinite sacrifice triggers',
@@ -11066,7 +11066,7 @@
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
         'Infinite card draw', 'Infinite draw triggers',
-        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite death triggers',
         'Near-infinite creature ETB', 'Near-infinite creature LTB',
         'Near-infinite creature sacrifice triggers',
       ],
@@ -11083,7 +11083,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Each opponent loses the game', 'Infinite +1/+1 counters on a creature',
+        'Each opponent loses the game',
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
@@ -11102,7 +11102,7 @@
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
         'Infinite card draw', 'Infinite draw triggers',
-        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite death triggers',
         'Near-infinite creature ETB', 'Near-infinite creature LTB',
         'Near-infinite creature sacrifice triggers',
       ],
@@ -11120,7 +11120,7 @@
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
         'Infinite draw triggers', 'Infinite rummaging', 'Infinite self-discard triggers',
-        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite death triggers',
         'Near-infinite creature ETB', 'Near-infinite creature LTB',
         'Near-infinite creature sacrifice triggers',
       ],
@@ -11137,7 +11137,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
@@ -11172,7 +11172,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite self-discard triggers',
         'Infinite storm count',
@@ -11190,7 +11190,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
@@ -11206,7 +11206,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
@@ -11222,7 +11222,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
@@ -11238,7 +11238,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite colored mana',
+        'Infinite colored mana',
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count', 'Infinite Treasure tokens',
       ],
@@ -11256,7 +11256,7 @@
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
         'Infinite card draw', 'Infinite draw triggers',
-        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite death triggers',
         'Near-infinite creature ETB', 'Near-infinite creature LTB',
         'Near-infinite creature sacrifice triggers',
       ],
@@ -11273,7 +11273,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite card draw for opponents',
+        'Infinite card draw for opponents',
         'Infinite death triggers', 'Infinite draw triggers for all players',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
         'Infinite storm count',
@@ -11291,7 +11291,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
       ],
@@ -11308,7 +11308,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
       ],
@@ -11325,7 +11325,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
       ],
@@ -11342,7 +11342,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
       ],
@@ -11377,7 +11377,7 @@
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
         'Infinite card draw', 'Infinite draw triggers', 'Infinite looting',
-        'Near-infinite +1/+1 counters on a creature', 'Near-infinite death triggers',
+        'Near-infinite death triggers',
         'Near-infinite creature ETB', 'Near-infinite creature LTB',
         'Near-infinite power for certain creatures until end of turn',
         'Near-infinite creature sacrifice triggers',
@@ -11395,7 +11395,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
@@ -11411,7 +11411,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite card draw for opponents',
+        'Infinite card draw for opponents',
         'Infinite death triggers', 'Infinite draw triggers for all players',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
         'Infinite storm count',
@@ -11429,7 +11429,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
       ],
@@ -11446,7 +11446,7 @@
         + 'puts a +1/+1 counter on itself, '
         + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
       produces: [
-        'Infinite +1/+1 counters on a creature', 'Infinite death triggers',
+        'Infinite death triggers',
         'Infinite draw triggers', 'Infinite creature ETB', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
       ],
@@ -11500,7 +11500,7 @@
       produces: [
         'Infinite +1/+1 counters on most creatures you control', 'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite sacrifice triggers',
-        'Infinite scry 1',
+        
       ],
     },
     {
@@ -11516,7 +11516,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11532,7 +11532,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers',
         'Infinite lifegain', 'Infinite storm count', 'Infinite damage',
       ],
     },
@@ -11549,7 +11549,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers',
         'Infinite lifegain', 'Infinite storm count', 'Infinite damage',
       ],
     },
@@ -11566,7 +11566,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11583,7 +11583,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
         'Return all creature cards from all graveyards to the battlefield under your control',
       ],
     },
@@ -11601,7 +11601,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
         'Return all creature cards from all graveyards to the battlefield under your control',
       ],
     },
@@ -11634,7 +11634,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite magecraft triggers',
+        'Infinite sacrifice triggers', 'Infinite magecraft triggers',
         'Infinite recursion of creature cards in your graveyard',
       ],
     },
@@ -11651,7 +11651,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11668,7 +11668,7 @@
       produces: [
         'Infinite colorless mana that can only be spent to activate abilities',
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11685,7 +11685,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
         'Return all creature cards from all graveyards to the battlefield under your control',
       ],
     },
@@ -11702,7 +11702,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite combat phases', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11718,7 +11718,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite landfall triggers',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11734,8 +11734,8 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite scry', 'Infinite sacrifice triggers',
-        'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
+        
       ],
     },
     {
@@ -11751,7 +11751,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11768,7 +11768,7 @@
       produces: [
         'Infinite blinking for all players', 'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers',
-        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite storm count',
+        'Infinite sacrifice triggers', 'Infinite storm count',
       ],
     },
     {
@@ -11784,7 +11784,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11800,7 +11800,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11816,7 +11816,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11832,7 +11832,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite magecraft triggers',
+        'Infinite sacrifice triggers', 'Infinite magecraft triggers',
         'Infinite recursion of creature cards in your graveyard',
       ],
     },
@@ -11849,7 +11849,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite colored mana', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
         'Infinite Treasure tokens',
       ],
     },
@@ -11866,7 +11866,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11900,7 +11900,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11934,7 +11934,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -11986,7 +11986,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
         'Infinite untap of creatures you control',
         'Infinite mana creatures you control can produce',
       ],
@@ -12021,7 +12021,7 @@
         'Infinite blinking for all players', 'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers',
         'Infinite mana lands you control can produce', 'Infinite sacrifice triggers',
-        'Infinite scry 1', 'Infinite storm count', 'Infinite untap of lands you control',
+        'Infinite storm count', 'Infinite untap of lands you control',
       ],
     },
     {
@@ -12037,7 +12037,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite draw triggers', 'Infinite creature LTB', 'Infinite creature ETB',
-        'Infinite sacrifice triggers', 'Infinite death triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers', 'Infinite death triggers',
         'Infinite lifegain triggers', 'Infinite lifegain', 'Infinite storm count',
       ],
     },
@@ -12072,7 +12072,7 @@
       produces: [
         'Infinite colored mana', 'Infinite creature tokens', 'Infinite death triggers',
         'Infinite energy counters', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite Treasure tokens',
+        'Infinite sacrifice triggers', 'Infinite Treasure tokens',
       ],
     },
     {
@@ -12090,7 +12090,7 @@
         'Infinite blinking for all players', 'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers',
         'Infinite mana lands you control can produce', 'Infinite sacrifice triggers',
-        'Infinite scry 1', 'Infinite storm count', 'Infinite untap of lands you control',
+        'Infinite storm count', 'Infinite untap of lands you control',
       ],
     },
     {
@@ -12107,7 +12107,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
         'Infinite lifeloss', 'Infinite creature LTB', 'Infinite sacrifice triggers',
-        'Infinite scry 1',
+        
       ],
     },
     {
@@ -12123,7 +12123,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12156,7 +12156,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
         'Infinite storm count',
       ],
     },
@@ -12173,7 +12173,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12189,7 +12189,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite storm count',
+        'Infinite sacrifice triggers', 'Infinite storm count',
       ],
     },
     {
@@ -12205,7 +12205,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12238,7 +12238,7 @@
       produces: [
         'Infinite colored mana', 'Infinite creature tokens', 'Infinite death triggers',
         'Infinite energy counters', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1', 'Infinite Treasure tokens',
+        'Infinite sacrifice triggers', 'Infinite Treasure tokens',
       ],
     },
     {
@@ -12254,7 +12254,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12270,7 +12270,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers',
         'Infinite storm count', 'Infinite lifeloss',
       ],
     },
@@ -12287,7 +12287,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite creature LTB', 'Infinite creature ETB', 'Infinite sacrifice triggers',
-        'Infinite death triggers', 'Infinite scry 1', 'Infinite lifegain triggers',
+        'Infinite death triggers', 'Infinite lifegain triggers',
         'Infinite storm count',
       ],
     },
@@ -12304,7 +12304,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
         'Infinite storm count',
       ],
     },
@@ -12321,7 +12321,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite draw triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
         'Infinite storm count',
       ],
     },
@@ -12339,7 +12339,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite sacrifice triggers',
-        'Infinite scry 1',
+        
       ],
     },
     {
@@ -12356,7 +12356,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite creature LTB', 'Infinite lifegain triggers', 'Infinite sacrifice triggers',
-        'Infinite scry 1',
+        
       ],
     },
     {
@@ -12372,7 +12372,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12388,7 +12388,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB',
-        'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12419,7 +12419,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12435,7 +12435,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12451,7 +12451,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12467,7 +12467,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite commander casts', 'Infinite damage', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite sacrifice triggers', 'Infinite scry 1',
+        'Infinite creature LTB', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -12484,7 +12484,7 @@
       produces: [
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite creature LTB', 'Infinite sacrifice triggers',
-        'Infinite scry 1',
+        
       ],
     },
     {
@@ -12532,7 +12532,7 @@
         + 'The loop consumes neither, so the swap is the same loop with a different byproduct. Spellbook publishes it with Viscera Seer and not with Carrion Feeder.',
       produces: [
         'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB',
-        'Infinite creature LTB', 'Infinite scry 1',
+        'Infinite creature LTB',
       ],
     },
     // ---- Prosperous Innkeeper -----
@@ -12849,23 +12849,31 @@
         'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
       ],
     },
-    {
-      cards: ['Prosperous Innkeeper', 'Intruder Alarm', 'Peregrine Drake'],
-      confidence: 'verified',
-      from: {
-        id: '1636-3641-3821',
-        cards: ['Distinguished Conjurer', 'Intruder Alarm', 'Peregrine Drake'],
-      },
-      swap: { out: 'Distinguished Conjurer', in: 'Prosperous Innkeeper', inId: 4716 },
-      why: 'Distinguished Conjurer and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
-        + ', and the loop reads nothing else off either. '
-        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Distinguished Conjurer and not with Prosperous Innkeeper.',
-      produces: [
-        'Infinite creature LTB', 'Infinite creature ETB', 'Infinite lifegain triggers',
-        'Infinite lifegain', 'Infinite untap of creatures',
-        'Infinite mana creatures you control can produce',
-      ],
-    },
+    // TWO ROWS WERE REMOVED HERE, and the reason is worth more than they were.
+    //
+    // Both swapped **Distinguished Conjurer** out for Prosperous Innkeeper on the
+    // strength of the clause they share — "whenever another creature you control
+    // enters, you gain 1 life" — and both said, in a `why` written as though it had
+    // been checked, that "the loop reads nothing else off either". It does. The
+    // Conjurer's second ability is "{4}{W}, {T}: Exile another target creature you
+    // control, then return it to the battlefield", and Spellbook's published steps
+    // use it as **step 1** in each:
+    //
+    //   1636-3641-3821  Distinguished Conjurer + Intruder Alarm + Peregrine Drake
+    //     "Activate Distinguished Conjurer's ability by paying {4}{W} and tapping it,
+    //      blinking Peregrine Drake." — the blink *is* the engine. Intruder Alarm
+    //      untaps the Conjurer for the next lap and the Drake pays for it.
+    //   3641-4605-5118  Ratchet + Preston, the Vanisher + Distinguished Conjurer
+    //     "Activate Distinguised Conjurer ... blinking Ratchet, causing it to enter
+    //      the battlefield as Ratchet, Field Medic." Preston needs a creature that
+    //      entered *without being cast*, which is what the blink provides.
+    //
+    // Prosperous Innkeeper has no blink, so neither row was a combo — it was two
+    // cards and a lifegain trigger. **A card with two abilities can be swapped on the
+    // wrong one**, and the shared clause reads as sufficient evidence right up to the
+    // point somebody opens the published steps. CLAUDE.md already names this exact
+    // card as the trap, in the paragraph about which cards may be stand-in *sources*;
+    // nothing carried that warning across to the hand-written rows.
     {
       cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Rhox Faithmender'],
       confidence: 'verified',
@@ -13007,22 +13015,7 @@
         'Infinite creature tokens', 'Infinite creature ETB', 'Infinite lifegain triggers',
       ],
     },
-    {
-      cards: ['Prosperous Innkeeper', 'Ratchet, Field Medic // Ratchet, Rescue Racer', 'Preston, the Vanisher'],
-      confidence: 'verified',
-      from: {
-        id: '3641-4605-5118',
-        cards: ['Ratchet, Field Medic // Ratchet, Rescue Racer', 'Preston, the Vanisher', 'Distinguished Conjurer'],
-      },
-      swap: { out: 'Distinguished Conjurer', in: 'Prosperous Innkeeper', inId: 4716 },
-      why: 'Distinguished Conjurer and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
-        + ', and the loop reads nothing else off either. '
-        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Distinguished Conjurer and not with Prosperous Innkeeper.',
-      produces: [
-        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
-        'Infinite lifegain triggers', 'Infinite creature LTB',
-      ],
-    },
+    // The second of the two Distinguished Conjurer rows was here. See the note above.
     {
       cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Aetherflux Reservoir', 'Platinum Angel', 'Doubling Season'],
       confidence: 'verified',

@@ -1006,7 +1006,7 @@ section about unchecked numbers, and it had already drifted once.
 | claim | counted from |
 | --- | --- |
 | `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 836 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 834 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
@@ -1785,7 +1785,7 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 836 hand-written rows cite a published combo. **746 are `verified` and 90 are `derived`** — the
+All 834 hand-written rows cite a published combo. **744 are `verified` and 90 are `derived`** — the
 sentence above this one said *all of them* were verified until 7 Aug 2026, and the sweep that broke it
 is the one the label was waiting for. Viscera Seer and Carrion Feeder are the two most-published cards
 in the database, and their families are large enough that reading every member's steps individually
@@ -1810,6 +1810,51 @@ one.
 plus a sideboard that must stay ignored. The test pins the **exact rows** it unlocks, a list rather than
 a count, so **a diff there is a prompt to read the list, not a failure**. It also holds those rows to
 being *one card away* from the deck, catching a row that matches too loosely.
+
+### A result chip is a claim about the card that arrived
+
+The row carries the swap's evidence. Its `produces` list was carried across from the published combo
+and nothing checked it against the card that replaced one — so a row could promise, in the same
+vocabulary the published rows use, an effect none of its cards can produce.
+
+**The audit of 10 Aug 2026 found 74 such chips on 73 rows**, out of 836. Two families, each confirmed
+against Spellbook's own step text rather than inferred:
+
+| | |
+|---|---|
+| **51 rows** swapped Viscera Seer out for Carrion Feeder and kept *Infinite scry 1* | Carrion Feeder's only ability puts a +1/+1 counter on itself |
+| **22 rows** swapped Carrion Feeder out for Viscera Seer and kept *(Near-infinite) +1/+1 counters on a creature* | Viscera Seer's only ability is scry 1 |
+
+Six of those cited combos spell it out — *"Resolve the Carrion Feeder ability, putting a +1/+1 counter
+on it"* — which is what makes this a reading rather than a guess. Two rows keep their chip because
+another card on them does the job: Toluz, Clever Conductor connives every lap through Corpse Dance, and
+that is a real +1/+1 counter. Four `Ulasht, the Hate Seed → Ghave, Guru of Spores` rows keep *Infinite
+damage* for the same reason — Ghave cannot deal damage, but Slimefoot, the Stowaway is on those rows
+and does.
+
+`tools/produces-audit.js` is the standing check, in `npm test` because `card-text.json` holds every
+card and no network is needed. It flags a result whose effect appears in the swapped-out card's oracle
+text, not in the swapped-in card's, and nowhere else on the row. **Run against the file as it stood
+before the audit it catches 72 of the 74** — and the two it misses are the honest limit of reading text
+with a regex, not a bug: Weatherlight Compleated's text says "scry 1" but only below seven phyresis
+counters, and Haunted One's undying names a +1/+1 counter that annihilates against the same loop's
+persist counter. Wording says yes, arithmetic says no, and only a person can tell.
+
+**Two rows were deleted outright, and they are the more serious finding.** Both swapped Distinguished
+Conjurer for Prosperous Innkeeper on the clause they share — *"whenever another creature you control
+enters, you gain 1 life"* — and the Conjurer's *other* ability, `{4}{W}, {T}: Exile another target
+creature you control, then return it`, is step 1 of both published combos. It is the engine. The
+Innkeeper cannot blink, so neither row was a combo. **A card with two abilities can be swapped on the
+wrong one**, and the shared clause reads as sufficient evidence right up to the moment somebody opens
+the published steps. This README already warned about this exact card, one section down, in the
+paragraph about which cards may be stand-in *sources*; nothing carried the warning across to the
+hand-written rows.
+
+What the audit did **not** cover, and the next pass starts here: a wider narrowing over the same data
+flags **230** (row, result) pairs where no card on the row obviously supplies the result, dominated by
+draw and lifegain claims that come from *tokens* a card creates — Academy Manufactor's Clue draws a
+card and the word "draw" is nowhere in its text. That noise is why the shipped check asks the narrower
+question. The 488 distinct (swap, result) pairs beyond the three patterns chased here are unread.
 
 ### They graduate rather than accumulate
 
@@ -2003,7 +2048,7 @@ npx serve .                                                   # any static serve
 
 ### Answering questions from the data
 
-**10 read-only tools** for the questions that keep coming up.
+**11 read-only tools** for the questions that keep coming up.
 
 ```bash
 node tools/try-deck.js [deck.txt]           # what the page would show. Does NOT cover the
@@ -2016,15 +2061,16 @@ node tools/cache-card-text.js "Card name"   # runner only; "Cache card text" wor
 node tools/substitution-scope.js [jaccard] [minShared]   # how much of the space is unread
 node tools/deck-cards.js [deck.txt] --unswept            # which cards carry a deck's combos
 node tools/deck-gaps.js [deck.txt]          # which gaps THIS deck exposes, castable tonight
+node tools/produces-audit.js [--verbose]    # which result chips only the swapped-away card could make
 node tools/probe-cors.js [site]             # can a browser read a deck from this site?
 node tools/check-branch-rules.js            # does GitHub enforce what these files claim?
 ```
 
 **7 have a manual workflow**, and the split is about network rather than convenience: a runner can
 reach hosts this sandbox cannot, which is the whole reason `probe-cors.js` and
-`check-branch-rules.js` have one. The three that do not — `substitution-scope.js`,
-`deck-cards.js`, `deck-gaps.js` — read only files already in the tree, so there is nothing a
-runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
+`check-branch-rules.js` have one. The four that do not — `substitution-scope.js`,
+`deck-cards.js`, `deck-gaps.js`, `produces-audit.js` — read only files already in the tree, so there
+is nothing a runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
 workflow* while the list held nine and six of them had one: a count in prose beside the list it
 counts is the easiest kind of number to leave behind, and `check:readme` now measures the second
 against `.github/workflows/` rather than against the prose.
