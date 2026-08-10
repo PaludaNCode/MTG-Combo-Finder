@@ -1850,11 +1850,47 @@ the published steps. This README already warned about this exact card, one secti
 paragraph about which cards may be stand-in *sources*; nothing carried the warning across to the
 hand-written rows.
 
-What the audit did **not** cover, and the next pass starts here: a wider narrowing over the same data
-flags **230** (row, result) pairs where no card on the row obviously supplies the result, dominated by
-draw and lifegain claims that come from *tokens* a card creates — Academy Manufactor's Clue draws a
-card and the word "draw" is nowhere in its text. That noise is why the shipped check asks the narrower
-question. The 488 distinct (swap, result) pairs beyond the three patterns chased here are unread.
+#### What a card supplies that its own text never says
+
+The wider question — *does any card on the row supply this result at all?* — started at **230**
+candidate pairs and finished at **32**, all of them clean. The 198 that went away were not rows being
+fixed; they were the tool learning to read. Three blind spots, in order of depth:
+
+**A token carries its own abilities and the card that creates one never repeats them.** Academy
+Manufactor's whole text is *"If you would create a Clue, Food, or Treasure token, instead create one
+of each"*. The word "draw" is nowhere in it, and a Clue is `{2}, Sacrifice this token: Draw a card` —
+so 39 rows looked like they were promising a draw nothing could produce. Clue, Food, Treasure, Blood,
+Gold and Powerstone rules text is now appended to any card that names one.
+
+**A venturer supplies whatever the dungeon's rooms do, and the dungeon is a card no deck list
+names.** The Sefris of the Hidden Ways rows account for **112** of the 230 on their own, claiming a
+Treasure, a draw, `+1/+1` counters and lifeloss that live on the dungeon card rather than on
+anything in the combo. **`Undercity` is not in `card-text.json`** — the one dungeon most of those rows
+actually walk. `Dungeon of the Mad Mage` and `Tomb of Annihilation` are, so a venturer inherits those
+two and the gap is stated rather than filled with remembered room text. It costs nothing today
+because no row's swap takes the venturing away; the day one does, this is where to look.
+
+**Five wordings read as absent and are not**, each of which had cost a false hit: Altar of Dementia
+*"mills cards equal to"* (never "mill"), Mana Echoes *"add an amount of {C} equal to"* (never
+"add {C}"), Splinter Twin *"a token that's a copy of this creature"* (never "creature token"),
+Warstorm Surge *"deals damage equal to its power"* (no word between "deals" and "damage"), and Living
+Death *"puts all cards they exiled this way onto the battlefield"* (never "return").
+
+The 32 that survive read clean, and both groups are outside what this file may correct. **29** are the
+Sefris family, whose swap is the sacrifice outlet — `Goblin Bombardment → Blasting Station`, and
+neither card makes mana or counters — so whatever supplies those results, the swap did not take it
+away. The other **3** claim *Infinite colored mana* on Encroaching Mycosynth and Biotransference rows
+where the only mana source is Krark-Clan Ironworks' `{C}{C}`; the sibling row with Mycosynth Lattice
+has *"Players may spend mana as though it were mana of any color"* and these two do not. **That claim
+is Spellbook's own** — the cited combos list it, and the swap is `Necrosynthesis → Tarrian's
+Soulcleaver`, which touches no mana. A row copying a published result list faithfully is doing its
+job; diverging from the combo it cites would be worse than reproducing an upstream error.
+
+Still unread: the generic trigger counts are out of scope by design, and there is no check that a row
+has *added* a result the cited combo does not list. That one needs the snapshot rather than the text
+cache, so it belongs beside the nightly citation job — and it needs the result-name rename map first,
+since Spellbook split `Infinite ETB` into `Infinite creature ETB` and `Infinite artifact ETB` and
+**551 of 834 rows still carry the retired name**.
 
 ### They graduate rather than accumulate
 

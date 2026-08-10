@@ -62,6 +62,13 @@ const { COMBOS } = require(path.join(__dirname, '..', 'unofficial.js'));
 // Wizards both write the enumerated form: Academy Manufactor says "a Clue, Food, or
 // Treasure token", where "Food token" as two adjacent words never appears. That was two
 // false hits before it was fixed, and both were about the same card.
+//
+// Five more patterns are wider than they look, and each was a false hit before it was:
+// Altar of Dementia says "mills cards equal to", never "mill"; Mana Echoes says "add an
+// amount of {C} equal to", never "add {C}"; Splinter Twin makes "a token that's a copy of
+// this creature", never a "creature token"; Murderous Redcap and Warstorm Surge say "deals
+// damage equal to its power", with no word between "deals" and "damage"; and Living Death
+// "puts all cards they exiled this way onto the battlefield" rather than returning them.
 const EFFECTS = [
   ['scry', /scry/i],
   ['surveil', /surveil/i],
@@ -70,25 +77,69 @@ const EFFECTS = [
   ['+1/+1 counters', /\+1\/\+1 counter/i],
   ['-1/-1 counters', /-1\/-1 counter/i],
   ['energy', /\{E\}/i],
-  ['mill', /\bmill\b/i],
+  ['mill', /\bmills?\b/i],
   ['indestructible', /indestructible/i],
   ['turns', /extra turn/i],
   ['Blood tokens', /\bBlood\b/i],
   ['Food tokens', /\bFood\b/i],
   ['Clue tokens', /\bClue\b|investigate/i],
   ['Treasure tokens', /\bTreasure\b/i],
+  ['card draw', /draws? (a|two|three|that many|cards|X)/i],
+  ['damage', /deals? (\w+ )?damage/i],
+  ['creature tokens', /creature token|token that's a copy/i],
+  ['blinking', /exile.*(return|onto the battlefield)/i],
+  ['colored mana', /add one mana of any color|add \{[WUBRG]\}|mana of any color/i],
+  ['colorless mana', /add (an amount of )?\{C\}|add one mana/i],
 ];
 
 const byName = new Map();
 for (const key of Object.keys(CARDS)) byName.set(CARDS[key].name.toLowerCase(), CARDS[key]);
 
-// Every face's text, joined. A card absent from the cache answers null rather than '' —
-// "no text" and "text with no scry in it" are opposite answers, and the second is the one
-// that would silently clear a row.
+// ---- what a card supplies that its own text never says ------------------------
+//
+// The predefined tokens carry their own abilities, and the card that creates one does not
+// repeat them. Academy Manufactor's whole text is "If you would create a Clue, Food, or
+// Treasure token, instead create one of each" — the word "draw" is nowhere in it, and yet
+// a row of Manufactor combos rightly claims infinite card draw, because a Clue is
+// "{2}, Sacrifice this token: Draw a card". Reading the creator's text alone flagged 39 of
+// those rows as promising a draw nothing could produce.
+const TOKEN_RULES = [
+  [/\bClue\b|investigate/i, '{2}, Sacrifice this token: Draw a card.'],
+  [/\bFood\b/i, '{2}, {T}, Sacrifice this token: You gain 3 life.'],
+  [/\bTreasure\b/i, '{T}, Sacrifice this token: Add one mana of any color.'],
+  [/\bBlood\b/i, '{1}, {T}, Discard a card, Sacrifice this token: Draw a card.'],
+  [/\bGold\b token/i, 'Sacrifice this token: Add one mana of any color.'],
+  [/\bPowerstone\b/i, '{T}: Add {C}. This mana can’t be spent to cast a nonartifact spell.'],
+];
+
+// And the same thing one level deeper: a card that ventures into the dungeon supplies
+// whatever the dungeon's rooms do, and the dungeon is a separate card nobody's deck list
+// names. Sefris of the Hidden Ways' rows claim a Treasure, a draw, +1/+1 counters and
+// lifeloss on exactly that basis — 112 candidate hits, every one of them right.
+//
+// **`Undercity` is not in card-text.json**, so the rooms most of these rows actually walk
+// cannot be read here; `Dungeon of the Mad Mage` and `Tomb of Annihilation` are. Rather
+// than hardcode remembered room text — the mistake this project keeps a rule about — a
+// venturer inherits the dungeons the cache *can* answer for, and the gap is stated:
+// anything only Undercity grants is invisible to this tool. It costs nothing today,
+// because no row's swap takes the venturing away; it would matter the day one did.
+const DUNGEONS = ['Dungeon of the Mad Mage', 'Tomb of Annihilation'];
+
+// Every face's text, joined, plus what the tokens and dungeons above add. A card absent
+// from the cache answers null rather than '' — "no text" and "text with no scry in it" are
+// opposite answers, and the second is the one that would silently clear a row.
 function oracleOf(name) {
   const card = byName.get(String(name).toLowerCase());
   if (!card) return null;
-  return (card.faces || []).map((face) => face.oracle || '').join('\n');
+  let text = (card.faces || []).map((face) => face.oracle || '').join('\n');
+  for (const [re, rules] of TOKEN_RULES) if (re.test(text)) text += '\n' + rules;
+  if (/venture into the dungeon/i.test(text)) {
+    for (const dungeon of DUNGEONS) {
+      const rooms = byName.get(dungeon.toLowerCase());
+      if (rooms) text += '\n' + (rooms.faces || []).map((face) => face.oracle || '').join('\n');
+    }
+  }
+  return text;
 }
 
 const effectFor = (result) => EFFECTS.slice()

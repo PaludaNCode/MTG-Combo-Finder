@@ -606,6 +606,18 @@ loosely.
   "scry 1" stops at seven phyresis counters, Haunted One's undying counter annihilates against the
   same loop's persist counter. Wording says yes, arithmetic says no. **A hit is a row to open; never
   widen the regex to quiet it.** README § *A result chip is a claim about the card that arrived*.
+- **A card supplies what its tokens and its dungeon do, and its own text never says so.** Academy
+  Manufactor's text has no "draw" in it; a Clue is `{2}, Sacrifice this token: Draw a card`. Sefris of
+  the Hidden Ways' rows claim a Treasure, a draw and `+1/+1` counters that live on the *dungeon* card.
+  Reading only the named cards' text called **198 of 230** candidate rows liars. `oracleOf()` appends
+  the six predefined tokens' rules and, for a venturer, the dungeons the cache holds — but
+  **`Undercity` is not in `card-text.json`**, which is the dungeon most of those rows walk, so
+  anything only it grants is invisible → `test/produces-audit.test.js` fails the day it appears, which
+  is the signal to read it directly instead.
+- **Never diverge from the cited combo's result list to fix Spellbook.** Three rows claim *Infinite
+  colored mana* where the only mana is Krark-Clan Ironworks' `{C}{C}` and no card converts it — and
+  the cited combos claim it too, with a swap that touches no mana. Reproducing an upstream error is
+  the row doing its job; quietly disagreeing with the combo it cites is not.
 - **A card with two abilities can be swapped on the wrong one, and no check will see it.** Two rows
   swapped **Distinguished Conjurer** for Prosperous Innkeeper on the lifegain clause they share, and
   his `{4}{W}, {T}: Exile another target creature you control, then return it` is **step 1 of both

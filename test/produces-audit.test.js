@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { audit, report, effectFor } = require('../tools/produces-audit.js');
+const { audit, report, effectFor, oracleOf } = require('../tools/produces-audit.js');
 
 // A row's result chips are a claim about the card that arrived, and until this file
 // existed nothing checked one. The audit of 2026-08-10 found 74 chips across 73 rows that
@@ -60,6 +60,57 @@ test('produces audit: an effect another card on the row supplies is not a hit', 
       'Ulasht, the Hate Seed', 'Ghave, Guru of Spores'),
   ]);
   assert.deepStrictEqual(hits, []);
+});
+
+// ---- what a card supplies that its own text never says ------------------------
+
+// The blind spot that made the wider narrowing unreadable. Academy Manufactor's entire
+// text is "If you would create a Clue, Food, or Treasure token, instead create one of
+// each" — no "draw" anywhere — and yet its combos rightly claim infinite card draw,
+// because a Clue is "{2}, Sacrifice this token: Draw a card". Reading only the creator's
+// text called 39 rows liars.
+test('produces audit: a card that makes Clues supplies their draw', () => {
+  assert.match(oracleOf('Academy Manufactor'), /Draw a card/i);
+  const { hits } = audit([
+    row(['Academy Manufactor', 'Cauldron Familiar'], ['Infinite card draw'],
+      'Peregrin Took', 'Academy Manufactor'),
+  ]);
+  assert.deepStrictEqual(hits, []);
+});
+
+test('produces audit: Food supplies lifegain and Treasure supplies mana', () => {
+  assert.match(oracleOf('Peregrin Took'), /You gain 3 life/i, 'Food');
+  assert.match(oracleOf('Warren Soultrader'), /Add one mana of any color/i, 'Treasure');
+});
+
+// One level deeper, and the same shape: a card that ventures supplies whatever the
+// dungeon's rooms do, and the dungeon is a card no deck list names. 112 candidates on the
+// Sefris of the Hidden Ways rows were exactly this.
+test('produces audit: a venturer inherits the dungeons the cache can answer for', () => {
+  const text = oracleOf('Sefris of the Hidden Ways');
+  assert.match(text, /venture into the dungeon/i);
+  assert.match(text, /Create a Treasure token/i, 'a room from Dungeon of the Mad Mage');
+  assert.match(text, /Scry 2/i);
+  // And the gap is stated rather than papered over: Undercity is the dungeon most of
+  // those rows actually walk and it is not in card-text.json, so anything only it grants
+  // is invisible here. If this ever starts passing, drop the DUNGEONS workaround.
+  assert.strictEqual(oracleOf('Undercity'), null,
+    'Undercity is in the cache now — read its rooms directly instead of inheriting two dungeons');
+});
+
+// Five wordings that each cost a false hit. Kept as a list because the next one will be
+// a sixth card whose phrasing nobody predicted, and this is where it goes.
+test('produces audit: the wordings that read as absent and are not', () => {
+  assert.match(oracleOf('Altar of Dementia'), /mills cards/i);
+  assert.ok(effectFor('Infinite mill')[1].test(oracleOf('Altar of Dementia')), '"mills", not "mill"');
+  assert.ok(effectFor('Infinite colorless mana')[1].test(oracleOf('Mana Echoes')),
+    '"add an amount of {C} equal to", not "add {C}"');
+  assert.ok(effectFor('Infinite creature tokens')[1].test(oracleOf('Splinter Twin')),
+    '"a token that\'s a copy", not "creature token"');
+  assert.ok(effectFor('Infinite damage')[1].test(oracleOf('Warstorm Surge')),
+    '"deals damage equal to its power" — no word between "deals" and "damage"');
+  assert.ok(effectFor('Infinite blinking')[1].test(oracleOf('Living Death')),
+    '"puts ... onto the battlefield", not "return"');
 });
 
 // A generic trigger count follows from the loop, not from one card's wording, so it is out
