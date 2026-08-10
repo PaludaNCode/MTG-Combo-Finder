@@ -2784,6 +2784,27 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
 // along with it.
 const CAPTION_MAX_CH = 75;
 
+// The two widths the README states for the open bracket explanation, read out of the README
+// rather than restated here.
+//
+// They were prose, in the one file whose stated point is that its numbers are measured, and
+// `check:readme` could not reach them: it runs without a browser, and these exist only once
+// the panel has been opened at a width. This run already takes both measurements and prints
+// them on a green line (`608px wide, 98px inside the box`) — nothing read them back, so a
+// padding change would have left the README describing a page that no longer existed, with
+// the measurement sitting unread in the output. Issue #207.
+//
+// A missing sentence is a failure and not a skip: a regex that stops matching after a
+// rewording would otherwise turn this check off and report success for it.
+const BRACKET_PANEL_CLAIM = /(\d+)px at 768px and up, (\d+)px on a phone/;
+
+function readmeBracketWidths() {
+  const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+  const m = BRACKET_PANEL_CLAIM.exec(readme);
+  if (!m) return null;
+  return { wide: Number(m[1]), phone: Number(m[2]) };
+}
+
 function captionDrift(notes) {
   const seen = notes || [];
   if (seen.length < 2) return [];
@@ -3967,6 +3988,20 @@ function captionDrift(notes) {
       if (open.overflow > 0) {
         problems.push(`opening the bracket explanation gives the page ${open.overflow}px of horizontal overflow — `
           + 'a phone answers that by zooming the whole page out');
+      }
+      // And the width the README says it is. Two figures, keyed on which side of the
+      // `min(38rem, 100%)` cap the viewport falls: a phone takes the percentage, everything
+      // from 768px up takes the 38rem. See BRACKET_PANEL_CLAIM.
+      const claimed = readmeBracketWidths();
+      if (!claimed) {
+        problems.push('the README no longer states the width of the open bracket explanation — '
+          + 'see BRACKET_PANEL_CLAIM in tools/verify-layout.js');
+      } else {
+        const want = vp.width >= 768 ? claimed.wide : claimed.phone;
+        if (Math.abs(open.width - want) > 1) {
+          problems.push(`the open bracket explanation is ${open.width}px wide at ${vp.width}px, `
+            + `where the README says ${want}px — remeasure both, and change the prose or the padding`);
+        }
       }
     }
     // The caveat is the reason a bracket number here is honest at all.

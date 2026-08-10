@@ -777,13 +777,14 @@ The pips are `aria-hidden` — five numbered circles read out as "1 2 3 4 5" is 
 the button carries the whole answer as its accessible name.
 
 **The panel is bounded by the box it explains, never by the window.** It hangs off pips sitting two
-paddings into the page — 155px into a 390px phone, after the key column — so a width capped at
-`100vw` was still free to end up off the screen: measured at **170px of horizontal overflow at 390px
-and 48px at 768px**, which on a phone is not a scrollbar but the browser zooming the whole page out
-to fit, on one tap. Anchoring it to the bracket line and capping it at `min(38rem, 100%)` costs
-nothing anywhere it fitted before — 608px at 768px and up, 325px on a phone. `npm run verify` opens
-the panel before it measures and prints both numbers; with the panel shut, every other check on the
-page passed while this was live.
+paddings into the page, so a width capped at `100vw` was still free to end up off the screen — and on
+a phone that is not a scrollbar but the browser zooming the whole page out to fit, on one tap.
+Anchoring it to the bracket line and capping it at `min(38rem, 100%)` costs nothing anywhere it fitted
+before: **608px at 768px and up, 325px on a phone**, which `npm run verify` measures against this
+sentence rather than printing for nobody. Two checks keep the overhang itself at zero — `verify`
+against the summary box at four widths, and *opening the bracket explanation does not push the page
+sideways* in `e2e/deck.spec.js` against a real scrollbar. With the panel shut, every other check on
+the page passed while this was live.
 
 **"Two-card infinite combo" means a two-card line that wins**, by the same written-down inventory the
 result chips use. Basalt Monolith + Rings of Brighthearth loops all day and wins nothing. A filled
@@ -971,31 +972,28 @@ case added to one copy and not the other is a claim only half the tests make.
 
 Two small tools that exist because the same manual ritual kept being performed by hand.
 
-**`npm run prove`** breaks a check on purpose, confirms it goes red, and puts the file back —
-`tools/prove-check.js`. The rule it serves is the oldest one in `CLAUDE.md`: *a check nobody has seen
-fail is a check nobody has seen work.* Doing it by hand is four steps and the last one matters most,
-because the fix being demonstrated is usually still uncommitted, so a restore that quietly does not
-happen loses the work and leaves a tree that looks finished. The tool holds a copy on disk as well as
-in memory, restores in a `finally`, and verifies byte for byte before reporting. It refuses three
-things that each look like a successful demonstration: a break that changed no bytes, a break command
-that exited non-zero, and a restore that did not verify. **`--expect <regex>` adds the fourth** and is
-worth passing every time — without it the tool reads an exit code and nothing else, so a check
-reddened for an unrelated reason is reported as proved. What "reverted" means stays a judgement —
-putting one selector back is a different claim from deleting the rule — so the break is a shell
-command you write. It cannot tell you the check was green beforehand; run it yourself first.
+**`npm run prove`** reverts a fix, confirms the check goes red, and puts the file back —
+`tools/prove-check.js`, serving the oldest rule in `CLAUDE.md`: *a check nobody has seen fail is a
+check nobody has seen work.* It refuses five things that each look like a successful demonstration,
+and **`--expect <regex>` is worth passing every time**, because without it the tool reads an exit code
+and nothing else. It cannot tell you the check was green beforehand; run it yourself first. The
+argument for each refusal — and for why the break stays a shell command you write — is in that file's
+header comment.
 
-**`npm run shot`** photographs a selector at a device profile — `e2e/shot.spec.js`. Both harnesses
-report numbers, and neither answers *does that read right*. It **registers no tests unless `SHOT` is
-set**, rather than using `test.skip()`: a skipped test still moves the count `test:ui` reports and
-reads as something switched off instead of a tool.
+**`npm run shot`** photographs a selector at a device profile — `e2e/shot.spec.js` for the gestures,
+`tools/shot-config.js` for what a given environment means. Both harnesses report numbers, and neither
+answers *does that read right*.
 
 ```bash
-SHOT_SELECTOR='.deck-summary' SHOT_PROJECT=phone npm run shot   # -> test-results/shot-phone.png
-SHOT_OPEN='.bracket-scale' npm run shot                          # press something first
+SHOT_SELECTOR='.deck-summary' SHOT_PROJECT=phone npm run shot   # -> shots/shot-phone.png
+SHOT_OPEN='.bracket-scale' npm run shot                         # press, wait for what it opened
+SHOT_PAGE=tiers.html npm run shot                               # the other page
+SHOT_SEARCH=0 npm run shot                                      # before anything is pasted
 ```
 
 `SHOT_PROJECT` is an environment variable and not a flag because `npm run shot -- --project=phone`
 silently does nothing: the `npx -c '…'` form swallows anything after it, and both profiles run.
+Pictures go to `shots/`, not `test-results/`, which Playwright empties at the start of every run.
 
 ### The numbers in this file are checked
 

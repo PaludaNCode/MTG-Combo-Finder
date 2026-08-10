@@ -202,6 +202,36 @@ test('a second press puts the bracket explanation away', async ({ page }) => {
   await expect(why).toBeHidden();
 });
 
+// Opening it must not cost the reader the page, which is the other thing this control has
+// done. The panel is absolutely positioned off pips sitting ~155px into a 390px screen, and
+// it shipped **170px past the right edge** — a phone answers a document wider than itself by
+// zooming everything out, so asking why the deck is bracket 3 lost the reader the page they
+// were reading. Nothing could see it, because nothing pressed anything before measuring.
+//
+// It lives here rather than in `nothing on the page scrolls sideways` in e2e/map.spec.js,
+// where it was first written: that test was named for the resting state and had grown a
+// pressed one, so the only guard on this bug sat in the map suite and anybody rewriting a
+// map test would have taken it with them. Both projects run this file, so the 390px case is
+// still covered. Issue #205.
+//
+// `verify` measures the same overhang against the summary box at four widths; this is the
+// run with a real scrollbar and a real device pixel ratio.
+test('opening the bracket explanation does not push the page sideways', async ({ page }) => {
+  await pasteDeck(page);
+  await search(page);
+
+  const sideways = () => page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  // Both states, in one test, because the claim is about the difference between them: a
+  // page that already overflowed at rest would make the second assertion meaningless.
+  expect(await sideways()).toBeLessThanOrEqual(0);
+
+  await page.locator('.bracket-scale').click();
+  await expect(page.locator('#bracket-why')).toBeVisible();
+  expect(await sideways()).toBeLessThanOrEqual(0);
+});
+
 // The other half of the same rule, and the one that would come back quietly: arriving
 // at the control must not open it. `.bracket-wrap:focus-within` was removed to make the
 // test above pass, and putting it back would restore a page where *leaving* the pips is

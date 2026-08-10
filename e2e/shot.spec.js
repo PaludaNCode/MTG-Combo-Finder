@@ -15,43 +15,60 @@
 //
 // Deliberately not asserting anything. A screenshot that fails is a screenshot nobody
 // looks at, and the thing being examined is usually mid-change and legitimately wrong.
+//
+// **Where the plan comes from, and why not from here.** Nothing in this file can be unit
+// tested — requiring it pulls in @playwright/test, which is fetched per run — so the
+// defaults it used to hold were unwatched, and three were wrong at once: no wait after
+// pressing a control, `index.html` hard-coded, and pictures written where the next
+// `test:ui` deletes them. The decisions live in tools/shot-config.js now and the gestures
+// live here. Issue #206.
 'use strict';
 
 const { test } = require('@playwright/test');
-const path = require('node:path');
+const fs = require('node:fs');
 const { DECKS } = require('../test/fixtures/dataset.js');
+const { shotPlan } = require('../tools/shot-config.js');
 
 if (process.env.SHOT) {
-  const selector = process.env.SHOT_SELECTOR || '#results';
-  const deck = DECKS[process.env.SHOT_DECK || 'marked'] || DECKS.marked;
-  const out = process.env.SHOT_OUT || path.join(__dirname, '..', 'test-results');
-  // A control to press before the picture is taken — the reason this exists at all, since
-  // the two things worth photographing in this page's history were both behind one.
-  const open = process.env.SHOT_OPEN || '';
-  // The other box. Newline-separated, because that is what the page reads: a partner pair
-  // is two lines, and the summary box's top row cannot be photographed without them.
-  const commanders = process.env.SHOT_COMMANDERS || '';
-  // A width the projects do not have. `desktop` is 1280 and `phone` is a Pixel 7, which
-  // leaves the two sizes most of this page's layout rules are written against — a 1440
-  // laptop and a 1920 desktop — unphotographable without one of these. The project still
-  // decides the device: its scale factor, its touch flag, its user agent.
-  const width = Number(process.env.SHOT_WIDTH) || 0;
-  const height = Number(process.env.SHOT_HEIGHT) || 900;
+  const plan = shotPlan(process.env);
+  const deck = DECKS[plan.deck] || DECKS.marked;
 
   test('shot', async ({ page }, info) => {
-    if (width) await page.setViewportSize({ width, height });
-    await page.goto('/index.html');
-    if (commanders) await page.locator('#commanders').fill(commanders);
-    await page.locator('#decklist').fill(deck);
-    await page.getByRole('button', { name: 'Find combos' }).click();
-    await page.locator('#results').waitFor();
-    // The search paints in two tasks — combos first, panels after a yield — so a picture
-    // taken on #results alone can catch the half-drawn page. See renderResults() in app.js.
-    await page.locator('#pieces .combo').first().waitFor();
-    if (open) await page.locator(open).first().click();
+    if (plan.width) await page.setViewportSize({ width: plan.width, height: plan.height });
+    await page.goto(plan.page);
 
-    const file = path.join(out, `shot-${info.project.name}.png`);
-    await page.locator(selector).first().screenshot({ path: file });
-    console.log(`shot: ${selector} at ${info.project.name} -> ${file}`);
+    if (plan.search) {
+      if (plan.commanders) await page.locator('#commanders').fill(plan.commanders);
+      await page.locator('#decklist').fill(deck);
+      await page.getByRole('button', { name: 'Find combos' }).click();
+      await page.locator('#results').waitFor();
+      // The search paints in two tasks — combos first, panels after a yield — so a picture
+      // taken on #results alone can catch the half-drawn page. See renderResults() in app.js.
+      await page.locator('#pieces .combo').first().waitFor();
+    }
+
+    if (plan.open) {
+      const control = page.locator(plan.open).first();
+      await control.click();
+      // The wait that was missing. Clicking and screenshotting on the next line catches the
+      // one thing the picture is being taken of mid-transition, which is the tool being
+      // least reliable at its own job.
+      //
+      // Asked of the control rather than configured, because this page says what it opens:
+      // every disclosure here sets `aria-controls` (app.js for the bracket, page-dom.js for
+      // a panel, render-combos.js for a steps row). SHOT_WAIT is the override for a control
+      // that does not — and a `<details>` is neither, so its content is waited for through
+      // the screenshot target itself, which Playwright already holds still before shooting.
+      const target = plan.waitFor || await control.getAttribute('aria-controls');
+      if (target) {
+        const opened = plan.waitFor ? page.locator(plan.waitFor) : page.locator('#' + target);
+        await opened.first().waitFor({ state: 'visible' });
+      }
+    }
+
+    fs.mkdirSync(plan.out, { recursive: true });
+    const file = `${plan.out}/shot-${info.project.name}.png`;
+    await page.locator(plan.selector).first().screenshot({ path: file });
+    console.log(`shot: ${plan.selector} at ${info.project.name} -> ${file}`);
   });
 }

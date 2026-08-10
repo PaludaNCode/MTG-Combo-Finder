@@ -239,21 +239,18 @@ test('adding a card redraws the map with it on', async ({ page }) => {
 test('nothing on the page scrolls sideways', async ({ page }) => {
   // Checked here as well as in the layout test because this is the run with a
   // real scrollbar and a real device pixel ratio.
-  const sideways = () => page.evaluate(
+  //
+  // The resting state, which is what this name describes. The same measurement with
+  // the bracket explanation held open used to be a second half of this test, and it
+  // was the only guard on a bug that cost a phone reader the whole page — sitting in
+  // the map suite, where deleting or rewriting a map test would have taken it along
+  // with nothing to say so. It is `opening the bracket explanation does not push the
+  // page sideways` in e2e/deck.spec.js now, beside the other tests that press that
+  // control. Issue #205.
+  const sideways = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth
   );
-  expect(await sideways()).toBeLessThanOrEqual(0);
-
-  // And with the one thing on the page that overhangs its own container held open.
-  // This test was named for the whole page and measured only its resting state: the
-  // bracket explanation is absolutely positioned off a control ~155px into a 390px
-  // screen, and it shipped 170px past the right edge — a phone answers a document
-  // wider than the screen by zooming everything out, so a reader lost the page for
-  // asking why their deck is bracket 3. Nothing already here could see it, because
-  // nothing already here pressed anything before measuring.
-  await page.locator('.bracket-scale').click();
-  await expect(page.locator('.bracket-why')).toBeVisible();
-  expect(await sideways()).toBeLessThanOrEqual(0);
+  expect(sideways).toBeLessThanOrEqual(0);
 });
 
 // The map is drawn in canvas units and scaled into whatever column it lands in,

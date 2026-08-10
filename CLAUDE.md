@@ -31,7 +31,8 @@ npm run verify:unofficial # every unofficial row still cites a real published co
                           # --graduated out.json = rows Spellbook now publishes
 npm run check:readme      # the README's countable numbers still match the files
 npm run prove -- --files <f> --break "<sh>" --check "<cmd>" [--expect <re>]  # watch a check go red, safely
-SHOT_SELECTOR=… SHOT_PROJECT=phone npm run shot                # photograph a selector; SHOT_OPEN presses first
+SHOT_SELECTOR=… SHOT_PROJECT=phone npm run shot                # photograph a selector into shots/
+SHOT_OPEN=… SHOT_PAGE=tiers.html SHOT_SEARCH=0 npm run shot    # press first · the other page · before a search
 
 node tools/fetch-combos.js out.json [steps/]      # --no-steps skips the 103,737 files
 node tools/fetch-combos.js out.json --fixture test/fixtures/export.json   # no network
@@ -130,6 +131,7 @@ logic is unit-testable without a DOM.
 | `tools/scryfall-bulk.js` | — | picking a bulk file and streaming cards out of it — no cache logic |
 | `tools/sweep-impact.js` | — | which of a sweep's changes land on a card this repo cites |
 | `tools/prove-check.js` | — | breaking a check on purpose and, above all, putting the file back |
+| `tools/shot-config.js` | — | what a `SHOT_*` environment means — the half of `npm run shot` a test can load |
 | `e2e/shot.spec.js` | — | **not a test.** Photographs a selector; registers nothing unless `SHOT` is set |
 
 - `research-log.js` breaks that shape — never loaded by a browser, so plain CommonJS, linted with
@@ -297,13 +299,18 @@ loosely.
   before you filter, and put the decision in an exported function (`sweepStatus()`,
   `skippedLines()`) → `test/deck-tools.test.js`.
   README § *What a tool says about itself is not exempt*.
-- **Shell inside a workflow's `run:` block is the only code here nothing can test**, so a
-  decision must not live there. Exercising it means dispatching the workflow, and exercising a
+- **Two places here hold code nothing can unit-test, and a decision must not live in either.**
+  Shell in a workflow `run:` block is the first. The second is a Playwright spec, `e2e/*.spec.js`:
+  requiring one pulls in `@playwright/test`, which is fetched per run and is not in the repository,
+  so a unit test cannot load it — which is how three wrong defaults sat inside `shot.spec.js` at
+  once, the worst of them writing pictures into `test-results/`, where the next `test:ui` deleted
+  them. Same remedy as the shell: the decision moves to a tool and the spec calls it →
+  `tools/shot-config.js`, `test/shot-tool.test.js`. The spec keeps the gestures only.
+  **The shell half is the more expensive one to exercise**: it means dispatching the workflow, and a
   path that only fires on the default branch means merging the workflow to the default branch
   *first* — a round trip per attempt, which is why one wrong `if` in *Cache card text* survived
-  as long as it did. The decision goes in a tool and the `run:` block calls it →
-  `tools/cache-target-branch.js`, `test/cache-target-branch.test.js` covers both paths in
-  milliseconds. **Patching that YAML also deleted `setup-node` once** and the step needed
+  as long as it did → `tools/cache-target-branch.js`, `test/cache-target-branch.test.js` covers both
+  paths in milliseconds. **Patching that YAML also deleted `setup-node` once** and the step needed
   `node`: read back the parsed step list, not the diff.
 - **`HARNESS` in `verify-layout.js` is a template literal**, so a regex loses its backslashes:
   `/\d+ combos/` becomes `/d+ combos/` and matches nothing, which passes → write `\\d`. **A
@@ -320,10 +327,21 @@ loosely.
   and watch it go red; every entry above once passed while measuring nothing. **`npm run prove` is
   that ritual with the dangerous step taken out** — the fix being demonstrated is usually still
   uncommitted, so a revert that quietly stays reverted loses it and leaves a tree that looks
-  finished. It restores in a `finally`, verifies byte for byte, and refuses three things that each
+  finished. It restores in a `finally`, verifies byte for byte, and refuses five things that each
   look like a successful demonstration: a break that changed no bytes, a break command that exited
-  non-zero, and a restore that did not verify. **It cannot tell you the check was green first** —
+  non-zero, a restore that did not verify, **a path moved outside `--files`** — compared through
+  `git status --porcelain` either side of the run, since the break command's reach is not the restore
+  list's — and **a run that was interrupted**, because Ctrl-C kills the check too and a check killed
+  by a signal exits exactly like one going red. **It cannot tell you the check was green first** —
   run it yourself, or a check that was already red will read as proved. `/prove-check`.
+- **Ctrl-C used to take the tree with it, and the fix is a listener rather than a `finally`.** With no
+  `SIGINT` listener registered node is *terminated by* the signal, so the `finally` never ran and the
+  patched file stayed on disk — measured both ways, signal to the process and to the group, `signal=SIGINT`
+  and the subject file still broken. Registering one makes the signal non-fatal, which is what lets the
+  restore happen. It cannot make it *prompt*: `execSync` holds the event loop, so a handler cannot run
+  while the check does. In a terminal that costs nothing, because the signal reaches the check as well.
+  → `test/prove-check.test.js` drives a real SIGINT at a real process group. **The uncovered case is
+  `kill -INT` at this pid alone**: the check survives, finishes, and its result is reported.
 - **A control that opens something must be measured OPEN, and pressed with focus.** Both halves have
   shipped bugs. Every rect inside a closed `<details>` is 0 and every assertion about one passes;
   and **`element.click()` moves no focus**, so anything keyed on `:focus`, `:focus-within` or

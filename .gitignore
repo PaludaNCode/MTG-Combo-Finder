@@ -27,3 +27,7 @@ steps/
 # Playwright: fetched for the run, and its output is per-run
 test-results/
 playwright-report/
+
+# `npm run shot` writes here rather than into test-results/, which Playwright empties at
+# the start of every run — a picture taken to look at once, not to keep.
+shots/
