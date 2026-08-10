@@ -364,8 +364,45 @@ cached**, unlike the other two — the network being down says nothing about whe
 steps.
 
 **An unofficial row borrows the published combo's steps, and says so** — *"These are the published
-combo's steps. Read Sadistic Glee as Necrosynthesis"*. Unattributed, the page would be printing
-instructions for somebody else's deck.
+combo's steps. Read Sadistic Glee as Necrosynthesis, which is marked where they name it"*.
+Unattributed, the page would be printing instructions for somebody else's deck.
+
+### A borrowed step is marked, not rewritten
+
+The caveat is not enough on its own: the steps under it go on naming the card the reader does not
+own, line after line. So every mention is marked — Spellbook's word struck through, the card the
+deck actually has written beside it, in words rather than a colour or a tooltip so it survives
+greyscale and a screen reader. `DeckView.markedSteps()` decides where the marks go.
+
+**Rewriting the name outright is the obvious version and it is wrong.** Measured across all 689
+published combos this repository cites: of 839 swaps, **802** name the swapped-out card in full,
+**all 839** are reached by also matching the pre-comma short name (*"Activate Ulasht by paying
+{1}"*), and **none** collides with another card in the same combo. Mechanically easy, in other
+words — and still wrong, because a step states more than the loop needs. Spellbook writes *"apply
+Chatterfang's, creating … three 1/1 Squirrel creature tokens"*, and the row swapping him for
+Quina, Qu Gourmet gets **one Frog**. Rewritten, that sentence names the right card and lies about
+what happens. Marked, the worst a missed mention can do is go unannotated — which happens, and is
+visible on the page: their own step text for `2082-2292-4186` says *"Sadisitc Glee"*, so that
+mention cannot be matched by any rule and is left exactly as they wrote it.
+
+**The short name is only looked for once the full one has been seen in the same record.** Free by
+measurement — not one of the 839 uses a short name without the full name appearing somewhere too —
+and it bounds the one real risk: a pre-comma name that is also an ordinary word would otherwise
+mark a token type as one of the reader's cards. The three this file needs today are Chatterfang,
+Quina and Eloise, all proper nouns.
+
+**A row whose loop genuinely runs differently carries its own steps instead** — `ownSteps` in
+`unofficial.js`, drawn under a caveat crediting this project rather than Spellbook, and fetching
+nothing. Reserved for the case marking cannot fix: the Quina row above, where the published steps
+also spend Chatterfang's `{B}, Sacrifice X Squirrels` on an opponent's board and Quina has no such
+ability. Writing them out for every row is not the plan — the swap is what these rows *are*, and
+re-describing each one would be a second copy of the database to keep true.
+
+Reading that loop closely enough to write those steps also found **three result chips on the row
+that were carried over from the published combo and are not true of it**: *Infinite creature
+tokens* (Chatterfang nets two creatures a lap, Quina's Frog count is flat), and both of
+Chatterfang's toughness-reduction results. The row's own `why` had said the Frog count never moves
+since the day it was written. Nothing checks a `produces` list against a card, and nothing can.
 
 **Fetching from Spellbook directly is ruled out** by the same CORS allowlist that made this project
 publish data instead of querying it. `setSource()` stays a seam anyway.
@@ -969,7 +1006,7 @@ section about unchecked numbers, and it had already drifted once.
 | claim | counted from |
 | --- | --- |
 | `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 836 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 834 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
@@ -1748,7 +1785,7 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 836 hand-written rows cite a published combo. **746 are `verified` and 90 are `derived`** — the
+All 834 hand-written rows cite a published combo. **744 are `verified` and 90 are `derived`** — the
 sentence above this one said *all of them* were verified until 7 Aug 2026, and the sweep that broke it
 is the one the label was waiting for. Viscera Seer and Carrion Feeder are the two most-published cards
 in the database, and their families are large enough that reading every member's steps individually
@@ -1773,6 +1810,87 @@ one.
 plus a sideboard that must stay ignored. The test pins the **exact rows** it unlocks, a list rather than
 a count, so **a diff there is a prompt to read the list, not a failure**. It also holds those rows to
 being *one card away* from the deck, catching a row that matches too loosely.
+
+### A result chip is a claim about the card that arrived
+
+The row carries the swap's evidence. Its `produces` list was carried across from the published combo
+and nothing checked it against the card that replaced one — so a row could promise, in the same
+vocabulary the published rows use, an effect none of its cards can produce.
+
+**The audit of 10 Aug 2026 found 74 such chips on 73 rows**, out of 836. Two families, each confirmed
+against Spellbook's own step text rather than inferred:
+
+| | |
+|---|---|
+| **51 rows** swapped Viscera Seer out for Carrion Feeder and kept *Infinite scry 1* | Carrion Feeder's only ability puts a +1/+1 counter on itself |
+| **22 rows** swapped Carrion Feeder out for Viscera Seer and kept *(Near-infinite) +1/+1 counters on a creature* | Viscera Seer's only ability is scry 1 |
+
+Six of those cited combos spell it out — *"Resolve the Carrion Feeder ability, putting a +1/+1 counter
+on it"* — which is what makes this a reading rather than a guess. Two rows keep their chip because
+another card on them does the job: Toluz, Clever Conductor connives every lap through Corpse Dance, and
+that is a real +1/+1 counter. Four `Ulasht, the Hate Seed → Ghave, Guru of Spores` rows keep *Infinite
+damage* for the same reason — Ghave cannot deal damage, but Slimefoot, the Stowaway is on those rows
+and does.
+
+`tools/produces-audit.js` is the standing check, in `npm test` because `card-text.json` holds every
+card and no network is needed. It flags a result whose effect appears in the swapped-out card's oracle
+text, not in the swapped-in card's, and nowhere else on the row. **Run against the file as it stood
+before the audit it catches 72 of the 74** — and the two it misses are the honest limit of reading text
+with a regex, not a bug: Weatherlight Compleated's text says "scry 1" but only below seven phyresis
+counters, and Haunted One's undying names a +1/+1 counter that annihilates against the same loop's
+persist counter. Wording says yes, arithmetic says no, and only a person can tell.
+
+**Two rows were deleted outright, and they are the more serious finding.** Both swapped Distinguished
+Conjurer for Prosperous Innkeeper on the clause they share — *"whenever another creature you control
+enters, you gain 1 life"* — and the Conjurer's *other* ability, `{4}{W}, {T}: Exile another target
+creature you control, then return it`, is step 1 of both published combos. It is the engine. The
+Innkeeper cannot blink, so neither row was a combo. **A card with two abilities can be swapped on the
+wrong one**, and the shared clause reads as sufficient evidence right up to the moment somebody opens
+the published steps. This README already warned about this exact card, one section down, in the
+paragraph about which cards may be stand-in *sources*; nothing carried the warning across to the
+hand-written rows.
+
+#### What a card supplies that its own text never says
+
+The wider question — *does any card on the row supply this result at all?* — started at **230**
+candidate pairs and finished at **32**, all of them clean. The 198 that went away were not rows being
+fixed; they were the tool learning to read. Three blind spots, in order of depth:
+
+**A token carries its own abilities and the card that creates one never repeats them.** Academy
+Manufactor's whole text is *"If you would create a Clue, Food, or Treasure token, instead create one
+of each"*. The word "draw" is nowhere in it, and a Clue is `{2}, Sacrifice this token: Draw a card` —
+so 39 rows looked like they were promising a draw nothing could produce. Clue, Food, Treasure, Blood,
+Gold and Powerstone rules text is now appended to any card that names one.
+
+**A venturer supplies whatever the dungeon's rooms do, and the dungeon is a card no deck list
+names.** The Sefris of the Hidden Ways rows account for **112** of the 230 on their own, claiming a
+Treasure, a draw, `+1/+1` counters and lifeloss that live on the dungeon card rather than on
+anything in the combo. **`Undercity` is not in `card-text.json`** — the one dungeon most of those rows
+actually walk. `Dungeon of the Mad Mage` and `Tomb of Annihilation` are, so a venturer inherits those
+two and the gap is stated rather than filled with remembered room text. It costs nothing today
+because no row's swap takes the venturing away; the day one does, this is where to look.
+
+**Five wordings read as absent and are not**, each of which had cost a false hit: Altar of Dementia
+*"mills cards equal to"* (never "mill"), Mana Echoes *"add an amount of {C} equal to"* (never
+"add {C}"), Splinter Twin *"a token that's a copy of this creature"* (never "creature token"),
+Warstorm Surge *"deals damage equal to its power"* (no word between "deals" and "damage"), and Living
+Death *"puts all cards they exiled this way onto the battlefield"* (never "return").
+
+The 32 that survive read clean, and both groups are outside what this file may correct. **29** are the
+Sefris family, whose swap is the sacrifice outlet — `Goblin Bombardment → Blasting Station`, and
+neither card makes mana or counters — so whatever supplies those results, the swap did not take it
+away. The other **3** claim *Infinite colored mana* on Encroaching Mycosynth and Biotransference rows
+where the only mana source is Krark-Clan Ironworks' `{C}{C}`; the sibling row with Mycosynth Lattice
+has *"Players may spend mana as though it were mana of any color"* and these two do not. **That claim
+is Spellbook's own** — the cited combos list it, and the swap is `Necrosynthesis → Tarrian's
+Soulcleaver`, which touches no mana. A row copying a published result list faithfully is doing its
+job; diverging from the combo it cites would be worse than reproducing an upstream error.
+
+Still unread: the generic trigger counts are out of scope by design, and there is no check that a row
+has *added* a result the cited combo does not list. That one needs the snapshot rather than the text
+cache, so it belongs beside the nightly citation job — and it needs the result-name rename map first,
+since Spellbook split `Infinite ETB` into `Infinite creature ETB` and `Infinite artifact ETB` and
+**551 of 834 rows still carry the retired name**.
 
 ### They graduate rather than accumulate
 
@@ -1966,7 +2084,7 @@ npx serve .                                                   # any static serve
 
 ### Answering questions from the data
 
-**10 read-only tools** for the questions that keep coming up.
+**11 read-only tools** for the questions that keep coming up.
 
 ```bash
 node tools/try-deck.js [deck.txt]           # what the page would show. Does NOT cover the
@@ -1979,15 +2097,16 @@ node tools/cache-card-text.js "Card name"   # runner only; "Cache card text" wor
 node tools/substitution-scope.js [jaccard] [minShared]   # how much of the space is unread
 node tools/deck-cards.js [deck.txt] --unswept            # which cards carry a deck's combos
 node tools/deck-gaps.js [deck.txt]          # which gaps THIS deck exposes, castable tonight
+node tools/produces-audit.js [--verbose]    # which result chips only the swapped-away card could make
 node tools/probe-cors.js [site]             # can a browser read a deck from this site?
 node tools/check-branch-rules.js            # does GitHub enforce what these files claim?
 ```
 
 **7 have a manual workflow**, and the split is about network rather than convenience: a runner can
 reach hosts this sandbox cannot, which is the whole reason `probe-cors.js` and
-`check-branch-rules.js` have one. The three that do not — `substitution-scope.js`,
-`deck-cards.js`, `deck-gaps.js` — read only files already in the tree, so there is nothing a
-runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
+`check-branch-rules.js` have one. The four that do not — `substitution-scope.js`,
+`deck-cards.js`, `deck-gaps.js`, `produces-audit.js` — read only files already in the tree, so there
+is nothing a runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
 workflow* while the list held nine and six of them had one: a count in prose beside the list it
 counts is the easiest kind of number to leave behind, and `check:readme` now measures the second
 against `.github/workflows/` rather than against the prose.

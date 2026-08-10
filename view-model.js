@@ -319,6 +319,93 @@
     return { key: 'commanders', label: names.length === 1 ? 'Commander' : 'Commanders', names };
   }
 
+  // ---- the steps an unofficial row borrows ------------------------------------
+
+  // An unofficial row has no steps of its own to fetch: it shows the published
+  // combo's, which name the card that was swapped out. The caveat above them says
+  // which to read as which, and this is what puts that answer *inside the line* —
+  // a reader on step four should not have to hold a mapping in their head while
+  // they follow instructions naming a card they do not own.
+  //
+  // It marks rather than rewrites, and that is the decision here. Rewriting the
+  // name outright was measured against all 689 published combos this file cites:
+  // 802 of 839 swaps name the swapped-out card in full, all 839 are reached by
+  // also matching the pre-comma short name, and none of them collides with another
+  // card in the same combo — so a rewrite would be mechanically easy. It is still
+  // wrong, because a step states more than the loop needs. Spellbook writes
+  // "apply Chatterfang's, creating … three 1/1 Squirrel creature tokens", and the
+  // row that swaps him for Quina, Qu Gourmet gets **one Frog**. Rewritten, that
+  // sentence names the right card and lies about what happens, and reads perfectly
+  // while doing it. Marked, Spellbook's word stays on the page and the substitute
+  // sits beside it, so the worst a missed mark can do is annotate one mention
+  // fewer. A row whose steps genuinely run differently carries its own — see
+  // `ownSteps` in unofficial.js — and this is not asked of it.
+  //
+  // Best effort by nature, which is another reason not to rewrite: Spellbook's own
+  // step text for 2082-2292-4186 says "Sadisitc Glee", so that mention cannot be
+  // matched by any rule. It goes unmarked and the line still says what they wrote.
+  //
+  // README § *A borrowed step is marked, not rewritten* carries the measurement.
+  //
+  // Takes normalize()'s output and the row's swaps; returns the same two lists with
+  // every line split into runs. A run is `{ text }`, or `{ text, readAs }` where the
+  // text names a swapped-out card and `readAs` is what the reader has instead.
+  // Returns null when there is nothing to mark, so the caller draws plain lines.
+  function markedSteps(data, swaps) {
+    const pairs = (swaps || []).filter((s) => s && s.out && s.in);
+    if (!data || !pairs.length) return null;
+
+    const prerequisites = [].concat(data.prerequisites || []);
+    const steps = [].concat(data.steps || []);
+    const all = prerequisites.concat(steps).join('\n');
+
+    const matchers = [];
+    for (const swap of pairs) {
+      matchers.push({ text: swap.out, readAs: swap.in });
+      // The short name is only looked for once the full one has been seen in the
+      // same record. Spellbook writes "Activate Ulasht by paying {1}" in a line
+      // after naming "Ulasht, the Hate Seed" in an earlier one — 37 of the 839
+      // swaps read that way — and not one of the 839 uses a short name without the
+      // full name appearing somewhere too, which is what makes the guard free.
+      //
+      // It is not free of judgement. A pre-comma name that is also an ordinary word
+      // in a step ("creating a Squirrel token") would be marked as the card, and the
+      // reader would be told to read a token type as a card they own. The three
+      // one-word short names this file needs today — Chatterfang, Quina, Eloise —
+      // are all proper nouns; this is the line to revisit when one is not.
+      const short = swap.out.split(',')[0].trim();
+      if (short && short !== swap.out && all.includes(swap.out)) {
+        matchers.push({ text: short, readAs: swap.in });
+      }
+    }
+    // Longest first, so a full name wins over its own short form at the same
+    // position, and so one card's name cannot be eaten by another's prefix.
+    matchers.sort((a, b) => b.text.length - a.text.length);
+
+    // A name has to be the whole word to count. "Ulasht" inside "Ulasht's" is the
+    // card and matches — an apostrophe is not a letter — while a longer name that
+    // merely starts the same does not.
+    const alnum = /[A-Za-z0-9]/;
+    const edged = (line, at, end) => !alnum.test(line[at - 1] || ' ') && !alnum.test(line[end] || ' ');
+
+    const split = (line) => {
+      const runs = [];
+      let plain = '';
+      let i = 0;
+      while (i < line.length) {
+        const hit = matchers.find((m) => line.startsWith(m.text, i) && edged(line, i, i + m.text.length));
+        if (!hit) { plain += line[i]; i += 1; continue; }
+        if (plain) { runs.push({ text: plain }); plain = ''; }
+        runs.push({ text: hit.text, readAs: hit.readAs });
+        i += hit.text.length;
+      }
+      if (plain) runs.push({ text: plain });
+      return runs;
+    };
+
+    return { prerequisites: prerequisites.map(split), steps: steps.map(split) };
+  }
+
   // ---- which bracket the list is in -------------------------------------------
 
   const BRACKET_NAMES = { 1: 'Exhibition', 2: 'Core', 3: 'Upgraded', 4: 'Optimized', 5: 'cEDH' };
@@ -717,6 +804,7 @@
     bracketProse,
     commanderPin,
     commanderRow,
+    markedSteps,
     timingSentence,
     fileLoaded,
     fileRefusal,

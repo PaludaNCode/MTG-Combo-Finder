@@ -2068,6 +2068,25 @@ summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
 }
 .steps-caveat .card-name { font-weight: 600; }
 
+/* And inside the steps, wherever those steps name the card the deck has not got.
+   Spellbook's word is struck through rather than replaced — see markedSteps() in
+   view-model.js for why a rewrite was measured and rejected — and the card the
+   reader does have is written beside it.
+
+   "read as" is three words of real text rather than an arrow, an icon or a tooltip,
+   because this has to survive greyscale, a screen reader and a phone with no hover:
+   the same rule the commander pin follows. The pair is allowed to wrap, since two
+   long card names inside one step overflow a 325px column otherwise.
+   --muted on --panel-2 is 5.69:1 dark and 5.00:1 light, --accent 6.43:1 and 4.91:1;
+   both pairings already ship in this panel (.steps-pre and the list markers). */
+.swap-out { color: var(--muted); }
+.swap-as {
+  color: var(--muted);
+  font-size: .9em;
+  font-style: italic;
+}
+.swap-in { color: var(--accent); font-weight: 600; }
+
 /* The working shown on an unofficial combo. Quieter than the cards and the
    results either side of it: it is there to be read once, when deciding whether
    to believe the row, not on every pass down the list. */

@@ -584,6 +584,48 @@ loosely.
 - **Rows leave only by graduation, noticed by the nightly job**, which fails on a broken citation
   and maintains a standing issue itself. **Don't hand-edit that issue** — `npm run verify:unofficial`
   is the live answer. README § *They graduate rather than accumulate*.
+- **A row's borrowed steps are marked, never rewritten** — `DeckView.markedSteps()`. Every mention
+  of the swapped-out card in the cited combo's steps is struck through with the reader's card beside
+  it, in words rather than a colour or a tooltip. **A rewrite was measured and rejected**: 802 of
+  839 swaps name the card in full, all 839 are reached by adding the pre-comma short name, and none
+  collides — mechanically easy, and still wrong, because a step states more than the loop needs.
+  *"apply Chatterfang's, creating … three 1/1 Squirrel creature tokens"* becomes a perfectly
+  readable lie about Quina's one Frog. **A missed mark is a line nobody annotated; a wrong rewrite
+  is the page making something up** — Spellbook's own text for `2082-2292-4186` says "Sadisitc
+  Glee", so one mention is unmatchable by any rule and is left as they wrote it. Where marking
+  cannot fix it a row carries **`ownSteps`** and the panel credits us rather than them →
+  `test/view-model.test.js`, `test/unofficial.test.js`, `e2e/deck.spec.js`, `e2e/a11y.spec.js`, all
+  five checks proved. README § *A borrowed step is marked, not rewritten*.
+- **A row's `produces` is a claim about the card that arrived** → `node tools/produces-audit.js`,
+  in `npm test` (no network — `card-text.json` has every card). The audit of 10 Aug 2026 found **74
+  chips on 73 of 836 rows**: 51 rows promising Viscera Seer's *Infinite scry 1* after swapping her
+  out for Carrion Feeder, 22 promising his *+1/+1 counters* after swapping him out for her, plus the
+  Quina row's three. The check flags an effect in the swapped-**out** card's text, absent from the
+  swapped-**in** card's, and nowhere else on the row; it catches **72 of the 74** on the pre-audit
+  file, and **the two it misses are its documented limit, not a bug** — Weatherlight Compleated
+  "scry 1" stops at seven phyresis counters, Haunted One's undying counter annihilates against the
+  same loop's persist counter. Wording says yes, arithmetic says no. **A hit is a row to open; never
+  widen the regex to quiet it.** README § *A result chip is a claim about the card that arrived*.
+- **A card supplies what its tokens and its dungeon do, and its own text never says so.** Academy
+  Manufactor's text has no "draw" in it; a Clue is `{2}, Sacrifice this token: Draw a card`. Sefris of
+  the Hidden Ways' rows claim a Treasure, a draw and `+1/+1` counters that live on the *dungeon* card.
+  Reading only the named cards' text called **198 of 230** candidate rows liars. `oracleOf()` appends
+  the six predefined tokens' rules and, for a venturer, the dungeons the cache holds — but
+  **`Undercity` is not in `card-text.json`**, which is the dungeon most of those rows walk, so
+  anything only it grants is invisible → `test/produces-audit.test.js` fails the day it appears, which
+  is the signal to read it directly instead.
+- **Never diverge from the cited combo's result list to fix Spellbook.** Three rows claim *Infinite
+  colored mana* where the only mana is Krark-Clan Ironworks' `{C}{C}` and no card converts it — and
+  the cited combos claim it too, with a swap that touches no mana. Reproducing an upstream error is
+  the row doing its job; quietly disagreeing with the combo it cites is not.
+- **A card with two abilities can be swapped on the wrong one, and no check will see it.** Two rows
+  swapped **Distinguished Conjurer** for Prosperous Innkeeper on the lifegain clause they share, and
+  his `{4}{W}, {T}: Exile another target creature you control, then return it` is **step 1 of both
+  published combos** — the engine. The Innkeeper cannot blink, so neither row was a combo, and both
+  `why` texts said "the loop reads nothing else off either". This file already named that card as
+  the trap, in the stand-in *sources* paragraph; nothing carried it to the hand-written rows. **So
+  before writing a row, fetch the cited combo's steps and check which clause step 1 uses** — the
+  shared sentence is not the evidence, the steps are.
 - **Watch `unofficial.js`'s gzipped size, not its row count** — `gzip -9 -c unofficial.js | wc -c`.
   **At 200 KB gzipped, `COMBOS` moves to the `data` branch as JSON**; one four-card sweep put on
   14 KB, so headroom is a dozen passes, not a hundred. It is never parsed on the main thread — only

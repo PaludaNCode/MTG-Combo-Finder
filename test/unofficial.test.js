@@ -59,6 +59,35 @@ test('unofficial: every row carries the evidence the page prints', () => {
   });
 });
 
+// A row's own steps, for the case where marking the borrowed ones is not enough
+// because the published steps say something the substitute does not do. The panel
+// draws these under a caveat crediting us rather than Spellbook, so an empty or
+// half-built one would be this project asserting something in its own name with
+// nothing behind it — and a heading over no lines, which is the state the fetched
+// panel goes out of its way to never draw.
+test('unofficial: a row that brings its own steps brings usable ones', () => {
+  const own = COMBOS.filter((row) => row.ownSteps);
+  // Not a count to keep matching, a floor: the browser test opens one of these, so
+  // at zero the rendering path has nobody exercising it. If the last row carrying
+  // them graduates, move `ownSteps` to another row rather than deleting the check.
+  assert.ok(own.length >= 1, 'no row carries its own steps, so nothing renders that panel');
+  own.forEach((row) => {
+    const at = row.cards.join(' + ');
+    const lines = row.ownSteps.steps;
+    assert.ok(Array.isArray(lines) && lines.length >= 2, at + ': own steps but no sequence to follow');
+    lines.concat(row.ownSteps.prerequisites || []).forEach((line) => {
+      assert.strictEqual(typeof line, 'string', at + ': a step that is not text');
+      assert.ok(line.trim().length > 10, at + ': "' + line + '" is not a step');
+    });
+    const pre = row.ownSteps.prerequisites;
+    assert.ok(pre === undefined || Array.isArray(pre), at + ': prerequisites are a list or absent');
+    // The reason for writing them out is that the published steps are wrong for this
+    // row, so the row still has to cite the combo they are wrong for — the link
+    // beside the panel goes there, and it is still the evidence for the swap.
+    assert.ok(row.from && row.from.id, at + ': own steps and no combo cited');
+  });
+});
+
 // A chain is a weaker claim than a single swap and has to look like one on the
 // page, so it is worth knowing how many rows make it. Every extra step is another
 // judgement the reader is being asked to accept at once.

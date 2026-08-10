@@ -317,6 +317,78 @@ test('a combo row fetches and shows how the combo is actually executed', async (
   await expect(panel).toContainText('Mana available: {2}');
 });
 
+// An unofficial row has no steps of its own to fetch, so it shows the cited combo's
+// — which name the card that was swapped out, in every line. The caveat above them
+// says which to read as which; this is the half that puts the answer where the
+// reader is looking. Marked, never rewritten: see markedSteps() in view-model.js for
+// the measurement that ruled a rewrite out.
+test('an unofficial row marks the swapped-out card inside the steps it borrows', async ({ page }) => {
+  await pasteDeck(page, DECKS.unofficial);
+  await search(page);
+
+  // Top-level rows, in a panel of their own — no card disclosure to open first.
+  const row = page.locator('#unofficial .combo').first();
+  await expect(row).toBeVisible();
+  await row.locator('.steps-toggle').click();
+  const panel = row.locator('.steps');
+  await expect(panel).toBeVisible();
+
+  // Whose steps these are, before the steps themselves.
+  await expect(panel.locator('.steps-caveat')).toContainText('These are the published combo’s steps');
+
+  // Spellbook's word is kept and struck through, and the card the deck actually has
+  // is written beside it — in words, so it survives greyscale and a screen reader.
+  // Two mentions, both in the prerequisites: Spellbook's own "Sadistic Glee attached
+  // to Scurry Oak", and the per-card line describeUse() builds from the published
+  // `uses`. That second one is the case for marking the prerequisites at all — it is
+  // the panel telling the reader to have a card the row is about not having.
+  const mark = panel.locator('.swap');
+  await expect(mark).toHaveCount(2);
+  await expect(mark.first().locator('s.swap-out')).toHaveText('Sadistic Glee');
+  await expect(mark.first().locator('.swap-in')).toHaveText('Necrosynthesis');
+  await expect(mark.first()).toContainText('read as');
+  await expect(panel.locator('.steps-pre .swap')).toHaveCount(2);
+
+  // And the one mention no rule can reach — Spellbook's own "Sadisitc Glee" — is
+  // left exactly as they wrote it. That is what marking costs when it misses: a
+  // line nobody annotated, rather than a line that says something false.
+  const second = panel.locator('ol.steps-list li').nth(1);
+  await expect(second).toContainText('Sadisitc Glee triggers');
+  await expect(second.locator('.swap')).toHaveCount(0);
+});
+
+// The other half: a row whose loop genuinely runs differently carries `ownSteps`,
+// and then nothing above is borrowed and nothing is fetched. The published combo
+// makes three Squirrels a lap where this one makes one Frog, so marking its name
+// would leave the sentence around it false.
+test('a row with steps of its own shows ours, attributed, and fetches nothing', async ({ page }) => {
+  const asked = [];
+  page.on('request', (req) => { if (req.url().includes('/steps/')) asked.push(req.url()); });
+
+  await pasteDeck(page, DECKS.ownSteps);
+  await search(page);
+
+  const row = page.locator('#unofficial .combo').first();
+  await row.locator('.steps-toggle').click();
+  const panel = row.locator('.steps');
+  await expect(panel).toBeVisible();
+
+  // Ours, and said to be ours. A panel that looked like the other one would be this
+  // project's reasoning wearing Commander Spellbook's authority.
+  await expect(panel.locator('.steps-caveat')).toContainText('not published by Commander Spellbook');
+  const steps = panel.locator('ol.steps-list li');
+  await expect(steps).toHaveCount(8);
+  await expect(steps.nth(1)).toContainText('one 1/1 green Frog creature token');
+
+  // Nothing to mark, because these name the reader's own cards.
+  await expect(panel.locator('.swap')).toHaveCount(0);
+  // And nothing asked for. The steps tree holds no file for this combo in the
+  // fixture, so a fetch would have drawn "no steps recorded" instead.
+  expect(asked).toEqual([]);
+  // The way out is still their page for the combo this was derived from.
+  await expect(row.getByRole('link', { name: /View the published combo this came from/ })).toBeVisible();
+});
+
 // A combo Commander Spellbook records nothing for has no file at all: the 404 is
 // the answer, and it is what stands in for the index this design does not have.
 // The panel has to draw that as a note, not as a failure, and keep the link.

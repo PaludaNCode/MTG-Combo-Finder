@@ -189,6 +189,12 @@ const DECKS = {
   // than one. A chained row makes a weaker claim than a single swap, so the page
   // has to spell out both steps rather than quietly showing the last one.
   chained: ['1 Kitchen Finks', '1 Heroic Feast', '1 Hammerhead, Maggia Boss'].join('\n'),
+  // The row that carries steps written here rather than Spellbook's, because the
+  // published combo's steps make three Squirrels where this one makes one Frog. Its
+  // published combo is deliberately NOT in STEPS below: a row with its own steps
+  // must not fetch at all, and if it did the panel would say "no steps recorded"
+  // and the test would say so too.
+  ownSteps: ['1 Quina, Qu Gourmet', '1 Warren Soultrader', '1 Academy Manufactor'].join('\n'),
   // One card short of an unofficial row and of nothing else, so the suggestion
   // for that card is carried entirely by combos nobody published — the case the
   // page could not express at all until the second count existed.
@@ -298,6 +304,29 @@ const STEPS = {
   2: {
     uses: [{ card: { name: 'Rings of Brighthearth' }, zoneLocations: ['B'] }],
     description: 'Copy the untap ability with Rings of Brighthearth.\nRepeat.',
+  },
+  // The one entry here that is not the fixture's own: a real Spellbook id, cited by
+  // a real row in unofficial.js, carrying their real published text verbatim. It has
+  // to be real, because what it is for is the marking of a *borrowed* combo's steps
+  // — a fixture writing its own would be a fixture choosing how hard its own test is.
+  //
+  // It also carries the case no rule can reach: their step 2 says "Sadisitc Glee",
+  // which is their typo, so that mention goes unmarked while the prerequisite's
+  // correctly-spelled one is marked. That is the failure mode of marking rather than
+  // rewriting, on the page, in the test — one mention fewer annotated, and not one
+  // word of theirs altered.
+  '2082-2292-4186': {
+    notablePrerequisites: 'You control at least one additional creature',
+    easyPrerequisites: 'Sadistic Glee attached to Scurry Oak.',
+    description: 'Activate Viscera Seer by sacrificing any other creature.\n'
+      + 'When the creature dies, Sadisitc Glee triggers, putting a +1/+1 counter on Scurry Oak.\n'
+      + 'Scurry Oak triggers, creating a 1/1 Squirrel creature token.\n'
+      + 'Resolve the Viscera Seer ability, causing you to scry 1.\nRepeat.',
+    uses: [
+      { card: { name: 'Scurry Oak' }, zoneLocations: ['B'] },
+      { card: { name: 'Sadistic Glee' }, zoneLocations: ['B'] },
+      { card: { name: 'Viscera Seer' }, zoneLocations: ['B'] },
+    ],
   },
 };
 
