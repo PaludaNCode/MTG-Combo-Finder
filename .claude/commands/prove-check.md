@@ -36,7 +36,10 @@ npm run prove -- \
 ```
 
 - `--files` is the **restore list**. Every file the break touches goes here, listed rather
-  than inferred — guessing what to put back is how uncommitted work gets lost.
+  than inferred — guessing what to put back is how uncommitted work gets lost. A path the
+  break moves that is *not* on the list now fails the run rather than being left behind:
+  the tree is compared through `git status --porcelain` either side, so the answer is
+  refused when the tree is wrong.
 - **`--expect` is what makes this a proof rather than a coin flip.** Give it a number or a
   phrase from the failure you are expecting. Without it the tool reads an exit code, so a
   check reddened by an unrelated break passes. Pass it whenever the expected failure has a
@@ -44,10 +47,12 @@ npm run prove -- \
 - The tool holds a copy on disk as well as in memory, restores in a `finally`, and verifies
   the restore byte for byte before it reports anything.
 
-It refuses four things that all look like a successful demonstration: a break that changed
+It refuses six things that all look like a successful demonstration: a break that changed
 no bytes (usually a search string that stopped matching), a break command that exited
 non-zero (half applied, so the check measured a state nobody designed), a restore that did
-not verify, and — with `--expect` — a failure that never said the expected thing.
+not verify, a path moved outside `--files`, a run interrupted by Ctrl-C (which kills the
+check too, so an abandoned run otherwise reports the check going red), and — with
+`--expect` — a failure that never said the expected thing.
 
 ## 3. Read what went red
 
