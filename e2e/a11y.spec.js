@@ -167,6 +167,28 @@ for (const theme of ['dark', 'light']) {
   });
 }
 
+// The marks inside an unofficial row's borrowed steps: --muted struck through and
+// --accent beside it, on the --panel-2 the steps panel is drawn on. Both are already
+// used in that panel — .steps-pre and the list markers — but on text nobody has to
+// read as a pair, and a strike-through is the one decoration that has to stay legible
+// while it says "not this card". Two presses and a different deck to reach, which is
+// the shape of every contrast bug this repository has shipped: the tuning deck has no
+// unofficial combo, so none of the runs above draws one of these at all.
+for (const theme of ['dark', 'light']) {
+  test(`a swap marked inside borrowed steps is clean in ${theme}`, async ({ page }) => {
+    await page.goto('/index.html');
+    await page.evaluate((t) => localStorage.setItem('mtg-combo-finder.theme', t), theme);
+    await page.reload();
+    await page.locator('#decklist').fill(DECKS.unofficial);
+    await page.getByRole('button', { name: 'Find combos' }).click();
+
+    const row = page.locator('#unofficial .combo').first();
+    await row.locator('.steps-toggle').click();
+    await expect(row.locator('.steps .swap').first()).toBeVisible();
+    await expectClean(page);
+  });
+}
+
 test('the tiers page is clean', async ({ page }) => {
   await page.goto('/tiers.html');
   // The filter row is hidden until the database has loaded and the table is

@@ -787,3 +787,84 @@ test('legalityProse: nothing survives the filter means no colour line at all', (
   }));
   assert.equal(said.offIdentity.length, 0);
 });
+
+// ---- the steps an unofficial row borrows ------------------------------------
+//
+// A mark says "the published steps name this card; you have that one". Getting it
+// wrong is not a cosmetic bug: an unmarked mention leaves instructions naming a
+// card the reader does not own, and a mark in the wrong place tells them to read
+// an ordinary word as one of their cards. Both render perfectly.
+
+const swap = (out, into) => [{ out, in: into }];
+// A line as a reader sees it, with every mark spelled out, so an assertion here
+// reads like the sentence on the page rather than like a list of runs.
+const shown = (runs) => runs.map((r) => (r.readAs ? `[${r.text} → ${r.readAs}]` : r.text)).join('');
+
+test('markedSteps: the swapped-out card is marked wherever the steps name it', () => {
+  const marked = View.markedSteps({
+    prerequisites: ['Sadistic Glee attached to Scurry Oak.'],
+    steps: ['Sacrifice a Squirrel. Sadistic Glee triggers.'],
+  }, swap('Sadistic Glee', 'Necrosynthesis'));
+  assert.equal(shown(marked.prerequisites[0]), '[Sadistic Glee → Necrosynthesis] attached to Scurry Oak.');
+  assert.equal(shown(marked.steps[0]), 'Sacrifice a Squirrel. [Sadistic Glee → Necrosynthesis] triggers.');
+});
+
+// Spellbook names a legend in full once and then drops to the short name — 37 of
+// the 839 swaps this file cites read that way. The possessive is the common form of
+// it, and an apostrophe is not a letter, so the mark has to stop before it rather
+// than swallow it.
+test('markedSteps: the short name is marked too, possessive included', () => {
+  const marked = View.markedSteps({
+    prerequisites: [],
+    steps: ['Apply Chatterfang, Squirrel General’s effect.', 'Activate Chatterfang once more.'],
+  }, swap('Chatterfang, Squirrel General', 'Quina, Qu Gourmet'));
+  assert.equal(shown(marked.steps[0]), 'Apply [Chatterfang, Squirrel General → Quina, Qu Gourmet]’s effect.');
+  assert.equal(shown(marked.steps[1]), 'Activate [Chatterfang → Quina, Qu Gourmet] once more.');
+});
+
+// The guard on the short name. On its own "Chatterfang" is a word that might be
+// anything; it is only known to mean the card because the full name appears in the
+// same record. Measured free: none of the 839 swaps uses a short name without the
+// full one somewhere too.
+test('markedSteps: a short name alone is not marked', () => {
+  const marked = View.markedSteps(
+    { prerequisites: [], steps: ['Activate Chatterfang once more.'] },
+    swap('Chatterfang, Squirrel General', 'Quina, Qu Gourmet')
+  );
+  assert.equal(shown(marked.steps[0]), 'Activate Chatterfang once more.');
+});
+
+// A chained row swaps two cards, and both are the reader's problem. Marking only
+// the last one would present a two-step claim as a one-step one — the thing the
+// derived note on the row exists to prevent.
+test('markedSteps: both halves of a chained swap are marked', () => {
+  const marked = View.markedSteps({
+    prerequisites: [],
+    steps: ['Activate Bartolomé del Presidio. Archangel of Thune triggers.'],
+  }, [
+    { out: 'Archangel of Thune', in: 'Heroic Feast' },
+    { out: 'Bartolomé del Presidio', in: 'Hammerhead, Maggia Boss' },
+  ]);
+  assert.equal(
+    shown(marked.steps[0]),
+    'Activate [Bartolomé del Presidio → Hammerhead, Maggia Boss]. [Archangel of Thune → Heroic Feast] triggers.'
+  );
+});
+
+// A name that merely starts the same is a different card. "Scurry Oak" must not be
+// found inside "Scurry Oakling", or a row would credit a swap the reader never made.
+test('markedSteps: a longer name is not a mention of the shorter one', () => {
+  const marked = View.markedSteps(
+    { prerequisites: [], steps: ['Scurry Oakling enters.'] },
+    swap('Scurry Oak', 'Herd Baloth')
+  );
+  assert.equal(shown(marked.steps[0]), 'Scurry Oakling enters.');
+});
+
+// Nothing to mark is the common case for a published row, and the renderer draws
+// plain lines for it rather than a one-run split of every sentence.
+test('markedSteps: no swaps, no marking', () => {
+  assert.equal(View.markedSteps({ prerequisites: [], steps: ['Tap it.'] }, []), null);
+  assert.equal(View.markedSteps({ prerequisites: [], steps: ['Tap it.'] }, null), null);
+  assert.equal(View.markedSteps(null, swap('A', 'B')), null);
+});

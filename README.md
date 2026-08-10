@@ -364,8 +364,45 @@ cached**, unlike the other two — the network being down says nothing about whe
 steps.
 
 **An unofficial row borrows the published combo's steps, and says so** — *"These are the published
-combo's steps. Read Sadistic Glee as Necrosynthesis"*. Unattributed, the page would be printing
-instructions for somebody else's deck.
+combo's steps. Read Sadistic Glee as Necrosynthesis, which is marked where they name it"*.
+Unattributed, the page would be printing instructions for somebody else's deck.
+
+### A borrowed step is marked, not rewritten
+
+The caveat is not enough on its own: the steps under it go on naming the card the reader does not
+own, line after line. So every mention is marked — Spellbook's word struck through, the card the
+deck actually has written beside it, in words rather than a colour or a tooltip so it survives
+greyscale and a screen reader. `DeckView.markedSteps()` decides where the marks go.
+
+**Rewriting the name outright is the obvious version and it is wrong.** Measured across all 689
+published combos this repository cites: of 839 swaps, **802** name the swapped-out card in full,
+**all 839** are reached by also matching the pre-comma short name (*"Activate Ulasht by paying
+{1}"*), and **none** collides with another card in the same combo. Mechanically easy, in other
+words — and still wrong, because a step states more than the loop needs. Spellbook writes *"apply
+Chatterfang's, creating … three 1/1 Squirrel creature tokens"*, and the row swapping him for
+Quina, Qu Gourmet gets **one Frog**. Rewritten, that sentence names the right card and lies about
+what happens. Marked, the worst a missed mention can do is go unannotated — which happens, and is
+visible on the page: their own step text for `2082-2292-4186` says *"Sadisitc Glee"*, so that
+mention cannot be matched by any rule and is left exactly as they wrote it.
+
+**The short name is only looked for once the full one has been seen in the same record.** Free by
+measurement — not one of the 839 uses a short name without the full name appearing somewhere too —
+and it bounds the one real risk: a pre-comma name that is also an ordinary word would otherwise
+mark a token type as one of the reader's cards. The three this file needs today are Chatterfang,
+Quina and Eloise, all proper nouns.
+
+**A row whose loop genuinely runs differently carries its own steps instead** — `ownSteps` in
+`unofficial.js`, drawn under a caveat crediting this project rather than Spellbook, and fetching
+nothing. Reserved for the case marking cannot fix: the Quina row above, where the published steps
+also spend Chatterfang's `{B}, Sacrifice X Squirrels` on an opponent's board and Quina has no such
+ability. Writing them out for every row is not the plan — the swap is what these rows *are*, and
+re-describing each one would be a second copy of the database to keep true.
+
+Reading that loop closely enough to write those steps also found **three result chips on the row
+that were carried over from the published combo and are not true of it**: *Infinite creature
+tokens* (Chatterfang nets two creatures a lap, Quina's Frog count is flat), and both of
+Chatterfang's toughness-reduction results. The row's own `why` had said the Frog count never moves
+since the day it was written. Nothing checks a `produces` list against a card, and nothing can.
 
 **Fetching from Spellbook directly is ruled out** by the same CORS allowlist that made this project
 publish data instead of querying it. `setSource()` stays a seam anyway.

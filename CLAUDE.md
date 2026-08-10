@@ -584,6 +584,24 @@ loosely.
 - **Rows leave only by graduation, noticed by the nightly job**, which fails on a broken citation
   and maintains a standing issue itself. **Don't hand-edit that issue** — `npm run verify:unofficial`
   is the live answer. README § *They graduate rather than accumulate*.
+- **A row's borrowed steps are marked, never rewritten** — `DeckView.markedSteps()`. Every mention
+  of the swapped-out card in the cited combo's steps is struck through with the reader's card beside
+  it, in words rather than a colour or a tooltip. **A rewrite was measured and rejected**: 802 of
+  839 swaps name the card in full, all 839 are reached by adding the pre-comma short name, and none
+  collides — mechanically easy, and still wrong, because a step states more than the loop needs.
+  *"apply Chatterfang's, creating … three 1/1 Squirrel creature tokens"* becomes a perfectly
+  readable lie about Quina's one Frog. **A missed mark is a line nobody annotated; a wrong rewrite
+  is the page making something up** — Spellbook's own text for `2082-2292-4186` says "Sadisitc
+  Glee", so one mention is unmatchable by any rule and is left as they wrote it. Where marking
+  cannot fix it a row carries **`ownSteps`** and the panel credits us rather than them →
+  `test/view-model.test.js`, `test/unofficial.test.js`, `e2e/deck.spec.js`, `e2e/a11y.spec.js`, all
+  five checks proved. README § *A borrowed step is marked, not rewritten*.
+- **Nothing checks a row's `produces` against the cards, and nothing can.** Reading the Quina loop
+  closely enough to write its steps found **three** chips copied off the published combo that are
+  false of ours — *Infinite creature tokens* where the Frog count is flat, and both of Chatterfang's
+  toughness results, which Quina has no ability for. The row's own `why` had said the Frog count
+  never moves since the day it was written. A `produces` list carried across a swap is a claim, so
+  read it against the swapped-in card rather than copying it.
 - **Watch `unofficial.js`'s gzipped size, not its row count** — `gzip -9 -c unofficial.js | wc -c`.
   **At 200 KB gzipped, `COMBOS` moves to the `data` branch as JSON**; one four-card sweep put on
   14 KB, so headroom is a dozen passes, not a hundred. It is never parsed on the main thread — only

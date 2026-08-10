@@ -21,15 +21,47 @@
   // the way out. See combo-steps.js for where the text comes from.
   let disclosureSeq = 0;
 
-  function stepsList(data, derived) {
+  // One step or prerequisite, with the swapped-out card marked wherever it is named.
+  // Spellbook's own wording is kept and struck through, and the card the reader has
+  // is written out beside it — in words, not a colour or an icon, so it survives
+  // greyscale, a screen reader and a device with no hover, the same rule the
+  // commander pin follows. DeckView.markedSteps() decides where the marks go and why
+  // it marks rather than rewrites.
+  function stepLine(runs) {
+    const li = el('li');
+    runs.forEach((run) => {
+      if (!run.readAs) { li.appendChild(document.createTextNode(run.text)); return; }
+      const swap = el('span', 'swap');
+      swap.appendChild(el('s', 'swap-out', run.text));
+      swap.appendChild(el('span', 'swap-as', ' read as '));
+      swap.appendChild(el('span', 'swap-in card-name', run.readAs));
+      li.appendChild(swap);
+    });
+    return li;
+  }
+
+  function stepsList(data, derived, own) {
     const body = el('div', 'steps-body');
 
     // An unofficial row borrows the published combo's steps, and the whole point
     // of the row is that one card has been swapped — so the steps name a card the
     // reader does not have. Saying so is not optional: unattributed, this panel
     // would be the page quietly printing instructions that do not match the deck.
+    //
+    // A row may instead carry steps written here, and then the caveat says the
+    // opposite thing: nothing below it is Spellbook's, so nothing below it should
+    // be read on their authority. Both states are stated; neither is the absence
+    // of the other.
     const swaps = derived ? (derived.swaps || (derived.swap ? [derived.swap] : [])) : [];
-    if (swaps.length) {
+    if (own) {
+      const caveat = el('p', 'steps-caveat');
+      caveat.appendChild(document.createTextNode(
+        'These steps were written for this row, not published by Commander Spellbook — '
+        + 'the published combo’s steps describe a card that does a different amount of '
+        + 'work here. The link beside this one goes to theirs.'
+      ));
+      body.appendChild(caveat);
+    } else if (swaps.length) {
       const caveat = el('p', 'steps-caveat');
       caveat.appendChild(document.createTextNode('These are the published combo’s steps. Read '));
       swaps.forEach((step, i) => {
@@ -38,14 +70,20 @@
         caveat.appendChild(document.createTextNode(' as '));
         caveat.appendChild(el('span', 'card-name', step.in));
       });
-      caveat.appendChild(document.createTextNode('.'));
+      caveat.appendChild(document.createTextNode(', which is marked where they name it.'));
       body.appendChild(caveat);
     }
+
+    // Marked only where the steps are somebody else's. A row's own steps name the
+    // reader's cards already, and marking them would be the page correcting itself.
+    const marked = own ? null : DeckView.markedSteps(data, swaps);
 
     if (data.prerequisites.length) {
       body.appendChild(el('h4', 'steps-head', 'Before you start'));
       const ul = el('ul', 'steps-pre');
-      data.prerequisites.forEach((line) => ul.appendChild(el('li', null, line)));
+      data.prerequisites.forEach((line, i) => ul.appendChild(
+        marked ? stepLine(marked.prerequisites[i]) : el('li', null, line)
+      ));
       body.appendChild(ul);
     }
 
@@ -54,7 +92,9 @@
       // A real <ol>: these are a sequence, the numbers carry the order, and a
       // reader who loses their place mid-loop needs them.
       const ol = el('ol', 'steps-list');
-      data.steps.forEach((line) => ol.appendChild(el('li', null, line)));
+      data.steps.forEach((line, i) => ol.appendChild(
+        marked ? stepLine(marked.steps[i]) : el('li', null, line)
+      ));
       body.appendChild(ol);
     }
 
@@ -78,6 +118,17 @@
     panel.id = id;
     panel.hidden = true;
 
+    // A row that brought its own steps has nothing to fetch, so the four states
+    // below collapse to one and the panel is built the first time it is opened.
+    // Still built lazily rather than up front: the reason a closed disclosure holds
+    // no rows is the DOM cost of a hundred of them, and that is the same here.
+    const own = derived && derived.ownSteps
+      ? {
+        prerequisites: [].concat(derived.ownSteps.prerequisites || []),
+        steps: [].concat(derived.ownSteps.steps || []),
+      }
+      : null;
+
     let loaded = false;
     // Waiting, failed and "there aren't any" all go here. The panel drops its
     // quoted-block styling for them: a line saying there is nothing to read
@@ -95,9 +146,14 @@
       control.classList.toggle('is-open', open);
       if (!open || loaded) return;
 
+      loaded = true;
+      if (own) {
+        panel.appendChild(stepsList(own, derived, true));
+        return;
+      }
+
       // Only fetched once, and only when someone asks. A row nobody opens costs
       // nothing, which is the entire reason the steps are not in the download.
-      loaded = true;
       say('steps-pending', 'Looking up the steps…');
       ComboSteps.get(comboId).then((data) => {
         if (data && data.error) {
@@ -316,7 +372,7 @@
   // produce identical results by construction. That measurement was about 233 rows side
   // by side in one panel, which is exactly the arrangement that no longer exists.
 
-  const api = { stepsList, stepsDisclosure, comboCard };
+  const api = { stepLine, stepsList, stepsDisclosure, comboCard };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

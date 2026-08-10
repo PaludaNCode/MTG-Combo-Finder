@@ -36,6 +36,16 @@
 //   derived   both halves of the swap are separately published, but the specific
 //             pairing has not been read against the card text
 //
+// A row has no "how it works" of its own to publish, so the page shows the cited
+// combo's steps and marks every mention of the swapped-out card with the card the
+// reader has instead — markedSteps() in view-model.js, which explains why it marks
+// rather than rewrites. Where that is not enough, because the published steps say
+// something the substitute does not do, a row carries `ownSteps: { prerequisites,
+// steps }` and the panel draws those instead, attributed to us rather than to
+// Spellbook. Only worth writing where the loop genuinely runs differently: the swap
+// is what these rows are, and re-describing it for every one of them would be a
+// second copy of the database to keep true.
+//
 // A row disappears from this file's output the moment Spellbook publishes the same
 // card set — see matchUnofficial() in combos.js. That is deliberate: these should
 // graduate rather than accumulate, and a duplicate on screen would be worse than
@@ -61,13 +71,51 @@
         + 'into a Clue, a Food and a Treasure, and Quina adds one Frog to that creation — '
         + 'which is exactly the Frog that was eaten. The artifacts accumulate; the Frog '
         + 'count never moves.',
+      // The row that made `ownSteps` necessary, and the reason marking the borrowed
+      // steps is not enough on its own. Spellbook's step 2 for 3000-4231-5670 reads
+      // "apply Chatterfang's, creating a Treasure token, a Food token, a Clue token
+      // and three 1/1 Squirrel creature tokens", and their last step spends
+      // Chatterfang's {B}, Sacrifice X Squirrels on an opponent's board. Quina makes
+      // ONE Frog and has no such ability, so marking his name would leave two
+      // sentences that are still false about this deck.
+      ownSteps: {
+        prerequisites: [
+          'You control at least one other creature.',
+          'Your life total is at least 3.',
+        ],
+        steps: [
+          'Activate Warren Soultrader by paying 1 life and sacrificing another creature.',
+          'Apply the Academy Manufactor replacement effect, then Quina’s: the Treasure '
+            + 'becomes a Clue, a Food and a Treasure, and one 1/1 green Frog creature '
+            + 'token is created alongside them.',
+          'Repeat steps 1 and 2, feeding the Frog from the first lap to Warren Soultrader.',
+          'Activate two Treasure tokens by tapping and sacrificing them, adding {2}.',
+          'Activate a Food by paying {2}, tapping and sacrificing it, causing you to gain '
+            + '3 life.',
+          'Repeat. Two laps cost 2 life and gain 3, so the life total climbs while the '
+            + 'Clues and the Food pile up — and the Frog count never moves, because each '
+            + 'lap makes exactly the one Frog the next lap eats.',
+          'Once your life total is arbitrarily high, stop spending the Treasures and the '
+            + 'Food: every lap then adds one of each artifact token, and the loop runs on '
+            + 'the Frog alone.',
+          'Quina’s own “{2}, Sacrifice a Frog: Put a +1/+1 counter on Quina” is not part '
+            + 'of the loop and does not go infinite — the Frog it eats is the one Warren '
+            + 'Soultrader needs, so it can be paid once, at the end.',
+        ],
+      },
+      // Three results were carried over from the published combo and are not true of
+      // this one, which is what reading the loop closely enough to write the steps
+      // above turned up. **Infinite creature tokens**: Chatterfang adds *that many*
+      // Squirrels per creation, so his version nets two creatures a lap, while Quina
+      // adds exactly one Frog and the lap eats it — the count is flat, which is what
+      // this row's own `why` says. **Destroy all creatures opponents control** and
+      // **Reduce the toughness … to 0** are both Chatterfang's {B}, Sacrifice X
+      // Squirrels; Quina's only activated ability puts a counter on herself.
       produces: [
         'Infinite LTB', 'Infinite ETB', 'Infinite colored mana', 'Infinite sacrifice triggers',
         'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite lifegain',
         'Infinite card draw', 'Infinite draw triggers', 'Infinite Treasure tokens',
-        'Infinite Clue tokens', 'Infinite Food tokens', 'Infinite creature tokens',
-        'Destroy all creatures opponents control',
-        'Reduce the toughness of creatures opponents control to 0',
+        'Infinite Clue tokens', 'Infinite Food tokens',
       ],
     },
     {
