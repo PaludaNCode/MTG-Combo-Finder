@@ -1256,6 +1256,77 @@ button:disabled { opacity: .6; cursor: wait; }
   font-variant-numeric: tabular-nums;
 }
 
+/* ---- what a card costs ------------------------------------------------------
+ *
+ * On the links line of a row where the reader might buy the card, beside the Buy
+ * link and never inside it — see cardLinks() in render-rows.js for why that is a
+ * rule about honesty rather than about layout.
+ *
+ * Tabular and the same size as the links it sits among, because it is a number a
+ * reader compares down a column rather than a headline. Deliberately NOT in the
+ * gutter: that column holds what the card *buys you*, and a second figure at that
+ * size would make every row ask two questions at once.
+ *
+ * `--muted` and not `--faint`: --faint is only safe on --bg and this sits on a
+ * panel, and half a decision is not decoration. */
+.price {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-weight: 600;
+}
+/* The separator belongs to the figure, not to the line, so a row that never gets one
+ * does not keep a dangling "·" where it would have been — which is what a text node
+ * appended beside it left behind. A hidden element draws no ::before at all. */
+.price::before { content: '· '; font-weight: 400; }
+
+/* "no price" is a different statement to a low price, so it does not get the
+ * number's weight. The page never renders an absent price as 0 — see
+ * DeckView.priceLabel(), and tools/fetch-prices.js for why the gap exists. */
+.price.is-unknown { font-weight: 500; font-style: italic; }
+
+/* The basket's total, under its combo sentence rather than folded into it: the two
+ * answer different questions. Same class as every other panel caption so the two
+ * lines are one kind of thing, with only the top margin closing the gap between
+ * them — a second caption at a second size is the drift `.panel-note`'s own comment
+ * is about. */
+.panel-note.is-money { margin-top: .35rem; }
+
+/* ---- "Cards carrying no combo" ---------------------------------------------
+ *
+ * Rows are `.combo.suggestion` again, so this panel needs no layout rules either —
+ * the gutter, the card's column and the line down it are all inherited. Two parts
+ * are its own.
+ *
+ * The sentence under the links: what this card is waiting for ("Needs Ashnod's Altar
+ * or Mana Echoes"), or why it is here at all. Inside `.row-main` rather than a
+ * sibling of it, which is what keeps the border-left down the column unbroken — a
+ * block placed beside `.row-main` would have to carry its own piece of that line.
+ * `margin` and not `padding` for the same reason it is safe here and nowhere else:
+ * it is inside the bordered box, not between two of them.
+ *
+ * A sentence and not chips: two card names as pills would read as results the card
+ * produces, which is what the green and yellow chips mean four rows up. */
+.row-why {
+  margin: .3rem 0 0;
+  color: var(--muted);
+  font-size: .85rem;
+  line-height: 1.45;
+}
+
+/* The third group is names, not rows: every row would carry the same absent number
+ * and the same sentence. Loose leading because it wraps to several lines on any
+ * width — 21 names on the tuning deck — and a `·` separated run at 1.5 reads as one
+ * block of text rather than as a list. Same shape the "cards it did not recognise"
+ * line above the results uses, and capped at the same measure as every other piece
+ * of prose in a panel. */
+.card-list {
+  margin: 0;
+  line-height: 1.9;
+  max-width: 62ch;
+  color: var(--muted);
+}
+.card-list .card-name { color: var(--text); }
+
 /* Copy first, stores after it, and the order is the argument. The copy works for every
  * reader in every region for as long as this page exists; a store link works for some
  * readers in one region for as long as a URL contract nobody here owns keeps holding.

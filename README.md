@@ -21,9 +21,9 @@ branch.
 
 | Area | Covers |
 | --- | --- |
-| [Features](#features) · [Results and ranking](#results-and-ranking) | what the page does; tiers, row order, size breakdowns, collapsing, template slots |
+| [Features](#features) · [Results and ranking](#results-and-ranking) | what the page does; tiers, row order, size breakdowns, collapsing, template slots, the cards carrying none |
 | [How a combo is executed](#how-a-combo-is-executed) · [The combo map](#the-combo-map) | the steps disclosure and how steps are published; the picture under *Combos in your deck* |
-| [Rendering order](#rendering-order-the-combos-come-first) · [Adding a card](#adding-a-card-and-searching-again) · [Buying them](#buying-the-cards-the-page-recommends) · [Bracket and legality](#classifying-the-decklist-which-bracket-is-it) | why the page yields after the combos; `+ Add to deck`; the basket and the store links; the five pips, colour identity, bans |
+| [Rendering order](#rendering-order-the-combos-come-first) · [Adding a card](#adding-a-card-and-searching-again) · [Buying them](#buying-the-cards-the-page-recommends) · [What a card costs](#what-a-card-costs) · [Bracket and legality](#classifying-the-decklist-which-bracket-is-it) | why the page yields after the combos; `+ Add to deck`; the basket and the store links; the prices and what they may claim; the five pips, colour identity, bans |
 | [Cards and lands](#how-many-cards-and-how-many-of-them-are-lands) | the strip above the results, and the three things it stays silent about |
 | [Layout and the test suites](#layout-and-the-test-suites) · [How it works](#how-it-works) | themes, `verify` vs `test:ui`, what each proves; every file and what it owns |
 | [The published data](#why-the-data-is-published-not-queried-live) | the payload, the worker, caching, the publish gate |
@@ -53,6 +53,16 @@ branch.
   card you put in the command zone. Nothing at all if your list never said who your commander is.
 - **Interchangeable cards are one decision, not many.** On a real 99-card deck that took 141 suggestions
   to 81. **Compare all N on Scryfall** opens a whole choice on one page.
+- **Cards carrying no combo** — the other half of the first panel, and the question it cannot answer:
+  which of your cards are in none of your combos. Three groups rather than one list, because they are
+  not the same kind of thing: **one card away** (Trudge Garden is one addition from eight), **no partner
+  here** (Well of Lost Dreams is in 92 published combos and none of them can happen in this deck), and
+  **no known combo** — the removal, the ramp and the protection, listed as names rather than rows. Lands
+  are left out and the caption says how many. It never recommends a cut; see
+  [Cards carrying no combo](#cards-carrying-no-combo-and-why-it-is-not-a-cut-list).
+- **What a suggestion costs** — a price beside the Buy link on every card the page suggests, including
+  each interchangeable alternative, and a hedged total on the basket. See
+  [What a card costs](#what-a-card-costs).
 - **It works with the network off**, **cards it did not recognise are named**, suggestions **split by
   colour**, and deck import from an Archidekt URL, a dropped export file, or any site's text export.
 - **Collapsible results**, **light or dark**, a **decklist that survives a reload**, **Copy link**, and a
@@ -326,6 +336,59 @@ Four rules, all about not overclaiming:
 reimplementing Scryfall's query language, and `is:permanent` and `is:tdfc` are their own derived
 definitions rather than fields — so it would be a reconstruction, and a wrong reconstruction does not
 error, it silently yields a slightly wrong card list.
+
+### Cards carrying no combo, and why it is not a cut list
+
+The panel above answers *what does cutting this card cost me* for every card that carries a combo. This
+one answers the question it leaves: **which of my cards are in none of them?** On the tuning deck that
+is 41 of its 62 nonland cards, which is normal and is exactly why the panel is hard to get right.
+
+**It is three groups, because one list would be useless.** Measured 13 Aug 2026 against the live
+snapshot, the tuning deck's nonland cards split:
+
+| | tuning deck | Chatterfang deck |
+|---|---:|---:|
+| carries a combo now — the panel above | 22 | 41 |
+| **one card away** from one | 10 | 11 |
+| **no partner here** — in published combos, none reachable | 9 | 7 |
+| **no known combo** at all | 21 | 22 |
+
+Trudge Garden carries nothing and is one card from eight. Path to Exile carries nothing and always
+will. Both are "carrying no combo", and a single ranked list would put them next to each other and say
+they were the same thing. **The panel does not empty out as a deck improves either** — the tuned
+Chatterfang list splits 41 / 11 / 7 / 22, and what changes is that the first group's cards are closer:
+Well of Lost Dreams sits in *no partner here* on the tuning deck and moves to *one card away* on the
+Chatterfang one. Same card, same 92 published combos, different deck.
+
+Three rules, each with the number behind it:
+
+- **It never recommends a cut, and it is not called "Cut candidates".** The page cannot see what a deck
+  needs to function — 21 of those 62 cards are the removal, the ramp and the protection. Same rule the
+  bracket follows: a floor, never a verdict. `test/cut-candidates.test.js` pins the phrasings that were
+  rejected, because there is no automatic way to check a tone.
+- **Lands are left out and the caption says how many.** 21 of the 43 cards in no published combo are
+  lands and a group that is mostly `Forest` is wallpaper — but two of the hidden ones are Command Tower
+  (15 published combos) and Vernal Fen (1), so the filter is stated rather than silent.
+- **A card the snapshot has never heard of is in no group at all.** A misspelling is not a card in no
+  combo; it is already named above the results, and listing it here would call the reader's typo
+  unplayable.
+
+**No group prints the shipped `combos` label**, because under a heading saying the card carries none
+that would be the page contradicting itself in the same breath: the first group's figure is how many
+combos are one card away, the second's is how many published combos name the card *somewhere else*, and
+the third prints no figure at all — every row would carry the same absent number, so it is a run of
+names instead.
+
+The one thing this shares with the panel above is its rows: `pieceCard()` already handled a card with
+zero combos, since the basket produces those, so the row shape cost nothing new. What is new is the
+sentence under the links — *"Needs Ashnod's Altar, Intruder Alarm or Mana Echoes"* — which is the most
+useful line in the panel and is capped at four names with the rest as a count, so a row never claims to
+have named them all.
+
+**Neither fixture deck reaches it**, since every card in both carries something, so the layout test has
+a deck of its own (`DECKS.cut`) that fills all three groups and presses every tab — a hidden pane's
+rects are all 0, and every assertion about a row in one would otherwise pass against boxes the browser
+never laid out. The drawing the design was settled from is `prototypes/no-combo-panel.md`.
 
 ### The panel that could not answer its own question
 
@@ -735,6 +798,53 @@ publish gate's ceiling (`node tools/check-snapshot.js`).
 
 The three shapes this was chosen from, with what each costs, are in `prototypes/shopping.md`.
 
+### What a card costs
+
+A figure beside the Buy link on every card the page suggests — each interchangeable alternative
+included — and a hedged total on the basket. `prices.js` holds the table and the lookup; every sentence
+and every formatted number is `view-model.js`'s.
+
+**The argument for it needs no price at all.** Measured 13 Aug 2026 against the live snapshot: of the
+tuning deck's 141 suggestions, **139 (99%) are tied with another on combos unlocked** — one card unlocks
+10, seven cards unlock exactly 7, sixty-six unlock exactly 1 — and the Chatterfang deck's 248 split
+241/7 the same way. So for almost the whole list the order a reader sees comes from the tiebreak, which
+is popularity, and popularity is not what anybody is asking of seven cards that each unlock seven
+combos. The figure on the row is what lets them break the tie themselves. It shows immediately on the
+interchangeable groups, where three cards do the same job: on the fixture, $24.00, $1.20 and one with no
+price at all.
+
+**The file is small because of what it leaves out.** `prices.json` covers only the cards a published
+combo names — **7,371 of the 34,422** the text cache holds, which is ~189 KB of JSON before gzip — and
+nothing outside that set can ever be suggested, because a suggestion *is* a card some combo is missing.
+It is published beside `combos.json` by the same nightly job (`tools/fetch-prices.js`) and fetched
+**after the results are on screen**: it is a second download against a 7.6 MB first one, and no panel
+waits for it. Rows leave a hidden placeholder and fill it when the table lands; rows built after that
+paint at once.
+
+Four decisions, each of which is a way to be confidently wrong:
+
+- **The cheapest printing, not the representative one.** The fetcher reads `default_cards` — one object
+  per printing — rather than the `oracle_cards` file the text cache reads, whose price is whichever
+  printing Scryfall chose. A card with a $40 first printing and a $2 reprint would otherwise be
+  published at $40.
+- **Absent is not free.** A card whose only printing is foil gets no figure, and the page prints *no
+  price* in italics rather than a blank or a zero. A missing price read as 0 would make exactly the
+  cards nobody can buy look like the cheapest thing on the page — and it would look like a working
+  feature. `Number('')` is 0, so an empty string has to fail the parse rather than parse.
+- **Never part of the Buy link.** "Buy $4.00" reads as a quote for the page that link opens, and it is
+  the cheapest printing in a nightly file before postage. The figure is its own element beside the link,
+  its tooltip carries the printing, the currency, the exclusion and the date, and it rides on the *same
+  opt-in* as the Buy link — so it can no more appear beside a banned card than that link can.
+- **A total is "about", always.** `About $47` is what a daily snapshot of cheapest printings supports;
+  `$46.75` is a claim about postage, printing and the hour of the day. When cards in the basket have no
+  price the caption says how many, because a total quietly short by two cards is worse than no total.
+
+**The fetcher cannot be run from the sandbox this repository is usually edited in** — every Scryfall
+host is 403 at CONNECT — so `--fixture` exercises the whole path offline and the nightly job is the
+first live run of any change to it. It refuses to publish a file covering less than two thirds of the
+named cards, for the same reason the combo snapshot has a gate: the `data` branch is one force-pushed
+orphan commit, so a short file does not sit beside the good one, it replaces it.
+
 ## Classifying the decklist: which bracket is it?
 
 Two of Wizards' criteria are properties of a card list; the rest are judgements about how a deck
@@ -1087,7 +1197,8 @@ under Node and a named global in a browser, so logic is unit-testable without a 
 | `page-dom.js` | `PageDom` | DOM helpers, `setStatus`, the collapsible `panel` |
 | `render-rows.js` | `RenderRows` | the vocabulary every result row is built from |
 | `render-combos.js` | `RenderCombos` | a combo as a row + its steps disclosure |
-| `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck*, suggestions, unofficial panel |
+| `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck*, suggestions, unofficial panel, *Cards carrying no combo* |
+| `prices.js` | `CardPrices` | what a card costs: the table, the lookup, the figure a row leaves room for |
 | `render-map.js` | `RenderMap` | the map's drawing half |
 | `deck-io.js` | `DeckIO` | the decklist, the share link, the dropped file |
 | `app.js` | — | wiring, the search, bracket and legality lines |
@@ -1103,7 +1214,10 @@ under Node and a named global in a browser, so logic is unit-testable without a 
 - `research-log.js` breaks the module shape — the browser never loads it, so it is plain CommonJS,
   linted with the tools. `test/lint-config.test.js` fails if a script matches no lint block.
 - **`combos.json` is built by CI on the `data` branch — never commit it.** `steps/` ships beside it,
-  gitignored.
+  gitignored, and so does `prices.json`.
+- **`prices.js` is in the page only**, like `cart-links.js`: nothing about a *search* needs a price, so
+  the worker never loads it. It reads `DeckView` **at call time**, because `view-model.js` is loaded
+  after it — see [What a card costs](#what-a-card-costs) for what capturing it at load time cost.
 - `e2e/server.js` serves the repository as it deploys with `combos.json` answered from the fixture.
 
 ## Why the data is published, not queried live
@@ -2057,6 +2171,8 @@ npm run check:readme      # the README's countable numbers still match the files
 
 node tools/fetch-combos.js out.json [steps/]      # --no-steps skips the 103,737 files
 node tools/fetch-combos.js out.json --fixture test/fixtures/export.json   # no network
+node tools/fetch-prices.js combos.json prices.json                        # runner only
+node tools/fetch-prices.js combos.json prices.json --fixture test/fixtures/bulk-prices.jsonl
 node tools/templates.js templates.json            # ~13 min; --all is ~16 and only for measuring
 
 for f in $(git ls-files '*.js'); do node --check "$f"; done   # same as CI
@@ -2082,7 +2198,7 @@ npx serve .                                                   # any static serve
 
 ### Answering questions from the data
 
-**11 read-only tools** for the questions that keep coming up.
+**12 read-only tools** for the questions that keep coming up.
 
 ```bash
 node tools/try-deck.js [deck.txt]           # what the page would show. Does NOT cover the
@@ -2095,6 +2211,7 @@ node tools/cache-card-text.js "Card name"   # runner only; "Cache card text" wor
 node tools/substitution-scope.js [jaccard] [minShared]   # how much of the space is unread
 node tools/deck-cards.js [deck.txt] --unswept            # which cards carry a deck's combos
 node tools/deck-gaps.js [deck.txt]          # which gaps THIS deck exposes, castable tonight
+node tools/deck-filters.js [deck.txt]       # what a filter chip would leave: combos AND rows
 node tools/produces-audit.js [--verbose]    # which result chips only the swapped-away card could make
 node tools/probe-cors.js [site]             # can a browser read a deck from this site?
 node tools/check-branch-rules.js            # does GitHub enforce what these files claim?
@@ -2102,9 +2219,9 @@ node tools/check-branch-rules.js            # does GitHub enforce what these fil
 
 **7 have a manual workflow**, and the split is about network rather than convenience: a runner can
 reach hosts this sandbox cannot, which is the whole reason `probe-cors.js` and
-`check-branch-rules.js` have one. The four that do not — `substitution-scope.js`,
-`deck-cards.js`, `deck-gaps.js`, `produces-audit.js` — read only files already in the tree, so there
-is nothing a runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
+`check-branch-rules.js` have one. The five that do not — `substitution-scope.js`,
+`deck-cards.js`, `deck-gaps.js`, `deck-filters.js`, `produces-audit.js` — read only files already in the
+tree, so there is nothing a runner would add. Both numbers are checked, because this sentence said *seven, each also a manual
 workflow* while the list held nine and six of them had one: a count in prose beside the list it
 counts is the easiest kind of number to leave behind, and `check:readme` now measures the second
 against `.github/workflows/` rather than against the prose.

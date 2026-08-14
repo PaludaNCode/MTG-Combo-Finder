@@ -317,6 +317,24 @@
       unofficialAlmostByAddingColors: marked(nearly.filter((r) => !inColour(r)).map(DeckCombos.expand)),
       almostIncluded: marked(matched.almostIncluded.map(DeckCombos.expand)),
       almostIncludedByAddingColors: marked(matched.almostIncludedByAddingColors.map(DeckCombos.expand)),
+      // Which of the deck's cards carry none of those combos, and how close each is to
+      // carrying one. Here rather than in the page for the usual reason and one extra:
+      // the land list and the identity map are part of the dataset, *and* the second
+      // group's number is how many combos in the whole database name the card — which
+      // only something holding the database can answer.
+      //
+      // Both halves go in, ours and Spellbook's. A card holding up nothing but an
+      // unofficial row is not carrying nothing, and leaving those out would list it here
+      // while "Combos in your deck" lists it above — on the tuning deck that is one real
+      // card, which is exactly the size of mistake nobody would notice.
+      cutCandidates: DeckCombos.cutCandidates(
+        data,
+        entries,
+        included.concat(unofficial),
+        matched.almostIncluded
+          .concat(matched.almostIncludedByAddingColors)
+          .concat(nearly)
+      ),
     };
   }
 

@@ -554,6 +554,53 @@ test('the same file can be chosen twice', async ({ page }) => {
 //
 // Driven through the page's own button rather than by typing the card in, because the
 // baseline that decides what is in the basket is set by a search that no add started.
+// The figures arrive after the panels, so this is the state check the layout test cannot
+// make: it measures a page where the table has already landed, and what a reader gets is a
+// row that fills in. Both halves are checked — a figure where the file has one, and "no
+// price" where it does not.
+//
+// The unpriced card is one of the interchangeable alternatives, deliberately: that group is
+// the reason a figure on a row is worth anything (three cards, same combo, one of them a
+// twentieth of the price), and it is where a blank would be least noticed.
+test('a price appears on the cards you might buy, and says so when there is none', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.locator('#decklist').fill(DECKS.marked);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+
+  const row = page.locator('#suggestions .tab-pane:not([hidden]) .combo.suggestion').first();
+  const price = row.locator('.row-main > .card-links .price');
+  // Not visible at once: the table is a second request, made after the results render.
+  await expect(price).toBeVisible();
+  await expect(price).toHaveText(/^\$\d+\.\d\d$/);
+  await expect(price).toHaveAttribute('title', /cheapest non-foil printing/);
+
+  // The card with no non-foil printing. It must say so rather than go blank or read as
+  // free — "absent is not zero" is the whole rule this feature rests on.
+  const none = page.locator('#suggestions .alt-list li', { hasText: 'The Destined White Mage' })
+    .locator('.price');
+  await expect(none).toHaveText('no price');
+  await expect(none).toHaveClass(/is-unknown/);
+  await expect(none).toHaveAttribute('title', /Not the same as free/);
+
+  // And nowhere on a card the reader already has.
+  await expect(page.locator('#pieces .price')).toHaveCount(0);
+});
+
+// What the basket costs, which is a separate sentence from what it bought — a price on a
+// combo is not a claim this page can make.
+test('the basket says what its cards cost, hedged', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.locator('#decklist').fill(DECKS.marked);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+  await page.locator('#suggestions .tab-pane:not([hidden]) .combo.suggestion .add-card').first().click();
+
+  const money = page.locator('#basket .panel-note.is-money');
+  await expect(money).toHaveText(/^About \$\d/);
+  await expect(money).toContainText('before postage');
+  // The combo caption above it stays about combos.
+  await expect(page.locator('#basket .panel-note').first()).not.toContainText('About $');
+});
+
 test('the basket counts our combos as well as Spellbook’s', async ({ page }) => {
   await pasteDeck(page, DECKS.unofficialAlmost);
   await page.getByRole('button', { name: 'Find combos' }).click();

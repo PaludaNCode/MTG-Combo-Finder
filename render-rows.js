@@ -20,6 +20,10 @@
   // did not load cart-links.js should lose the Buy links and keep every row — a missing
   // shop is not a reason for a suggestion list to fail to render.
   const Cart = global.CartLinks || (typeof require === 'function' ? require('./cart-links.js') : null);
+  // Optional in exactly the same way, and for a stronger reason: prices.json does not exist
+  // on a local checkout at all, so "no price module" and "no price file" have to look the
+  // same to every row that asks.
+  const Prices = global.CardPrices || (typeof require === 'function' ? require('./prices.js') : null);
 
   // Where a combo's own page lives. Here rather than in app.js because both renderers
   // link to it and neither should carry its own copy of the URL.
@@ -157,6 +161,19 @@
       links.appendChild(document.createTextNode(' · '));
       links.appendChild(buy);
     }
+    // The price rides on the same opt-in as the Buy link, which is the point rather than a
+    // shortcut: "a card the reader does not have" is exactly the set a price belongs on, so
+    // one flag governs both and the figure cannot appear beside a banned card or a Game
+    // Changer the way the Buy link once did.
+    //
+    // Beside the link and never inside it. "Buy $4.00" reads as a quote for the page that
+    // link opens, and it is the cheapest printing in a nightly snapshot before postage —
+    // see DeckView.priceTitle(), which is what the tooltip says.
+    // No separator text node before it: the figure may never arrive — no price file on a
+    // local checkout, no non-foil printing for this card — and a `·` with nothing after it
+    // is what appending one here leaves behind. The stylesheet draws the separator as part
+    // of the figure instead, so the two appear and disappear together.
+    if (opts && opts.buy && Prices) links.appendChild(Prices.tag(name));
     return links;
   }
 

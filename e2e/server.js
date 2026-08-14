@@ -33,13 +33,17 @@ const MIME = {
 // A second dataset for the tiers page, which is about results the tier inventory
 // has not classified — nothing to do with a deck. Kept behind its own path so a
 // test can ask for it explicitly.
-const { TIERS_FIXTURE } = require('../test/fixtures/dataset.js');
+const { TIERS_FIXTURE, PRICES_FIXTURE } = require('../test/fixtures/dataset.js');
 
 const DATASETS = {
   // Served the way the deploy publishes it — interned, most ids derived — so a
   // page that forgets DeckCombos.decode() fails here rather than in production.
   '/combos.json': asPublished(FIXTURE),
   '/combos-tiers.json': asPublished(TIERS_FIXTURE),
+  // The price table, beside it, as the same nightly job publishes it. Served rather than
+  // left absent because the figures are only checkable if they arrive — and the panel has
+  // to be correct without it too, which is what a local checkout is.
+  '/prices.json': PRICES_FIXTURE,
 };
 
 // The steps tree the nightly job publishes beside combos.json, at the same paths.

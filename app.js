@@ -20,6 +20,19 @@
   // written out twice, so a data branch that moves takes the steps with it.
   const STEPS_BASE = DATA_URL.replace(/combos\.json$/, '');
 
+  // What each card costs, beside the same file, published by the same nightly job. Derived
+  // rather than written out twice for the same reason STEPS_BASE is.
+  //
+  // **Fetched after the results are on screen, never before.** It is a second download
+  // (189 KB against combos.json's 7.6 MB, measured 14 Aug 2026) and nothing on the page
+  // waits for it: prices.js fills the figures in wherever they have been left room. A local
+  // checkout has no such file and every panel is correct without it.
+  const PRICES_URL = DATA_URL.replace(/combos\.json$/, 'prices.json');
+
+  // Feature-detected rather than assumed, the same way ComboSteps is below: prices.js is a
+  // page-only script and this file must be correct on a page that never loaded it.
+  const Prices = typeof CardPrices !== 'undefined' ? CardPrices : null;
+
   // Wired here rather than inside combo-steps.js so that module stays free of any
   // opinion about where data lives — the same reason search.js takes a URL.
   if (typeof ComboSteps !== 'undefined' && typeof StepsSource !== 'undefined') {
@@ -422,7 +435,12 @@
     // Two textContent writes, so this costs nothing worth measuring.
     $('graph').textContent = '';
     $('suggestions').textContent = '';
+    $('cut-candidates').textContent = '';
     $('basket').textContent = '';
+    // The price placeholders in the panels just emptied are gone with them, and a queue of
+    // nodes that are no longer in the document would be written into on arrival — work
+    // nobody sees, holding one deck's rows alive after another deck replaced them.
+    if (Prices) Prices.forget();
 
     // Drawn from the same `included` the panel above is — Spellbook's own combos and
     // not the unofficial ones, which is the same line "Combos in your deck" draws, so
@@ -448,6 +466,15 @@
       results.identity
     ));
 
+    // The cards carrying none of it, worked out in the worker beside the match — the
+    // second group's number counts combos across the whole database, which nothing on
+    // this thread can see. Deferred like the panels above it: it is below the fold on
+    // every viewport the layout test measures.
+    afterPaint(token, () => RenderSuggestions.renderCutCandidates(
+      $('cut-candidates'),
+      results.cutCandidates
+    ));
+
     // Last of the deferred panels, and the only one that is usually absent: it needs
     // somebody to have added a card first. The basket is derived here rather than kept
     // — DeckCombos.basketFrom() explains why at length — so it is recomputed from the
@@ -462,6 +489,14 @@
       DeckIO.baselineCombos(),
       { official: included.length, ours: (results.unofficial || []).length }
     ));
+
+    // Last of all, and deliberately not awaited by anything above: the figures appear in
+    // the rows that left room for them whenever the file lands. A page that never gets it —
+    // a local checkout, an offline visit, a CDN having a bad morning — keeps every panel and
+    // shows no figures, which is why nothing here reports a failure.
+    if (Prices) {
+      afterPaint(token, () => Prices.load(new URL(PRICES_URL, location.href).href));
+    }
   }
 
   // ---- combo database ------------------------------------------------------

@@ -1538,6 +1538,152 @@
         || a.card.localeCompare(b.card));
   }
 
+  // ---- and the cards carrying none of them --------------------------------
+
+  // How many published combos name each of `keys`, over the whole database rather than
+  // over the deck. Read straight off the index comboIndex() already built, so it costs a
+  // Map lookup and a walk of that card's own postings — no second pass over the combos.
+  //
+  // **Distinct combos, not postings.** A card's run in `list` is one entry per
+  // *occurrence*, which comboIndex() keeps deliberately (see the argument there), so a
+  // combo naming the same card twice would otherwise be counted twice and this number is
+  // shown to a reader as "in 92 published combos". The run is filled in database order,
+  // so the duplicates are adjacent and skipping them is one comparison.
+  function publishedCounts(combos, keys) {
+    const index = comboIndex(combos);
+    const out = new Map();
+    for (const key of keys) {
+      const s = index.slot.get(key);
+      if (s === undefined) { out.set(key, 0); continue; }
+      const end = index.starts[s + 1];
+      let n = 0;
+      let last = -1;
+      for (let i = index.starts[s]; i < end; i += 1) {
+        const at = index.list[i];
+        if (at !== last) { n += 1; last = at; }
+      }
+      out.set(key, n);
+    }
+    return out;
+  }
+
+  // How many of a card's missing partners to name on its row. Four because the rows this
+  // was measured against wanted one to three — the tuning deck's widest is Sorin of House
+  // Markov at three — and because the list is a thing to go and find rather than a
+  // catalogue. The rest is a count, so a row never claims to have named them all.
+  const CUT_NEEDS_SHOWN = 4;
+
+  // The cards in the deck that carry none of its combos, split by how close they are to
+  // carrying one. Facts only — every sentence about them is DeckView's.
+  //
+  // Three groups, because one list would be useless: a card one addition away from five
+  // combos and a card that will never be in one are both "carrying nothing", and saying so
+  // in a single ranked list is the panel's whole failure mode. It is also why the panel is
+  // not a cut list — see DeckView.cutCandidatesNote(), and prototypes/no-combo-panel.md
+  // for the measurement (the tuning deck's 62 nonland cards split 21 / 10 / 9 / 22).
+  //
+  // `carried` is every combo the page counts as being *in* the deck, ours included: a card
+  // holding up nothing but an unofficial row is not carrying nothing, and leaving those out
+  // would put it in this panel while "Combos in your deck" lists it above. `nearMiss` is
+  // every row the deck is one card short of, from both halves for the same reason.
+  //
+  // Two exclusions, both stated rather than silent, because a filtered list that does not
+  // say what it filtered is a list a reader will trust for something it never claimed:
+  //
+  //   lands   — 21 of the tuning deck's 43 cards in no published combo are lands, and a
+  //             group that is mostly `Forest` is wallpaper. Counted and reported.
+  //   unknown — a card the snapshot has never heard of is not a card in no combo, it is a
+  //             misspelling or a card newer than the data, and it is already named above
+  //             the results. Counting it here would accuse the reader's typo of being
+  //             unplayable.
+  function cutCandidates(data, entries, carried, nearMiss) {
+    const identity = identityIndex(data && data.cardIdentity);
+    const lands = landIndex(data && data.lands);
+    const deckNames = deckNameSet(entries);
+
+    // One entry per distinct card, keeping the decklist's own spelling and quantity. A
+    // decklist can name the same card twice (a `Commander` heading repeated under `Deck`);
+    // mergeCommandZone() folds that, and this keeps the first spelling either way.
+    const cards = new Map();
+    for (const entry of entries || []) {
+      const name = (entry && entry.card) || '';
+      const key = nameKey(name);
+      if (!key || cards.has(key)) continue;
+      cards.set(key, { card: name.split('//')[0].trim(), quantity: Number(entry.quantity) || 1 });
+    }
+
+    const carrying = new Set();
+    for (const variant of carried || []) {
+      for (const key of comboCardIndex(variant).keys()) if (cards.has(key)) carrying.add(key);
+    }
+
+    // What each still-empty card is waiting for: the cards missing from the rows that name
+    // it. Collected per deck card rather than per row, because the row is not what a reader
+    // acts on — "Trudge Garden needs Ashnod's Altar or Mana Echoes" is.
+    const waiting = new Map();
+    for (const variant of nearMiss || []) {
+      const names = variantCardNames(variant);
+      const missing = names.filter((n) => !deckNames.has(nameKey(n)));
+      for (const name of names) {
+        const key = nameKey(name);
+        if (!cards.has(key) || carrying.has(key)) continue;
+        let entry = waiting.get(key);
+        if (!entry) { entry = { combos: 0, needs: new Map() }; waiting.set(key, entry); }
+        entry.combos += 1;
+        for (const want of missing) entry.needs.set(nameKey(want), want.split('//')[0].trim());
+      }
+    }
+
+    const open = [...cards.keys()].filter((key) => !carrying.has(key));
+    const published = publishedCounts((data && data.combos) || [], open);
+
+    const away = [];
+    const unpaired = [];
+    const none = [];
+    let landCount = 0;
+    let unknown = 0;
+
+    for (const key of open) {
+      const card = cards.get(key);
+      if (identity[key] === undefined) { unknown += 1; continue; }
+      if (lands && lands.has(key)) { landCount += 1; continue; }
+      const near = waiting.get(key);
+      if (near) {
+        const names = [...near.needs.values()].sort((a, b) => a.localeCompare(b));
+        away.push({
+          card: card.card,
+          quantity: card.quantity,
+          combos: near.combos,
+          needs: names.slice(0, CUT_NEEDS_SHOWN),
+          needsMore: Math.max(0, names.length - CUT_NEEDS_SHOWN),
+        });
+        continue;
+      }
+      const count = published.get(key) || 0;
+      if (count) unpaired.push({ card: card.card, quantity: card.quantity, published: count });
+      else none.push({ card: card.card, quantity: card.quantity });
+    }
+
+    // Each group ranked by the number its own rows print, so the order is explicable from
+    // what is on screen. `none` prints no number and is alphabetical.
+    away.sort((a, b) => b.combos - a.combos || a.card.localeCompare(b.card));
+    unpaired.sort((a, b) => b.published - a.published || a.card.localeCompare(b.card));
+    none.sort((a, b) => a.card.localeCompare(b.card));
+
+    return {
+      away,
+      unpaired,
+      none,
+      lands: landCount,
+      unknown,
+      // What the caption reconciles against: how many of the deck's cards this panel is
+      // *not* about. Counted here rather than derived from the panel's own rows, which is
+      // the mistake deck-cards.js made — a count taken from an already-filtered list.
+      carrying: carrying.size,
+      cards: cards.size - landCount - unknown,
+    };
+  }
+
   // ---- what a combo actually gives you ------------------------------------
   //
   // Three tiers, shown as three colours. Which outcome sits in which tier is not
@@ -1881,6 +2027,7 @@
     matchDeck, matchUnofficial, standInRows, identityString,
     deckIdentity, withinIdentity, unrecognizedCards, deckCounts,
     expand, summarizeResults, comboPieces, comboCardIndex,
+    cutCandidates, publishedCounts, CUT_NEEDS_SHOWN,
     splitResults,
     groupSuggestions, groupVariants, COLLAPSE_FROM, interchangeableIn,
     variantSignature,
