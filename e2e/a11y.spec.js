@@ -94,6 +94,33 @@ test('the legality line is clean', async ({ page }) => {
   await expectClean(page);
 });
 
+// "Cards carrying no combo", on the one deck that fills all three of its groups. It is
+// absent from every other run here — the tuning deck's every card carries a combo — so
+// without this the panel's tab strip and its two new pieces of text (the figure's label and
+// the "Needs …" sentence) would never be put in front of axe.
+//
+// Both remaining groups are pressed rather than only the one that opens, because a hidden
+// pane is invisible to a contrast check: axe skips what is not rendered, so the second and
+// third groups would pass by never being looked at.
+test('the cards-carrying-no-combo panel is clean, in all three groups', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.locator('#decklist').fill(DECKS.cut);
+  await page.getByRole('button', { name: 'Find combos' }).click();
+  const panel = page.locator('#cut-candidates .panel');
+  await expect(panel).toBeVisible();
+  await expectClean(page);
+
+  const tabs = panel.locator('.tab');
+  await expect(tabs).toHaveCount(3);
+  for (const label of ['No partner here', 'No known combo']) {
+    await tabs.filter({ hasText: label }).click();
+    await expect(panel.locator('.tab-pane:not([hidden])')).toContainText(label === 'No known combo'
+      ? 'Swords to Plowshares'
+      : 'Thopter Foundry');
+    await expectClean(page);
+  }
+});
+
 // The three controls that build DOM when pressed, so their opened state is
 // checked rather than assumed: the bracket explanation, a steps disclosure, and
 // the map's own filter.

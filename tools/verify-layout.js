@@ -75,6 +75,14 @@ const VIEWPORTS = [
   // every other run above is the other branch of that rule, where nothing is
   // unrecognized and nothing at all is said.
   { name: 'misspelled card', width: 1440, height: 900, deck: 'misspelled' },
+  // "Cards carrying no combo", on the one deck that fills all three of its groups. Its
+  // own kind because the main runs' deck has no such card at all — every card in the
+  // tuning deck carries a combo, so that panel is absent from every run above and its
+  // rows would never be drawn by anything.
+  { name: 'cards carrying no combo', width: 1440, height: 900, deck: 'cut', kind: 'cut' },
+  // And on a phone, where the group labels are the widest thing in the strip: three tabs
+  // with counts inside a 325px panel body is the case the ellipsis rule exists for.
+  { name: 'cards carrying no combo (phone)', width: 390, height: 844, deck: 'cut', kind: 'cut' },
   { name: 'misspelled card (phone)', width: 390, height: 844, deck: 'misspelled' },
   // The same deck made illegal two ways at once — a card outside the commander's
   // colour identity and a card on the fixture's ban list — because the two findings
@@ -157,7 +165,9 @@ function findBrowser() {
 // The fixture deck and dataset, shared with the Playwright suite in e2e/ — see
 // test/fixtures/dataset.js. Both harnesses drive the real pages against the same
 // made-up deck, so a case added for one is a case the other gets too.
-const { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished, stepsFiles } = require('../test/fixtures/dataset.js');
+const {
+  FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, PRICES_FIXTURE, asPublished, stepsFiles,
+} = require('../test/fixtures/dataset.js');
 
 // The steps tree, at the paths steps-source.js builds and in the shape
 // tools/fetch-combos.js writes. Served here so the disclosure on a combo row
@@ -391,7 +401,11 @@ function measure(win, doc) {
       };
     })
     .filter(Boolean);
-  const tabs = [...doc.querySelectorAll('.tabs .tab')].map((t) => ({
+  // **Scoped to #suggestions.** Two panels draw a tab strip now, and this read is the
+  // suggestions panel's — unscoped it collected all five and every assertion about
+  // "the tabs" was about a mixture of two panels' controls. It passed for as long as
+  // there was one strip, which is what makes it worth a sentence.
+  const readTabs = (root) => [...root.querySelectorAll('.tabs .tab')].map((t) => ({
     label: t.querySelector('.tab-label').textContent,
     count: t.querySelector('.tab-count').textContent,
     active: t.classList.contains('is-active'),
@@ -399,6 +413,81 @@ function measure(win, doc) {
     paneVisible: !doc.getElementById(t.getAttribute('aria-controls')).hidden,
     height: t.offsetHeight,
   }));
+  const tabs = readTabs(doc.getElementById('suggestions'));
+
+  // What a card costs, and — the half that has been got wrong before on this line — where
+  // it is allowed to appear. A price belongs on a card the reader does not have: a
+  // suggestion, one of its interchangeable alternatives, the basket. The panels listing
+  // cards already in the deck must carry none, which is the same rule the Buy link has and
+  // the same rule it once broke.
+  const priceOf = (root) => {
+    const span = root && root.querySelector('.price');
+    if (!span) return null;
+    return {
+      text: span.textContent,
+      title: span.title,
+      hidden: span.hidden,
+      unknown: span.classList.contains('is-unknown'),
+      // Drawn by the stylesheet as part of the figure so it disappears with it: a text
+      // node appended beside the span left a dangling "·" on every row that never got a
+      // figure, which is every row on a local checkout.
+      separator: win.getComputedStyle(span, '::before').content,
+    };
+  };
+  const prices = {
+    suggestion: priceOf(doc.querySelector('#suggestions .tab-pane:not([hidden]) .combo.suggestion .row-main')),
+    // The alternatives are the reason a figure on a row earns its place: three
+    // interchangeable cards, same combo, and the cheapest is not the one the count puts
+    // first. One of them is deliberately unpriced in the fixture.
+    alternatives: [...doc.querySelectorAll('#suggestions .tab-pane:not([hidden]) .alt-list li')]
+      .map((li) => priceOf(li))
+      .filter(Boolean),
+    // Where they must not be.
+    inPieces: doc.querySelectorAll('#pieces .price').length,
+    inCut: doc.querySelectorAll('#cut-candidates .price').length,
+    inLegality: doc.querySelectorAll('#legality .price').length,
+    inBracket: doc.querySelectorAll('#bracket .price').length,
+  };
+
+  // "Cards carrying no combo", which is absent on most decks: every card in the tuning
+  // deck carries one, and that silence is the branch an author never sees. Null here
+  // rather than an empty object, so a check can tell "no panel" from "a panel saying
+  // nothing" — the two are different bugs.
+  const cut = (function () {
+    const section = doc.querySelector('#cut-candidates .panel');
+    if (!section) return null;
+    const note = section.querySelector('.panel-note');
+    const pane = section.querySelector('.tab-pane:not([hidden])');
+    const row = pane && pane.querySelector('.combo.suggestion');
+    const main = row && row.querySelector('.row-main');
+    return {
+      title: section.querySelector('.panel-title').textContent,
+      badge: (section.querySelector('.panel-count') || {}).textContent || '',
+      caption: note ? note.textContent : '',
+      tabs: readTabs(section),
+      // Which group is open, and what it holds. A pane of names is the third group and
+      // must NOT be rows — every one of them would carry the same absent number.
+      openTab: pane ? (pane.querySelector('.tab-count') || {}).textContent : null,
+      rows: pane ? pane.querySelectorAll('.combo.suggestion').length : 0,
+      names: pane ? pane.querySelectorAll('.card-list .card-name').length : 0,
+      // The row's own claim: the figure, the word under it, and the sentence saying
+      // what the card is waiting for. The word is the one that must not read "combos".
+      gutter: row ? {
+        total: (row.querySelector('.row-total') || {}).textContent || '',
+        label: (row.querySelector('.row-total-label') || {}).textContent || '',
+        spoken: (row.querySelector('.row-total') || {}).title || '',
+      } : null,
+      why: main && main.querySelector('.row-why') ? main.querySelector('.row-why').textContent : null,
+      // Inside the card's own column, which is what keeps the line down the row
+      // unbroken: a row-why placed beside row-main would need its own border piece.
+      whyInMain: Boolean(main && main.querySelector('.row-why')),
+      // A card the reader already owns gets no Buy link. cardLinks() takes an opt-in
+      // flag for exactly this, and the panel that forgot it offered to sell somebody
+      // a card they had just pasted.
+      buyLinks: pane ? pane.querySelectorAll('.buy-link').length : 0,
+      removeButtons: pane ? pane.querySelectorAll('.remove-card').length : 0,
+    };
+  }());
   // The per-card breakdown of what each suggestion's count is made of. The pills
   // on a row must add up to that row's own total — that is the whole reason it
   // is reported per card rather than per panel.
@@ -1533,6 +1622,8 @@ function measure(win, doc) {
     panels,
     topPiece,
     tabs,
+    cut,
+    prices,
     sideBySide: out.left >= form.right - 1,
     shellWidth: Math.round(shell.width),
     unusedWidth: Math.round(win.innerWidth - shell.width),
@@ -1736,6 +1827,92 @@ async function runStamped(vp) {
 // Partners are the whole point — "one line for each" is a claim about geometry, so it is
 // measured rather than read off the DOM: two names, two distinct tops, both inside the
 // box. A stack that silently laid out side by side would pass every text assertion.
+// "Cards carrying no combo", on the one deck built to fill all three of its groups.
+//
+// Its own run because no other deck here can. Every card in the tuning deck carries a
+// combo, so that panel is absent from almost every run above, and the fixture's other
+// decks reach at most the third group -- see DECKS.cut in test/fixtures/dataset.js.
+//
+// Each tab is pressed and measured OPEN. A hidden pane's rects are all 0, so every
+// assertion about a row in the two closed groups would pass against boxes the browser
+// never laid out -- and the rows are built eagerly here, so they exist to be measured
+// wrongly. focus() before click() because a dispatched press moves no focus, and this
+// strip carries a focus-visible outline.
+async function runCut(vp) {
+  try {
+    const { win, doc } = await load('/index.html', vp.width);
+    win.localStorage.clear();
+    doc.getElementById('commanders').value = '';
+    doc.getElementById('decklist').value = DECKS.cut;
+    doc.getElementById('deck-form').dispatchEvent(new win.Event('submit', { cancelable: true }));
+    await settled(doc, '#cut-candidates .combo');
+
+    const section = doc.querySelector('#cut-candidates .panel');
+    // Absent, which is a failure for this deck and this deck only — every other run
+    // here is the branch where the panel legitimately draws nothing.
+    if (!section) return { ok: true, name: vp.name, requested: vp.width, kind: 'cut', cut: null };
+    const note = section.querySelector('.panel-note');
+    const strip = [...section.querySelectorAll('.tabs .tab')];
+
+    const groups = [];
+    for (const tab of strip) {
+      tab.focus();
+      tab.click();
+      await new Promise((r) => win.requestAnimationFrame(r));
+      const pane = doc.getElementById(tab.getAttribute('aria-controls'));
+      const rows = [...pane.querySelectorAll('.combo.suggestion')].map(function (row) {
+        const main = row.querySelector('.row-main');
+        const why = main && main.querySelector('.row-why');
+        const total = row.querySelector('.row-total');
+        const gutter = row.querySelector('.row-numbers');
+        return {
+          name: (row.querySelector('.card-name') || {}).textContent || '',
+          total: total ? total.textContent : '',
+          spoken: total ? total.title : '',
+          label: (row.querySelector('.row-total-label') || {}).textContent || '',
+          why: why ? why.textContent : null,
+          // The sentence inside the card's column, so the line down the row stays one
+          // unbroken border -- and measured open, since a hidden pane makes every one
+          // of these numbers 0 and the comparison trivially true.
+          whyIn: why ? Math.round(why.getBoundingClientRect().left) : null,
+          nameAt: Math.round((row.querySelector('.card-name') || row).getBoundingClientRect().left),
+          gutterRight: gutter ? Math.round(gutter.getBoundingClientRect().right) : null,
+          removes: row.querySelectorAll('.remove-card').length,
+          adds: row.querySelectorAll('.add-card').length,
+          buys: row.querySelectorAll('.buy-link').length,
+          line: main ? win.getComputedStyle(main).borderLeftWidth : null,
+        };
+      });
+      groups.push({
+        id: tab.getAttribute('aria-controls'),
+        label: (tab.querySelector('.tab-label') || {}).textContent || '',
+        count: (tab.querySelector('.tab-count') || {}).textContent || '',
+        note: (pane.querySelector('.panel-note') || {}).textContent || '',
+        rows,
+        names: [...pane.querySelectorAll('.card-list .card-name')].map((e) => e.textContent),
+        // A group of names must not also be a group of rows, and vice versa.
+        listBoxes: pane.querySelectorAll('.card-list').length,
+      });
+    }
+
+    return {
+      ok: true,
+      name: vp.name,
+      requested: vp.width,
+      kind: 'cut',
+      cut: {
+        title: (section.querySelector('.panel-title') || {}).textContent || '',
+        badge: (section.querySelector('.panel-count') || {}).textContent || '',
+        caption: note ? note.textContent : '',
+        groups,
+        overflow: doc.documentElement.scrollWidth - doc.documentElement.clientWidth,
+      },
+    };
+  } catch (err) {
+    return { ok: false, name: vp.name, error: String((err && err.stack) || err) };
+  }
+}
+
 async function runTwoCommanders(vp) {
   try {
     const { win, doc } = await load('/index.html', vp.width);
@@ -2091,6 +2268,7 @@ function runOne(vp) {
   if (vp.kind === 'unofficial') return runUnofficial(vp);
   if (vp.kind === 'legality') return runLegality(vp);
   if (vp.kind === 'two-commanders') return runTwoCommanders(vp);
+  if (vp.kind === 'cut') return runCut(vp);
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'border:0;display:block;width:' + vp.width + 'px;height:' + vp.height + 'px';
@@ -2345,6 +2523,36 @@ function runOne(vp) {
               return a.getAttribute('href');
             }),
             copy: Boolean(bp.querySelector('.copy-btn')),
+            // The money line, which is a second caption under the combo one: what these
+            // cards cost, against what they bought. Read as its own field because the
+            // two must not merge into one sentence — a price on a combo is not a claim
+            // this page can make.
+            money: bp.querySelector('.panel-note.is-money')
+              ? bp.querySelector('.panel-note.is-money').textContent : null,
+            // The figure on the row itself. The basket is a card the reader does NOT own
+            // yet, which is the whole set a price belongs on.
+            price: bpRow && bpRow.querySelector('.row-main .price')
+              ? {
+                text: bpRow.querySelector('.row-main .price').textContent,
+                title: bpRow.querySelector('.row-main .price').title,
+                hidden: bpRow.querySelector('.row-main .price').hidden,
+                // After the Buy link and outside it — never "Buy $4.00", which would
+                // read as a quote for the page that link opens.
+                insideBuy: Boolean(bpRow.querySelector('.row-main .buy-link .price')),
+                // Reading order, not geometry. The first version compared the figure's
+                // left edge against the Buy link's right edge, which is true on a
+                // desktop and false on a phone for the correct layout: the links line
+                // wraps, so the figure is BELOW the link and starts further left.
+                // Document order is what "after the Buy link" actually means.
+                afterBuy: (function () {
+                  var buy = bpRow.querySelector('.row-main .buy-link');
+                  var price = bpRow.querySelector('.row-main .price');
+                  if (!buy || !price) return null;
+                  // 4 is DOCUMENT_POSITION_FOLLOWING: the price comes after the link.
+                  return Boolean(buy.compareDocumentPosition(price) & 4);
+                }()),
+              }
+              : null,
           } : null;
         }
         // Put the real accessor back before anything else measures the page.
@@ -2621,6 +2829,10 @@ const DeckCombos_nameKey = (name) => String(name || '').split('/')[0].trim().toL
     const server = serve(ROOT, {
       ...STEPS_FILES,
       '/combos.json': { type: 'application/json', body: JSON.stringify(fixture) },
+      // The prices the deploy publishes beside it. app.js fetches this after the results
+      // are on screen, so a run that measures a figure is also proving the late fill
+      // works — a table that arrived before the rows would hide that path entirely.
+      '/prices.json': { type: 'application/json', body: JSON.stringify(PRICES_FIXTURE) },
       '/_page.html': { type: 'text/html', body: harness + SHARED + REPORTER },
       // index.html as the deploy publishes it: every asset URL stamped. The
       // query is stripped when the file is served, so this only exercises the
@@ -3085,6 +3297,120 @@ function captionDrift(notes) {
       continue;
     }
 
+    if (v.kind === 'cut') {
+      const wrong = [];
+      const c = v.cut;
+      if (!c) {
+        wrong.push('the panel did not render at all on a deck with three groups of cards carrying nothing');
+      } else {
+        if (!/carrying no combo/i.test(c.title)) wrong.push(`the panel is titled "${c.title}"`);
+        // Not a cut list, in the words a reader actually gets. The sentence is assembled
+        // from three parts in view-model.js and this is the only check that sees it whole.
+        if (/\bcut (this|these|it)\b|should be cut|candidates for cutting/i.test(c.caption)) {
+          wrong.push(`the caption recommends a cut: "${c.caption}"`);
+        }
+        if (!/that is normal/i.test(c.caption)) wrong.push('the caption no longer says this is normal');
+        // The reconciliation and the filter, both said out loud: 3 of 5 nonland cards, and
+        // the one land it hid. A silent filter would be hiding cards that are in published
+        // combos — two of them are, on a real deck.
+        if (!/3 of your 5 nonland cards/.test(c.caption)) {
+          wrong.push(`the caption does not reconcile against the deck: "${c.caption}"`);
+        }
+        if (!/1 land is not shown/.test(c.caption)) {
+          wrong.push(`the caption does not say which lands it hid: "${c.caption}"`);
+        }
+        if (c.badge !== '3') wrong.push(`the badge reads "${c.badge}" over three groups of one`);
+        if (c.groups.length !== 3) wrong.push(`${c.groups.length} groups, not 3`);
+        if (c.overflow > 0) wrong.push(`the panel overflows by ${c.overflow}px`);
+
+        const byLabel = {};
+        c.groups.forEach((g) => { byLabel[g.label] = g; });
+        const away = byLabel['One card away'];
+        const unpaired = byLabel['No partner here'];
+        const none = byLabel['No known combo'];
+        if (!away || !unpaired || !none) {
+          wrong.push(`the groups are labelled ${JSON.stringify(c.groups.map((g) => g.label))}`);
+        } else {
+          // Each group's own count, and each group's own explanation: three tabs under one
+          // shared sentence would leave the reader to work out which they are looking at.
+          c.groups.forEach((g) => {
+            if (g.count !== '1') wrong.push(`"${g.label}" counts ${g.count}, not the 1 this deck has`);
+            if (!g.note) wrong.push(`"${g.label}" has no sentence of its own`);
+          });
+
+          // The first two groups are rows; the third is names. Never both, never neither.
+          [away, unpaired].forEach((g) => {
+            if (g.rows.length !== 1) wrong.push(`"${g.label}" drew ${g.rows.length} rows`);
+            if (g.listBoxes) wrong.push(`"${g.label}" drew a name list as well as rows`);
+          });
+          if (none.rows.length) wrong.push(`"No known combo" drew ${none.rows.length} rows instead of names`);
+          if (none.names.length !== 1) wrong.push(`"No known combo" drew ${none.names.length} names`);
+          if (none.names[0] !== 'Swords to Plowshares') {
+            wrong.push(`"No known combo" names ${JSON.stringify(none.names)}`);
+          }
+
+          const a = away.rows[0];
+          const u = unpaired.rows[0];
+          if (a) {
+            if (a.name !== 'Deadeye Navigator') wrong.push(`the one-card-away row is ${a.name}`);
+            if (a.total !== '2') wrong.push(`Deadeye Navigator is one card from 2 combos, the row says ${a.total}`);
+            // The word under the figure. Under a heading saying the card carries no combo,
+            // "combos" would be the page contradicting itself in the same breath.
+            if (/^combos?$/.test(a.label)) wrong.push(`a row in this panel is labelled "${a.label}"`);
+            if (a.label !== 'one away') wrong.push(`the one-card-away row is labelled "${a.label}"`);
+            if (!/one card away from 2 combos/.test(a.spoken)) {
+              wrong.push(`the figure does not say what it counts: "${a.spoken}"`);
+            }
+            // The most useful sentence in the panel: the card that would switch this on.
+            // Alternatives, so "or" — "and" would claim the row needs both.
+            if (a.why !== 'Needs Great Whale or Palinchron.') {
+              wrong.push(`the one-card-away row says "${a.why}"`);
+            }
+          }
+          if (u) {
+            if (u.name !== 'Thopter Foundry') wrong.push(`the no-partner row is ${u.name}`);
+            if (u.total !== '1') wrong.push(`Thopter Foundry is in 1 published combo, the row says ${u.total}`);
+            if (u.label !== 'elsewhere') wrong.push(`the no-partner row is labelled "${u.label}"`);
+            if (!/none with a card you play/.test(u.why || '')) {
+              wrong.push(`the no-partner row says "${u.why}"`);
+            }
+          }
+          // Every row is a card the reader owns: one way to remove it, no way to buy it,
+          // and no "+ Add to deck" — the panel that got this wrong offered to sell
+          // somebody a card they had just pasted.
+          [away, unpaired].forEach((g) => g.rows.forEach((row) => {
+            if (row.removes !== 1) wrong.push(`"${row.name}" has ${row.removes} remove buttons`);
+            if (row.buys) wrong.push(`"${row.name}" offers to sell a card the reader owns`);
+            if (row.adds) wrong.push(`"${row.name}" offers to add a card already in the deck`);
+            // The sentence is inside the card's column, which is what keeps the line down
+            // the row unbroken: a block beside it would need its own piece of that border.
+            if (row.whyIn === null || row.whyIn < row.nameAt - 1) {
+              wrong.push(`"${row.name}"'s sentence sits at ${row.whyIn}px, left of its name at ${row.nameAt}px`);
+            }
+            if (row.line === '0px' || row.line === null) {
+              wrong.push(`"${row.name}" has no line down its column (border-left ${row.line})`);
+            }
+          }));
+          // The figures are a column: two groups, one right edge. A gutter that sized
+          // itself to its own content would give each group a different one, and that is
+          // invisible in a screenshot of either.
+          const edges = [...new Set([away.rows[0], unpaired.rows[0]].filter(Boolean).map((r) => r.gutterRight))];
+          if (edges.length !== 1) wrong.push(`the two groups' figures end at ${JSON.stringify(edges)}px`);
+        }
+      }
+
+      if (wrong.length) {
+        failed = true;
+        console.error(`FAIL ${v.name} — ${wrong.join('; ')}`);
+      } else {
+        const g = v.cut.groups.map((x) => `${x.label}:${x.count}`).join(' · ');
+        const rows = v.cut.groups.flatMap((x) => x.rows).map((r) => `${r.name} ${r.total} "${r.label}"`);
+        console.log(`ok   ${v.name} @${v.requested}px — badge ${v.cut.badge} [${g}], `
+          + `${rows.join(' | ')}, names [${v.cut.groups.flatMap((x) => x.names).join(', ')}]`);
+      }
+      continue;
+    }
+
     // The share-link run measures a round trip rather than a layout, so it is
     // judged on its own terms.
     if (v.theme) {
@@ -3184,7 +3510,14 @@ function captionDrift(notes) {
     // slot away" went before that. The bracket check is not among them either — it
     // stopped being a panel and became a line beside the colour identity, which the
     // next check is what keeps true.
-    if (v.panels.length !== 3) problems.push(`expected 3 panels, got ${v.panels.length}`);
+    // …plus "Cards carrying no combo", which is absent unless the deck has one. Every
+    // card in the tuning deck carries a combo, so the expected count is a function of
+    // the deck rather than a constant — and the two states are both checked, here and
+    // in the cut block below.
+    const expectedPanels = v.cut ? 4 : 3;
+    if (v.panels.length !== expectedPanels) {
+      problems.push(`expected ${expectedPanels} panels, got ${v.panels.length}`);
+    }
     if (v.panels.some((p) => /carrying your combos/i.test(p.title))) {
       problems.push('the cards-carrying panel is a second panel again, not the combos panel itself');
     }
@@ -3403,6 +3736,107 @@ function captionDrift(notes) {
       if (v.tabs.some((t) => t.selected !== String(t.active))) problems.push('aria-selected does not match the active tab');
       if (v.tabs.some((t) => t.height < 44)) problems.push('a tab is under 44px tall');
       if (!/in your colours/i.test(v.tabs[0].label)) problems.push(`first tab reads "${v.tabs[0].label}"`);
+    }
+
+    // ---- what a card costs ------------------------------------------------
+    //
+    // The figures arrive after the panels do — app.js fetches prices.json once the
+    // results are on screen — so a run that measures one has also proved the late fill
+    // works. A table that arrived first would hide that path completely.
+    const money = v.prices;
+    if (!money.suggestion) {
+      problems.push('a suggestion row carries no price at all, with a price file served');
+    } else {
+      if (money.suggestion.hidden) problems.push('a suggestion row left its price hidden');
+      if (!/^\$\d+\.\d\d$/.test(money.suggestion.text)) {
+        problems.push(`a price reads "${money.suggestion.text}" rather than a two-decimal figure`);
+      }
+      // Everything the figure cannot say goes in the tooltip, and the date is the half
+      // that matters: a price with no date is a claim about now.
+      if (!/cheapest non-foil/.test(money.suggestion.title)) {
+        problems.push(`the price does not say which printing: "${money.suggestion.title}"`);
+      }
+      if (!/prices from \d{4}-\d\d-\d\d/.test(money.suggestion.title)) {
+        problems.push(`the price does not say which day it is from: "${money.suggestion.title}"`);
+      }
+      // The separator is the stylesheet's, not a text node beside the figure — see the
+      // read above for what appending one left behind.
+      if (!/·/.test(money.suggestion.separator || '')) {
+        problems.push(`the price draws no separator of its own (${money.suggestion.separator})`);
+      }
+    }
+    // The alternatives carry them too, and one of the fixture's three has no price on
+    // purpose: "no price" has to read as absent rather than as free or as a broken row.
+    const unpricedAlts = money.alternatives.filter((p) => p.unknown);
+    if (money.alternatives.length && !unpricedAlts.length) {
+      problems.push('every interchangeable alternative is priced — the unpriced case is not being drawn');
+    }
+    unpricedAlts.forEach((p) => {
+      if (!/no price/i.test(p.text)) problems.push(`an unpriced card reads "${p.text}"`);
+      if (/\$|\b0\b|free/i.test(p.text)) problems.push(`an unpriced card reads as free: "${p.text}"`);
+    });
+    // And nowhere near a card the reader already owns. Every one of these panels lists
+    // cards in the deck, and the Buy link shipped default-on into two of them.
+    ['inPieces', 'inCut', 'inLegality', 'inBracket'].forEach((where) => {
+      if (money[where]) {
+        problems.push(`${money[where]} price(s) rendered in ${where.slice(2).toLowerCase()}, `
+          + 'which lists cards the reader already has');
+      }
+    });
+
+    // ---- "Cards carrying no combo" ----------------------------------------
+    //
+    // Both branches are checked. Most runs here have no such panel — every card in the
+    // tuning deck carries a combo — and a panel that quietly stopped rendering would
+    // otherwise look exactly like a deck with nothing to report.
+    if (v.cut) {
+      const c = v.cut;
+      const counts = c.tabs.map((t) => Number(t.count));
+      const total = counts.reduce((a, b) => a + b, 0);
+      if (c.tabs.length !== 3) problems.push(`the cut panel has ${c.tabs.length} groups, not 3`);
+      // The badge counts the panel's rows across all three groups. It disagreeing with
+      // its own tabs is the class of bug that made deckCombosNote() necessary one panel
+      // up: a count beside a heading that counts something else.
+      if (Number(c.badge) !== total) {
+        problems.push(`the cut panel's badge says ${c.badge} over tabs summing to ${total}`);
+      }
+      // It is not a cut list and must never read as one, which is a claim about words
+      // rather than about pixels — but this is the only check that sees the words a
+      // reader gets, and the sentence is assembled from three parts in view-model.js.
+      if (/\bcut (this|these|it)\b|should be cut|candidates for cutting/i.test(c.caption)) {
+        problems.push(`the cut panel's caption recommends a cut: "${c.caption}"`);
+      }
+      if (!/that is normal/i.test(c.caption)) {
+        problems.push('the cut panel no longer says that carrying no combo is normal');
+      }
+      // What it filtered, said out loud. Two of the lands it hides on a real deck are
+      // in published combos, so a silent filter would be hiding something real.
+      if (!/\d+ lands? (is|are) not shown/.test(c.caption)) {
+        problems.push(`the cut panel does not say how many lands it hid: "${c.caption}"`);
+      }
+      // A row's own claim. The word under the figure must not be "combos": under a
+      // heading saying the card carries none, that is the page contradicting itself.
+      if (c.gutter) {
+        if (!/^\\d+$/.test(c.gutter.total)) problems.push(`a cut row's figure reads "${c.gutter.total}"`);
+        if (/^combos?$/.test(c.gutter.label)) {
+          problems.push('a cut row is labelled "combos" under a panel that says it carries none');
+        }
+        if (!/(one card away|published combos?)/i.test(c.gutter.spoken)) {
+          problems.push(`a cut row's figure does not say what it counts: "${c.gutter.spoken}"`);
+        }
+        if (!c.why) problems.push('a cut row says nothing about why it is in this group');
+        if (!c.whyInMain) problems.push("a cut row's sentence is not in the card's own column");
+      }
+      // Every row is a card the reader owns, so every row offers to remove it and none
+      // offers to sell it.
+      if (c.rows && !c.removeButtons) problems.push('a cut row has no way to remove the card');
+      if (c.buyLinks) problems.push(`the cut panel offers to sell ${c.buyLinks} card(s) the reader already owns`);
+      // The open group is either rows or a run of names, never both and never neither.
+      if (c.rows && c.names) problems.push('the open cut group draws rows and a name list at once');
+      if (!c.rows && !c.names) problems.push('the open cut group drew nothing at all');
+      // Whichever group is open has something in it: tabStrip() opens the first
+      // non-empty one, and landing on an empty group reads as "there are none".
+      if (Number(c.openTab) === 0) problems.push('the cut panel opened on an empty group');
     }
     // The header draws the deck's colours as mana symbols rather than the
     // letters "GU", and says nothing about a commander — colours are read off
@@ -4117,6 +4551,31 @@ function captionDrift(notes) {
         // combos are entirely ours. This deck has none, so the check that catches that
         // case is in e2e/deck.spec.js where a deck with unofficial rows can be driven;
         // what is checkable here is that the two never disagree about zero.
+        // The money line: a second caption, not a clause in the first. "About $47" is
+        // what a snapshot of cheapest printings supports and an exact sum is not.
+        if (!basket.money) {
+          problems.push('the basket says nothing about what its cards cost, with prices served');
+        } else {
+          if (!/^About \$\d/.test(basket.money)) {
+            problems.push(`the basket's total is not hedged: "${basket.money}"`);
+          }
+          if (!/before postage/.test(basket.money)) {
+            problems.push(`the basket's total does not say what it excludes: "${basket.money}"`);
+          }
+          if (basket.note.indexOf('About $') !== -1) {
+            problems.push('the money and the combos are one sentence — a price on a combo is not a claim this page can make');
+          }
+        }
+        if (!basket.price) {
+          problems.push('the basket row carries no price, on a card the reader does not own yet');
+        } else {
+          if (basket.price.insideBuy) {
+            problems.push('the price is inside the Buy link, which reads as a quote for the page it opens');
+          }
+          if (basket.price.afterBuy === false) {
+            problems.push('the price sits before the Buy link rather than after it');
+          }
+        }
         if (/still 0 combos/.test(basket.note) && basket.total !== '0') {
           problems.push(`the basket caption says "still 0 combos" over a row reading ${basket.total}`);
         }
@@ -4477,6 +4936,13 @@ function captionDrift(notes) {
       ? `top piece ${v.topPiece.card} ${v.topPiece.total} ${JSON.stringify(v.topPiece.pills)}`
       : 'no pieces';
     const tabNote = v.tabs.map((t) => `${t.active ? '[' : ''}${t.label}:${t.count}${t.active ? ']' : ''}`).join(' ');
+    // Printed either way, because "no panel" is the branch most runs are in and a
+    // silent absence is what a broken render would look like.
+    const cutNote = v.cut
+      ? `cut ${v.cut.badge} [${v.cut.tabs.map((t) => `${t.label}:${t.count}`).join(' · ')}] `
+        + `open ${v.cut.rows || v.cut.names} ${v.cut.rows ? 'row(s)' : 'name(s)'}`
+        + (v.cut.gutter ? ` (${v.cut.gutter.total} "${v.cut.gutter.label}")` : '')
+      : 'every card carries a combo';
     const chipNote = `${v.chips.length} folded (${v.resultsHeight.folded}px) / ${v.expandedChips.length} open (${v.resultsHeight.open}px), ${new Set(v.expandedChips.map((c) => c.colour)).size} colours [${v.expandedChips.map((c) => (c.win ? 'G:' : c.decisive ? 'Y:' : 'x:') + c.text).join(', ')}]`;
     if (problems.length) {
       failed = true;
@@ -4568,7 +5034,7 @@ function captionDrift(notes) {
         + `[${v.map.counts.join(',')}] and ${v.map.hiddenCounts} on hover, at ${v.map.width}×${v.map.height}, `
         + `hover lights ${v.map.lit.nodes}+${v.map.lit.edges}, `
         + `picking two: "${(v.map.picked ? v.map.picked.two : '').slice(0, 90)}…"`;
-      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${stripNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}, ${footerNote(v.footer)}`);
+      console.log(`ok   ${v.name} @${v.width}px — ${layout}, ${headNote}, ${v.panels.length} panels, tabs ${tabNote}, ${cutNote}, ${pieceNote}, ${groupNote}, ${sizeNote}, ${dividerNote}, ${gutterNote}, ${signNote}, ${linkNote}, ${cardsNote}, ${stripNote}, ${unknownNote}, ${legalNote}, ${bracketNote}, ${addNote}, ${mapNote}, data from ${v.dataAge.source}, ${chipNote}, ${footerNote(v.footer)}`);
     }
   }
 

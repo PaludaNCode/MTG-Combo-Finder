@@ -144,6 +144,12 @@
              scratch by every search, so adding a card moves the map too. -->
         <div id="graph"></div>
         <div id="suggestions"></div>
+        <!-- The other half of "Combos in your deck": the cards carrying none of them,
+             grouped by how close each is to carrying one. Below the suggestions
+             deliberately — the positive answer and the actionable one keep the top of
+             the results, and its first group points back up at this panel. Absent
+             entirely on a deck where every card carries something. -->
+        <div id="cut-candidates"></div>
         <!-- The cards in the box that were not in the deck when it arrived, and where
              to buy them. Last, because it is the step after taking a suggestion, and
              absent entirely until somebody has taken one. -->
@@ -202,6 +208,11 @@
        panel ask. Before the two renderers that read it at call time, and never loaded by
        search-worker.js — nothing about a search needs to know about a shop. -->
   <script src="cart-links.js"></script>
+  <!-- What a card costs, beside the Buy link and on the same opt-in. Page-only for the
+       same reason cart-links.js is, and read at call time by render-rows.js, so the
+       order here is for readability rather than for load. It fetches its own table
+       after the results are on screen — see PRICES_URL in app.js. -->
+  <script src="prices.js"></script>
   <script src="render-rows.js"></script>
   <script src="render-combos.js"></script>
   <script src="render-suggestions.js"></script>

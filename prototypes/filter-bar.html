@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — Filtering the results</title>
+  <!-- A bar of toggles above the results: **show me only the combos that win**, **only the
+       two-card ones**, **only the ones my commander is in**.
+
+       It filters the real 233. `filter-bar-data.js` is the Chatterfang fixture with its
+       commander declared, matched against the live snapshot on 13 Aug 2026 and written by
+       `node tools/deck-filters.js --json`, so every count below is measured rather than
+       typed — including the ones that come out awkward.
+
+       ## The finding that shapes the whole design
+
+       **"Wins only" removes 51 of 233 combos and 0 of 40 rows.**
+
+           chip                combos      rows in "Combos in your deck"
+           (none)              233         40
+           Uses my commander    11         14
+           Wins only           182         40      <- every row survives
+           2-card                9         12
+           commander + 2-card    1          2
+
+       The panel is a row per *card*, and every card carrying a combo carries at least one
+       win, so pressing "Wins only" leaves the list looking identical. Its whole visible
+       effect is that the gutter numbers get smaller — Phyrexian Altar 46 → 35, Heliod
+       44 → 39 — and a reader with the disclosures closed sees a page that did nothing.
+
+       That is why the panel caption restates the filter in words and both numbers, and
+       why the chips carry live counts rather than static ones. **A filter you cannot see
+       working reads as a filter that is broken.**
+
+       ## Three decisions
+
+       **1. Toggles, not tabs.** They AND together, and `commander + 2-card` = 1 combo is
+       the case worth having: Chatterfang + Pitiless Plunderer, the one combo in this deck
+       you assemble by drawing a single card. Tabs would make that combination unreachable.
+
+       **2. The counts are live, and a chip that would empty the panel is disabled.** Each
+       chip says what the panel *would* hold if you pressed it now, given what is already
+       on. Static counts are cheaper and they strand you: two chips each reading a healthy
+       number, zero rows between them, no way to tell which to let go of.
+
+       **3. "Uses my commander" is absent, not empty, when no commander is declared.** A
+       chip reading 0 says the deck's commander is in no combo; a deck that never said who
+       its commander is has not made that claim. Both fixture decks are in the second
+       state — CLAUDE.md, "The two fixture decks" — so it is the state an author meets
+       first and the one that ships broken. The button at the top of this page switches the
+       page between the two.
+
+       ## What it does not filter
+
+       Suggestions. "Which card unlocks the most *wins*" is a good question and a different
+       feature: these chips are about the combos you already have, and the suggestions
+       panel has tabs of its own that would then be tabs inside a filter. Recorded rather
+       than built.
+
+       Classes are `proto-` prefixed except where they are shipped ones used unchanged. -->
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <script src="filter-bar-data.js" defer></script>
+  <script src="filter-bar-proto.js" defer></script>
+  <style>
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+      max-width: 62ch;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+
+    /* ---- the bar ------------------------------------------------------------
+     *
+     * Above the first panel and outside it, because it governs three panels: the
+     * combos, the map under them and the unofficial rows. Inside "Combos in your
+     * deck" it would read as that panel's own control and the map quietly changing
+     * would be a bug report.
+     *
+     * Deliberately NOT the `.tabs` strip. Tabs are exclusive and sit *inside* one
+     * panel; these AND together and reach across panels, and giving two different
+     * behaviours one appearance is how a reader learns the wrong rule. */
+    .proto-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .5rem;
+      margin: 0 0 .9rem;
+    }
+    .proto-filters-label {
+      color: var(--muted);
+      font-size: .85rem;
+      font-weight: 600;
+      margin-right: .15rem;
+    }
+
+    /* A pill, and none of the three pill shapes already on the page: not the green
+     * or yellow result chip (which says what a combo achieves), not the slate size
+     * pill (which says how big it is). Those two describe a combo; this one is a
+     * control. Outline when off, accent fill when on — the same accent-on-brass-ink
+     * pair `.tab.is-active .tab-count` already uses, so the page has one idea of
+     * what "this is switched on" looks like. */
+    .proto-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      min-height: 44px;
+      padding: .4rem .75rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: none;
+      color: var(--muted);
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .proto-chip:hover { color: var(--text); background: var(--panel-2); filter: none; }
+    .proto-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .proto-chip[aria-pressed='true'] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--brass-ink);
+    }
+    .proto-chip-count {
+      padding: .05rem .4rem;
+      border-radius: 999px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: .75rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .proto-chip[aria-pressed='true'] .proto-chip-count {
+      background: rgb(0 0 0 / .18);
+      color: var(--brass-ink);
+    }
+    /* A chip that would leave nothing is still readable and still says its zero —
+     * disabled, not hidden, because a chip vanishing as you press another one is a
+     * bar that changes shape under the pointer. */
+    .proto-chip[disabled] { opacity: .45; cursor: not-allowed; }
+
+    .proto-clear {
+      border: none;
+      background: none;
+      color: var(--accent);
+      font-size: .85rem;
+      text-decoration: underline;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .proto-clear[hidden] { display: none; }
+
+    /* The row's own summary line, standing in for the disclosure this prototype does
+     * not build. Muted, under the links, inside the row's border-left. */
+    .proto-why { margin: .3rem 0 0; color: var(--muted); font-size: .85rem; line-height: 1.45; }
+    .proto-why .card-name { color: var(--text); }
+    .proto-dim { opacity: .5; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row"><h1>MTG Combo Finder</h1></div>
+    <p class="tagline">Prototype — a filter bar over the real Chatterfang deck: 233 combos, 40 cards
+      carrying them, measured 13 Aug 2026.</p>
+  </header>
+
+  <main class="proto-frame">
+    <div class="col-output">
+      <!-- The two states of the commander chip, switchable, because the one that ships
+           broken is the one no fixture deck is in: neither checked-in deck declares a
+           commander, so an author testing this always has the chip in front of them. -->
+      <p class="note">
+        <strong id="proto-mode-lede">Commander declared.</strong><span id="proto-mode-said"> The deck says
+        Chatterfang, Squirrel General is its commander, so the chip is on the bar. </span>
+        <button type="button" class="proto-clear" id="proto-toggle-cmdr" hidden=""></button>
+      </p>
+
+      <!-- ============================ the bar ============================ -->
+      <div class="proto-filters" id="proto-bar" role="group" aria-label="Filter the results">
+        <span class="proto-filters-label">Show only</span>
+        <!-- chips are built by filter-bar-proto.js so their counts cannot be typed in -->
+      </div>
+
+      <!-- ======================= combos in your deck ======================= -->
+      <section class="panel">
+        <button class="panel-head" type="button" aria-expanded="true" aria-controls="panel-pieces" title="Collapse">
+          <span class="chev">▸</span>
+          <h2 class="panel-title">Combos in your deck</h2>
+          <span class="panel-count" id="proto-panel-count">233</span>
+        </button>
+        <div class="panel-body" id="panel-pieces">
+          <!-- The shipped caption reconciles the badge with the rows — 233 combos, 40 cards
+               carry them (DeckView.deckCombosNote). Under a filter it has a second job: to
+               say what is being hidden, in words, because "wins only" is invisible in the
+               list itself. -->
+          <p class="panel-note" id="proto-caption"></p>
+          <div id="proto-rows"></div>
+        </div>
+      </section>
+
+      <!-- ===================== the unofficial panel ===================== -->
+      <!-- Only a stub: it is here because "Hide unofficial" is the one chip that acts on a
+           different panel, and a bar that silently governs something off screen is the
+           mistake this prototype is meant to catch. -->
+      <section class="panel" id="proto-unofficial">
+        <button class="panel-head" type="button" aria-expanded="false" aria-controls="panel-unofficial" title="Expand">
+          <span class="chev">▸</span>
+          <h2 class="panel-title">Unofficial combos</h2>
+          <span class="panel-count">50</span>
+        </button>
+      </section>
+
+      <p class="proto-note"><b>Where the bar goes.</b> Above the first results panel and outside it,
+        because it governs three: the combos, the map beneath them, and the unofficial rows. Inside
+        <i>Combos in your deck</i> it would read as that panel’s own control, and the map changing
+        underneath would look like a bug.</p>
+      <p class="proto-note"><b>What is not settled.</b> Whether the bar should survive a new search.
+        Keeping it means pasting a fresh deck and being told it has 9 combos; clearing it means losing
+        the filter every time you press <i>+ Add to deck</i>, which re-runs the search. Neither is
+        obviously right, and the shipped answer probably has to distinguish the two.</p>
+      <p class="proto-note"><b>Not filtered:</b> the suggestions. “Which card unlocks the most wins” is
+        a real question and a separate feature — that panel has tabs of its own, and these chips would
+        become filters wrapping tabs.</p>
+    </div>
+  </main>
+</body>
+</html>

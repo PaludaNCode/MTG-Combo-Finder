@@ -90,19 +90,29 @@ function downloadUrl(entry) {
   );
 }
 
-// Choose the download. Documented type first, then anything that says "oracle", then throw
-// with the actual menu — see the header for why this is not a single string comparison.
-function pickBulk(list) {
+// Choose the download. Documented type first, then anything whose type or name mentions the
+// word it is keyed on, then throw with the actual menu — see the header for why this is not
+// a single string comparison.
+//
+// `want` defaults to `oracle_cards`, which is what the card-text cache reads: one object per
+// distinct card, holding wording. `default_cards` is the other one anything here asks for —
+// one object per *printing*, which is the only file that can answer "what is the cheapest
+// printing of this card" (tools/fetch-prices.js). The loose fallback keys on the requested
+// word rather than always on "oracle", or asking for prices would silently be handed the
+// wording file when Scryfall next renames something.
+function pickBulk(list, want) {
+  const type = want || 'oracle_cards';
   const items = Array.isArray(list) ? list : (list && list.data) || [];
-  const exact = items.find((b) => b && b.type === 'oracle_cards');
+  const exact = items.find((b) => b && b.type === type);
   if (exact) return exact;
+  const word = type.split('_')[0];
   const loose = items.find((b) => b
-    && /oracle/i.test(String(b.type || '') + ' ' + String(b.name || '')));
+    && new RegExp(word, 'i').test(String(b.type || '') + ' ' + String(b.name || '')));
   if (loose) return loose;
   const offered = items.map((b) => (b && b.type) || '(no type)').join(', ') || '(nothing)';
   throw new Error(
-    'Scryfall /bulk-data offered no oracle-cards file. Types present: ' + offered
-    + '. If the type was renamed, that list is the fix.',
+    'Scryfall /bulk-data offered no ' + type.replace('_', '-') + ' file. Types present: '
+    + offered + '. If the type was renamed, that list is the fix.',
   );
 }
 
@@ -198,7 +208,7 @@ async function* streamCards(deps = {}) {
   const get = deps.fetch || fetch;
   const indexRes = await get(deps.indexUrl || BULK_INDEX, { headers: HEADERS });
   if (!indexRes.ok) throw new Error(`Scryfall /bulk-data answered ${indexRes.status}`);
-  const chosen = pickBulk(await indexRes.json());
+  const chosen = pickBulk(await indexRes.json(), deps.bulk);
   const url = downloadUrl(chosen);
 
   const res = await get(url, { headers: HEADERS });

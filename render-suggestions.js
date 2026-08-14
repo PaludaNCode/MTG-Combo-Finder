@@ -13,6 +13,9 @@
   // Optional, like it is in render-rows.js: a page without the store module keeps every
   // panel and loses only the Buy buttons. Copy list needs nothing from it but asText().
   const Cart = global.CartLinks || (typeof require === 'function' ? require('./cart-links.js') : null);
+  // Optional like Cart, and for a stronger reason: prices.json does not exist on a local
+  // checkout, so a page with no figures is a state this panel has to be correct in.
+  const Prices = global.CardPrices || (typeof require === 'function' ? require('./prices.js') : null);
 
   // A card worth adding. Two columns: its numbers in the gutter, and beside them
   // the card, where to read about it, and what its combos cost to assemble — one
@@ -302,6 +305,18 @@
     const body = panel(container, 'basket', 'Cards you’ve added', note && note.count);
     body.appendChild(el('p', 'panel-note', note.sentence));
 
+    // What the basket costs, on its own line under the combo sentence rather than folded
+    // into it: the two answer different questions — what these cards bought you, and what
+    // they will cost — and one sentence carrying both reads as a price on a combo.
+    //
+    // Absent until the table has arrived, and absent for good if it never does. It is not
+    // filled in later like the row figures are, because a caption appearing under a heading
+    // a second after the panel did is the kind of movement a reader reads as a bug; the
+    // rows are already the place a late figure lands quietly. On any search after the first
+    // the table is there and the line is drawn with everything else.
+    const money = Prices ? DeckView.basketPriceNote(Prices.totalOf(basket)) : null;
+    if (money) body.appendChild(el('p', 'panel-note is-money', money));
+
     const rows = basketPieces(basket, included, unofficial);
     const quantities = new Map(basket.map((e) => [DeckCombos.nameKey(e.card), e.quantity]));
     rows.forEach((piece) => body.appendChild(
@@ -383,26 +398,19 @@
     return actions;
   }
 
-  function renderSuggestions(container, onColour, offColour, deckNames, identity) {
-    const total = onColour.length + offColour.length;
-    const colours = identity && identity.size ? [...identity].join('').toUpperCase() : null;
-    const body = panel(container, 'suggestions', 'Suggested additions', total || null);
-
-    const tabs = [
-      {
-        id: 'in-colour',
-        label: colours ? 'In your colours · ' + colours : 'In your colours',
-        items: onColour,
-        empty: 'No single-card addition would complete a combo in your colours.',
-      },
-      {
-        id: 'off-colour',
-        label: 'Other colours',
-        items: offColour,
-        empty: 'Nothing outside your colours would complete a combo either.',
-      },
-    ];
-
+  // ---- one tab strip, two panels ------------------------------------------
+  //
+  // Extracted when "Cards carrying no combo" wanted the same strip: two copies of a
+  // roving-tabindex tablist would be two places for the accessible half to rot, and
+  // e2e/a11y.spec.js only presses one of them.
+  //
+  // `prefix` is not decoration — the ids are in the document, so two panels using
+  // `tab-away` would give the page duplicate ids and point one panel's
+  // `aria-controls` at the other's pane.
+  //
+  // `fill(tab, pane)` appends the rows, because that is the only part the two panels
+  // do not share: one builds suggestion rows, the other builds cut rows.
+  function tabStrip(body, prefix, tabs, fill) {
     const strip = el('div', 'tabs');
     strip.setAttribute('role', 'tablist');
     const built = [];
@@ -411,20 +419,17 @@
       const button = el('button', 'tab');
       button.type = 'button';
       button.setAttribute('role', 'tab');
-      button.id = 'tab-' + tab.id;
-      button.setAttribute('aria-controls', 'pane-' + tab.id);
+      button.id = prefix + '-tab-' + tab.id;
+      button.setAttribute('aria-controls', prefix + '-pane-' + tab.id);
       button.appendChild(el('span', 'tab-label', tab.label));
-      button.appendChild(el('span', 'tab-count', String(tab.items.length)));
+      button.appendChild(el('span', 'tab-count', String(tab.count)));
 
       const pane = el('div', 'tab-pane');
-      pane.id = 'pane-' + tab.id;
+      pane.id = prefix + '-pane-' + tab.id;
       pane.setAttribute('role', 'tabpanel');
       pane.setAttribute('aria-labelledby', button.id);
-      if (tab.items.length) {
-        tab.items.forEach((s) => pane.appendChild(suggestionCard(s, deckNames)));
-      } else {
-        pane.appendChild(el('p', 'empty', tab.empty));
-      }
+      if (tab.count) fill(tab, pane);
+      else pane.appendChild(el('p', 'empty', tab.empty));
 
       const select = () => {
         built.forEach((b, i) => {
@@ -444,10 +449,108 @@
     body.appendChild(strip);
     built.forEach((b) => body.appendChild(b.pane));
 
-    // Open on whichever tab has something in it: landing on an empty "In your
-    // colours" while suggestions sit unseen behind the other tab would read as
-    // "there are no suggestions".
-    (onColour.length || !offColour.length ? built[0] : built[1]).select();
+    // Open on the first tab that has something in it. Landing on an empty one while
+    // rows sit unseen behind its neighbour reads as "there are none".
+    (built[tabs.findIndex((t) => t.count)] || built[0]).select();
+    return built;
+  }
+
+  // ---- cards carrying no combo --------------------------------------------
+  //
+  // The panel "Combos in your deck" cannot answer: which of my cards are in none of
+  // them? Three groups rather than one list, because a card one addition away from
+  // eight combos and a card that will never be in one are both "carrying nothing" and
+  // saying so in one ranked list is this panel's whole failure mode.
+  //
+  // What it must never do is recommend a cut — see DeckView.cutCandidatesNote() for
+  // the argument and prototypes/no-combo-panel.md for the measurement.
+  function cutRow(row, group) {
+    const card = el('article', 'combo suggestion');
+
+    // The third group prints no number, so it gets no gutter and no column: 21 rows
+    // reading 0 would be the same fact 21 times, at the size the page reserves for
+    // the number a decision turns on. It is a paragraph of names instead — see below.
+    const gutter = DeckView.cutGutter(row, group);
+    const numbers = el('div', 'row-numbers');
+    const total = el('span', 'row-total');
+    total.textContent = gutter.count;
+    total.title = gutter.spoken;
+    numbers.appendChild(total);
+    numbers.appendChild(el('span', 'row-total-label', gutter.label));
+    card.appendChild(numbers);
+
+    const main = el('div', 'row-main');
+    const head = el('h3', 'row-name');
+    if (row.quantity > 1) head.appendChild(el('span', 'row-qty', row.quantity + ' × '));
+    head.appendChild(el('span', 'card-name', row.card));
+    main.appendChild(head);
+
+    // No Buy link: this is a card the reader already owns, which is the rule
+    // cardLinks() takes `buy` for — see render-rows.js.
+    const links = el('p', 'card-links');
+    links.appendChild(RenderRows.cardLinks(row.card));
+    links.appendChild(RenderRows.removeButton(row.card));
+    main.appendChild(links);
+
+    const why = DeckView.cutWhy(row, group);
+    if (why) main.appendChild(el('p', 'row-why', why));
+
+    card.appendChild(main);
+    return card;
+  }
+
+  function renderCutCandidates(container, cut) {
+    container.textContent = '';
+    const note = DeckView.cutCandidatesNote(cut);
+    // Absent entirely rather than empty: on a deck where every card carries something
+    // — which a tuned list can be — a panel headed "Cards carrying no combo" with
+    // nothing in it is a question nobody asked being answered at length.
+    if (!note) return;
+
+    const body = panel(container, 'cut-candidates', 'Cards carrying no combo', note.count);
+    body.appendChild(el('p', 'panel-note', note.sentence));
+
+    tabStrip(body, 'cut', DeckView.cutGroups(cut), (tab, pane) => {
+      pane.appendChild(el('p', 'panel-note', tab.note));
+      // The last group is names, not rows. Every row would carry the same absent
+      // number and the same sentence, so what is left is the list itself — the same
+      // shape the "cards it did not recognise" line above the results already uses.
+      if (tab.id === 'none') {
+        const names = el('p', 'card-list');
+        tab.rows.forEach((row, i) => {
+          if (i) names.appendChild(document.createTextNode(' · '));
+          names.appendChild(el('span', 'card-name', row.card));
+        });
+        pane.appendChild(names);
+        return;
+      }
+      tab.rows.forEach((row) => pane.appendChild(cutRow(row, tab.id)));
+    });
+  }
+
+  function renderSuggestions(container, onColour, offColour, deckNames, identity) {
+    const total = onColour.length + offColour.length;
+    const colours = identity && identity.size ? [...identity].join('').toUpperCase() : null;
+    const body = panel(container, 'suggestions', 'Suggested additions', total || null);
+
+    tabStrip(body, 'suggestions', [
+      {
+        id: 'in-colour',
+        label: colours ? 'In your colours · ' + colours : 'In your colours',
+        count: onColour.length,
+        items: onColour,
+        empty: 'No single-card addition would complete a combo in your colours.',
+      },
+      {
+        id: 'off-colour',
+        label: 'Other colours',
+        count: offColour.length,
+        items: offColour,
+        empty: 'Nothing outside your colours would complete a combo either.',
+      },
+    ], (tab, pane) => {
+      tab.items.forEach((s) => pane.appendChild(suggestionCard(s, deckNames)));
+    });
   }
 
   // The header strip: the deck's colours as mana symbols.
@@ -461,7 +564,10 @@
   // A commander that *was* given still matters: it is part of the deck, so its
   // colours are in here along with everything else's.
 
-  const api = { suggestionCard, pieceCard, renderUnofficial, renderPieces, renderBasket, renderSuggestions };
+  const api = {
+    suggestionCard, pieceCard, cutRow,
+    renderUnofficial, renderPieces, renderBasket, renderSuggestions, renderCutCandidates,
+  };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

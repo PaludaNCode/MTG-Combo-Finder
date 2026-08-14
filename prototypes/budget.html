@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — What a suggestion costs</title>
+  <!-- The page ranks 141 cards by how many combos each would unlock, and then has nothing
+       to say about the fact that one of them is 25 cents and the next is thirty dollars.
+
+       ## THE PRICES ON THIS PAGE ARE PLACEHOLDERS
+
+       Scryfall is 403 at CONNECT from the sandbox this was drawn in (CLAUDE.md, "Network,
+       and this sandbox"), so **no price here was measured**. They are deliberately round —
+       0.25, 0.50, 1, 2, 4, 8 — so they cannot be mistaken for quotes, and one card is
+       deliberately unpriced. The layout is real, the combo counts are real, the ordering
+       mechanism is real; the money is invented.
+
+       ## The measurement that argues for the feature, and it is not "combos per dollar"
+
+       Measured 13 Aug 2026 against the live snapshot (105,452 combos) with the real
+       parser.js and combos.js:
+
+           tuning deck        141 suggestions, 139 of them (99%) tied with another
+           Chatterfang deck   248 suggestions, 241 of them (97%) tied
+
+           tuning deck, suggestions by combos unlocked:
+             10 → 1 card    7 → 7 cards    6 → 1 card    5 → 14 cards
+              4 → 12 cards  3 → 19 cards   2 → 21 cards  1 → 66 cards
+
+       **The headline number decides almost nothing.** One card unlocks 10, seven cards
+       unlock exactly 7, sixty-six unlock exactly 1 — so for 99% of the list the *order the
+       reader sees* comes from the tiebreak, which today is EDHREC popularity. Popularity is
+       a fine tiebreak and it is not the one a deck builder is asking for: given seven cards
+       that each unlock seven combos, the question is which one they can afford.
+
+       So the feature is **not** primarily a "combos per dollar" ranking. It is that
+       **price is the tiebreak**, and the seven-way tie is where it shows.
+
+       ## Three decisions
+
+       **1. The price is its own quiet pill, not part of the Buy link.** "Buy $4.00" reads
+       as a quote for the page that link opens, and it is not one — it is a market price
+       from a daily snapshot, for some printing, before shipping. The pill carries the
+       snapshot date in its title, and the panel caption says which day. Overclaiming here
+       is worse than saying nothing, because a reader who clicks through to a different
+       number stops believing the rest of the page too.
+
+       **2. Sorting is a `<select>`, filtering is a chip.** Deliberate, and it is the same
+       distinction prototypes/filter-bar.html made: chips are additive toggles, and a sort
+       is exclusive. Giving them one appearance teaches the wrong rule.
+
+       **3. An unpriced card sorts last and says why.** The Destined White Mage has no price
+       here. The failure mode is real and silent: an absent price read as 0 makes every new
+       or unpriced card the cheapest thing on the page, and "cheapest first" then recommends
+       exactly the cards nobody can buy. Absent is not free.
+
+       ## What must be measured before this ships
+
+       - **The payload.** Prices would be a new file on the `data` branch, built by the
+         nightly job that already streams Scryfall's bulk export for card-text.json. Under
+         1 MB is an *estimate* and nothing here has weighed it: `node tools/scryfall-bulk.js`
+         on a runner is the answer.
+       - **How many of the 34,422 cards have no price at all**, which is decision 3's real
+         size.
+       - Whether the file is fetched lazily. The page's first-search budget is already spent
+         on combos.json; a second unconditional download is a regression for every reader
+         who never opens this control. -->
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <script src="budget-proto.js" defer></script>
+  <style>
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+      max-width: 62ch;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+
+    /* The banner. Loud on purpose: a prototype with invented money in it must not be
+     * screenshotted into a decision without the caveat travelling with the picture. */
+    .proto-warn {
+      margin: 0 0 1rem;
+      padding: .7rem .9rem;
+      border: 1px dashed var(--accent);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+    .proto-warn b { color: var(--accent); }
+
+    /* ---- the controls -------------------------------------------------------
+     *
+     * A row above the panel, like the filter bar, and made of two different kinds of
+     * control on purpose: a <select> for the ranking, because exactly one ranking is
+     * in force, and a chip for the cap, because it is a toggle that ANDs with
+     * whatever else is on. Same rule as prototypes/filter-bar.html. */
+    .proto-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .6rem;
+      margin: 0 0 .9rem;
+    }
+    .proto-controls label { color: var(--muted); font-size: .85rem; font-weight: 600; }
+    .proto-controls select {
+      padding: .45rem .6rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      font-size: .88rem;
+      min-height: 44px;
+    }
+    .proto-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      min-height: 44px;
+      padding: .4rem .75rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: none;
+      color: var(--muted);
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .proto-chip:hover { color: var(--text); background: var(--panel-2); filter: none; }
+    .proto-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .proto-chip[aria-pressed='true'] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--brass-ink);
+    }
+
+    /* ---- the price -----------------------------------------------------------
+     *
+     * Tabular, muted, and the same size as the links it sits beside — a number the
+     * reader compares down a column, not a headline. It is deliberately NOT in the
+     * gutter: that column holds what the card *buys you*, and a second figure at
+     * that size would make the row ask two questions at once.
+     *
+     * `--muted` and not `--faint`: --faint is only safe on --bg and this sits on a
+     * panel. It is also not decoration — it is half the decision. */
+    .proto-price {
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    /* An absent price is a different statement to a low one, so it does not get the
+     * number's styling. It sorts last, always. */
+    .proto-price.is-unknown { font-weight: 500; font-style: italic; }
+    .proto-per {
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .proto-why { margin: .3rem 0 0; color: var(--muted); font-size: .85rem; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row"><h1>MTG Combo Finder</h1></div>
+    <p class="tagline">Prototype — what a suggestion costs. Combo counts are the tuning deck’s real
+      ones, measured 13 Aug 2026. <strong>The prices are not real.</strong></p>
+  </header>
+
+  <main class="proto-frame">
+    <div class="col-output">
+      <p class="proto-warn"><b>Placeholder prices.</b> Scryfall is unreachable from the sandbox that
+        drew this page, so every figure in a price position was typed by hand and is deliberately
+        round — 0.25, 0.50, 1, 2, 4, 8 — so it cannot be mistaken for a quote. One card is
+        deliberately unpriced. What is real: the cards, the combo counts, the seven-way tie, and the
+        order each control puts them in.</p>
+
+      <div class="proto-controls">
+        <label for="proto-sort">Rank by</label>
+        <select id="proto-sort">
+          <!-- The recommendation leads, and it is not the flashy one. Drawing the other
+               three is what found it: "cheapest first" puts a +5 above a +7, which throws
+               away the ranking the page exists to produce. -->
+          <option value="tiebreak">Combos, then cheapest</option>
+          <option value="combos">Combos, then popularity (today)</option>
+          <option value="cheapest">Cheapest first</option>
+          <option value="per">Combos per $1</option>
+        </select>
+        <button type="button" class="proto-chip" id="proto-cap" aria-pressed="false">
+          <span>Under $2</span>
+        </button>
+      </div>
+
+      <section class="panel">
+        <button class="panel-head" type="button" aria-expanded="true" aria-controls="panel-suggestions" title="Collapse">
+          <span class="chev">▸</span>
+          <h2 class="panel-title">Suggested additions</h2>
+          <span class="panel-count" id="proto-count">12</span>
+        </button>
+        <div class="panel-body" id="panel-suggestions">
+          <p class="panel-note" id="proto-caption"></p>
+          <div id="proto-rows"></div>
+        </div>
+      </section>
+
+      <p class="proto-note"><b>The seven-way tie is the whole argument.</b> Ashnod’s Altar, Heliod,
+        Cleric Class, Light of Promise, Sunbond, Spider-Man and The Destined White Mage each unlock
+        exactly 7 of this deck’s combos. Today the page orders those seven on EDHREC popularity, which
+        is not the question anyone is asking of them. Switch <i>Rank by</i> and watch which one leads.</p>
+      <p class="proto-note"><b>The default should be “combos, then cheapest”, and drawing the others
+        is what settled it.</b> <i>Cheapest first</i> puts Ajani’s Welcome (+5) above Cleric Class
+        (+7) — it throws away the ranking the whole page exists to produce, in exchange for a number
+        the reader could have read off the rows. Price belongs where popularity is now: after the
+        count, deciding the 99% of the list the count leaves tied.</p>
+      <p class="proto-note"><b>Combos per $1 is the flashy one and the least useful.</b> It promotes a
+        25¢ card unlocking one combo over a $4 card unlocking seven, which is arithmetic rather than
+        advice. It is on the control because it is cheap to offer and somebody will want it — not
+        because it should be the default.</p>
+      <p class="proto-note"><b>What a total may not claim.</b> The basket says “about $14” and never a
+        precise sum: these are market prices from a daily snapshot, one printing each, before postage.
+        A page that prints $13.75 has told the reader something it cannot stand behind.</p>
+    </div>
+  </main>
+</body>
+</html>

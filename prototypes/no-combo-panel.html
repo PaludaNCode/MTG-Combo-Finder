@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype — Cards carrying no combo</title>
+  <!-- The panel that answers the question "Combos in your deck" cannot: **which of my
+       cards are in none of them, and does that matter?**
+
+       Everything numeric here was measured on 13 Aug 2026 against the tuning deck and the
+       live snapshot (105,452 combos), with the real parser.js and combos.js:
+
+           node tools/try-deck.js                       # 85 lines, 98 cards, 33 combos
+           node tools/deck-cards.js test/fixtures/deck.txt
+
+       85 distinct cards, 23 of them lands. The 62 nonland cards split four ways:
+
+           carries a combo now                       21   <- "Combos in your deck" today
+           one card away from one                    10   <- tab 1 here
+           in published combos, none reachable here   9   <- tab 2 here
+           in no published combo at all              22   <- tab 3 here
+
+       On the Chatterfang deck (103 cards, 233 combos) the same four are 40 / 11 / 7 / 22.
+       So the panel does not empty out as a deck gets better — it shrinks by two.
+
+       ## The three decisions this prototype is here to settle
+
+       **1. It is three groups, not one list.** "41 cards carry no combo" is true and
+       useless: Trudge Garden is one card away from five, and Path to Exile will never be
+       in one. Sorting them by how close they are to doing something is the whole value,
+       and it is why the panel is not called "Cut candidates" — see below.
+
+       **2. It is a floor, never a verdict** — the same rule the bracket panel follows. A
+       card in no combo is not a card to cut; a deck is mostly removal, ramp and
+       protection, and 22 of these 62 are exactly that. The panel says so in its caption
+       rather than leaving a reader to infer that a list of their cards under a heading is
+       an accusation. **"Cut candidates" was the name in the review that asked for this,
+       and it is the one thing here I would not ship**: the page has no idea what the deck
+       needs to function, so a verdict is a claim it cannot support.
+
+       **3. Lands are excluded and the caption says how many.** 21 of the 43 cards in no
+       published combo are lands, and a panel whose third tab is mostly `Forest` is
+       wallpaper. `dataset.lands` already carries the list — deckCounts() uses it for the
+       summary box — so this costs no new data. **The two lands it hides that are not
+       wallpaper are Command Tower (15 published combos) and Vernal Fen (1)**, which is the
+       argument for saying "23 lands are not listed" out loud rather than silently
+       filtering.
+
+       ## What is shipped chrome and what is new
+
+       Almost all of it is shipped: `.panel`, `.panel-head`, `.panel-note`, the `.tabs`
+       strip lifted straight off "Suggested additions", and `.combo.suggestion` rows with
+       their number gutter. The row builder would be pieceCard() in render-suggestions.js,
+       which **already handles a card with zero combos** — the basket produces those — so
+       the rows cost nothing new either.
+
+       Two things are new and both are wording, which is where this needs a decision:
+
+       - **the gutter's label**, `one away` and `elsewhere`. The shipped label is `combos`
+         (DeckView.rowNumbers), and on this panel `5 combos` under a heading that says the
+         card carries none would be the page contradicting itself. Both replacements read
+         a little cramped under the figure and I have no better pair.
+       - **the `.proto-why` line**, "Needs Ashnod's Altar or Mana Echoes". It is the most
+         useful sentence in the panel and it belongs in view-model.js next to the other
+         row sentences. Its hard case is a card wanting eleven different partners.
+
+       Classes are `proto-` prefixed, per the other prototypes here. -->
+  <script src="../theme.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <script src="no-combo-proto.js" defer></script>
+  <style>
+    /* ---- prototype chrome, the same helpers the other prototypes use ---- */
+    .proto-note {
+      margin: 2rem 0 .6rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: .85rem;
+      max-width: 62ch;
+    }
+    .proto-note b { color: var(--text); }
+    .proto-frame { max-width: 46rem; }
+
+    /* ---- the one new row part: why the card is in this group ----------------
+     *
+     * Muted, under the links, in the card's own column so it sits inside the
+     * border-left that runs down the row. Deliberately a sentence rather than
+     * chips: "needs Ashnod's Altar or Mana Echoes" is a thing to go and do, and
+     * two card names as pills would read as results the card produces.
+     *
+     * On tab 2 it carries the only interesting fact on the row — that the card is
+     * in 92 published combos and none of them can happen here — which is the
+     * difference between "this card is bad" and "this card has no partner in your
+     * list". Those are not the same sentence and only the second is true. */
+    .proto-why {
+      margin: .3rem 0 0;
+      color: var(--muted);
+      font-size: .85rem;
+      line-height: 1.45;
+    }
+    .proto-why .card-name { color: var(--text); }
+
+    /* Tab 3 is a paragraph of names, not rows — see the note under it. */
+    .proto-names { line-height: 1.9; max-width: 62ch; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row"><h1>MTG Combo Finder</h1></div>
+    <p class="tagline">Prototype — the panel under <em>Combos in your deck</em>, drawn against the
+      real stylesheet. Numbers are the tuning deck, measured 13 Aug 2026.</p>
+  </header>
+
+  <!-- `.proto-frame` rather than `.layout`, as the other prototypes here do: the shipped
+       grid gives its first 370px track to the decklist, and with no decklist on the page
+       the results column renders at a width no reader ever sees. 46rem is roughly what
+       the real column gets on a laptop. -->
+  <main class="proto-frame">
+    <div class="col-output">
+      <section class="panel">
+        <button class="panel-head" type="button" aria-expanded="true" aria-controls="panel-nocombo" title="Collapse">
+          <span class="chev">▸</span>
+          <h2 class="panel-title">Cards carrying no combo</h2>
+          <span class="panel-count">41</span>
+        </button>
+        <div class="panel-body" id="panel-nocombo">
+          <!-- The caption does three jobs, and dropping any one of them turns the panel
+               into an accusation: it reconciles 41 against the deck's 62 nonland cards,
+               it says outright that this is normal, and it admits what it hid. -->
+          <p class="panel-note">41 of this deck’s 62 nonland cards are in none of its 33 combos. That is
+            normal — most of a deck is removal, ramp and protection — so they are grouped by how close
+            they are to doing something rather than listed as cuts. <b>23 lands are not shown</b>, two of
+            which do appear in published combos.</p>
+
+          <div class="tabs" role="tablist">
+            <button class="tab is-active" type="button" role="tab" id="tab-away" aria-controls="pane-away" aria-selected="true" tabindex="0">
+              <span class="tab-label">One card away</span><span class="tab-count">10</span>
+            </button>
+            <button class="tab" type="button" role="tab" id="tab-unpaired" aria-controls="pane-unpaired" aria-selected="false" tabindex="-1">
+              <span class="tab-label">No partner here</span><span class="tab-count">9</span>
+            </button>
+            <button class="tab" type="button" role="tab" id="tab-none" aria-controls="pane-none" aria-selected="false" tabindex="-1">
+              <span class="tab-label">No known combo</span><span class="tab-count">22</span>
+            </button>
+          </div>
+
+          <!-- ================= tab 1: one card away ================= -->
+          <div class="tab-pane" id="pane-away" role="tabpanel" aria-labelledby="tab-away">
+            <p class="panel-note">Carrying nothing today, and one card from carrying something. Cutting one
+              of these costs you a suggestion rather than a combo.</p>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="one card away from 5 combos">5</span>
+                <span class="row-total-label">one away</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Trudge Garden</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/trudge-garden" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Trudge+Garden%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">Needs <span class="card-name">Ashnod’s Altar</span> or <span class="card-name">Mana Echoes</span>.</p>
+              </div>
+            </article>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="one card away from 3 combos">3</span>
+                <span class="row-total-label">one away</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Sevinne’s Reclamation</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/sevinnes-reclamation" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Sevinne%27s+Reclamation%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">Needs <span class="card-name">Dualcaster Mage</span>.</p>
+              </div>
+            </article>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="one card away from 3 combos">3</span>
+                <span class="row-total-label">one away</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Sorin of House Markov</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/sorin-of-house-markov" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Sorin+of+House+Markov%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">Needs <span class="card-name">Revival // Revenge</span>, <span class="card-name">Beacon of Immortality</span> or <span class="card-name">Celestial Mantle</span>.</p>
+              </div>
+            </article>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="one card away from 2 combos">2</span>
+                <span class="row-total-label">one away</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Dina, Soul Steeper</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/dina-soul-steeper" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Dina%2C+Soul+Steeper%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">Needs <span class="card-name">Exquisite Blood</span> or <span class="card-name">Bloodthirsty Conqueror</span>.</p>
+              </div>
+            </article>
+
+            <p class="empty">…and 6 more: Greta, Sweettooth Scourge · Mirkwood Bats · Gilded Goose ·
+              Pippin, Warden of Isengard · Sol Ring · Swords to Plowshares.</p>
+          </div>
+
+          <!-- ================= tab 2: no partner here ================= -->
+          <div class="tab-pane" id="pane-unpaired" role="tabpanel" aria-labelledby="tab-unpaired" hidden>
+            <p class="panel-note">Real combo cards with nothing in this list to combo with. The number is how
+              many published combos name the card <em>somewhere</em> — none of them are reachable from here,
+              and none are one card away either.</p>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="in 92 published combos, none of them in this deck">92</span>
+                <span class="row-total-label">elsewhere</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Well of Lost Dreams</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/well-of-lost-dreams" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Well+of+Lost+Dreams%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">In 92 published combos — none with a card you play, and none you are one card from.</p>
+              </div>
+            </article>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="in 89 published combos, none of them in this deck">89</span>
+                <span class="row-total-label">elsewhere</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Chord of Calling</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/chord-of-calling" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Chord+of+Calling%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">In 89 published combos — none with a card you play, and none you are one card from.</p>
+              </div>
+            </article>
+
+            <article class="combo suggestion">
+              <div class="row-numbers">
+                <span class="row-total" title="in 13 published combos, none of them in this deck">13</span>
+                <span class="row-total-label">elsewhere</span>
+              </div>
+              <div class="row-main">
+                <h3 class="row-name"><span class="card-name">Birds of Paradise</span></h3>
+                <p class="card-links"><span class="card-links"><a href="https://edhrec.com/cards/birds-of-paradise" target="_blank" rel="noopener">EDHREC</a> · <a href="https://scryfall.com/search?q=%21%22Birds+of+Paradise%22" target="_blank" rel="noopener">Scryfall</a></span><button class="remove-card" type="button">− Remove</button></p>
+                <p class="proto-why">In 13 published combos — none with a card you play, and none you are one card from.</p>
+              </div>
+            </article>
+
+            <p class="empty">…and 6 more: Nature’s Rhythm (89) · Veinwitch Coven (11) · Arcane Signet (2) ·
+              Collected Company (1) · Moseo, Vein’s New Dean (1) · Savvy Hunter (1).</p>
+          </div>
+
+          <!-- ================= tab 3: no known combo =================
+               Names, not rows. 22 rows of Path to Exile with a gutter reading 0 would be
+               22 controls to press and one fact to learn, and the fact is the same on all
+               of them. The page already has this shape — the "cards it did not recognise"
+               line above the results — so it is not a new idea either. -->
+          <div class="tab-pane" id="pane-none" role="tabpanel" aria-labelledby="tab-none" hidden>
+            <p class="panel-note">In no published combo at all, so nothing you add can switch them on. This is
+              the removal, the ramp and the protection — the part of a deck that makes the other part work.</p>
+            <p class="proto-names">Abrupt Decay · Avacyn’s Pilgrim · Blossoming Bogbeast · Call Damage Control ·
+              Esper Sentinel · Farseek · Fix What’s Broken · Hammerhead, Maggia Boss · Hurska Sweet-Tooth ·
+              Meriadoc Brandybuck · Michelangelo, the Heart · Of Herbs and Stewed Rabbit · Path to Exile ·
+              Pest Infestation · Pick Your Poison · Rampant Growth · Shared Roots · Summoner’s Pact ·
+              Sylvan Library · Trail of Crumbs · Witherbloom Charm · Witherbloom Command</p>
+          </div>
+        </div>
+      </section>
+
+      <p class="proto-note"><b>Where it goes.</b> Last but one, after <i>Suggested additions</i> and before
+        <i>Cards you’ve added</i>. The positive answer and the actionable one keep the top of the results;
+        this is what you read when you are cutting rather than adding, and tab 1 points at the suggestions
+        panel above it.</p>
+      <p class="proto-note"><b>Collapsed or open by default?</b> Open here so you can see it. Shipped, I would
+        collapse it — the panel state is already remembered per reader (PageDom’s COLLAPSE_KEY), and a
+        41-row panel between the suggestions and the basket pushes the basket off a phone screen.</p>
+      <p class="proto-note"><b>What is not settled.</b> The gutter labels (<code>one away</code>,
+        <code>elsewhere</code>) and whether tab 2’s number should be the published count at all — it is the
+        only figure on the page that counts combos outside your deck, and a reader may well read
+        <code>92</code> as something they have.</p>
+    </div>
+  </main>
+</body>
+</html>

@@ -27,6 +27,9 @@ const FIXTURE = {
     // line lists a card per line now, and a check for that cannot fail while the fixture
     // only ever puts one card on it.
     'Swords to Plowshares': 'W',
+    // The three cards of the three-card combo below, which exists for one group of
+    // "Cards carrying no combo" that nothing else here can produce — see that combo.
+    'Thopter Foundry': 'WUB', 'Time Sieve': 'UB', "Ashnod's Altar": '',
   },
   commanderNames: ['Kinnan, Bonder Prodigy', 'Heliod, Sun-Crowned'],
   // Wizards' Game Changer list, as the fetcher publishes it. Which real cards are
@@ -149,6 +152,18 @@ const FIXTURE = {
     // ordering would pass whichever rule were in force.
     { id: '15', c: ['Palinchron', 'Basalt Monolith', 'Great Whale', 'Kinnan, Bonder Prodigy'],
       p: ['Infinite mana'], i: 'GU', pop: 500 },
+    // Three cards, none of them in the tuning deck, which is the whole point: it exists
+    // for the "No partner here" group of "Cards carrying no combo" — a card that is in a
+    // published combo and is **two or more** cards short of it, so nothing the reader
+    // could add next would switch it on.
+    //
+    // Nothing else in this fixture can produce that group. Every other card here is in
+    // some two-card combo, so holding it puts the card either in a combo or one card away,
+    // and the middle group is unreachable. Three cards no existing deck holds also means
+    // this combo is not a candidate for any of them: matchDeck() only reaches a combo
+    // missing at most one card, and every deck above is missing all three.
+    { id: '16', c: ['Thopter Foundry', 'Time Sieve', "Ashnod's Altar"],
+      p: ['Infinite thopters'], i: 'WUB', pop: 40 },
   ],
 };
 
@@ -218,6 +233,23 @@ const DECKS = {
   // saying exactly that, which is the header and legality checks working.
   misspelled: ['1 Kinnan, Bonder Prodigy (C21) 3 *CMDR*']
     .concat(REST, ['1 Sol Rimg', '1 Treasure', '1 Bala Ged Recovery']).join('\n'),
+  // A deck built so that "Cards carrying no combo" has something in all three of its
+  // groups at once, which no other deck here does — the tuning deck's every card carries
+  // one, so that panel is absent from almost every run and its rows would go undrawn.
+  //
+  //   Walking Ballista + Heliod   a complete combo, so both cards are absent from it
+  //   Deadeye Navigator           one card short of two combos (Palinchron, Great Whale)
+  //   Thopter Foundry             in one combo and two cards short of it
+  //   Swords to Plowshares        in no combo at all
+  //   Island                      a land, so hidden — and the caption has to say so
+  //
+  // No commander, deliberately: the panel is about the deck's cards and has nothing to do
+  // with the command zone, and declaring one would put a legality line on the page over
+  // Swords to Plowshares being off-identity.
+  cut: [
+    '1 Walking Ballista', '1 Heliod, Sun-Crowned', '1 Deadeye Navigator',
+    '1 Thopter Foundry', '1 Swords to Plowshares', '3 Island',
+  ].join('\n'),
   // The tuning deck made illegal two different ways, which is one deck because the
   // two findings have to be shown together to be shown apart: Heliod is white and
   // the commander is {G}{U}, so it is off-identity, and Murderous Redcap is on this
@@ -231,6 +263,43 @@ const DECKS = {
   // own colours, which would make every list legal by construction.
   illegalNoCommander: ['1 Kinnan, Bonder Prodigy']
     .concat(REST, ['1 Heliod, Sun-Crowned', '1 Swords to Plowshares', '1 Murderous Redcap']).join('\n'),
+};
+
+// The price table the deploy publishes beside combos.json, as tools/fetch-prices.js
+// writes it: keyed by DeckCombos.nameKey, cheapest non-foil USD, one decimal place of
+// pennies.
+//
+// **The Destined White Mage is deliberately absent**, and it is the most important entry
+// in here. A card with no non-foil printing gets no figure, the page must say "no price"
+// rather than nothing and must never read it as free — and that card is one of the
+// interchangeable alternatives on a suggestion row, so the case is on screen in the runs
+// that check the panel rather than in a corner nobody renders.
+//
+// Prices are made up. They are ordered so that the cheapest of the three interchangeable
+// cards is NOT the one the combo count puts first, which is what makes a figure on the row
+// worth having at all — see prototypes/budget.md.
+const PRICES_FIXTURE = {
+  generated: '2026-01-02',
+  updatedAt: '2026-01-02T00:00:00Z',
+  currency: 'usd',
+  named: 15,
+  count: 14,
+  usd: {
+    'kinnan, bonder prodigy': 2.2,
+    'basalt monolith': 0.99,
+    'rings of brighthearth': 19,
+    palinchron: 28,
+    'deadeye navigator': 0.35,
+    'great whale': 3.1,
+    'walking ballista': 9.99,
+    'heliod, sun-crowned': 4,
+    'sword of the meek': 1.75,
+    'bloom tender': 24,
+    'devoted druid': 1.2,
+    'thopter foundry': 0.5,
+    'time sieve': 5,
+    "ashnod's altar": 7,
+  },
 };
 
 // ---- the shape the deploy actually publishes --------------------------------
@@ -344,4 +413,5 @@ function stepsFiles() {
   return out;
 }
 
-module.exports = { FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished, STEPS, stepsFiles };
+module.exports = {
+  PRICES_FIXTURE, FIXTURE, DECKS, TIERS_FIXTURE, UNKNOWN_RESULT, asPublished, STEPS, stepsFiles };

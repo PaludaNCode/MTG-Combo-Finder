@@ -208,6 +208,203 @@
     return { count: cards, sentence: `${what}. With ${cards === 1 ? 'it' : 'them'} in, ${outcome}.` };
   }
 
+  // ---- what a card costs ------------------------------------------------------
+  //
+  // The page ranks 141 cards by how many combos each would unlock and, until this, said
+  // nothing about one of them being 25 cents and the next thirty dollars. The measurement
+  // that argues for it is in prototypes/budget.md: **139 of those 141 suggestions (99%) are
+  // tied with another on combos unlocked** — seven cards unlock exactly 7, sixty-six unlock
+  // exactly 1 — so for almost the whole list the order a reader sees comes from the
+  // tiebreak, and the figure on the row is what lets them break it themselves.
+  //
+  // Two rules about what a price may claim, both of them about not being believed too
+  // precisely:
+  //
+  //   It is never part of the Buy link. "Buy $4.00" reads as a quote for the page that
+  //   link opens and it is not one — it is the cheapest printing in a daily snapshot,
+  //   before postage. A reader who clicks through to a different number stops believing
+  //   the rest of the page, which costs more than the figure is worth.
+  //
+  //   An absent price is not zero. tools/fetch-prices.js publishes no figure for a card
+  //   whose only printing is foil, and a missing one read as free would make exactly the
+  //   cards nobody can buy look like the cheapest thing on the page.
+  function priceLabel(price) {
+    if (price === null || price === undefined) return { text: 'no price', known: false };
+    // Two decimals always, including on a whole number: this is a column a reader compares
+    // down, and "$4" beside "$0.50" makes the eye do the alignment the digits should.
+    return { text: '$' + Number(price).toFixed(2), known: true };
+  }
+
+  // The tooltip, which is where everything the figure cannot say goes: which printing,
+  // which currency, what is not included, and which day. The date is the important half —
+  // a price with no date is a claim about now, and this one is a claim about a nightly file.
+  function priceTitle(price, snapshot) {
+    const when = snapshot ? ` (prices from ${snapshot})` : '';
+    if (price === null || price === undefined) {
+      return 'No US dollar price in this snapshot — usually a card with no non-foil printing. '
+        + 'Not the same as free' + when + '.';
+    }
+    return `About $${Number(price).toFixed(2)} — cheapest non-foil printing in US dollars, `
+      + `before postage${when}.`;
+  }
+
+  // The money half of the caption over "Cards you've added". Deliberately vague where the
+  // data is: "about $47" is what a daily snapshot of cheapest printings supports, and
+  // "$46.75" is a claim about postage, printing and the hour of the day that it does not.
+  //
+  // Returns null when there is nothing honest to say — no table, or nothing in the basket
+  // priced — rather than a total of 0, which would read as a free basket.
+  function basketPriceNote(total) {
+    if (!total || !total.known || !total.priced) return null;
+    const rounded = total.sum >= 10 ? Math.round(total.sum) : Math.round(total.sum * 100) / 100;
+    const money = total.sum >= 10 ? '$' + rounded : '$' + rounded.toFixed(2);
+    // What the number does not cover, said in the same breath rather than left to be
+    // discovered: a total quietly missing two of five cards is worse than no total.
+    const gap = total.unpriced
+      ? ` ${total.unpriced} of them ${total.unpriced === 1 ? 'has' : 'have'} no price in this snapshot, `
+        + 'so the total is short.'
+      : '';
+    return `About ${money} for the ${total.priced === 1 ? 'card' : total.priced + ' cards'} `
+      + `priced here, cheapest printings before postage.${gap}`;
+  }
+
+  // ---- the cards carrying none of them ----------------------------------------
+  //
+  // "Cards carrying no combo" is the one panel on this page that lists the reader's own
+  // cards under a heading that could be read as an accusation, so almost everything in
+  // this section is about what it is **not** allowed to say.
+  //
+  // It is not called "Cut candidates" and it never recommends a cut. The page cannot see
+  // what a deck needs to function: 21 of the tuning deck's 62 nonland cards are in no
+  // published combo at all and they are the removal, the ramp and the protection. Same
+  // rule the bracket panel follows — a floor, never a verdict.
+  //
+  // The caption carries three things and dropping any one of them turns the panel into
+  // that accusation: the reconciliation (how many of the deck's cards this is about, and
+  // that the rest carry something), the sentence saying this is normal, and **what was
+  // filtered out**. Lands are excluded because 21 of the tuning deck's 43 cards in no
+  // published combo are lands and a group that is mostly `Forest` is wallpaper — but two
+  // of the hidden ones are Command Tower (15 published combos) and Vernal Fen (1), so the
+  // number is said out loud rather than quietly dropped. See prototypes/no-combo-panel.md.
+  function cutCandidatesNote(cut) {
+    if (!cut) return null;
+    const total = cut.away.length + cut.unpaired.length + cut.none.length;
+    if (!total) return null;
+
+    const nonland = `${total} of your ${cut.cards} nonland card${cut.cards === 1 ? '' : 's'}`;
+    // Only where there is something to say. A deck with no lands in it — a cube list, a
+    // paste that lost its mana base — would otherwise be told that 0 lands are not shown,
+    // which reads as a bug in the panel rather than as a fact about the list.
+    const hidden = cut.lands
+      ? ` ${cut.lands} land${cut.lands === 1 ? '' : 's'} ${cut.lands === 1 ? 'is' : 'are'} not shown.`
+      : '';
+
+    return {
+      count: total,
+      sentence: `${nonland} are in none of its combos. That is normal — most of a deck is `
+        + 'removal, ramp and protection — so they are grouped by how close they are to '
+        + `doing something rather than listed as cuts.${hidden}`,
+    };
+  }
+
+  // The three groups, in the order a reader wants them: nearly there, then real combo
+  // cards with nobody to combo with, then the ones no addition can help.
+  //
+  // Each carries its own caption because the three mean genuinely different things, and a
+  // tab strip with one shared sentence over it would leave the reader to work out which
+  // one they are looking at from the numbers.
+  //
+  // `empty` matters more than it looks. A tab a reader presses onto nothing has to say why
+  // it is empty, or the panel reads as broken — and all three are reachable: a deck with no
+  // near-misses at all is a real deck, and so is one where every card carries something.
+  function cutGroups(cut) {
+    if (!cut) return [];
+    return [
+      {
+        id: 'away',
+        label: 'One card away',
+        count: cut.away.length,
+        rows: cut.away,
+        note: 'Carrying nothing today, and one card from carrying something. Cutting one of '
+          + 'these costs you a suggestion rather than a combo.',
+        empty: 'No card here is one addition away from a combo.',
+      },
+      {
+        id: 'unpaired',
+        label: 'No partner here',
+        count: cut.unpaired.length,
+        rows: cut.unpaired,
+        note: 'Combo cards with nothing in this list to combo with. The number is how many '
+          + 'published combos name the card somewhere else — none of them are reachable from '
+          + 'here, and none are one card away either.',
+        empty: 'Every combo card in this deck has something to pair with.',
+      },
+      {
+        id: 'none',
+        label: 'No known combo',
+        count: cut.none.length,
+        rows: cut.none,
+        note: 'In no published combo at all, so nothing you add can switch them on. This is '
+          + 'the removal, the ramp and the protection — the part of a deck that makes the '
+          + 'other part work.',
+        empty: 'Every card in this deck turns up in a published combo somewhere.',
+      },
+    ];
+  }
+
+  // The gutter on one of those rows: the number, and the word under it.
+  //
+  // **The word is not "combos", and that is the point.** The shipped label comes from
+  // rowNumbers() and says `combos`, which under a heading that says the card carries none
+  // would be the page contradicting itself in the same breath. So each group's number
+  // means something it can name: how many combos are one card away, or how many published
+  // combos name the card somewhere that is not here.
+  //
+  // `spoken` is the whole claim in a sentence, because two words under a figure cannot
+  // carry it and the figure is what a screen reader would otherwise read alone.
+  function cutGutter(row, group) {
+    if (group === 'away') {
+      const n = row.combos;
+      return {
+        count: String(n),
+        label: 'one away',
+        spoken: `one card away from ${n} combo${n === 1 ? '' : 's'}`,
+      };
+    }
+    const n = row.published;
+    return {
+      count: String(n),
+      label: 'elsewhere',
+      spoken: `named in ${n} published combo${n === 1 ? '' : 's'}, none of them in this deck`,
+    };
+  }
+
+  // What the row says under its links. On the first group this is the most useful sentence
+  // in the panel — the card that would switch this one on — and on the second it is the
+  // only thing on the row a reader could not already see.
+  //
+  // The "and N more" tail exists because the list is capped in combos.js
+  // (CUT_NEEDS_SHOWN): a row naming four partners and stopping without saying so would be
+  // claiming to have named them all.
+  function cutWhy(row, group) {
+    if (group === 'none') return null;
+    if (group === 'unpaired') {
+      return `In ${row.published} published combo${row.published === 1 ? '' : 's'} — none with `
+        + 'a card you play, and none you are one card from.';
+    }
+    const names = row.needs || [];
+    if (!names.length) return null;
+    const more = row.needsMore
+      ? ` and ${row.needsMore} other${row.needsMore === 1 ? '' : 's'}`
+      : '';
+    // "A or B", "A, B or C" — the comma-and-or list, because these are alternatives and
+    // "A and B" would read as needing both.
+    const list = names.length === 1
+      ? names[0]
+      : names.slice(0, -1).join(', ') + ' or ' + names[names.length - 1];
+    return `Needs ${list}${more}.`;
+  }
+
   // ---- the numbers a row carries, and whose combos they are -------------------
 
   // A result row's numbers sit in a column of their own rather than in the
@@ -800,6 +997,13 @@
     sizePills,
     deckCombosNote,
     basketNote,
+    priceLabel,
+    priceTitle,
+    basketPriceNote,
+    cutCandidatesNote,
+    cutGroups,
+    cutGutter,
+    cutWhy,
     rowNumbers,
     bracketProse,
     commanderPin,

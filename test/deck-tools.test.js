@@ -95,3 +95,59 @@ test('sweepStatus: nothing in, nothing out', () => {
   // No sweep data at all reports everything unswept rather than throwing.
   assert.strictEqual(sweepStatus(cards, null).unswept, 3);
 });
+
+// ---- deck-filters.js: what a filter chip would leave -------------------------
+//
+// The pair of numbers is the whole point, and reporting either alone is what hides the
+// case this tool was written to find: on the standing Chatterfang deck "wins only" takes
+// 233 combos to 182 and leaves all 40 rows standing, because every card carrying a combo
+// carries at least one win. A chip whose visible effect is that some numbers got smaller
+// is a different design problem to one that empties the panel.
+const { filterCounts } = require('../tools/deck-filters.js');
+
+const combo = (cards, size, tier, commander) => ({ cards, deckCards: cards, size, tier, commander });
+const deck = [
+  combo(['Chatterfang', 'Pitiless Plunderer'], 2, 'decisive', true),
+  combo(['Chatterfang', 'Warren Soultrader', 'Academy Manufactor'], 3, 'win', true),
+  combo(['Rosie Cotton', 'Scurry Oak'], 2, 'win', false),
+  combo(['Spike Feeder', 'Heroic Feast'], 2, 'decisive', false),
+  combo(['Animation Module', 'Sadistic Glee', 'Carrion Feeder'], 3, 'win', false),
+];
+
+test('filterCounts: no chips pressed is the whole deck', () => {
+  const all = filterCounts(deck, []);
+  assert.strictEqual(all.combos, 5);
+  assert.strictEqual(all.rows, 11, 'eleven distinct cards carry them');
+});
+
+// The measured case, in miniature: a filter that removes combos and no rows at all.
+test('filterCounts: combos and rows move independently', () => {
+  const wins = filterCounts(deck, ['win']);
+  assert.strictEqual(wins.combos, 3, 'two of the five are decisive rather than wins');
+  const two = filterCounts(deck, ['two']);
+  assert.strictEqual(two.combos, 3);
+  assert.strictEqual(two.rows, 6, 'and this one really does empty most of the panel');
+});
+
+test('filterCounts: chips AND together', () => {
+  const both = filterCounts(deck, ['commander', 'two']);
+  assert.strictEqual(both.combos, 1, 'only Chatterfang + Pitiless Plunderer is both');
+  assert.deepStrictEqual(both.cards.map((c) => c.card), ['Chatterfang', 'Pitiless Plunderer']);
+  // The combination a chip's own count cannot predict: each alone keeps 2 and 3.
+  assert.strictEqual(filterCounts(deck, ['commander']).combos, 2);
+});
+
+test('filterCounts: rows are ranked by combos, then by name', () => {
+  const rows = filterCounts(deck, ['commander']).cards;
+  assert.deepStrictEqual(rows.slice(0, 2).map((c) => c.card), ['Chatterfang', 'Academy Manufactor']);
+  assert.strictEqual(rows[0].combos, 2, 'the commander carries both');
+});
+
+test('filterCounts: an unknown chip id is ignored, not fatal', () => {
+  assert.strictEqual(filterCounts(deck, ['nonsense']).combos, 5);
+});
+
+test('filterCounts: nothing in, nothing out', () => {
+  assert.deepStrictEqual(filterCounts([], ['win']), { combos: 0, rows: 0, cards: [] });
+  assert.deepStrictEqual(filterCounts(null, null), { combos: 0, rows: 0, cards: [] });
+});

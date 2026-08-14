@@ -21,6 +21,7 @@ on:
     branches: [main]
     paths:
       - 'tools/fetch-combos.js'
+      - 'tools/fetch-prices.js'
       - '.github/workflows/update-data.yml'
 
 concurrency:
@@ -63,6 +64,21 @@ jobs:
       - name: Fetch the combo database
         run: node tools/fetch-combos.js "$RUNNER_TEMP/combos.json" "$RUNNER_TEMP/steps"
 
+      # What each card costs, beside the combos and from the same run. It reads
+      # combos.json rather than the whole of Scryfall so the file stays small — only
+      # the ~7,400 cards a published combo names can ever be suggested — and it
+      # refuses to write a file that covers too few of them, for the same reason the
+      # gate below exists: this branch has no history to roll back to.
+      #
+      # After the combos and before their gate, so a fetch that throws stops the run
+      # before anything is published. A price file is worth having and it is not worth
+      # holding today's combos back for: if this step ever becomes flaky, moving it
+      # after the publish is the right fix rather than retrying it here.
+      - name: Fetch the prices
+        run: |
+          node tools/fetch-prices.js "$RUNNER_TEMP/combos.json" "$RUNNER_TEMP/prices.json" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
       # Before the publish, not after. The data branch is one orphan commit that
       # gets force-pushed, so there is no history and nothing to roll back to —
       # the previous snapshot is gone the moment a worse one lands. The fetcher's
@@ -92,6 +108,7 @@ jobs:
           work="$RUNNER_TEMP/data-branch"
           mkdir -p "$work"
           cp "$RUNNER_TEMP/combos.json" "$work/combos.json"
+          cp "$RUNNER_TEMP/prices.json" "$work/prices.json"
           # 103,737 files, and the reason they are affordable is measured rather
           # than hoped: `git add` of a tree this size is 24s, the commit 1.6s, and
           # the pack 19.8 MB — inside a job that has just streamed a 512 MB export.
@@ -102,12 +119,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -q --orphan data
-          git add combos.json steps
+          git add combos.json prices.json steps
           git commit -q -m "Combo data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git push -q --force \
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
             data
-          echo "Published $(du -h combos.json | cut -f1) combos.json and $(du -sh steps | cut -f1) of steps to the data branch"
+          echo "Published $(du -h combos.json | cut -f1) combos.json, $(du -h prices.json | cut -f1) prices.json and $(du -sh steps | cut -f1) of steps to the data branch"
 
       - name: Say what a dry run would have published
         if: ${{ inputs.dry_run }}
@@ -117,6 +134,7 @@ jobs:
             echo "### Dry run — nothing was published"
             echo ""
             echo "combos.json: $(du -h "$RUNNER_TEMP/combos.json" | cut -f1)"
+            echo "prices.json: $(du -h "$RUNNER_TEMP/prices.json" | cut -f1)"
             echo "steps: $(find "$RUNNER_TEMP/steps" -type f | wc -l) files, $(du -sh "$RUNNER_TEMP/steps" | cut -f1)"
           } >> "$GITHUB_STEP_SUMMARY"
 

@@ -36,6 +36,9 @@ SHOT_OPEN=… SHOT_PAGE=tiers.html SHOT_SEARCH=0 npm run shot    # press first �
 
 node tools/fetch-combos.js out.json [steps/]      # --no-steps skips the 103,737 files
 node tools/fetch-combos.js out.json --fixture test/fixtures/export.json   # no network
+node tools/fetch-prices.js combos.json prices.json          # runner only — Scryfall is 403 here
+node tools/fetch-prices.js combos.json prices.json --fixture test/fixtures/bulk-prices.jsonl
+node tools/deck-filters.js [deck.txt] [--json out.json]     # what a filter chip would leave
 node tools/try-deck.js [deck.txt]                 # what the page would show
 node tools/combos-with.js "Card A" "Card B"        # why isn't this a combo?
 node tools/template-users.js ["Persist Creature"]
@@ -120,7 +123,8 @@ logic is unit-testable without a DOM.
 | `page-dom.js` | `PageDom` | DOM helpers, `setStatus`, the collapsible `panel` |
 | `render-rows.js` | `RenderRows` | the vocabulary every result row is built from |
 | `render-combos.js` | `RenderCombos` | a combo as a row + its steps disclosure |
-| `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck* (a row per card), suggestions, unofficial |
+| `render-suggestions.js` | `RenderSuggestions` | *Combos in your deck* (a row per card), suggestions, unofficial, *Cards carrying no combo* |
+| `prices.js` | `CardPrices` | what a card costs: the table, the lookup, the figure a row leaves room for |
 | `render-map.js` | `RenderMap` | the map's drawing half |
 | `deck-io.js` | `DeckIO` | the decklist, the share link, the dropped file, **the deck as it arrived** |
 | `cart-links.js` | `CartLinks` | where to buy a card — the store URL, the affiliate wrapper, the subid |
@@ -138,9 +142,16 @@ logic is unit-testable without a DOM.
   the tools → `test/lint-config.test.js` fails if a script matches no lint block.
 - `search-worker.js` `importScripts` result-tiers → combos → unofficial → search, **in that
   order** (each reads the previous at load time). Not `parser.js`, not `graph.js`.
+- **`prices.js` reads `DeckView` at call time, not at load time**, and that is not a style choice:
+  `view-model.js` is loaded *after* it in `index.html`, so a `const DeckView = global.DeckView` at the
+  top captured undefined, every paint threw, and **the throw was swallowed by the fetch's own catch** —
+  the page showed a dangling `·` where a figure belonged and reported nothing anywhere. The catch now
+  covers the fetch alone. It took a screenshot to find, which is the cost of a catch that is one line
+  too wide. → `test/prices.test.js`, `npm run verify`.
 - `tiers.html` loads `combos.js` for one function, `DeckCombos.decode()`.
 - `templates.json` is generated and checked in. `combos.json` is built by CI on the `data` branch
-  — **never commit it.** `steps/` ships beside it: one file per combo, 256 buckets, gitignored.
+  — **never commit it.** `steps/` ships beside it: one file per combo, 256 buckets, gitignored, and so
+  does `prices.json` (`tools/fetch-prices.js`, same nightly job).
 
 ## Researching a card, and recording that you did
 
@@ -417,7 +428,28 @@ loosely.
 - **Load order is load-bearing** — `combos.js` reads the tier inventory at load time, `search.js`
   reads `combos.js`. A new script goes into `index.html` **and** `search-worker.js`.
   `cart-links.js` is the exception and deliberately so: nothing about a search needs a shop, so it is
-  in the page only.
+  in the page only. `prices.js` is the second, for the same reason.
+- **An absent price is not zero, and that rule is the whole price feature.** `tools/fetch-prices.js`
+  publishes no figure for a card whose only printing is foil, and the page prints *no price* rather than
+  a blank or a `$0.00`: read as free, exactly the cards nobody can buy become the cheapest thing on the
+  page, and it looks like a working feature. `Number('')` is 0, so an empty string has to fail the parse
+  rather than parse → `test/prices.test.js`, `test/fetch-prices.test.js`, `npm run verify`, proved by
+  breaking `priceLabel()`.
+- **A price rides on the same opt-in as the Buy link** — `cardLinks(name, { buy: true })` — so it can no
+  more appear beside a banned card or a Game Changer than that link can, and it is **never inside** the
+  link: "Buy $4.00" reads as a quote for the page that link opens, and it is the cheapest printing in a
+  nightly file before postage. `verify` counts figures in `#pieces`, `#cut-candidates`, `#legality` and
+  `#bracket` and requires zero, proved by making the flag unconditional. The separator is drawn by CSS
+  (`.price::before`) rather than appended beside the span, because a figure that never arrives otherwise
+  leaves a dangling `·` — which is every row on a local checkout, where there is no price file at all.
+- **"Cards carrying no combo" is three groups and never a cut list.** `cutCandidates()` in `combos.js`
+  returns facts, `DeckView.cutCandidatesNote()` says them: the page cannot see what a deck needs to
+  function — 21 of the tuning deck's 62 nonland cards are in no published combo and they are the removal
+  and the ramp. Lands are filtered and the count is stated (2 of the hidden ones are in published
+  combos); a card the snapshot has never heard of is in no group at all, since a misspelling is not a
+  card in no combo. **Neither fixture deck reaches this panel** — every card in both carries something —
+  so `DECKS.cut` exists for it and `verify` has a run of its own that presses all three tabs.
+  README § *Cards carrying no combo, and why it is not a cut list*.
 - **"Cards you've added" is a diff, and every way the diff can be wrong looks right.** It is the deck
   now minus the deck as it *arrived* — `basketFrom()`, with the baseline in `DeckIO` — and arrival is
   defined by exclusion: the add and cut buttons are the only things that edit the deck by themselves,
