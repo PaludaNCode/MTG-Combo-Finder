@@ -2019,9 +2019,24 @@ drops any row whose card set already appears there.
 **And somebody is told, which is the part that used to be missing.** The page dropping a row silently is
 right for the reader and wrong for the file: the row stays in `unofficial.js` carrying a claim that is no
 longer ours to make. The nightly job runs `tools/verify-unofficial.js` against the snapshot it just
-published. A **broken citation** fails the job. A **graduation** is not a failure and now opens a standing
-issue listing the rows that can come out, updated nightly and closed by the job once the list empties.
-**Don't hand-edit that issue** — `npm run verify:unofficial` is the live answer.
+published, and sorts what it finds into two kinds.
+
+**A defect fails the run; the world moving does not.** A broken citation — an id that resolves to nothing,
+or to a combo naming different cards — means the page is showing evidence for something that is not there,
+so the job fails. A row that has graduated, or a `null` card id the published data has caught up with, is
+a claim of ours that reality has overtaken: nothing a reader sees is wrong, and what is wanted is a
+person's judgement. **That distinction was learnt the expensive way.** A `null` id becoming published was
+filed as a defect, and in Aug 2026 it failed the nightly for ten consecutive nights over a file that was
+working perfectly — while *also* skipping the reporting job, which is gated behind that same run.
+
+**So the report is a standing GitHub issue, and a red cron run is not a notification.** The job keeps one
+issue — opened when the nightly wants a person, rewritten every night it still does, closed by the job
+itself the night it does not — covering all three: broken citations, moved claims, graduated rows. It is
+opened for a night that published nothing at all, and for a night whose check wrote no report, because
+silence and an all-clear are the same shape and the job must never read one as the other. The wording and
+the four states are `tools/nightly-issue.js`, unit-tested, because a decision inside a workflow's `run:`
+block can only be exercised at 04:17 tomorrow. **Don't hand-edit that issue** — `npm run verify:unofficial`
+is the live answer.
 
 ### What the file costs, and the size at which it stops being source
 

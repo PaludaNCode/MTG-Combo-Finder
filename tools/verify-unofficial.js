@@ -142,7 +142,14 @@ function checkStandIns(data, rules) {
 // to a reader, matches no deck ever, and says nothing about it.
 //
 // So every swap records the card's Spellbook id beside the name, and this reads
-// the two against each other. Both directions are a finding:
+// the two against each other. Both directions are a finding, and they are two
+// different KINDS of finding — which is the distinction this whole tool now turns
+// on. A recorded id that has stopped resolving, or that now carries somebody else's
+// name, means the page is showing a citation to nothing: a defect, and the job
+// fails. A `null` that has become published means the world moved: the row still
+// works, nothing a reader sees is wrong, and what is needed is a person's judgement
+// about a rule. That is news, and news must not fail a cron job — see the note above
+// `news` below.
 //
 //   inId: <number>   the id must exist and must still carry that name. If Spellbook
 //                    renames the card, the id resolves to the new one and says so,
@@ -150,11 +157,16 @@ function checkStandIns(data, rules) {
 //   inId: null       a claim that the published data has no such card. Hammerhead
 //                    made it for a month — being in no combo at all is the entire
 //                    reason he needs a stand-in rule — and on 18 Aug 2026 Spellbook
-//                    began publishing him (460 combos by the 27th), so this failed
-//                    and went on failing until somebody wrote `8095` down against
-//                    all four citations. That is the check working: a card
-//                    the file says is unpublished becoming published is news, and
-//                    ten red nights is what news looks like from a cron job.
+//                    began publishing him (460 combos by the 27th).
+//
+//                    **This used to be a problem and is now news.** It failed the
+//                    nightly for ten consecutive nights, over a file that was
+//                    working: no reader sees an id, the row cites by name and
+//                    matched decks throughout. All ten reds bought was a habit of
+//                    ignoring a red nightly — and they hid the graduation report,
+//                    which is skipped when this job fails. Ten nights is what news
+//                    looks like coming out of a cron job's exit code, so it comes
+//                    out of the standing issue instead.
 //
 // research-log.js records the same thing for every card a pass swept, and for the
 // same reason, so it is checked here too — nothing else could. Seven of its ids were
@@ -162,14 +174,19 @@ function checkStandIns(data, rules) {
 // Partnership, Cauldron Familiar's 1475 was One with the Kami. Nothing had noticed,
 // because an id in the log is never dereferenced by anything that runs.
 function checkCardIds(cards, rows, rules, passes) {
-  if (!cards) return [];
   const problems = [];
+  // Kept apart from `problems` all the way out, rather than split by the caller on a
+  // regex over the message. A finding's severity is decided where the finding is
+  // made or it is decided twice.
+  const news = [];
+  if (!cards) return { problems, news };
   const look = (where, name, id) => {
     const known = cards.byKey.get(nameKey(name));
     if (id === null || id === undefined) {
       if (known) {
-        problems.push(`${where}: records no card id for ${name}, but the published data `
-          + `now names it (id ${known.id}) — the citation can be direct.`);
+        news.push(`${where}: records no card id for ${name}, but the published data `
+          + `now names it (id ${known.id}) — write the id down, and check whether the `
+          + 'rule that exists because Spellbook had never used the card still earns its keep.');
       }
       return;
     }
@@ -197,7 +214,7 @@ function checkCardIds(cards, rows, rules, passes) {
       look(`research log "${pass.subject}"`, name, (pass.cardIds || [])[i]);
     });
   }
-  return problems;
+  return { problems, news };
 }
 
 // The name/id tables are read off the payload *before* decode(), which deletes
@@ -249,7 +266,8 @@ async function main() {
   const { data, cards } = await load(snapshot);
   const { problems, graduated, counted } = check(data, COMBOS);
   const rules = checkStandIns(data, STAND_INS);
-  problems.push(...checkCardIds(cards, COMBOS, STAND_INS, PASSES));
+  const ids = checkCardIds(cards, COMBOS, STAND_INS, PASSES);
+  problems.push(...ids.problems);
 
   say('# Unofficial rows against the published data');
   say();
@@ -288,7 +306,24 @@ async function main() {
       snapshot: data.updatedAt || null,
       checked: COMBOS.length,
       graduated,
+      news: ids.news,
+      // The problems go in the file too, even though they have already failed the
+      // step above. That failure is an exit code on a cron run, which is the channel
+      // that went unread for ten nights — the issue this file feeds is the one a
+      // person actually passes.
+      problems,
     }, null, 1));
+  }
+
+  if (ids.news.length) {
+    say('## The published data moved under a claim of ours');
+    say();
+    say('Not an error and not a defect anybody can see: no reader is shown a card id, '
+      + 'and every one of these rows still cites by name and still matches. It wants a '
+      + 'person, which is why it is here and not in the failure below.');
+    say();
+    ids.news.forEach((n) => say(`- ${n}`));
+    say();
   }
 
   if (graduated.length) {

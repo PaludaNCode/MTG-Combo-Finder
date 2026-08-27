@@ -625,15 +625,16 @@ const idRow = (over) => Object.assign({
 }, over);
 
 test('card ids: a swap whose name and id agree is fine', () => {
-  assert.deepStrictEqual(checkCardIds(CARDS, [idRow()], []), []);
+  assert.deepStrictEqual(checkCardIds(CARDS, [idRow()], []), { problems: [], news: [] });
 });
 
 test('card ids: a card id the data does not have is caught', () => {
   const out = checkCardIds(CARDS, [idRow({
     swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 9999 },
   })], []);
-  assert.strictEqual(out.length, 1);
-  assert.match(out[0], /does not have/);
+  assert.strictEqual(out.problems.length, 1);
+  assert.match(out.problems[0], /does not have/);
+  assert.deepStrictEqual(out.news, [], 'a dangling id is a defect, not news');
 });
 
 // The one the id exists for: upstream renames the card, the name stops matching
@@ -642,8 +643,9 @@ test('card ids: an id that now carries a different name is caught', () => {
   const out = checkCardIds(CARDS, [idRow({
     swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 2292 },
   })], []);
-  assert.strictEqual(out.length, 1);
-  assert.match(out[0], /is now "Viscera Seer"/);
+  assert.strictEqual(out.problems.length, 1);
+  assert.match(out.problems[0], /is now "Viscera Seer"/);
+  assert.deepStrictEqual(out.news, [], 'a renamed card is a defect, not news');
 });
 
 // null is a claim, not a blank: it says the published data has no such card. That
@@ -653,15 +655,21 @@ test('card ids: null on a card the data does not name is fine', () => {
     cards: ['Scurry Oak', 'Hammerhead, Maggia Boss', 'Viscera Seer'],
     swap: { out: 'Sadistic Glee', in: 'Hammerhead, Maggia Boss', inId: null },
   })], []);
-  assert.deepStrictEqual(out, []);
+  assert.deepStrictEqual(out, { problems: [], news: [] });
 });
 
-test('card ids: null on a card the data now names is reported', () => {
+// And reported as NEWS, not as a problem. This is the finding that failed the
+// nightly ten nights running over a file nothing was wrong with: no reader sees a
+// card id, the row still cites by name and still matches decks, and what it needs
+// is somebody's judgement about whether the rule can go. Both halves are asserted
+// because the whole fix is which list it lands in.
+test('card ids: null on a card the data now names is news, and does not fail', () => {
   const out = checkCardIds(CARDS, [idRow({
     swap: { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: null },
   })], []);
-  assert.strictEqual(out.length, 1);
-  assert.match(out[0], /now names it \(id 1628\)/);
+  assert.deepStrictEqual(out.problems, [], 'the world moving is not a defect in our file');
+  assert.strictEqual(out.news.length, 1);
+  assert.match(out.news[0], /now names it \(id 1628\)/);
 });
 
 test('card ids: the stand-in rules are read the same way', () => {
@@ -670,15 +678,15 @@ test('card ids: the stand-in rules are read the same way', () => {
     cardId: null,
     for: [{ card: 'Viscera Seer', cardId: 4186 }],
   }]);
-  assert.strictEqual(out.length, 1);
-  assert.match(out[0], /is now "Scurry Oak"/);
+  assert.strictEqual(out.problems.length, 1);
+  assert.match(out.problems[0], /is now "Scurry Oak"/);
 });
 
 // A payload with no tables — the fixtures, and any older local combos.json — has
 // no ids to read, and that is not a failure. It is the same no-op decode() makes.
 test('card ids: a payload without the tables is skipped, not failed', () => {
   assert.strictEqual(cardIndex({ combos: [] }), null);
-  assert.deepStrictEqual(checkCardIds(null, [idRow()], []), []);
+  assert.deepStrictEqual(checkCardIds(null, [idRow()], []), { problems: [], news: [] });
 });
 
 // The failure a stand-in rule has that a written row does not: it cannot cite a

@@ -129,35 +129,48 @@ test('the warmer runs on the default branch, which is the only place a shared ca
 
 // ---- the nightly data job's second half has to survive its first half ---------
 //
-// `graduated` reports the rows Spellbook has since published and keeps the standing
-// issue for them. `fetch` publishes the snapshot and then, as its LAST step, checks
-// that every unofficial row still cites a real combo — deliberately after the push,
-// because a broken citation is our file's problem and not a reason to hold the data
-// back. The consequence nobody costed: a bare `needs: fetch` means "and fetch
-// succeeded", so a failing citation check skips the reporting job even though the
-// snapshot it wants is sitting on the branch.
+// `report` is the job that keeps the standing issue — the nightly's only channel to a
+// person. `fetch` publishes the snapshot and then, as its LAST step, checks that every
+// unofficial row still cites a real combo: deliberately after the push, because a
+// broken citation is our file's problem and not a reason to hold the data back. The
+// consequence nobody costed: a bare `needs: fetch` means "and fetch succeeded", so a
+// failing citation check skipped the reporting job even though the snapshot it wants
+// was sitting on the branch.
 //
 // That is not hypothetical. Hammerhead, Maggia Boss became a published card on
 // 18 Aug 2026, the citation check failed on it for ten consecutive nights, and the
-// graduation report never ran once in that time — five rows had graduated and the
-// issue that exists to say so was never opened. The gate is the publish step's output
-// now, which is a statement about the branch rather than about the job.
+// report never ran once in that time — five rows had graduated and the issue that
+// exists to say so had never been opened. So `report` now runs on any outcome, and
+// what the publish step's output decides is which report it writes.
 const updateData = fs.readFileSync(path.join(root, '.github', 'workflows', 'update-data.yml'), 'utf8');
+const reportJob = updateData.slice(updateData.indexOf('\n  report:'));
 
-test('the graduation report runs on a published snapshot, not on a passing fetch', () => {
-  const gate = updateData.slice(updateData.indexOf('\n  graduated:'));
-  const ifLine = /^\s*if: (.+)$/m.exec(gate);
-  assert.ok(ifLine, 'the graduated job must have an if:');
-  assert.match(ifLine[1], /needs\.fetch\.outputs\.published == 'true'/,
-    'the gate must be the publish step\'s output, so a failed citation check cannot skip it');
+test('the standing-issue job runs whatever the fetch job did', () => {
+  const ifLine = /^\s*if: (.+)$/m.exec(reportJob);
+  assert.ok(ifLine, 'the report job must have an if:');
   assert.match(ifLine[1], /!cancelled\(\)/,
     'a `needs:` job needs !cancelled() or always() to run at all when its dependency failed');
+  assert.doesNotMatch(ifLine[1], /needs\.fetch\.result/,
+    'the report is the thing that says a fetch failed, so it must not be gated on the fetch passing');
+});
+
+test('what was published decides which report is written, not whether one is', () => {
+  // The two data steps are skipped when there is no fresh snapshot — a report about
+  // yesterday's file wearing tonight's date is worse than the plain statement that
+  // nothing was published. The issue step is not skipped, and that is the whole fix.
+  const gated = reportJob.split('- name: ').filter((step) => /needs\.fetch\.outputs\.published == 'true'/.test(step));
+  assert.deepStrictEqual(gated.map((s) => s.split('\n')[0]), [
+    'Take the snapshot that was just published',
+    'Ask the snapshot what needs a person',
+  ], 'exactly the two steps that read the snapshot are gated on there being one');
+  assert.match(reportJob, /PUBLISHED: \$\{\{ needs\.fetch\.outputs\.published \}\}/,
+    'the issue step must be told what happened rather than skipped');
 });
 
 test('the fetch job actually publishes that output', () => {
   // Both halves, because a gate reading an output nothing sets is permanently false
-  // and skips the job — the same outcome as the bug, arrived at from the other end.
-  const fetchJob = updateData.slice(updateData.indexOf('\n  fetch:'), updateData.indexOf('\n  graduated:'));
+  // and skips the step — the same outcome as the bug, arrived at from the other end.
+  const fetchJob = updateData.slice(updateData.indexOf('\n  fetch:'), updateData.indexOf('\n  report:'));
   assert.match(fetchJob, /outputs:\s*\n\s*published: \$\{\{ steps\.publish\.outputs\.published \}\}/,
     'the fetch job must expose the publish step as an output');
   assert.match(fetchJob, /- name: Publish to the data branch\n\s*id: publish\n/,
@@ -173,6 +186,19 @@ test('the citation check still runs after the push, which is why any of this is 
   const cite = updateData.indexOf('- name: Check the unofficial rows still cite something real');
   assert.ok(push > 0 && cite > 0, 'both steps must exist');
   assert.ok(cite > push, 'the citation check runs after the publish, never before it');
+});
+
+// The issue's wording, its four states and its title all live in a tool with tests of
+// its own (test/nightly-issue.test.js). What this asserts is only that the workflow
+// still asks the tool rather than deciding for itself — the moment a branch reappears
+// in this shell it is untestable again, which is how three wrong defaults once sat
+// inside a Playwright spec at the same time.
+test('the issue step decides nothing itself', () => {
+  const step = reportJob.slice(reportJob.indexOf('- name: Keep the standing issue'));
+  assert.match(step, /node tools\/nightly-issue\.js/, 'the shell must ask the tool');
+  assert.match(step, /require\('\.\/tools\/nightly-issue\.js'\)\.TITLE/,
+    'the title must come from the tool too, or the lookup and the create can disagree');
+  assert.doesNotMatch(step, /^\s*echo "(#|##|\*\*)/m, 'no issue prose may be written in the shell');
 });
 
 module.exports = { playwrightPinInPackage, playwrightPinInWorkflow };
