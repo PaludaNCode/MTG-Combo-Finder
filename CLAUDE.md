@@ -136,6 +136,7 @@ logic is unit-testable without a DOM.
 | `tools/sweep-impact.js` | — | which of a sweep's changes land on a card this repo cites |
 | `tools/prove-check.js` | — | breaking a check on purpose and, above all, putting the file back |
 | `tools/shot-config.js` | — | what a `SHOT_*` environment means — the half of `npm run shot` a test can load |
+| `tools/nightly-issue.js` | — | what the nightly's standing issue should say, and whether there should be one |
 | `e2e/shot.spec.js` | — | **not a test.** Photographs a selector; registers nothing unless `SHOT` is set |
 
 - `research-log.js` breaks that shape — never loaded by a browser, so plain CommonJS, linted with
@@ -631,9 +632,17 @@ loosely.
   pin — before the confidence pin — is what marks a row as ours. It is drawn on every such row and
   never behind a flag, because a missing pin in a merged list credits our work to Spellbook and
   nothing on screen would say otherwise. Counts stay apart (`+3 official · +1 unofficial`).
-- **Rows leave only by graduation, noticed by the nightly job**, which fails on a broken citation
-  and maintains a standing issue itself. **Don't hand-edit that issue** — `npm run verify:unofficial`
-  is the live answer. README § *They graduate rather than accumulate*.
+- **Rows leave only by graduation, noticed by the nightly job**, which sorts its findings into
+  **a defect, which fails the run** (a citation resolving to nothing or to different cards) and
+  **the world moving, which does not** (a graduated row, a `null` card id the data has caught up
+  with). Filing the second as the first cost **ten consecutive red nights** in Aug 2026 over a file
+  that was working — and hid the reporting job, which is gated behind that run.
+  **A red cron run is not a notification**: the job keeps one standing issue for all of it, opened
+  also for a night that published nothing and for a night whose check wrote no report, since silence
+  and an all-clear are the same shape → `tools/nightly-issue.js`, `test/nightly-issue.test.js`, the
+  four states unit-tested because a branch inside a workflow `run:` block can only be exercised
+  tomorrow at 04:17. **Don't hand-edit that issue** — `npm run verify:unofficial` is the live
+  answer. README § *They graduate rather than accumulate*.
 - **A row's borrowed steps are marked, never rewritten** — `DeckView.markedSteps()`. Every mention
   of the swapped-out card in the cited combo's steps is struck through with the reader's card beside
   it, in words rather than a colour or a tooltip. **A rewrite was measured and rejected**: 802 of
