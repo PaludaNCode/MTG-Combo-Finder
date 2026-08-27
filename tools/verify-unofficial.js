@@ -81,9 +81,11 @@ function check(data, rows) {
 // all, silently, and the page simply shows less than it did. So this counts what
 // each rule actually reaches and says which source every row leaned on.
 //
-// It also watches for the day the rule stops being needed. Hammerhead is here
-// because Spellbook has never used him; when that changes, the rows start
-// graduating one by one, and the count below is how anybody notices.
+// It also watches for the day a rule stops being needed. Hammerhead is here
+// because Spellbook had never used him; that changed on 18 Aug 2026 and the rows
+// now graduate one by one, so `alreadyPublished` — the "names it in N combos of
+// its own" line — is how anybody notices, and it is 460 against the 1,834 the
+// rule still reaches.
 function checkStandIns(data, rules) {
   const combos = (data && data.combos) || [];
   const problems = [];
@@ -146,9 +148,13 @@ function checkStandIns(data, rules) {
 //                    renames the card, the id resolves to the new one and says so,
 //                    where the name alone would just quietly stop being a card.
 //   inId: null       a claim that the published data has no such card. Hammerhead
-//                    makes it — being in no combo at all is the entire reason he
-//                    needs a stand-in rule — and the day it stops being true is the
-//                    day the rule can go.
+//                    made it for a month — being in no combo at all is the entire
+//                    reason he needs a stand-in rule — and on 18 Aug 2026 Spellbook
+//                    began publishing him (460 combos by the 27th), so this failed
+//                    and went on failing until somebody wrote `8095` down against
+//                    all four citations. That is the check working: a card
+//                    the file says is unpublished becoming published is news, and
+//                    ten red nights is what news looks like from a cron job.
 //
 // research-log.js records the same thing for every card a pass swept, and for the
 // same reason, so it is checked here too — nothing else could. Seven of its ids were

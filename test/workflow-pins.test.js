@@ -127,4 +127,52 @@ test('the warmer runs on the default branch, which is the only place a shared ca
   assert.doesNotMatch(ciTriggers, /^\s*branches: \[main\]\s*$/m, 'ci.yml must not opt back into push-to-main');
 });
 
+// ---- the nightly data job's second half has to survive its first half ---------
+//
+// `graduated` reports the rows Spellbook has since published and keeps the standing
+// issue for them. `fetch` publishes the snapshot and then, as its LAST step, checks
+// that every unofficial row still cites a real combo — deliberately after the push,
+// because a broken citation is our file's problem and not a reason to hold the data
+// back. The consequence nobody costed: a bare `needs: fetch` means "and fetch
+// succeeded", so a failing citation check skips the reporting job even though the
+// snapshot it wants is sitting on the branch.
+//
+// That is not hypothetical. Hammerhead, Maggia Boss became a published card on
+// 18 Aug 2026, the citation check failed on it for ten consecutive nights, and the
+// graduation report never ran once in that time — five rows had graduated and the
+// issue that exists to say so was never opened. The gate is the publish step's output
+// now, which is a statement about the branch rather than about the job.
+const updateData = fs.readFileSync(path.join(root, '.github', 'workflows', 'update-data.yml'), 'utf8');
+
+test('the graduation report runs on a published snapshot, not on a passing fetch', () => {
+  const gate = updateData.slice(updateData.indexOf('\n  graduated:'));
+  const ifLine = /^\s*if: (.+)$/m.exec(gate);
+  assert.ok(ifLine, 'the graduated job must have an if:');
+  assert.match(ifLine[1], /needs\.fetch\.outputs\.published == 'true'/,
+    'the gate must be the publish step\'s output, so a failed citation check cannot skip it');
+  assert.match(ifLine[1], /!cancelled\(\)/,
+    'a `needs:` job needs !cancelled() or always() to run at all when its dependency failed');
+});
+
+test('the fetch job actually publishes that output', () => {
+  // Both halves, because a gate reading an output nothing sets is permanently false
+  // and skips the job — the same outcome as the bug, arrived at from the other end.
+  const fetchJob = updateData.slice(updateData.indexOf('\n  fetch:'), updateData.indexOf('\n  graduated:'));
+  assert.match(fetchJob, /outputs:\s*\n\s*published: \$\{\{ steps\.publish\.outputs\.published \}\}/,
+    'the fetch job must expose the publish step as an output');
+  assert.match(fetchJob, /- name: Publish to the data branch\n\s*id: publish\n/,
+    'the publish step must carry the id the output names');
+  assert.match(fetchJob, /echo "published=true" >> "\$GITHUB_OUTPUT"/,
+    'the publish step must write the output it claims');
+});
+
+test('the citation check still runs after the push, which is why any of this is needed', () => {
+  // If these ever swap round the gate above is pointless — and worse, a broken
+  // citation would start holding back a night of data over our own bookkeeping.
+  const push = updateData.indexOf('- name: Publish to the data branch');
+  const cite = updateData.indexOf('- name: Check the unofficial rows still cite something real');
+  assert.ok(push > 0 && cite > 0, 'both steps must exist');
+  assert.ok(cite > push, 'the citation check runs after the publish, never before it');
+});
+
 module.exports = { playwrightPinInPackage, playwrightPinInWorkflow };

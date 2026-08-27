@@ -1750,17 +1750,24 @@ added.
 The audit works by substitution *between two published cards*, so both halves have to be in the data.
 
 A card the database has **never used at all** is therefore invisible to it, and not by accident.
-Hammerhead, Maggia Boss is named by **zero** of 103,675 combos, which closes three doors at once:
-nothing to list; **nothing to substitute**, so the method has no opinion about him rather than a negative
-one; and no slot to arrive through, since Spellbook enumerates sacrifice outlets by name rather than
-templating them — `tools/research-coverage.js` checks that against live data and reports that not one
-template name mentions sacrificing.
+Hammerhead, Maggia Boss was named by **zero** of 103,675 combos when this was written, which closed three
+doors at once: nothing to list; **nothing to substitute**, so the method had no opinion about him rather
+than a negative one; and no slot to arrive through, since Spellbook enumerates sacrifice outlets by name
+rather than templating them — `tools/research-coverage.js` checks that against live data and reports that
+not one template name mentions sacrificing.
 
 **So the only way in is to read the card.** Hammerhead says *"Sacrifice another creature or artifact:
 Put a +1/+1 counter on Hammerhead"* — and Bartolomé del Presidio has one ability, the same sentence, the
-same body. Spellbook publishes **1,674** combos naming Bartolomé and none naming Hammerhead. The colour
-is what earns its keep: Hammerhead is mono-black where Bartolomé is white-black, so every one of those
-lines is an Orzhov combo a Golgari deck can actually run.
+same body. The colour is what earns its keep: Hammerhead is mono-black where Bartolomé is white-black, so
+every one of those lines is an Orzhov combo a Golgari deck can actually run.
+
+**And a card can leave this category, which is the other half of the method.** Spellbook began publishing
+Hammerhead on 18 Aug 2026 — 460 combos of his own by the 27th, against the 1,834 the stand-in rule still
+reaches that he is in none of. Nothing here noticed by reading; the *nightly* noticed, because every swap
+records the swapped-in card's Spellbook id and Hammerhead's was the positive claim `null`, meaning *the
+published data has no such card*. It failed for ten consecutive nights until the id was written down.
+`npm run verify:unofficial` prints both figures against tonight's snapshot, and the day the 1,834
+approaches zero is the day the rule comes out.
 
 ### One card, 1,893 combos: why this one is a rule and not rows
 

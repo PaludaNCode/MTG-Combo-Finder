@@ -35,6 +35,10 @@ jobs:
     # second job must not inherit this: see the note on its own permissions block.
     permissions:
       contents: write
+    # Set by the publish step and read by `graduated`'s `if`, which is what lets that
+    # job run after this one has *failed*. See the note on its `if`.
+    outputs:
+      published: ${{ steps.publish.outputs.published }}
     steps:
       # Pinned to commit SHAs rather than to `@v5`, and only in this workflow.
       #
@@ -102,6 +106,7 @@ jobs:
       # Published as a single orphan commit so the data never accumulates
       # history and the repo stays small — same approach as MTG-Pricerunner.
       - name: Publish to the data branch
+        id: publish
         if: ${{ !inputs.dry_run }}
         run: |
           set -euo pipefail
@@ -125,6 +130,11 @@ jobs:
             "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
             data
           echo "Published $(du -h combos.json | cut -f1) combos.json, $(du -h prices.json | cut -f1) prices.json and $(du -sh steps | cut -f1) of steps to the data branch"
+          # The gate on the `graduated` job below. Written here rather than inferred
+          # from this job's conclusion, because that conclusion also covers the
+          # citation check that runs *after* the push — and a snapshot on the branch
+          # is exactly what that job needs and all it needs.
+          echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Say what a dry run would have published
         if: ${{ inputs.dry_run }}
@@ -166,7 +176,19 @@ jobs:
   # This one can open an issue and cannot touch the data.
   graduated:
     needs: fetch
-    if: ${{ !inputs.dry_run }}
+    # Not `needs: fetch` alone, which is an implicit "and fetch succeeded" — and that
+    # is how this job spent ten consecutive nights not running. The citation check is
+    # the LAST step of `fetch`, after the push, so a broken citation fails that job
+    # with the snapshot already published and this one skipped: the `|| true` below
+    # was written to survive exactly that and never got the chance. Five rows had
+    # graduated by the time anyone looked, and the standing issue that is supposed to
+    # say so had never been opened.
+    #
+    # So the gate is the publish step's own output rather than the job's conclusion.
+    # It is true when, and only when, there is a fresh snapshot on the data branch to
+    # read — which is the whole of what this job needs — and it is empty on a dry run,
+    # so that condition is carried rather than repeated.
+    if: ${{ !cancelled() && needs.fetch.outputs.published == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

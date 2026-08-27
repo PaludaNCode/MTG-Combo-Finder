@@ -254,7 +254,7 @@
       from: { id: '2082-2438-4186', cards: ['Scurry Oak', 'Sadistic Glee', 'Carrion Feeder'] },
       swaps: [
         { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
-        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss', inId: null },
+        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss', inId: 8095 },
       ],
       why: 'The counter makes a Squirrel, Hammerhead eats it for free, and the death puts '
         + 'on the next counter. He eats creatures on the same terms Carrion Feeder does — '
@@ -271,7 +271,7 @@
       from: { id: '2082-2438-3197', cards: ['Herd Baloth', 'Sadistic Glee', 'Carrion Feeder'] },
       swaps: [
         { out: 'Sadistic Glee', in: 'Necrosynthesis', inId: 1628 },
-        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss', inId: null },
+        { out: 'Carrion Feeder', in: 'Hammerhead, Maggia Boss', inId: 8095 },
       ],
       why: 'The same loop as the Scurry Oak row, with 4/4 Beasts instead of Squirrels: the '
         + 'counter makes a token, Hammerhead eats it, the death puts on the next counter.',
@@ -676,7 +676,7 @@
     // about two cards that do the same job here — the fifteen rows above are
     // that judgement. Hammerhead for Bartolome del Presidio is not a judgement
     // at all: the two cards have one ability each and it is the same sentence,
-    // which is why STAND_INS declares it once for 1,889 combos.
+    // which is why STAND_INS declares it once for 1,834 combos.
     //
     // Chaining an identity onto a judgement leaves exactly the risk the
     // judgement already carried. Chaining two judgements would not, and the page
@@ -690,7 +690,7 @@
       },
       swaps: [
         { out: 'Archangel of Thune', in: 'Heroic Feast', inId: 7743 },
-        { out: 'Bartolomé del Presidio', in: 'Hammerhead, Maggia Boss', inId: null },
+        { out: 'Bartolomé del Presidio', in: 'Hammerhead, Maggia Boss', inId: 8095 },
       ],
       why: 'Hammerhead eats the Finks for free; persist returns it with a -1/-1 counter, '
         + 'its entry gains 2 life, and Heroic Feast spends one of those two targets putting '
@@ -16017,10 +16017,25 @@
   // appear in the data and only the pairing is missing, so each one is a single
   // combo somebody read and wrote down. These are a different problem.
   //
-  // Hammerhead, Maggia Boss appears in none of the 103,675 published combos.
-  // Nothing can be measured against him, so no amount of comparing the data
-  // would ever propose him — he is here because his text was read, and what it
-  // says is that he is a card Spellbook has published 1,674 combos for:
+  // Hammerhead, Maggia Boss appeared in none of the 103,675 published combos
+  // when this rule was written. Nothing could be measured against him, so no
+  // amount of comparing the data would ever have proposed him — he is here
+  // because his text was read, and what it says is that he is a card Spellbook
+  // has published well over a thousand combos for:
+  //
+  // **Spellbook has since started publishing him**: 460 combos of its own as of
+  // the snapshot of 27 Aug 2026, where the day before it had been zero for a
+  // month. That is the beginning of the end of this rule and not the end of it —
+  // the rule still reaches 1,834 combos those 460 do not, because Bartolomé is in
+  // 1,617 and the Feeder in 1,756 and Spellbook has written Hammerhead into a
+  // fraction of either. `npm run verify:unofficial` prints all four figures
+  // against tonight's data; when the 1,834 approaches zero the rule comes out.
+  //
+  // It cost ten nights of red to find out, which is the part worth remembering.
+  // Every swap records the swapped-in card's Spellbook id, and Hammerhead's was
+  // `null` — the positive claim that the published data has no such card, checked
+  // nightly in both directions. The day it stopped being true the nightly job
+  // failed and went on failing, exactly as designed, and it is `8095` now.
   //
   //   Bartolomé del Presidio  {W}{B}  2/1  Sacrifice another creature or
   //                                        artifact: Put a +1/+1 counter on
@@ -16044,7 +16059,7 @@
   // Free and repeatable the same way, but creatures only where Hammerhead also
   // eats artifacts, and able to eat *itself* where Hammerhead cannot. So it is
   // listed second: a row cites Bartolomé when Spellbook published that version,
-  // and falls back to the Feeder for the 215 lines the Feeder has and Bartolomé
+  // and falls back to the Feeder for the 218 lines the Feeder has and Bartolomé
   // does not. The direction matters and only runs one way — every Carrion Feeder
   // loop is a Hammerhead loop, and the reverse is not true. The one shape this
   // gets wrong is a loop that sacrifices the Feeder itself, which no longer has
@@ -16052,14 +16067,14 @@
   // rather than continuing it, so there is nothing in the data doing this on
   // purpose, and it is written down here rather than left as a surprise.
   //
-  // 1,730 combos come out of the two sources together, deduplicated. Four of
+  // 1,834 combos come out of the two sources together, deduplicated. Four of
   // them used to be written out by hand above, citing Umbral Collar Zealot —
   // same cost, different rider — and they are gone: this cites the card that
   // matches word for word instead, and covers the other 1,726.
   const STAND_INS = [
     {
       card: 'Hammerhead, Maggia Boss',
-      cardId: null,
+      cardId: 8095,
       confidence: 'verified',
       for: [
         {
@@ -16068,8 +16083,8 @@
           why: 'Hammerhead and Bartolomé del Presidio have one ability each and it is '
             + 'the same sentence: “Sacrifice another creature or artifact: Put a +1/+1 '
             + 'counter on this creature.” Same cost, free and repeatable, same 2/1 body. '
-            + 'Spellbook publishes this combo with Bartolomé and has never used '
-            + 'Hammerhead in a combo at all — he is mono-black where Bartolomé is '
+            + 'Spellbook publishes this combo with Bartolomé and has not published it '
+            + 'with Hammerhead — he is mono-black where Bartolomé is '
             + 'white-black, which is the only difference that reaches the table.',
         },
         {
@@ -16079,7 +16094,7 @@
             + 'this creature”, and Hammerhead’s is the same for one card less restrictive '
             + '— he eats artifacts as well. Free and repeatable either way, and a creature '
             + 'is what this loop feeds it. Spellbook publishes the Feeder version and has '
-            + 'never used Hammerhead in a combo at all.',
+            + 'not published this one with Hammerhead.',
         },
       ],
     },
