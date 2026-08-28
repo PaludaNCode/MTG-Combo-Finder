@@ -1114,7 +1114,7 @@ section about unchecked numbers, and it had already drifted once.
 | claim | counted from |
 | --- | --- |
 | `lists all 1,080 results Commander Spellbook publishes` | `result-tiers.js` |
-| `All 834 hand-written rows` | `unofficial.js` `COMBOS` |
+| `All 825 hand-written rows` | `unofficial.js` `COMBOS` |
 | `and the three stand-in rules` | `unofficial.js` `STAND_INS` |
 | `**<count>** candidates have been read`, in *The audit* | `research-log.js` `PASSES` |
 | `Templates resolved \| 148 \| **134**` | `templates.json` |
@@ -1904,7 +1904,7 @@ checking went:
 | `verified` | the swap was read against both cards' oracle text |
 | `derived` | both halves of the swap are separately published, but the specific pairing has not been read against the cards |
 
-All 834 hand-written rows cite a published combo. **744 are `verified` and 90 are `derived`** — the
+All 825 hand-written rows cite a published combo. **735 are `verified` and 90 are `derived`** — the
 sentence above this one said *all of them* were verified until 7 Aug 2026, and the sweep that broke it
 is the one the label was waiting for. Viscera Seer and Carrion Feeder are the two most-published cards
 in the database, and their families are large enough that reading every member's steps individually
@@ -2009,7 +2009,7 @@ Still unread: the generic trigger counts are out of scope by design, and there i
 has *added* a result the cited combo does not list. That one needs the snapshot rather than the text
 cache, so it belongs beside the nightly citation job — and it needs the result-name rename map first,
 since Spellbook split `Infinite ETB` into `Infinite creature ETB` and `Infinite artifact ETB` and
-**551 of 834 rows still carry the retired name**.
+**441 of 825 rows still list `Infinite ETB` and 318 still list `Infinite LTB`**.
 
 ### They graduate rather than accumulate
 

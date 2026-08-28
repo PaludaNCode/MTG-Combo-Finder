@@ -1007,7 +1007,12 @@ const PASSES = [
     },
     proposed: 19,
     examined: 19,
-    kept: 6,
+    // 6 until 28 Aug 2026, when Spellbook published the Evereth, Viceroy of Plunder
+    // version and that row graduated out of unofficial.js. `examined` does not move —
+    // the reading happened and is what this entry is for — but `kept` counts rows the
+    // file still holds, and a log claiming a row nobody can find is the second source
+    // of truth this file exists to avoid being.
+    kept: 5,
     ruledOut: [
       { reason: 'THE OUTLET HAS TO EAT AN ARTIFACT, AND THESE EAT A CREATURE. This is the answer '
         + 'to "every sacrifice outlet should substitute", and it is no: Peregrin Took returns a '
@@ -2976,7 +2981,14 @@ const PASSES = [
       + 'order, and counting cannot see order.',
     proposed: 1039,
     examined: 132,
-    kept: 120,
+    // 120 until 28 Aug 2026: Spellbook published seven of this pass's Blasting Station
+    // shapes — Wormfang Drake + Sun Titan, both Sakashima versions of the Loyal
+    // Retainers loop, and all four Rakdos Joins Up + Archon of Falling Stars ones — and
+    // an eighth, Metamorphosis Fanatic + Wispweaver Angel, came out because the combo it
+    // cited was withdrawn upstream (see the note beside its neighbours in unofficial.js).
+    // Seven graduating in one night is this pass working, not failing: it read the
+    // shapes Spellbook had not got to yet, and Spellbook got to them.
+    kept: 112,
     ruledOut: [
       {
         reason: 'THE OTHER FOUR OUTLETS ARE STILL UNREAD. 570 of the 1,039 come from '
