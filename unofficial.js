@@ -9819,10 +9819,15 @@
     //
     // That makes the slot enumerable, and Spellbook enumerates it: seventeen outlets
     // behind Peregrin Took, twenty-nine behind Ygra, Eater of All, which fills the same
-    // slot by making every other creature a Food. The six rows below are what the two
+    // slot by making every other creature a Food. The five rows below are what the two
     // lists disagree about plus what neither holds — see the research-log entry for the
     // full sweep, including the eleven creature-only outlets that are behind Ygra and
     // cannot be behind Took, because Took's Food is an artifact and they will not eat it.
+    //
+    // Six until 28 Aug 2026, when Spellbook published the Evereth, Viceroy of Plunder
+    // version and that row graduated out. The sweep behind it is unchanged and still in
+    // the log; what moved is one of its conclusions, upstream, which is the outcome
+    // these rows exist to reach.
     //
     // **These rows claim less than the combo they cite, on purpose.** Spellbook tags the
     // Zealot version with "Infinite Food tokens", "Infinite card draw" and "Infinite
@@ -9868,28 +9873,6 @@
         + 'not bound the loop, which runs as many times as you like in your own main phase with '
         + 'an empty stack — it only means you cannot run it in response to removal. The counter '
         + 'lands every lap, so the Dog is the second unbounded thing here.',
-      produces: [
-        'Infinite creature tokens',
-        'Infinite +1/+1 counters on a creature',
-        'Infinite ETB',
-        'Infinite LTB',
-        'Infinite sacrifice triggers',
-      ],
-    },
-    {
-      cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Evereth, Viceroy of Plunder'],
-      confidence: 'verified',
-      from: {
-        id: '4321-5777-6798',
-        cards: ['Camellia, the Seedmiser', 'Peregrin Took', 'Umbral Collar Zealot'],
-      },
-      swap: { out: 'Umbral Collar Zealot', in: 'Evereth, Viceroy of Plunder', inId: 6495 },
-      why: 'Evereth is the Zealot’s cost word for word — "Sacrifice another creature or '
-        + 'artifact:" — so the Food he eats is the same Food, and he keeps the counter the '
-        + 'Zealot spends on surveil. Spellbook has him in exactly one combo, which is why no '
-        + 'score proposes him: the pairing came off reading the slot rather than off shared '
-        + 'shapes. Sorcery-speed only, on the same reasoning as Mushroom Watchdogs. His '
-        + 'Treasure clause never fires here and does not need to.',
       produces: [
         'Infinite creature tokens',
         'Infinite +1/+1 counters on a creature',
@@ -13966,17 +13949,6 @@
       produces: ['Exile your library with the ability to play the exiled cards until your next turn', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite black mana', 'Infinite damage', 'Infinite death triggers', 'Infinite creature sacrifice triggers', 'Infinite storm count'],
     },
     {
-      cards: ['Blasting Station', 'Wormfang Drake', 'Sun Titan'],
-      confidence: 'verified',
-      from: {
-        id: '465-3175-5147',
-        cards: ['Goblin Bombardment', 'Wormfang Drake', 'Sun Titan'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Sun Titan returns from exile and returns Wormfang Drake with it — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature ETB', 'Infinite creature LTB', 'Infinite damage', 'Infinite death triggers', 'Infinite creature sacrifice triggers'],
-    },
-    {
       cards: ['Preston, the Vanisher', 'Blasting Station', 'Wormfang Drake', 'Nature\'s Rhythm'],
       confidence: 'verified',
       from: {
@@ -14141,39 +14113,27 @@
       why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Anti-Venom and Peregrine Drake both enter before the lap reaches the sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
       produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite storm count'],
     },
-    {
-      cards: ['Loyal Retainers', 'Karmic Guide', 'Blasting Station', 'Sakashima the Impostor'],
-      confidence: 'verified',
-      from: {
-        id: '804-2533-4681-5147',
-        cards: ['Loyal Retainers', 'Karmic Guide', 'Goblin Bombardment', 'Sakashima the Impostor'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Sakashima enters as a copy of Karmic Guide and brings Loyal Retainers back with it, both before the sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
-    },
-    {
-      cards: ['Loyal Retainers', 'Karmic Guide', 'Blasting Station', 'Sakashima of a Thousand Faces'],
-      confidence: 'verified',
-      from: {
-        id: '2533-2719-4681-5147',
-        cards: ['Loyal Retainers', 'Karmic Guide', 'Goblin Bombardment', 'Sakashima of a Thousand Faces'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Sakashima enters as a copy of Karmic Guide and brings Loyal Retainers back with it, both before the sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
-    },
-    {
-      cards: ['Metamorphosis Fanatic', 'Blasting Station', 'Wispweaver Angel'],
-      confidence: 'verified',
-      from: {
-        id: '1621-5147-6132',
-        cards: ['Metamorphosis Fanatic', 'Goblin Bombardment', 'Wispweaver Angel'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Metamorphosis Fanatic returns the blinker from your graveyard and the blink puts the Fanatic back — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
-    },
+    // A Wispweaver Angel row sat here until 28 Aug 2026, and it went because its
+    // evidence did, not because anybody re-read it.
+    //
+    // Spellbook retired `1621-5147-6132` — Metamorphosis Fanatic + Goblin Bombardment +
+    // Wispweaver Angel — while keeping ten other blinkers in the same family, this
+    // Restoration Angel one included. The nightly caught it as broken evidence within a
+    // day, which is what that check is for, and the row's whole basis was that one
+    // combo: no other published combo is one swap from it, so there is nothing to
+    // re-cite it to.
+    //
+    // **Whether the loop works is not the question, and that is the point.** Reading the
+    // cards says it does — the published steps for the row below sacrifice the blinker
+    // while its OWN enter trigger is still on the stack, which is what puts it in the
+    // graveyard in time to be a legal target for the Fanatic's trigger, and Wispweaver
+    // Angel's "exile another target creature you control, then return that card" takes
+    // the same line. But a row here cites a published combo rather than our reading of
+    // one, and upstream has withdrawn the claim without saying why. Reproducing an
+    // upstream error is a row doing its job; keeping a row whose source has been
+    // withdrawn is not.
+    //
+    // If Spellbook publishes a Wispweaver version again, this row comes back with it.
     {
       cards: ['Metamorphosis Fanatic', 'Blasting Station', 'Restoration Angel'],
       confidence: 'verified',
@@ -14206,50 +14166,6 @@
       swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
       why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Metamorphosis Fanatic returns the blinker from your graveyard and the blink puts the Fanatic back — two creatures entering a lap against one sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
       produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage'],
-    },
-    {
-      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Thaumatog', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '1669-5145-5147-5466',
-        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Thaumatog', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinitely large creature until end of turn'],
-    },
-    {
-      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Phantatog', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '3476-5145-5147-5466',
-        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Phantatog', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinitely large creature until end of turn'],
-    },
-    {
-      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Faith Healer', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '77-5145-5147-5466',
-        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Faith Healer', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinite lifegain triggers', 'Infinite lifegain'],
-    },
-    {
-      cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Auratog', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '435-5145-5147-5466',
-        cards: ['Rakdos Joins Up', 'Archon of Falling Stars', 'Auratog', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the Archon returns to the battlefield before the Station sacrifices it, and Rakdos Joins Up brings it back the next lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature LTB', 'Infinite creature ETB', 'Infinite creature sacrifice triggers', 'Infinite death triggers', 'Infinite damage', 'Infinitely large creature until end of turn'],
     },
     {
       cards: ['Dr. Madison Li', 'Decoction Module', 'Thornbite Staff', 'Myr Battlesphere', 'Blasting Station'],
