@@ -84,7 +84,7 @@ jobs:
       # seconds; the install below is skipped and nothing is re-saved.
       - name: Cache the Playwright browser download
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}-chromium
