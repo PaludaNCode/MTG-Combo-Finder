@@ -1,0 +1,1 @@
+{"id":"3525-7308","description":"Activate Mona Lisa by tapping it, adding at least {U}{U}\nActivate Pemmin's Aura by paying {U}, untapping Mona Lisa.\nRepeat.","uses":[{"name":"Pemmin's Aura","zoneLocations":["B"],"cardState":"attached to Mona Lisa"},{"name":"Mona Lisa, Science Geek","zoneLocations":["B"],"cardState":"without summoning sickness and with power 2 or greater"}]}

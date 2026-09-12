@@ -1,0 +1,1 @@
+{"id":"2348-3385","description":"Whenever a land enters the battlefield, it enters as a 2/2 creature due to Nature's Revolt.\nAether Flash triggers, dealing 2 damage to the land.\nThe land dies as a state-based action due to having less than zero toughness.","uses":[{"name":"Aether Flash","zoneLocations":["B"]},{"name":"Nature's Revolt","zoneLocations":["B"]}]}

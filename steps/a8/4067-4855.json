@@ -1,0 +1,1 @@
+{"id":"4067-4855","easyPrerequisites":"It is your precombat main phase.","description":"Activate Lu Su by tapping it, causing you to draw a card.\nActivate Mind Over Matter by discarding a card, untapping Lu Su.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Lu Su, Wu Advisor","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

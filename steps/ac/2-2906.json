@@ -1,0 +1,1 @@
+{"id":"2-2906","notablePrerequisites":"Your opponents have lost at least 4 life this turn.","description":"Cast Ancestral Statue by paying {0}.\nWhen Ancestral Statue enters the battlefield, it triggers, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Ancestral Statue","zoneLocations":["H"]},{"name":"Rakdos, Lord of Riots","zoneLocations":["B"]}]}

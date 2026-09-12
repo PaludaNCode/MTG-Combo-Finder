@@ -1,0 +1,1 @@
+{"id":"4067-7801","description":"Activate Spock, Logical Choice by tapping it, causing you to draw a card.\nActivate Mind Over Matter by discarding a card, untapping Spock, Logical Choice.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Spock, Logical Choice","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

@@ -1,0 +1,1 @@
+{"id":"4498-7839","manaNeeded":"{B}","description":"Activate Pestilence by paying {B}, dealing 1 damage to each player and creature.\nSmaug triggers, creating a Treasure token.\nActivate the Treasure by tapping and sacrificing it, adding {B}.\nRepeat.","uses":[{"name":"Smaug the Impenetrable","zoneLocations":["B"]},{"name":"Pestilence","zoneLocations":["B"]}]}

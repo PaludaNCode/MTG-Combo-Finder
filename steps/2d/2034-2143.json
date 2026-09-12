@@ -1,0 +1,1 @@
+{"id":"2034-2143","manaNeeded":"{4}","description":"Activate Spawnsire of Ulamog's first abiltiy by paying {4}, create two 0/1 Eldrazi Spawn creature tokens.\nActivate Ashnod's Altar twice by sacrificing two Eldrazi Spawn tokens, adding {C}{C}{C}{C}.\nRepeat.","uses":[{"name":"Spawnsire of Ulamog","zoneLocations":["B"]},{"name":"Ashnod's Altar","zoneLocations":["B"]}]}

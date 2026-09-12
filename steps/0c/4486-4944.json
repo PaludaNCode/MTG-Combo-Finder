@@ -1,0 +1,1 @@
+{"id":"4486-4944","description":"Activate Mirror Entity by paying {0}.\nCrackdown Construct triggers, giving itself +1/+1 until end of turn.\nHold priority and repeat from step 1.\nResolve all Mirror Entity abilities.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Mirror Entity","zoneLocations":["B"]}]}

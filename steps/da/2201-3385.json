@@ -1,0 +1,1 @@
+{"id":"2201-3385","description":"Whenever a creature enters the battlefield, Aether Flash triggers, dealing 2 damage to it.\nBecause the creature is 1/1 due to Godhead of Awe, it dies as a state-based action due to having less than zero toughness.","uses":[{"name":"Godhead of Awe","zoneLocations":["B"]},{"name":"Aether Flash","zoneLocations":["B"]}]}

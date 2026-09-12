@@ -1,0 +1,1 @@
+{"id":"678-3180","description":"Cast Chamber Sentry by paying {0}.\nChamber Sentry enters the battlefield and dies as a state-based action due to having zero or less toughness.\nEnduring Renewal triggers, returning Chamber Sentry from your graveyard to your hand.\nRepeat.","uses":[{"name":"Chamber Sentry","zoneLocations":["H"]},{"name":"Enduring Renewal","zoneLocations":["B"]}]}

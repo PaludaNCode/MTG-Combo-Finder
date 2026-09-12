@@ -1,0 +1,1 @@
+{"id":"1090-4875","manaNeeded":"{3}{W}","notablePrerequisites":"Any creature type besides \"Angel\" chosen with Conspiracy.","description":"Cast Restoration Angel.\nRestoration Angel's ETB triggers, exiling itself and returning itself to the battlefield.\nRepeat from step 2.","uses":[{"name":"Conspiracy","zoneLocations":["B"]},{"name":"Restoration Angel","zoneLocations":["H"]}]}

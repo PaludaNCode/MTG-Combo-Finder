@@ -1,0 +1,1 @@
+{"id":"129-2113-4824","description":"Activate Soliton by tapping it, adding {U}.\nKinnan triggers, adding {U}.\nActivate Soliton by paying {U}, untapping it.\nRepeat.","uses":[{"name":"Kinnan, Bonder Prodigy","zoneLocations":["B"]},{"name":"Karametra's Favor","zoneLocations":["B"],"cardState":"attached to Soliton"},{"name":"Soliton","zoneLocations":["B"]}]}

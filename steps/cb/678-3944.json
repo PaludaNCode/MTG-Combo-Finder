@@ -1,0 +1,1 @@
+{"id":"678-3944","description":"Activate Blood Pet by sacrificing it, adding {B}.\nEnduring Renewal triggers, returning Blood Pet to your hand from your graveyard.\nCast Blood Pet by paying {B}.\nRepeat.","uses":[{"name":"Blood Pet","zoneLocations":["B"]},{"name":"Enduring Renewal","zoneLocations":["B"]}]}

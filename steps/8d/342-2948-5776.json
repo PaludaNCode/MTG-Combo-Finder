@@ -1,0 +1,1 @@
+{"id":"342-2948-5776","description":"Activate Initiates of the Ebon Hand by paying {0} due to Sam's reduction effect, as Initiates of the Ebon Hand is a Food due to Ygra, adding {B}.\nRepeat.","uses":[{"name":"Ygra, Eater of All","zoneLocations":["B"]},{"name":"Sam, Loyal Attendant","zoneLocations":["B"]},{"name":"Initiates of the Ebon Hand","zoneLocations":["B"]}]}

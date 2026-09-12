@@ -1,0 +1,1 @@
+{"id":"4499-6586","notablePrerequisites":"You control any number of static effects that increase Vivi's power by at least 3.","description":"Activate Vivi by paying {0}, adding at least {U/R}{U/R}{U/R}.\nActivate Emiel by paying {3}, blinking Vivi.\nRepeat.","uses":[{"name":"Vivi Ornitier","zoneLocations":["B"]},{"name":"Emiel the Blessed","zoneLocations":["B"]}]}

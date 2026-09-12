@@ -1,0 +1,1 @@
+{"id":"2057-2358","manaNeeded":"{B}","description":"Activate Blood Celebrant by paying {B} and by exiling the top card of your library due to Ashiok, adding {B}.\nRepeat.","uses":[{"name":"Ashiok, Wicked Manipulator","zoneLocations":["B"]},{"name":"Blood Celebrant","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"5231-5961--5","description":"Activate Thermopod by sacrificing the persist creature.\nWhen the persist creature dies, its persist ability triggers, returning it from your graveyard to the battlefield without a -1/-1 counter on it due to Uncivil Unrest.\nRepeat.","uses":[{"name":"Thermopod","zoneLocations":["B"]},{"name":"Uncivil Unrest","zoneLocations":["B"]}]}

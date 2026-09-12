@@ -1,0 +1,1 @@
+{"id":"305-1978-5776","description":"Activate Llanowar Tribe by tapping it, adding {G}{G}{G}\nActivate Voltaic Construct by paying {2}, untapping Llanowar Tribe.\nRepeat","uses":[{"name":"Voltaic Construct","zoneLocations":["B"]},{"name":"Llanowar Tribe","zoneLocations":["B"],"cardState":"without summoning sickness"},{"name":"Ygra, Eater of All","zoneLocations":["B"]}]}

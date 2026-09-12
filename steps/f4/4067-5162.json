@@ -1,0 +1,1 @@
+{"id":"4067-5162","description":"Activate Kwain by tapping it, allowing each player to draw a card and gain 1 life if they draw a card.\nActivate Mind Over Matter by discarding a card, untapping Kwain.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Kwain, Itinerant Meddler","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

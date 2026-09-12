@@ -1,0 +1,1 @@
+{"id":"4875-6966","manaNeeded":"{3}{W}","description":"Cast All-Fates Stalker by paying {3}{W}.\nWhen All-Fates Stalker enters, it triggers, blinking itself as it isn't an Assassin due to Conspiracy.\nRepeat step 2.","uses":[{"name":"Conspiracy","zoneLocations":["B"],"cardState":"naming any type except \"Assassin\""},{"name":"All-Fates Stalker","zoneLocations":["H"]}]}

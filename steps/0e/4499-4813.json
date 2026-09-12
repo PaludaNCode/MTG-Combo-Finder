@@ -1,0 +1,1 @@
+{"id":"4499-4813","manaNeeded":"{3}","notablePrerequisites":"An opponent has lost life this turn.","description":"Activate Emiel by paying {3}, blinking Famished Foragers.\nFamished Foragers enters the battlefield, adding {R}{R}{R}.\nRepeat.","uses":[{"name":"Famished Foragers","zoneLocations":["B"]},{"name":"Emiel the Blessed","zoneLocations":["B"]}]}

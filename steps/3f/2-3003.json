@@ -1,0 +1,1 @@
+{"id":"2-3003","notablePrerequisites":"You control at least four artifacts.","description":"Cast Ancestral Statue by paying {0}.\nAncestral Statue enters the battlefield, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Mycosynth Golem","zoneLocations":["B"]},{"name":"Ancestral Statue","zoneLocations":["H"]}]}

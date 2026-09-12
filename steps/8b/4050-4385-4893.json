@@ -1,0 +1,1 @@
+{"id":"4050-4385-4893","manaNeeded":"{1}","description":"Activate Sliver Queen by paying {1}, creating a 1/1 Sliver creature token.\nActivate Phyrexian Altar by sacrificing the Sliver token, adding {1}.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Phyrexian Altar","zoneLocations":["B"]},{"name":"Training Grounds","zoneLocations":["B"]}]}

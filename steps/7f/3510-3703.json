@@ -1,0 +1,1 @@
+{"id":"3510-3703","notablePrerequisites":"A Forest card in hand.","description":"Play the Forest.\nSporemound triggers, creating a 1/1 Saproling Forest land creature token.\nRepeat step 2 infinite times.","uses":[{"name":"Sporemound","zoneLocations":["B"]},{"name":"Life and Limb","zoneLocations":["B"]}]}

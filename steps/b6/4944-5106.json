@@ -1,0 +1,1 @@
+{"id":"4944-5106","description":"Activate Crypt Rats by paying {0}.\nCrackdown Construct triggers, giving itself +1/+1 until end of turn.\nRepeat.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Crypt Rats","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"3794-4277","manaNeeded":"{2}","description":"During your draw step, activate Well of Knowledge by paying {2}, causing you to draw a card.\nActivate Cadaverous Bloom by exiling a card from your hand, adding {B}{B} or {G}{G}.\nRepeat.","uses":[{"name":"Cadaverous Bloom","zoneLocations":["B"]},{"name":"Well of Knowledge","zoneLocations":["B"]}]}

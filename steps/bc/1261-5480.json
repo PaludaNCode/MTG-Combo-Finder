@@ -1,0 +1,1 @@
+{"id":"1261-5480","description":"Activate Territory Forge using Time Vault's ability by tapping it, causing you to take an extra turn after this one.\nRepeat each turn.","uses":[{"name":"Time Vault","zoneLocations":["E"],"cardState":"exiled by Territory Forge"},{"name":"Territory Forge","zoneLocations":["B"]}]}

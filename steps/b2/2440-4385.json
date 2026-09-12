@@ -1,0 +1,1 @@
+{"id":"2440-4385","manaNeeded":"{2}","description":"Activate Sliver Queen by paying {2}, creating a 1/1 Sliver creature token.\nWhen the Sliver enters the battlefield, Mana Echoes triggers, adding {C} for each Sliver you control.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Mana Echoes","zoneLocations":["B"]}]}
