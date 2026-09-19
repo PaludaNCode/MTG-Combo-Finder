@@ -1,0 +1,1 @@
+{"id":"2679-2836","manaNeeded":"{1}{W}","notablePrerequisites":"There are no white cards in library.\nYou have a way to draw a card available.","description":"Activate Sacred Guide for {1}{W}, exiling your library.\nDraw a card, winning the game.","uses":[{"name":"Sacred Guide","zoneLocations":["B"]},{"name":"Laboratory Maniac","zoneLocations":["B"]}]}

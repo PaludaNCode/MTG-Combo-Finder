@@ -1,0 +1,1 @@
+{"id":"417-992","description":"Gravity Sphere causes all creatures to lose flying.\nMoat prevents non-flying creatures from attacking, and since no creatures can have flying, no creatures can attack.","uses":[{"name":"Gravity Sphere","zoneLocations":["B"]},{"name":"Moat","zoneLocations":["B"]}]}

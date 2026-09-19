@@ -1,0 +1,1 @@
+{"id":"4385-4465","description":"Activate Sliver Queen by paying {2}, creating a 1/1 Sliver token.\nActivate the Sliver token by sacrificing it, adding {B}{B}.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Basal Sliver","zoneLocations":["B"]}]}

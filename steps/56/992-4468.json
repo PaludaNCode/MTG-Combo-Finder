@@ -1,0 +1,1 @@
+{"id":"992-4468","description":"All creatures lose flying and Islandwalk.\nMoat prevents things without flying from attacking.\nCreatures can not fulfill the conditions nessasary to attack.","uses":[{"name":"Moat","zoneLocations":["B"]},{"name":"Mystic Decree","zoneLocations":["B"]}]}

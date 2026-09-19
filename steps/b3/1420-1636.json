@@ -1,0 +1,1 @@
+{"id":"1420-1636","notablePrerequisites":"Godsire does not have summoning sickness.","description":"Tap Godsire to create an 8/8 beast token.\nWhen the token ETBs, Intruder Alarm triggers, untapping all creatures.\nRepeat for infinite tokens.","uses":[{"name":"Intruder Alarm","zoneLocations":["B"]},{"name":"Godsire","zoneLocations":["B"]}]}

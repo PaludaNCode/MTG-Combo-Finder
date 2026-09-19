@@ -1,0 +1,1 @@
+{"id":"1108-4944","description":"Activate Chimeric Idol by paying {0}, tapping all lands you control, causing Chimeric Idol to become a 3/3 Turtle artifact creature until end of turn.\nCrackdown Construct triggers, gaining +1/+1 until end of turn.\nRepeat.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Chimeric Idol","zoneLocations":["B"]}]}

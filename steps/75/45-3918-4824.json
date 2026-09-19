@@ -1,0 +1,1 @@
+{"id":"45-3918-4824","description":"Activate Trazyn using Khalni Gem's ability by tapping it, adding {U}{U}.\nActivate Trazyn using Soliton's ability by paying {U}, untapping it.\nRepeat.","uses":[{"name":"Trazyn the Infinite","zoneLocations":["B"],"cardState":"without summoning sickness"},{"name":"Soliton","zoneLocations":["G"]},{"name":"Khalni Gem","zoneLocations":["G"]}]}

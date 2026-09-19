@@ -1,0 +1,1 @@
+{"id":"426-2390","notablePrerequisites":"You have a way to deal damage to an opponent.","description":"Deal damage to an opponent.\nTalon of Pain triggers, putting a charge counter on it.\nAll Will Be One triggers, dealing 1 damage to an opponent.\nRepeat from step 2.","uses":[{"name":"Talon of Pain","zoneLocations":["B"]},{"name":"All Will Be One","zoneLocations":["B"]}]}

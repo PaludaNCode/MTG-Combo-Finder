@@ -1,0 +1,1 @@
+{"id":"285-1623","notablePrerequisites":"You have any spell in hand with the mana to cast it.","description":"Cast any spell.\nNether Void triggers, choose not to pay for the trigger, exiling the spell and casting it from exile without paying its mana cost.\nRepeat from step 2.","uses":[{"name":"Guile","zoneLocations":["B"]},{"name":"Nether Void","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"7839-8041","manaNeeded":"{R}","description":"Activate Dizzying Gaze by paying {R}, dealing 1 damage to Smaug.\nSmaug triggers, creating a Treasure token.\nActivate the Treasure by tapping and sacrificing it, adding {R}.\nRepeat.","uses":[{"name":"Smaug the Impenetrable","zoneLocations":["B"]},{"name":"Dizzying Gaze","zoneLocations":["B"]}]}

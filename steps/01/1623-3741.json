@@ -1,0 +1,1 @@
+{"id":"1623-3741","notablePrerequisites":"You have a spell in hand you can cast for only colorless mana.","description":"Cast any spell using only colorless mana.\nVoid Mirror triggers, exiling the spell and casting it from exile without paying its mana cost.\nRepeat from step 2.","uses":[{"name":"Guile","zoneLocations":["B"]},{"name":"Void Mirror","zoneLocations":["B"]}]}

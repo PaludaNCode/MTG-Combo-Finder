@@ -1,0 +1,1 @@
+{"id":"2897-4944","description":"Activate Gigantoplasm by paying {0}.\nCrackdown Construct and Gigantoplasm trigger, giving themselves +1/+1 until end of turn.\nRepeat.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Gigantoplasm","zoneLocations":["B"],"cardState":"as a copy of Crackdown Construct"}]}

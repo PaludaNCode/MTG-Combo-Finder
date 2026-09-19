@@ -1,0 +1,1 @@
+{"id":"4629-7283","manaNeeded":"{R}","notablePrerequisites":"Raphael is indestructible.","description":"Activate Pyrohemia by paying {R}, dealing 1 damage to each creature and player.\nRaphael triggers, adding {R}.\nRepeat.","uses":[{"name":"Raphael, Ninja Destroyer","zoneLocations":["B"]},{"name":"Pyrohemia","zoneLocations":["B"]}]}

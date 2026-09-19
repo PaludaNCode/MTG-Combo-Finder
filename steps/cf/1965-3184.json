@@ -1,0 +1,1 @@
+{"id":"1965-3184","description":"Cast Omarthis by paying {0}.\nOmarthis enters the battlefield and dies as a state-based action due to having 0 toughness.\nYomiji triggers, returning Omarthis from your graveyard to your hand.\nRepeat.","uses":[{"name":"Yomiji, Who Bars the Way","zoneLocations":["B"]},{"name":"Omarthis, Ghostfire Initiate","zoneLocations":["H"]}]}
