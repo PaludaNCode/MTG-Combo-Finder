@@ -1,0 +1,1 @@
+{"id":"4702-7220","easyPrerequisites":"Splinter Twin attached to Glamermite.","description":"Activate Glamermite by tapping it, creating a token copy of itself with haste.\nWhen the token Glamermite enters the battlefield, it triggers, untapping the nontoken Glamermite.\nRepeat.","uses":[{"name":"Splinter Twin","zoneLocations":["B"]},{"name":"Glamermite","zoneLocations":["B"]}]}

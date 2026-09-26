@@ -1,0 +1,1 @@
+{"id":"1871-4053","description":"Whenever an opponent casts a spell, Decree of Silence triggers, countering that spell.\nSolemnity prevents Decree of Silence from putting a depletion counter on itself.","uses":[{"name":"Solemnity","zoneLocations":["B"]},{"name":"Decree of Silence","zoneLocations":["B"]}]}

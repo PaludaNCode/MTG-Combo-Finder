@@ -1,0 +1,1 @@
+{"id":"342-499-5856","easyPrerequisites":"You control a Food.","description":"Activate a Food using Farrelite Priest's ability by paying {0}, adding {W}.\nRepeat step 1.","uses":[{"name":"Hazel's Brewmaster","zoneLocations":["H"]},{"name":"Sam, Loyal Attendant","zoneLocations":["B"]},{"name":"Farrelite Priest","zoneLocations":["E"],"cardState":"exiled by Hazel's Brewmaster"}]}

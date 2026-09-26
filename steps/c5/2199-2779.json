@@ -1,0 +1,1 @@
+{"id":"2199-2779","description":"Activate Frenetic Efreet by paying {0}.\nRepeat step 1 an arbitrarily large number of times.\nResolve all Frenetic Efreet abilities. Each coin flip you win, Okaun triggers, doubling its power and toughness.","uses":[{"name":"Okaun, Eye of Chaos","zoneLocations":["B"]},{"name":"Frenetic Efreet","zoneLocations":["B"]}]}

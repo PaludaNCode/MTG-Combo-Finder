@@ -1,0 +1,1 @@
+{"id":"3525-8190","notablePrerequisites":"You control at least two creatures with different powers.","description":"Activate Loot by tapping it, adding at least {U}{U}\nActivate Pemmin's Aura by paying {U}, untapping Loot.\nRepeat.","uses":[{"name":"Pemmin's Aura","zoneLocations":["B"],"cardState":"attached to Loot"},{"name":"Loot, the Nexus","zoneLocations":["B"]}]}

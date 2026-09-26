@@ -1,0 +1,1 @@
+{"id":"2850-4186","manaNeeded":"{2}{G}","description":"Cast Scurry Oak by paying {2}{G}.\nIvy Lane Denizen triggers, putting a +1/+1 counter on Scurry Oak.\nScurry Oak's last ability triggers, allowing you to create a 1/1 Squirrel token.\nRepeat from step 2.","uses":[{"name":"Scurry Oak","zoneLocations":["H"]},{"name":"Ivy Lane Denizen","zoneLocations":["B"]}]}

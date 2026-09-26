@@ -1,0 +1,1 @@
+{"id":"4944-5084","description":"Activate Illusionary Mask by paying {0}.\nCrackdown Construct triggers, giving itself +1/+1 until end of turn.\nResolve the Illusionary Mask ability.\nRepeat.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Illusionary Mask","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"3263-7259","manaNeeded":"{5}","description":"Cast Anzrag's Rampage by paying {5}, destroying all permanents you don't control, as they're all artifacts due to Mycosynth Lattice.","uses":[{"name":"Mycosynth Lattice","zoneLocations":["B"]},{"name":"Anzrag's Rampage","zoneLocations":["H"]}]}

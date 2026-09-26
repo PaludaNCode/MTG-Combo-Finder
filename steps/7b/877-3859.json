@@ -1,0 +1,1 @@
+{"id":"877-3859","notablePrerequisites":"\"Harpy\" or \"Beast\" chosen with Morophon.","description":"Cast Cavern Harpy by paying {0}.\nCavern Harpy enters the battlefield, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Morophon, the Boundless","zoneLocations":["B"]},{"name":"Cavern Harpy","zoneLocations":["H"]}]}

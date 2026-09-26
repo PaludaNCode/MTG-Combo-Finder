@@ -1,0 +1,1 @@
+{"id":"992-5339","description":"Because Sandwurm Convergence prevents creatures with flying from attacking you, and Moat prevents creatures without flying from attacking you, no creatures can attack you.","uses":[{"name":"Moat","zoneLocations":["B"]},{"name":"Sandwurm Convergence","zoneLocations":["B"]}]}

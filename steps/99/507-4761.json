@@ -1,0 +1,1 @@
+{"id":"507-4761","description":"When an opponent casts a card from their hand, Possibility Storm will exile it.\nThey can not cast any cards from Possibility Storm because the stack is not empty.","uses":[{"name":"Teferi, Time Raveler","zoneLocations":["B"]},{"name":"Possibility Storm","zoneLocations":["B"]}]}

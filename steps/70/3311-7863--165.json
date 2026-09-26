@@ -1,0 +1,1 @@
+{"id":"3311-7863--165","easyPrerequisites":"You have a way to draw a card.","description":"Draw a card.\nHuman Torch triggers, dealing 1 damage.\nSnake Umbra triggers, causing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Snake Umbra","zoneLocations":["B"],"cardState":"attached to Human Torch"}]}

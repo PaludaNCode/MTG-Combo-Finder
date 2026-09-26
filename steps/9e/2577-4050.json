@@ -1,0 +1,1 @@
+{"id":"2577-4050","notablePrerequisites":"You control an additional Zombie.","description":"Activate Phyrexian Altar by sacrificing Gravecrawler, adding {B}.\nCast Gravecrawler from your graveyard by paying {B}.\nRepeat.","uses":[{"name":"Gravecrawler","zoneLocations":["B"]},{"name":"Phyrexian Altar","zoneLocations":["B"]}]}
