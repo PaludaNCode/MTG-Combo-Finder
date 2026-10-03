@@ -1,0 +1,1 @@
+{"id":"1261-3911","manaNeeded":"{3} each turn","description":"Activate Galvanic Key by paying {1}, untapping Time Vault.\nActivate Time Vault by tapping it, causing you to take an extra turn after this one.\nRepeat each turn.","uses":[{"name":"Time Vault","zoneLocations":["B"]},{"name":"Galvanic Key","zoneLocations":["B"]}]}

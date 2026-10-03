@@ -1,0 +1,1 @@
+{"id":"975-1636","manaNeeded":"{G} from creature sources","notablePrerequisites":"Jund Battlemage does not have summoning sickness.","description":"Pay {G} and tap Jund Battlemage to create a 1/1 Saproling.\nThe Saproling enters untapping all creatures you control.\nRepeat.","uses":[{"name":"Intruder Alarm","zoneLocations":["B"]},{"name":"Jund Battlemage","zoneLocations":["B"]}]}

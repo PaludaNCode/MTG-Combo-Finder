@@ -1,0 +1,1 @@
+{"id":"3944-4316-5220","description":"Activate Blood Pet by sacrificing it, adding {B}.\nMortuary triggers, putting Blood Pet on top of your library.\nCast Blood Pet for {B}.\nRepeat.","uses":[{"name":"Mortuary","zoneLocations":["B"]},{"name":"Experimental Frenzy","zoneLocations":["B"]},{"name":"Blood Pet","zoneLocations":["B"]}]}

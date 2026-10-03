@@ -1,0 +1,1 @@
+{"id":"417-4992","description":"Gravity Sphere causes all creatures to lose flying.\nStormtide Leviathan prevents creatures from attacking unless they have flying and/or islandwalk. Since no creatures will have flying, only creatures with islandwalk can attack.","uses":[{"name":"Gravity Sphere","zoneLocations":["B"]},{"name":"Stormtide Leviathan","zoneLocations":["B"]}]}

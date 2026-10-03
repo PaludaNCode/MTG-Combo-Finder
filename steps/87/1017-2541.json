@@ -1,0 +1,1 @@
+{"id":"1017-2541","notablePrerequisites":"Wizard Class is level three.\nYou have a way to draw a card.","description":"Draw a card.\nWizard Class triggers, putting a +1/+1 counter on Benthic Biomancer.\nBenthic Biomancer triggers, causing you to loot.\nRepeat from step 2.","uses":[{"name":"Benthic Biomancer","zoneLocations":["B"]},{"name":"Wizard Class","zoneLocations":["B"]}]}

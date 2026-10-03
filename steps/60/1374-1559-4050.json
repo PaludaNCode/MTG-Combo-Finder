@@ -1,0 +1,1 @@
+{"id":"1374-1559-4050","description":"Activate Phyrexian Altar by sacrificing Forsworn Paladin, adding {B}.\nCast Forsworn Paladin from your graveyard by paying {B}.\nRepeat.","uses":[{"name":"Haakon, Stromgald Scourge","zoneLocations":["B"]},{"name":"Phyrexian Altar","zoneLocations":["B"]},{"name":"Forsworn Paladin","zoneLocations":["B"]}]}

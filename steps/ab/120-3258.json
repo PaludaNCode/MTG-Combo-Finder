@@ -1,0 +1,1 @@
+{"id":"120-3258","manaNeeded":"{U}","notablePrerequisites":"{12} {U}","description":"Use {6} to activate Planar Portal to find Beacon of Tomorrows.\nCast Beacon of Tomorrow for {6} {U} {U} and have it shuffle into your library.\nPass to your next turn.","uses":[{"name":"Planar Portal","zoneLocations":["B"]},{"name":"Beacon of Tomorrows","zoneLocations":["L"]}]}

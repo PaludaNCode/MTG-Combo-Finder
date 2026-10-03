@@ -1,0 +1,1 @@
+{"id":"1369-6586","manaNeeded":"{U}","description":"Activate Quicksilver Elemental by paying {U}, causing it to gain Vivi's activated abilities until end of turn.\nActivate Quicksilver Elemental using Vivi's ability by paying {0}, adding {U}{U/R}{U/R}.\nRepeat.","uses":[{"name":"Vivi Ornitier","zoneLocations":["B"]},{"name":"Quicksilver Elemental","zoneLocations":["B"]}]}

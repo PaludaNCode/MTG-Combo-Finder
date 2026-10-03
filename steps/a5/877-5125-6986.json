@@ -1,0 +1,1 @@
+{"id":"877-5125-6986","description":"Cast Sparkcaster by paying {0}.\nWhen Sparkcaster enters, it triggers, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Morophon, the Boundless","zoneLocations":["B"],"cardState":"with \"Kavu\" chosen"},{"name":"Sparkcaster","zoneLocations":["H"]},{"name":"Leyline of Mutation","zoneLocations":["B"]}]}

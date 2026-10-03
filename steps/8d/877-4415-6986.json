@@ -1,0 +1,1 @@
+{"id":"877-4415-6986","description":"Cast Stonecloaker by paying {0}.\nWhen Stonecloaker enters, it triggers, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Morophon, the Boundless","zoneLocations":["B"],"cardState":"with \"Gargoyle\" chosen"},{"name":"Stonecloaker","zoneLocations":["H"]},{"name":"Leyline of Mutation","zoneLocations":["B"]}]}

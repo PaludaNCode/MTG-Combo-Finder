@@ -1,0 +1,1 @@
+{"id":"2781-4200","manaNeeded":"{3}{W}","description":"Cast Felidar Guardian by paying its mana cost.\nWhen Felidar Guardian enters, it triggers, blinking Icewind Stalwart.\nWhen Icewind Stalwart enters, it triggers, blinking Felidar Guardian.\nRepeat from step 2.","uses":[{"name":"Felidar Guardian","zoneLocations":["H"]},{"name":"Icewind Stalwart","zoneLocations":["B"]}]}
