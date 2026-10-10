@@ -1,0 +1,1 @@
+{"id":"2452-2577-3623","description":"Activate Corpse Blockade's ability by sacrificing Gravecrawler, Corpse Blockade gains deathtouch until end of turn.\nCast Gravecrawler from your graveyard by paying {0}.\nRepeat.","uses":[{"name":"Gravecrawler","zoneLocations":["B"]},{"name":"Rooftop Storm","zoneLocations":["B"]},{"name":"Corpse Blockade","zoneLocations":["B"]}]}

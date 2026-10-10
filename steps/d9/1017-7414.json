@@ -1,0 +1,1 @@
+{"id":"1017-7414","easyPrerequisites":"You have a way to draw a card.","description":"Draw a card.\nWizard Class triggers, putting a +1/+1 counter on Pensive Professor.\nPensive Professor triggers, causing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Pensive Professor","zoneLocations":["B"]},{"name":"Wizard Class","zoneLocations":["B"],"cardState":"is level 3"}]}

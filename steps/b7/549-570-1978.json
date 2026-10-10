@@ -1,0 +1,1 @@
+{"id":"549-570-1978","description":"Activate Faeburrow Elder by tapping it, adding at least {3}.\nActivate Voltaic Construct by paying {2}, untapping Faeburrow Elder.\nRepeat","uses":[{"name":"Voltaic Construct","zoneLocations":["B"]},{"name":"Biotransference","zoneLocations":["B"]},{"name":"Faeburrow Elder","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

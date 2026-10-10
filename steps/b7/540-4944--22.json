@@ -1,0 +1,1 @@
+{"id":"540-4944--22","description":"Activate the equipment's equip ability by paying {0}, targeting Fervent Champion.\nCrackdown Construct triggers, giving it +1/+1 until end of turn.\nResolve the equipment's ability, attaching it to Fervent Champion.\nRepeat.","uses":[{"name":"Fervent Champion","zoneLocations":["B"]},{"name":"Crackdown Construct","zoneLocations":["B"]}]}

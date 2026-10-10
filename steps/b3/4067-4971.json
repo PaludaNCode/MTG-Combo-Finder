@@ -1,0 +1,1 @@
+{"id":"4067-4971","description":"Activate Niv-Mizzet by tapping it, causing you to draw a card.\nNiv-Mizzet triggers, dealing 1 damage to any target.\nActivate Mind Over Matter by discarding a card, untapping Niv-Mizzet.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Niv-Mizzet, the Firemind","zoneLocations":["B"]}]}

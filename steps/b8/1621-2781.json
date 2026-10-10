@@ -1,0 +1,1 @@
+{"id":"1621-2781","manaNeeded":"{3}{W}","description":"Cast Felidar Guardian by paying its mana cost.\nWhen Felidar Guardian enters, it triggers, blinking Wispweaver Angel.\nWhen Wispweaver Angel enters, it triggers, blinking Felidar Guardian.\nRepeat from step 2.","uses":[{"name":"Wispweaver Angel","zoneLocations":["B"]},{"name":"Felidar Guardian","zoneLocations":["H"]}]}

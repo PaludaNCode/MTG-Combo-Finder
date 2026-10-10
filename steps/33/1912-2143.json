@@ -1,0 +1,1 @@
+{"id":"1912-2143","manaNeeded":"{2}","description":"Activate Spawnsire of Ulamog by paying {2}, creating two 0/1 Eldrazi Spawn creature tokens.\nActivate both Eldrazi Spawn tokens by sacrificing them, adding {C}{C}.\nRepeat.","uses":[{"name":"Spawnsire of Ulamog","zoneLocations":["B"]},{"name":"Biomancer's Familiar","zoneLocations":["B"]}]}

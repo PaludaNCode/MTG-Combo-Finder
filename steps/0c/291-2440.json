@@ -1,0 +1,1 @@
+{"id":"291-2440","manaNeeded":"{5}","notablePrerequisites":"You control at least four Myrs.","description":"Activate Myr Matrix by paying {5}, creating a 1/1 Myr creature token.\nThe Myr enters the battlefield, triggering Mana Echoes, adding at least {C}{C}{C}{C}{C}.\nRepeat.","uses":[{"name":"Myr Matrix","zoneLocations":["B"]},{"name":"Mana Echoes","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"3363-5278","manaNeeded":"{10} each turn","description":"Cast The One Ring by paying {4}.\nThe One Ring triggers, giving you protection from everything until your next turn.\nReturn The One Ring to your hand using Obelisk of Undoing.\nRepeat each turn.","uses":[{"name":"The One Ring","zoneLocations":["H"]},{"name":"Obelisk of Undoing","zoneLocations":["B"]}]}

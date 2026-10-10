@@ -1,0 +1,1 @@
+{"id":"678-1965","description":"Cast Omarthis by paying {0}.\nOmarthis enters the battlefield and dies as a state-based action due to having 0 toughness.\nEnduring Renewal triggers, returning Omarthis from your graveyard to your hand.\nRepeat.","uses":[{"name":"Enduring Renewal","zoneLocations":["B"]},{"name":"Omarthis, Ghostfire Initiate","zoneLocations":["H"]}]}

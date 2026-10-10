@@ -1,0 +1,1 @@
+{"id":"1261-4993","manaNeeded":"{1} each turn","description":"Activate Manifold Key by paying {1}, untapping Time Vault.\nActivate Time Vault by tapping it, causing you to take an extra turn after this one.\nRepeat each turn.","uses":[{"name":"Time Vault","zoneLocations":["B"]},{"name":"Manifold Key","zoneLocations":["B"]}]}

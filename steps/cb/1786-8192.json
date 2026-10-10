@@ -1,0 +1,1 @@
+{"id":"1786-8192","easyPrerequisites":"You have a way to draw a card.","description":"Draw a card.\nQueza triggers, causing you to gain life and an opponent to lose life.\nNiv-Mizzet triggers, causing you to pay 1 life to draw a card.\nRepeat from step 2.","uses":[{"name":"Niv-Mizzet, Ghost Counsel","zoneLocations":["B"]},{"name":"Queza, Augur of Agonies","zoneLocations":["B"]}]}

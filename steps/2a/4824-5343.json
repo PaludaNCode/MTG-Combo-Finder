@@ -1,0 +1,1 @@
+{"id":"4824-5343","description":"Activate Soliton by tapping it, adding {U}{U} and causing the next spell you cast to have cascade.\nActivate Soliton by paying {U}, untapping it.\nRepeat.","uses":[{"name":"Soliton","zoneLocations":["B"],"cardState":"without summoning sickness"},{"name":"Bigger on the Inside","zoneLocations":["B"],"cardState":"attached to Soliton"}]}

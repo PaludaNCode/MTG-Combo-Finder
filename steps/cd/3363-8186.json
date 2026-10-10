@@ -1,0 +1,1 @@
+{"id":"3363-8186","manaNeeded":"{4} each turn","description":"Cast The One Ring by paying {4}.\nThe One Ring triggers, giving you protection from everything until your next turn.\nDuring your next upkeep, return The One Ring to your hand using Esperzoa.\nRepeat each turn.","uses":[{"name":"The One Ring","zoneLocations":["H"]},{"name":"Esperzoa","zoneLocations":["B"]}]}
