@@ -332,7 +332,9 @@ const PASSES = [
     method: 'the outlet slot Spellbook fills by name, compared across the engines that fill the same shape',
     proposed: 16,
     examined: 16,
-    kept: 13,
+    // 13 until 11 Oct 2026, when Spellbook published Samwise Gamgee + Cauldron Familiar
+    // + Spawning Pit and that row graduated. `examined` stays — the reading happened.
+    kept: 12,
     ruledOut: [
       { reason: 'Warren Soultrader is an outlet that makes its own Treasure, so Cauldron Familiar '
         + '+ Warren Soultrader + Academy Manufactor is a published *three*-card combo and every '
@@ -1991,7 +1993,11 @@ const PASSES = [
       + 'peer was chosen from the card text rather than from the overlap score',
     proposed: 2709,
     examined: 43,
-    kept: 26,
+    // 26 until 11 Oct 2026: Spellbook published three of this pass's Carrion Feeder
+    // shapes with Viscera Seer — both The Locust God loops (with Liliana, Dreadhorde
+    // General and with Smothering Abomination) and the Vohar + Haunted One + Cauldron of
+    // Souls one — and they graduated.
+    kept: 23,
     ruledOut: [
       { reason: 'A SCORE IS NOT A PEER, AND EIGHT OF THE TWELVE ARE NOT. Twelve cards clear '
         + 'jaccard 0.3 against Viscera Seer because they sit in the same 1,700-odd shapes, '
@@ -2988,7 +2994,11 @@ const PASSES = [
     // cited was withdrawn upstream (see the note beside its neighbours in unofficial.js).
     // Seven graduating in one night is this pass working, not failing: it read the
     // shapes Spellbook had not got to yet, and Spellbook got to them.
-    kept: 112,
+    //
+    // 112 until 11 Oct 2026: three more graduated — The Locust God with Weatherlight
+    // Compleated and with Liliana, Dreadhorde General, and Godsire + Thornbite Staff — and
+    // Mazirek + One with the Kami went because Spellbook retired the combo it cited.
+    kept: 108,
     ruledOut: [
       {
         reason: 'THE OTHER FOUR OUTLETS ARE STILL UNREAD. 570 of the 1,039 come from '

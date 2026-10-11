@@ -3346,26 +3346,6 @@
     // it eats, which is the entire job.
 
     {
-      cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Spawning Pit'],
-      confidence: 'verified',
-      from: {
-        id: '856-2292-5270',
-        cards: ['Samwise Gamgee', 'Cauldron Familiar', 'Viscera Seer'],
-      },
-      swap: { out: 'Viscera Seer', in: 'Spawning Pit', inId: 3899 },
-      why: 'Spawning Pit reads “Sacrifice a creature: Put a charge counter on Spawning Pit” — '
-        + 'free, repeatable, and it will eat the Cat, which is everything Viscera Seer does '
-        + 'here bar the scry. Spellbook enumerates sixteen outlets for this loop behind '
-        + 'Peregrin Took and includes Spawning Pit in every one of them; the Samwise Gamgee '
-        + 'version also lists sixteen, but a different sixteen — Warren Soultrader is on it '
-        + 'and Spawning Pit is not.',
-      produces: [
-        'Infinite death triggers', 'Infinite ETB', 'Infinite lifegain',
-        'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite LTB',
-        'Infinite sacrifice triggers', 'Infinite charge counters on a permanent',
-      ],
-    },
-    {
       cards: ['Eloise, Nephalia Sleuth', 'Cauldron Familiar', 'Academy Manufactor', 'Spawning Pit'],
       confidence: 'verified',
       from: {
@@ -11037,24 +11017,6 @@
       ],
     },
     {
-      cards: ['Viscera Seer', 'The Locust God', 'Liliana, Dreadhorde General'],
-      confidence: 'verified',
-      from: {
-        id: '1339-1940-2438',
-        cards: ['The Locust God', 'Liliana, Dreadhorde General', 'Carrion Feeder'],
-      },
-      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
-      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
-        + 'puts a +1/+1 counter on itself, '
-        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
-      produces: [
-        'Infinite card draw', 'Infinite draw triggers',
-        'Near-infinite death triggers',
-        'Near-infinite creature ETB', 'Near-infinite creature LTB',
-        'Near-infinite creature sacrifice triggers',
-      ],
-    },
-    {
       cards: ['Viscera Seer', 'Sidisi, Undead Vizier', 'Rooftop Storm', 'Sedraxis Alchemist', 'Gray Merchant of Asphodel', 'Rot Hulk'],
       confidence: 'verified',
       from: {
@@ -11070,24 +11032,6 @@
         'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain',
         'Infinite lifegain triggers', 'Infinite lifeloss', 'Infinite creature LTB',
         'Infinite sacrifice triggers', 'Infinite storm count',
-      ],
-    },
-    {
-      cards: ['Viscera Seer', 'The Locust God', 'Smothering Abomination'],
-      confidence: 'verified',
-      from: {
-        id: '1339-2425-2438',
-        cards: ['The Locust God', 'Smothering Abomination', 'Carrion Feeder'],
-      },
-      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
-      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
-        + 'puts a +1/+1 counter on itself, '
-        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
-      produces: [
-        'Infinite card draw', 'Infinite draw triggers',
-        'Near-infinite death triggers',
-        'Near-infinite creature ETB', 'Near-infinite creature LTB',
-        'Near-infinite creature sacrifice triggers',
       ],
     },
     {
@@ -11345,25 +11289,6 @@
         'Infinite colored mana', 'Infinite colorless mana', 'Infinite death triggers',
         'Infinite creature ETB', 'Infinite creature LTB', 'Infinitely large creature',
         'Infinite sacrifice triggers',
-      ],
-    },
-    {
-      cards: ['Viscera Seer', 'Vohar, Vodalian Desecrator', 'Haunted One', 'Cauldron of Souls', 'Deceiver Exarch'],
-      confidence: 'verified',
-      from: {
-        id: '1365-2198-2438-2527-5294',
-        cards: ['Vohar, Vodalian Desecrator', 'Haunted One', 'Cauldron of Souls', 'Deceiver Exarch', 'Carrion Feeder'],
-      },
-      swap: { out: 'Carrion Feeder', in: 'Viscera Seer', inId: 2292 },
-      why: 'The published loop asks its outlet for one thing: sacrifice a creature, for free, as often as you like. Viscera Seer’s ability is that cost word for word — the only difference is Scry 1 where Carrion Feeder '
-        + 'puts a +1/+1 counter on itself, '
-        + 'and nothing in this loop reads it. Spellbook publishes the shape with Carrion Feeder and not with Viscera Seer.',
-      produces: [
-        'Infinite card draw', 'Infinite draw triggers', 'Infinite looting',
-        'Near-infinite death triggers',
-        'Near-infinite creature ETB', 'Near-infinite creature LTB',
-        'Near-infinite power for certain creatures until end of turn',
-        'Near-infinite creature sacrifice triggers',
       ],
     },
     {
@@ -14530,17 +14455,13 @@
       why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Mortuary puts the creature back on top of your library and you recast it, so it enters again every lap. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
       produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite magecraft triggers', 'Infinite creature sacrifice triggers', 'Put all creature cards from your library onto the battlefield'],
     },
-    {
-      cards: ['Mazirek, Kraul Death Priest', 'One with the Kami', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '317-1475-5147',
-        cards: ['Mazirek, Kraul Death Priest', 'One with the Kami', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here One with the Kami turns the death into Spirit tokens, and Mazirek modifies them — the creature that pays for the next sacrifice is the one this sacrifice made. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite creature tokens', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers', 'Infinite +1/+1 counters on creatures you control'],
-    },
+    // A Mazirek, Kraul Death Priest + One with the Kami row sat here until 11 Oct 2026,
+    // and it went because its evidence did — the same reason, and the same rule, as the
+    // Wispweaver Angel row earlier in this file. Spellbook retired `317-1475-5147`
+    // (Mazirek + One with the Kami + Goblin Bombardment) and publishes no other
+    // Bombardment version to re-cite it to. The Woe Strider version, `317-997-1475`,
+    // survives; re-citing the row to it would be a new reading with Woe Strider as the
+    // peer, not this row kept, so it is left for a pass that logs one.
     {
       cards: ['Ashnod the Uncaring', 'Bonecaller Cleric', 'Dockside Extortionist', 'Blasting Station'],
       confidence: 'verified',
@@ -14762,17 +14683,6 @@
       produces: ['Infinite combat phases', 'Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
     },
     {
-      cards: ['The Locust God', 'Weatherlight Compleated', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '1339-3394-5147',
-        cards: ['The Locust God', 'Weatherlight Compleated', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the death draws a card and The Locust God turns that draw into an Insect token — a creature entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite card draw', 'Infinite draw triggers', 'Near-infinite damage', 'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite creature LTB', 'Near-infinite creature sacrifice triggers'],
-    },
-    {
       cards: ['Jan Jansen, Chaos Crafter', 'Dross Scorpion', 'Liquimetal Coating', 'Blasting Station'],
       confidence: 'verified',
       from: {
@@ -14935,28 +14845,6 @@
       },
       swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
       why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Stimulus Package makes a Citizen token at the top of every lap and the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
-    },
-    {
-      cards: ['The Locust God', 'Liliana, Dreadhorde General', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '1339-1940-5147',
-        cards: ['The Locust God', 'Liliana, Dreadhorde General', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here the death draws a card and The Locust God turns that draw into an Insect token — a creature entering after every sacrifice. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
-      produces: ['Infinite card draw', 'Infinite draw triggers', 'Near-infinite damage', 'Near-infinite death triggers', 'Near-infinite creature ETB', 'Near-infinite creature LTB', 'Near-infinite creature sacrifice triggers'],
-    },
-    {
-      cards: ['Godsire', 'Thornbite Staff', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '1420-2178-5147',
-        cards: ['Godsire', 'Thornbite Staff', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Goblin Bombardment', in: 'Blasting Station', inId: 413 },
-      why: 'Goblin Bombardment sacrifices for free; Blasting Station taps to sacrifice and untaps whenever a creature enters, so what decides these is one sacrifice a lap against at least one creature entering a lap. Here Godsire makes an 8/8 Beast token at the top of every lap and the Station sacrifices it. Read off the published steps rather than assumed, and the 1 damage is the same damage the Bombardment deals.',
       produces: ['Infinite damage', 'Infinite death triggers', 'Infinite creature ETB', 'Infinite creature LTB', 'Infinite creature sacrifice triggers'],
     },
     {
