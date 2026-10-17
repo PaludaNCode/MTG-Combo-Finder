@@ -555,7 +555,9 @@ const PASSES = [
     method: 'shapes the two counter-to-token peers are published in and Broodscale is not; the same search for Spike Feeder returned no peer at all',
     proposed: 148,
     examined: 148,
-    kept: 38,
+    // 38 until 17 Oct 2026: Spellbook published Basking Broodscale + Tainted Observer + Mana Echoes,
+    // and that row graduated. `examined` does not move.
+    kept: 37,
     ruledOut: [
       { reason: 'the Eldrazi Spawn is 0/1 where the Squirrel is 1/1, and these loops read the '
         + 'token’s stats. Railway Brawler puts on X counters "where X is its power" and Reyhan '
@@ -638,7 +640,9 @@ const PASSES = [
     examined: 175,
     // Rows, which is what `kept` counts — the other 99 shapes this pass settled are a
     // STAND_INS rule instead, and a rule is not a row. See the notes.
-    kept: 76,
+    // 76 until 17 Oct 2026: Spellbook published all four Darien, King of Kjeldor shapes — Bogwater
+    // Lumaret and Elas il-Kor, each with Goblin Bombardment and with Blasting Station. `examined` does not move.
+    kept: 72,
     ruledOut: [
       { reason: 'Prosperous Innkeeper’s ETB Treasure is the loop, not its lifegain trigger. '
         + 'Deadeye Navigator and Emiel the Blessed blink it to re-trigger “when this creature '
@@ -763,7 +767,10 @@ const PASSES = [
     method: 'each of its two abilities against the cards published with that ability alone',
     proposed: 172,
     examined: 68,
-    kept: 49,
+    // 49 until 17 Oct 2026: Spellbook retired the Skeleton Crew combo the Shilgengar + Ovalchase
+    // Daredevil + Jadzi row cited, with no other version to re-cite it to (see the note
+    // where it sat in unofficial.js). `examined` does not move.
+    kept: 48,
     ruledOut: [
       { reason: 'Chalk Outline INVESTIGATES and the Roots do not. The Clue is an artifact, and '
         + 'the artifact is what returns Ovalchase Daredevil — “whenever an ARTIFACT you control '
@@ -1386,7 +1393,9 @@ const PASSES = [
       + 'control? The answer was no every time the loop could be traced at all.',
     proposed: 268,
     examined: 62,
-    kept: 39,
+    // 39 until 17 Oct 2026: Spellbook published all four Darien, King of Kjeldor shapes — Virulent
+    // Emissary and Aunt May, each with Goblin Bombardment and with Blasting Station. `examined` does not move.
+    kept: 35,
     ruledOut: [
       {
         reason:
@@ -2343,7 +2352,9 @@ const PASSES = [
       + 'not, with the peer list cut to cards whose trigger the Innkeeper can actually match',
     proposed: 458,
     examined: 90,
-    kept: 47,
+    // 47 until 17 Oct 2026: Spellbook published both Darien, King of Kjeldor shapes with Prosperous
+    // Innkeeper (Goblin Bombardment and Blasting Station), and they graduated. `examined` does not move.
+    kept: 45,
     ruledOut: [
       { reason: 'ENERGY IS NOT LIFE, AND GUIDE OF SOULS MAKES BOTH. Guide of Souls reads '
         + '"you gain 1 life AND GET {E}", and the loops it is published in — Aethergeode '
@@ -2683,7 +2694,9 @@ const PASSES = [
       + 'the peer is actually doing in the loop.',
     proposed: 1640,
     examined: 35,
-    kept: 31,
+    // 31 until 17 Oct 2026: Spellbook published Oloro, Ageless Ascetic + Nadir Kraken + Ashnod's Altar with
+    // Guide of Souls, and that row graduated. `examined` does not move.
+    kept: 30,
     ruledOut: [
       {
         reason: 'GUIDE OF SOULS WAS RULED OUT ONCE FOR THE WRONG DIRECTION, AND THIS PASS PUTS '

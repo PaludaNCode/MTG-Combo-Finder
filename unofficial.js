@@ -3714,30 +3714,6 @@
       ],
     },
     {
-      cards: ['Basking Broodscale', 'Tainted Observer', 'Mana Echoes'],
-      confidence: 'verified',
-      from: {
-        id: '2440-3517-4186',
-        cards: ['Tainted Observer', 'Mana Echoes', 'Scurry Oak'],
-      },
-      swap: { out: 'Scurry Oak', in: 'Basking Broodscale', inId: 5641 },
-      why: 'Both cards read “whenever one or more +1/+1 counters are put on this creature, you may '
-        + 'create a token”, and both fire once per counter event. Mana Echoes pays for the '
-        + 'proliferate, counting creatures that share a type with the one entering. Every Eldrazi '
-        + 'Spawn shares Eldrazi with Broodscale and with every Spawn before it, so the count '
-        + 'climbs exactly as the Squirrels’ does.',
-      produces: [
-        'Infinite +1/+1 counters on a creature',
-        'Infinite colorless mana',
-        'Infinite creature tokens',
-        'Infinite death triggers',
-        'Infinite ETB',
-        'Infinite LTB',
-        'Infinite proliferate',
-        'Infinite sacrifice triggers',
-      ],
-    },
-    {
       cards: ['Basking Broodscale', 'Plaguemaw Beast', 'Intruder Alarm'],
       confidence: 'verified',
       from: {
@@ -6218,39 +6194,11 @@
         'Infinite rummaging',
       ],
     },
-    {
-      cards: [
-        'Shilgengar, Sire of Famine',
-        'Ovalchase Daredevil',
-        'Insidious Roots',
-        'Jadzi, Oracle of Arcavios // Journey to the Oracle',
-      ],
-      confidence: 'verified',
-      from: {
-        id: '1401-4798-5631-5686',
-        cards: [
-          'Shilgengar, Sire of Famine',
-          'Ovalchase Daredevil',
-          'Skeleton Crew',
-          'Jadzi, Oracle of Arcavios // Journey to the Oracle',
-        ],
-      },
-      swap: { out: 'Skeleton Crew', in: 'Insidious Roots', inId: 5477 },
-      why: 'Skeleton Crew and Insidious Roots read the same event — “whenever one or more '
-        + 'creature cards leave your graveyard” — and Ovalchase Daredevil leaving for your hand '
-        + 'is that event. What the token has to do here is be a creature Shilgengar can eat for '
-        + 'the next Blood token, and the 0/1 Plant is one. Shilgengar counts toughness only for '
-        + 'an Angel, so the Plant being 0/1 rather than a 2/2 Skeleton Pirate costs the loop '
-        + 'nothing.',
-      produces: [
-        'Infinite LTB',
-        'Infinite ETB',
-        'Infinite sacrifice triggers',
-        'Infinite death triggers',
-        'Infinite self-discard triggers',
-        'Infinite Blood tokens',
-      ],
-    },
+    // A Shilgengar + Ovalchase Daredevil + Insidious Roots + Jadzi, Oracle of Arcavios
+    // row sat here until 17 Oct 2026, and it went because its evidence did. Spellbook
+    // retired `1401-4798-5631-5686` (the Skeleton Crew version) and publishes no
+    // Shilgengar + Ovalchase Daredevil + Jadzi combo in any form, so there is nothing to
+    // re-cite it to. If one comes back, so does this row.
     {
       cards: ['Shilgengar, Sire of Famine', 'Ovalchase Daredevil', 'Insidious Roots', 'Ghostly Pilferer'],
       confidence: 'verified',
@@ -7632,31 +7580,6 @@
       ],
     },
     {
-      cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Bogwater Lumaret'],
-      confidence: 'verified',
-      from: {
-        id: '360-1981-5147',
-        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Soul Warden'],
-      },
-      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
-      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
-        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
-        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
-        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
-        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
-        + 'control. That difference is exactly why this is a row and not part of the stand-in '
-        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
-        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
-        + 'slot rather than Soul Warden.',
-      produces: [
-        'Infinite ETB',
-        'Infinite LTB',
-        'Infinite death triggers',
-        'Infinite lifegain triggers',
-        'Infinite sacrifice triggers',
-      ],
-    },
-    {
       cards: ['Darien, King of Kjeldor', 'Pandemonium', 'Bogwater Lumaret'],
       confidence: 'verified',
       from: {
@@ -8304,31 +8227,6 @@
       ],
     },
     {
-      cards: ['Darien, King of Kjeldor', 'Bogwater Lumaret', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '360-413-1981',
-        cards: ['Darien, King of Kjeldor', 'Soul Warden', 'Blasting Station'],
-      },
-      swap: { out: 'Soul Warden', in: 'Bogwater Lumaret', inId: 7399 },
-      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
-        + 'opponent’s — where Bogwater Lumaret reads “whenever this creature or another creature '
-        + 'you control enters”, so the swap holds only where the creature entering is yours. In '
-        + 'every one of these it is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s '
-        + 'Snakes, Ghave’s Saproling, and Fiend Hunter and Karmic Guide returning under your own '
-        + 'control. That difference is exactly why this is a row and not part of the stand-in '
-        + 'rule below — a rule would be claiming it of every Soul Warden combo there will ever '
-        + 'be, and the opponent-facing loops Spellbook does publish put Suture Priest in this '
-        + 'slot rather than Soul Warden.',
-      produces: [
-        'Infinite death triggers',
-        'Infinite ETB',
-        'Infinite lifegain triggers',
-        'Infinite LTB',
-        'Infinite sacrifice triggers',
-      ],
-    },
-    {
       cards: [
         'Darien, King of Kjeldor',
         'Aetherflux Reservoir',
@@ -8743,30 +8641,6 @@
         'Infinite lifegain',
         'Infinite lifegain triggers',
         'Infinite LTB',
-        'Infinite sacrifice triggers',
-      ],
-    },
-    {
-      cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Elas il-Kor, Sadistic Pilgrim'],
-      confidence: 'verified',
-      from: {
-        id: '360-1981-5147',
-        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Soul Warden'],
-      },
-      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
-      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
-        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
-        + 'so the swap holds only where the creature entering is yours. In every one of these it '
-        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
-        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
-        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
-        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
-        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
-      produces: [
-        'Infinite ETB',
-        'Infinite LTB',
-        'Infinite death triggers',
-        'Infinite lifegain triggers',
         'Infinite sacrifice triggers',
       ],
     },
@@ -9405,30 +9279,6 @@
       from: {
         id: '360-2397-2530-5189',
         cards: ['Ghave, Guru of Spores', 'Carnival of Souls', 'Soul Warden', 'Panharmonicon'],
-      },
-      swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
-      why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
-        + 'opponent’s — where Elas il-Kor reads “whenever another creature you control enters”, '
-        + 'so the swap holds only where the creature entering is yours. In every one of these it '
-        + 'is: Darien’s Soldiers, Animation Module’s Servo, Hapatra’s Snakes, Ghave’s Saproling, '
-        + 'and Fiend Hunter and Karmic Guide returning under your own control. That difference '
-        + 'is exactly why this is a row and not part of the stand-in rule below — a rule would '
-        + 'be claiming it of every Soul Warden combo there will ever be, and the opponent-facing '
-        + 'loops Spellbook does publish put Suture Priest in this slot rather than Soul Warden.',
-      produces: [
-        'Infinite death triggers',
-        'Infinite ETB',
-        'Infinite lifegain triggers',
-        'Infinite LTB',
-        'Infinite sacrifice triggers',
-      ],
-    },
-    {
-      cards: ['Darien, King of Kjeldor', 'Elas il-Kor, Sadistic Pilgrim', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '360-413-1981',
-        cards: ['Darien, King of Kjeldor', 'Soul Warden', 'Blasting Station'],
       },
       swap: { out: 'Soul Warden', in: 'Elas il-Kor, Sadistic Pilgrim', inId: 2811 },
       why: 'Soul Warden reads “whenever ANOTHER creature enters” — anyone’s, including an '
@@ -10300,17 +10150,6 @@
       produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
     },
     {
-      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
-      confidence: 'verified',
-      from: {
-        id: '360-1981-5147',
-        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
-      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
-      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
-    },
-    {
       cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Pandemonium'],
       confidence: 'verified',
       from: {
@@ -10342,17 +10181,6 @@
       swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
       why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
       produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
-    },
-    {
-      cards: ['Virulent Emissary', 'Darien, King of Kjeldor', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '360-413-1981',
-        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Blasting Station'],
-      },
-      swap: { out: 'Soul Warden', in: 'Virulent Emissary', inId: 7173 },
-      why: 'Soul Warden reads "whenever another creature enters" and Virulent Emissary reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
-      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
     },
     {
       cards: ['Aunt May', 'Sunbond', 'Scurry Oak'],
@@ -10531,17 +10359,6 @@
       produces: ['Infinite creature tokens with haste', 'Infinite ETB', 'Infinite lifegain', 'Infinite lifegain triggers'],
     },
     {
-      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
-      confidence: 'verified',
-      from: {
-        id: '360-1981-5147',
-        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
-      },
-      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
-      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
-      produces: ['Infinite ETB', 'Infinite LTB', 'Infinite death triggers', 'Infinite lifegain triggers', 'Infinite sacrifice triggers'],
-    },
-    {
       cards: ['Aunt May', 'Darien, King of Kjeldor', 'Pandemonium'],
       confidence: 'verified',
       from: {
@@ -10573,17 +10390,6 @@
       swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
       why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
       produces: ['Infinite creature tokens', 'Infinite ETB', 'Infinite lifegain triggers'],
-    },
-    {
-      cards: ['Aunt May', 'Darien, King of Kjeldor', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '360-413-1981',
-        cards: ['Soul Warden', 'Darien, King of Kjeldor', 'Blasting Station'],
-      },
-      swap: { out: 'Soul Warden', in: 'Aunt May', inId: 6823 },
-      why: 'Soul Warden reads "whenever another creature enters" and Aunt May reads "whenever another creature YOU CONTROL enters", which is the only difference between them. Every creature this loop puts onto the battlefield is one of yours, so the narrower trigger sees all of them and the loop runs at the same rate.',
-      produces: ['Infinite death triggers', 'Infinite ETB', 'Infinite lifegain triggers', 'Infinite LTB', 'Infinite sacrifice triggers'],
     },
 
     // ---- the token slot of the Cauldron Familiar + Peregrin Took loop ---------
@@ -12445,22 +12251,6 @@
     },
     // ---- Prosperous Innkeeper -----
     {
-      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Blasting Station'],
-      confidence: 'verified',
-      from: {
-        id: '360-413-1981',
-        cards: ['Darien, King of Kjeldor', 'Soul Warden', 'Blasting Station'],
-      },
-      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
-      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
-        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
-        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
-      produces: [
-        'Infinite death triggers', 'Infinite creature ETB', 'Infinite lifegain triggers',
-        'Infinite creature LTB', 'Infinite sacrifice triggers',
-      ],
-    },
-    {
       cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Dingus Staff', 'Ashnod\'s Altar'],
       confidence: 'verified',
       from: {
@@ -12523,22 +12313,6 @@
         + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
       produces: [
         'Infinite creature ETB', 'Infinite lifegain', 'Infinite lifegain triggers',
-      ],
-    },
-    {
-      cards: ['Prosperous Innkeeper', 'Darien, King of Kjeldor', 'Goblin Bombardment'],
-      confidence: 'verified',
-      from: {
-        id: '360-1981-5147',
-        cards: ['Darien, King of Kjeldor', 'Goblin Bombardment', 'Soul Warden'],
-      },
-      swap: { out: 'Soul Warden', in: 'Prosperous Innkeeper', inId: 4716 },
-      why: 'Soul Warden and Prosperous Innkeeper both read "another creature you control enters, you gain 1 life"'
-        + ' — Soul Warden sees any creature entering, not only yours, and this loop only ever enters your own. '
-        + 'The Innkeeper’s own Treasure lands once, on its own entry, and no lap needs it. Spellbook publishes this shape with Soul Warden and not with Prosperous Innkeeper.',
-      produces: [
-        'Infinite creature ETB', 'Infinite creature LTB', 'Infinite death triggers',
-        'Infinite lifegain triggers', 'Infinite sacrifice triggers',
       ],
     },
     {
@@ -13524,17 +13298,6 @@
       swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
       why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
       produces: ["Infinite creature ETB", "Infinite lifegain triggers", "Infinite tapped creature tokens"],
-    },
-    {
-      cards: ["Oloro, Ageless Ascetic", "Nadir Kraken", "Ashnod's Altar", "Guide of Souls"],
-      confidence: 'verified',
-      from: {
-        id: "1722-2034-2999-3583",
-        cards: ["Oloro, Ageless Ascetic", "Nadir Kraken", "Ashnod's Altar", "Impassioned Orator"],
-      },
-      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
-      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
-      produces: ["Infinite card draw", "Infinite draw triggers", "Near-infinite +1/+1 counters on a creature", "Near-infinite death triggers", "Near-infinite creature ETB", "Near-infinite lifegain", "Near-infinite lifegain triggers", "Near-infinite lifeloss", "Near-infinite creature LTB", "Near-infinite creature sacrifice triggers"],
     },
     {
       cards: ["Stormfront Riders", "Mana Echoes", "Defiler of Faith", "Guide of Souls"],
