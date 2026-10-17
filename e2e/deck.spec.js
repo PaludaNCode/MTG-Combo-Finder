@@ -280,14 +280,20 @@ test('the theme control overrules the system and holds on the tiers page', async
   const after = await theme();
   expect(after).not.toBe(before);
 
+  // After a navigation the attribute is asked for with a retrying assertion, never
+  // a one-shot evaluate: toHaveURL resolves once the URL commits, which can be
+  // before the new document exists, and an evaluate landing in that gap reads
+  // `document.documentElement` as null. It failed exactly that way on the phone
+  // project in CI (PR #230) and passed on the same commit in the other run.
+  const html = page.locator('html');
   await page.reload();
-  expect(await theme()).toBe(after);
+  await expect(html).toHaveAttribute('data-theme', after);
 
   // The second page reads the same stored answer, so the site does not change
   // colour when you follow a link inside it.
   await page.getByRole('link', { name: /how every result is classified/i }).click();
   await expect(page).toHaveURL(/tiers\.html/);
-  expect(await theme()).toBe(after);
+  await expect(html).toHaveAttribute('data-theme', after);
 });
 
 test('a decklist the parser cannot use says so instead of failing quietly', async ({ page }) => {
