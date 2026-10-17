@@ -1,0 +1,1 @@
+{"id":"273-2796","description":"Activate Shuko's equip ability by paying {0}, targeting Cephalid Aristocrat.\nCephalid Aristocrat triggers, causing you to mill two cards.\nResolve Shuko's ability, attaching it to Cephalid Aristrocrat.\nRepeat.","uses":[{"name":"Cephalid Aristocrat","zoneLocations":["B"]},{"name":"Shuko","zoneLocations":["B"]}]}

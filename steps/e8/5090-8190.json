@@ -1,0 +1,1 @@
+{"id":"5090-8190","notablePrerequisites":"You control at least seven creatures with different powers.","description":"Activate Loot by tapping it, adding at least {7}\nActivate Singing Bell Strike by paying {6}, untapping Loot.\nRepeat.","uses":[{"name":"Singing Bell Strike","zoneLocations":["B"],"cardState":"attached to Loot"},{"name":"Loot, the Nexus","zoneLocations":["B"]}]}

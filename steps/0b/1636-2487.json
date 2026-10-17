@@ -1,0 +1,1 @@
+{"id":"1636-2487","manaNeeded":"{1} from creature sources","notablePrerequisites":"Flamewright does not have summoning sickness.","description":"Pay {1} and tap Flamewright to create a 1/1 Construct.\nThe Construct enters untapping all creatures you control.\nRepeat.","uses":[{"name":"Intruder Alarm","zoneLocations":["B"]},{"name":"Flamewright","zoneLocations":["B"]}]}

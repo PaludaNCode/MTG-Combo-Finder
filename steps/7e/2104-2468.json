@@ -1,0 +1,1 @@
+{"id":"2104-2468","description":"At the beginning of your upkeep, Panoptic Mirror triggers, casting a copy of Temporal Manipulation without paying its mana cost.\nResolve Temporal Manipulation, causing you to take an extra turn after this one.\nRepeat each turn.","uses":[{"name":"Panoptic Mirror","zoneLocations":["B"]},{"name":"Temporal Manipulation","zoneLocations":["E"]}]}
