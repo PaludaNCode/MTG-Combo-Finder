@@ -13234,17 +13234,6 @@
       produces: ["Infinite colorless mana", "Infinite creature tokens", "Infinite creature ETB", "Infinite lifegain", "Infinite lifegain triggers"],
     },
     {
-      cards: ["Yawgmoth, Thran Physician", "Scurry Oak", "Guide of Souls"],
-      confidence: 'verified',
-      from: {
-        id: "2999-4186-4279",
-        cards: ["Yawgmoth, Thran Physician", "Scurry Oak", "Impassioned Orator"],
-      },
-      swap: { out: "Impassioned Orator", in: "Guide of Souls", inId: 5870 },
-      why: "Guide of Souls and Impassioned Orator read the same clause word for word — \"whenever another creature you control enters, you gain 1 life\" — and this loop's published steps use the Orator for that and nothing else. Guide of Souls also gets an energy counter, which no lap here spends.",
-      produces: ["Infinite card draw", "Infinite draw triggers", "Near-infinite death triggers", "Near-infinite creature ETB", "Near-infinite lifegain triggers", "Near-infinite creature LTB", "Near-infinite creature sacrifice triggers"],
-    },
-    {
       cards: ["Agatha's Soul Cauldron", "Kiki-Jiki, Mirror Breaker", "Famished Paladin", "Guide of Souls"],
       confidence: 'derived',
       from: {
