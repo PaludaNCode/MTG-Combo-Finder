@@ -1,0 +1,1 @@
+{"id":"1462-5299","description":"All permanents become enchantment creatures with power and toughness equal to their mana value.\nAll permanents with a mana value of zero will be destroyed due to having zero toughness.","uses":[{"name":"Enchanted Evening","zoneLocations":["B"]},{"name":"Opalescence","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"2143-6441","manaNeeded":"{4}","description":"Activate Spawnsire of Ulamog by paying {4}, creating four 0/1 Eldrazi Spawn creature tokens.\nActivate the Eldrazi Spawns by sacrificing them, adding {C}{C}{C}{C}.\nRepeat.","uses":[{"name":"Spawnsire of Ulamog","zoneLocations":["B"]},{"name":"Elspeth, Storm Slayer","zoneLocations":["B"]}]}

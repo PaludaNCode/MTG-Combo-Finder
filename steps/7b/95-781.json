@@ -1,0 +1,1 @@
+{"id":"95-781","manaNeeded":"{3}{U}{U}","description":"Cast Traumatize by paying its mana cost, causing an opponent to mill a number of cards equal to half their library, rounded down, times two due to Bruvac.","uses":[{"name":"Bruvac the Grandiloquent","zoneLocations":["B"]},{"name":"Traumatize","zoneLocations":["H"]}]}

@@ -1,0 +1,1 @@
+{"id":"5200-8190","notablePrerequisites":"You control at least four creatures with different powers.","description":"Activate Loot by tapping it, adding at least {4}\nActivate Sword of the Paruns by paying {3}, untapping Loot.\nRepeat.","uses":[{"name":"Sword of the Paruns","zoneLocations":["B"],"cardState":"attached to Loot"},{"name":"Loot, the Nexus","zoneLocations":["B"]}]}

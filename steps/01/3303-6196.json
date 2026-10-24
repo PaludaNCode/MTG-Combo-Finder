@@ -1,0 +1,1 @@
+{"id":"3303-6196","description":"Whenever a player casts a nonlegendary creature spell, Bazaar of Wonders' second ability triggers, countering that spell, as the creature with Spy Kit attached will share a name with that spell.","uses":[{"name":"Spy Kit","zoneLocations":["B"],"cardState":"attached to a creature you control"},{"name":"Bazaar of Wonders","zoneLocations":["B"]}]}

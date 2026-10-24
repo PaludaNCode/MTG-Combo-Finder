@@ -1,0 +1,1 @@
+{"id":"3031-5201","description":"Whenever a player would draw a card, Uba Mask exiles that card and allows the player to play that card from exile this turn.\nDrannith Magistrate prevents opponents from playing nonland cards exiled by Uba Mask.","uses":[{"name":"Uba Mask","zoneLocations":["B"]},{"name":"Drannith Magistrate","zoneLocations":["B"]}]}
