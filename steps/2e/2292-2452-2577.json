@@ -1,0 +1,1 @@
+{"id":"2292-2452-2577","easyPrerequisites":"You control at least one additional Zombie.","description":"Activate Viscera Seer by sacrificing Gravecrawler.\nCast Gravecrawler from your graveyard by paying {0}.\nRepeat.","uses":[{"name":"Gravecrawler","zoneLocations":["B"]},{"name":"Rooftop Storm","zoneLocations":["B"]},{"name":"Viscera Seer","zoneLocations":["B"]}]}

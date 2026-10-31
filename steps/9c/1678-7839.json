@@ -1,0 +1,1 @@
+{"id":"1678-7839","easyPrerequisites":"You control a Treasure.","description":"Activate a Treasure by tapping and sacrificing it, adding one mana of any color.\nMayhem Devil triggers, dealing 1 damage to Smaug.\nSmaug triggers, creating a Treasure token.\nRepeat.","uses":[{"name":"Smaug the Impenetrable","zoneLocations":["B"]},{"name":"Mayhem Devil","zoneLocations":["B"]}]}

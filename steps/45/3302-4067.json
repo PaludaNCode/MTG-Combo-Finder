@@ -1,0 +1,1 @@
+{"id":"3302-4067","description":"Activate Otherworld Atlas by tapping it, causing you to draw a card.\nActivate Mind Over Matter by discarding a card, untapping Otherworld Atlas.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Otherworld Atlas","zoneLocations":["B"],"cardState":"with a charge counter on it"}]}

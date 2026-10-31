@@ -1,0 +1,1 @@
+{"id":"3420-4996","manaNeeded":"{5}{W}{B}{B}","description":"Cast Beacon of Immortality by paying {5}{W}, causing target opponent to lose life equal to their life total due to False Curse.\nThe opponent loses the game due to having zero or less life","uses":[{"name":"Beacon of Immortality","zoneLocations":["H"]},{"name":"False Cure","zoneLocations":["H"]}]}

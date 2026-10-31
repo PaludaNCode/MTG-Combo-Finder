@@ -1,0 +1,1 @@
+{"id":"1379-1978-3784","description":"Activate Vhal by tapping it, adding at least {C}{C}{C}.\nActivate Voltaic Construct by paying {2}, untapping Vhal.\nRepeat","uses":[{"name":"Voltaic Construct","zoneLocations":["B"]},{"name":"Encroaching Mycosynth","zoneLocations":["B"]},{"name":"Vhal, Candlekeep Researcher","zoneLocations":["B"],"cardState":"without summoning sickness"}]}
