@@ -1,0 +1,1 @@
+{"id":"586-4499","manaNeeded":"{3}","description":"Activate Emiel by paying {3}, exiling Priest of Gix and then returning it to the battlefield.\nPriest of Gix triggers, adding {B}{B}{B}.\nRepeat.","uses":[{"name":"Emiel the Blessed","zoneLocations":["B"]},{"name":"Priest of Gix","zoneLocations":["B"]}]}

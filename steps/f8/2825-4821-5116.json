@@ -1,0 +1,1 @@
+{"id":"2825-4821-5116","description":"Tap Gilded Lotus for {3} of any color.\nUsing {2}, tap Elite Arcanist to cast a copy of Dramatic Reversal.\nRepeat for infinite mana.","uses":[{"name":"Elite Arcanist","zoneLocations":["B"]},{"name":"Gilded Lotus","zoneLocations":["B"]},{"name":"Dramatic Reversal","zoneLocations":["E"],"cardState":"exiled by Elite Arcanist"}]}

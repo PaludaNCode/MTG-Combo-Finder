@@ -1,0 +1,1 @@
+{"id":"2816-4944","description":"Activate Umbral Mantle's equip ability by paying {0}.\nCrackdown Construct triggers, giving it +1/+1 until end of turn.\nResolve Umbral Mantle's equip ability.\nRepeat.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Umbral Mantle","zoneLocations":["B"]}]}

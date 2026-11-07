@@ -1,0 +1,1 @@
+{"id":"125-507","description":"Any time a player would cast a spell from their hand it gets exiled from possibility storm.\nRule of Law prevents them from casting the other card from possiblity storm resulting in a lock.","uses":[{"name":"Possibility Storm","zoneLocations":["B"]},{"name":"Rule of Law","zoneLocations":["B"]}]}
