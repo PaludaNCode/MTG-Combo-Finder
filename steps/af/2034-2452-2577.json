@@ -1,0 +1,1 @@
+{"id":"2034-2452-2577","easyPrerequisites":"You control at least one additional Zombie.","description":"Activate Ashnod's Altar by sacrificing Gravecrawler.\nCast Gravecrawler from your graveyard by paying {0}.\nRepeat.","uses":[{"name":"Gravecrawler","zoneLocations":["B"]},{"name":"Rooftop Storm","zoneLocations":["B"]},{"name":"Ashnod's Altar","zoneLocations":["B"]}]}

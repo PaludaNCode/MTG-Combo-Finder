@@ -1,0 +1,1 @@
+{"id":"132-1261","notablePrerequisites":"Myr Welder does not have summoning sickness.","description":"Activate Myr Welder using Time Vault's ability by tapping it, gaining an extra turn after this one.\nMove to your next turn.\nRepeat.","uses":[{"name":"Myr Welder","zoneLocations":["B"]},{"name":"Time Vault","zoneLocations":["E"],"cardState":"exiled by Myr Welder"}]}

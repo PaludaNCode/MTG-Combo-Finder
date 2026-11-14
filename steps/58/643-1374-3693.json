@@ -1,0 +1,1 @@
+{"id":"643-1374-3693","description":"Cast Walking Ballista by paying {0}.\nWalking Ballista dies as a state based action due to having zero toughness.\nRepeat.","uses":[{"name":"Haakon, Stromgald Scourge","zoneLocations":["B"]},{"name":"Maskwood Nexus","zoneLocations":["B"]},{"name":"Walking Ballista","zoneLocations":["G"]}]}

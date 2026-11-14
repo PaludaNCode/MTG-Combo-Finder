@@ -1,0 +1,1 @@
+{"id":"457-712-4824","description":"Activate Urza's first ability by tapping Soliton, adding {U}.\nActivate Soliton by paying {U}, untapping it.\nWake Thrasher triggers, giving itself +1/+1 until end of turn.\nRepeat.","uses":[{"name":"Urza, Lord High Artificer","zoneLocations":["B"]},{"name":"Wake Thrasher","zoneLocations":["B"]},{"name":"Soliton","zoneLocations":["B"]}]}

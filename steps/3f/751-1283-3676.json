@@ -1,0 +1,1 @@
+{"id":"751-1283-3676","manaNeeded":"{1}","description":"Cast Shrieking Drake by paying {1}.\nTangleroot triggers, adding {1}.\nShrieking Drake enters the battlefield, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Shrieking Drake","zoneLocations":["H"]},{"name":"Tangleroot","zoneLocations":["B"]},{"name":"Chromatic Orrery","zoneLocations":["B"]}]}

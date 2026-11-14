@@ -1,0 +1,1 @@
+{"id":"2365-2468","description":"At the beginning of your upkeep, Panoptic Mirror triggers, casting a copy of Expropriate without paying its mana cost.\nResolve Expropriate, causing you to take an extra turn after this one.\nRepeat each turn.","uses":[{"name":"Panoptic Mirror","zoneLocations":["B"]},{"name":"Expropriate","zoneLocations":["E"]}]}

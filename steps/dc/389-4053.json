@@ -1,0 +1,1 @@
+{"id":"389-4053","description":"If a source would deal damage to you, Nine Lives prevents that damage.\nSolmenity prevents Nine Lives from putting an incarnation counter on itself.","uses":[{"name":"Solemnity","zoneLocations":["B"]},{"name":"Nine Lives","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"4067-7421","description":"Activate Diary of Dreams by tapping it, causing you to draw a card.\nActivate Mind Over Matter by discarding a card, untapping Diary of Dreams.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Diary of Dreams","zoneLocations":["B"],"cardState":"with five or more page counters on it"}]}

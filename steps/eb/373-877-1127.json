@@ -1,0 +1,1 @@
+{"id":"373-877-1127","description":"Cast Blinking Spirit by paying {0}.\nWhen Blinking Spirit enters, it triggers, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Morophon, the Boundless","zoneLocations":["B"],"cardState":"with \"Spirit\" chosen"},{"name":"Fist of Suns","zoneLocations":["B"]},{"name":"Blinking Spirit","zoneLocations":["H"]}]}

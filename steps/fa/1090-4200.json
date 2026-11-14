@@ -1,0 +1,1 @@
+{"id":"1090-4200","manaNeeded":"{3}{W}","description":"Cast Icewind Stalwart by paying its mana cost.\nWhen Icewind Stalwart enters, it triggers, blinking Restoration Angel.\nWhen Restoration Angel enters, it triggers, blinking Icewind Stalwart.\nRepeat from step 2.","uses":[{"name":"Restoration Angel","zoneLocations":["B"]},{"name":"Icewind Stalwart","zoneLocations":["H"]}]}

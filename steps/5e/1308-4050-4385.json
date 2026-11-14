@@ -1,0 +1,1 @@
+{"id":"1308-4050-4385","manaNeeded":"{2}","description":"Activate Sliver Queen by paying {2}, creating two 1/1 Sliver creature tokens.\nActivate Phyrexian Altar twice by sacrificing both Slivers, adding {2}.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Phyrexian Altar","zoneLocations":["B"]},{"name":"Anointed Procession","zoneLocations":["B"]}]}
