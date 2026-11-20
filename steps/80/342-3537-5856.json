@@ -1,0 +1,1 @@
+{"id":"342-3537-5856","easyPrerequisites":"You control a Food.","description":"Activate a Food using Bog Initiate's ability by paying {0}, adding {B}.\nRepeat step 1.","uses":[{"name":"Hazel's Brewmaster","zoneLocations":["H"]},{"name":"Sam, Loyal Attendant","zoneLocations":["B"]},{"name":"Bog Initiate","zoneLocations":["E"],"cardState":"exiled by Hazel's Brewmaster"}]}

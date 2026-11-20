@@ -1,0 +1,1 @@
+{"id":"373-877-3634","description":"Cast Venser by paying {0}.\nWhen Venser enters, it triggers, returning itself from the battlefield to your hand.\nRepeat.","uses":[{"name":"Morophon, the Boundless","zoneLocations":["B"],"cardState":"with \"Human\" or \"Wizard\" chosen"},{"name":"Fist of Suns","zoneLocations":["B"]},{"name":"Venser, Shaper Savant","zoneLocations":["H"]}]}

@@ -1,0 +1,1 @@
+{"id":"4200-4875","manaNeeded":"{3}{W}","notablePrerequisites":"Any creature type besides \"Warrior\" chosen with Conspiracy.","description":"Cast Icewind Stalwart by paying {3}{W}.\nIcewind Stalwart enters the battlefield, blinking itself.\nRepeat step 2.","uses":[{"name":"Icewind Stalwart","zoneLocations":["H"]},{"name":"Conspiracy","zoneLocations":["B"]}]}

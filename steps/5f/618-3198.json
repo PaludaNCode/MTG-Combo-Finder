@@ -1,0 +1,1 @@
+{"id":"618-3198","description":"Activate the mutated Lore Drakkis and Kiki-Jiki creature by tapping it, creating a token copy of it with haste.\nRepeat.","uses":[{"name":"Kiki-Jiki, Mirror Breaker","zoneLocations":["B"]},{"name":"Lore Drakkis","zoneLocations":["B"],"cardState":"on top of Kiki-Jiki"}]}

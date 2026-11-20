@@ -1,0 +1,1 @@
+{"id":"678-4809","description":"Cast Shifting Wall by paying {0}.\nShifting Wall enters the battlefield and dies as a state-based action due to having zero or less toughness.\nEnduring Renewal triggers, returning Shifting Wall from your graveyard to your hand.\nRepeat.","uses":[{"name":"Shifting Wall","zoneLocations":["H"]},{"name":"Enduring Renewal","zoneLocations":["B"]}]}

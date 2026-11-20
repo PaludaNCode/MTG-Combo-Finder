@@ -1,0 +1,1 @@
+{"id":"1912-2034-4385","manaNeeded":"{1}","description":"Activate Sliver Queen by paying {1}, creating a 1/1 Sliver creature token.\nActivate Ashnod's Altar by sacrificing the Sliver token, adding {C}{C}.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Ashnod's Altar","zoneLocations":["B"]},{"name":"Biomancer's Familiar","zoneLocations":["B"]}]}

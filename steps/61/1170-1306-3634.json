@@ -1,0 +1,1 @@
+{"id":"1170-1306-3634","description":"Cast Mana Crypt by paying {0}.\nDisplacer Kitten triggers, blinking Venser.\nVenser enters the battlefield, returning Mana Crypt to your hand.\nRepeat.","uses":[{"name":"Venser, Shaper Savant","zoneLocations":["B"]},{"name":"Displacer Kitten","zoneLocations":["B"]},{"name":"Mana Crypt","zoneLocations":["H"]}]}

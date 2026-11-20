@@ -1,0 +1,1 @@
+{"id":"485-1636","manaNeeded":"{U}{U} from creature sources","notablePrerequisites":"Wall of Kelp does not have summoning sickness.","description":"Pay {U}{U} and tap Wall of Kelp to create a 0/1 Kelp token.\nThe Kelp token enters untapping all creatures you control.\nRepeat.","uses":[{"name":"Intruder Alarm","zoneLocations":["B"]},{"name":"Wall of Kelp","zoneLocations":["B"]}]}

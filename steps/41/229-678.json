@@ -1,0 +1,1 @@
+{"id":"229-678","description":"Cast Endless One by paying {0}.\nEndless One enters the battlefield and dies as a state-based action due to having zero or less toughness.\nEnduring Renewal triggers, returning Endless One from your graveyard to your hand.\nRepeat.","uses":[{"name":"Endless One","zoneLocations":["H"]},{"name":"Enduring Renewal","zoneLocations":["B"]}]}

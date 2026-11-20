@@ -1,0 +1,1 @@
+{"id":"917-4277","manaNeeded":"{2}","notablePrerequisites":"You have no cards in hand.","description":"Activate Idle Thoughts by paying {2}, causing you to draw a card.\nActivate Cadaverous Bloom by exiling a card from your hand, adding {B}{B} or {G}{G}.\nRepeat.","uses":[{"name":"Cadaverous Bloom","zoneLocations":["B"]},{"name":"Idle Thoughts","zoneLocations":["B"]}]}

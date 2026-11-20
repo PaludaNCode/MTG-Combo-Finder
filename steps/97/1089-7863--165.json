@@ -1,0 +1,1 @@
+{"id":"1089-7863--165","easyPrerequisites":"You have a way to draw a card.","description":"Draw a card.\nHuman Torch triggers, dealing 1 damage.\nCuriosity triggers, causing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Curiosity","zoneLocations":["B"],"cardState":"attached to Human Torch"}]}
