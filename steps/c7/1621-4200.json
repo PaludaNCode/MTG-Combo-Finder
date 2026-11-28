@@ -1,0 +1,1 @@
+{"id":"1621-4200","manaNeeded":"{3}{W}","description":"Cast Icewind Stalwart by paying its mana cost.\nWhen Icewind Stalwart enters, it triggers, blinking Wispweaver Angel.\nWhen Wispweaver Angel enters, it triggers, blinking Icewind Stalwart.\nRepeat from step 2.","uses":[{"name":"Wispweaver Angel","zoneLocations":["B"]},{"name":"Icewind Stalwart","zoneLocations":["H"]}]}

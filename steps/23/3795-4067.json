@@ -1,0 +1,1 @@
+{"id":"3795-4067","description":"Activate Sea Gate Loremaster by tapping it, causing you to draw at least one card.\nActivate Mind Over Matter by discarding a card, untapping Sea Gate Loremaster.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Sea Gate Loremaster","zoneLocations":["B"],"cardState":"without summoning sickness"}]}

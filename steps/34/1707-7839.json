@@ -1,0 +1,1 @@
+{"id":"1707-7839","easyPrerequisites":"You control a Treasure.","description":"Activate a Treasure by tapping and sacrificing it, adding {1}.\nLast Laugh triggers, dealing 1 damage to each player and creature.\nSmaug triggers, creating a Treasure token.\nRepeat.","uses":[{"name":"Smaug the Impenetrable","zoneLocations":["B"]},{"name":"Last Laugh","zoneLocations":["B"]}]}

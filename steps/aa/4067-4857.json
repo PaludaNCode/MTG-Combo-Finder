@@ -1,0 +1,1 @@
+{"id":"4067-4857","description":"Activate Temple Bell by tapping it, causing each player to draw a card.\nActivate Mind Over Matter by discarding a card, untapping Temple Bell.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Temple Bell","zoneLocations":["B"]}]}

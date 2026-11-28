@@ -1,0 +1,1 @@
+{"id":"7414-7811","easyPrerequisites":"You have a way to draw a card.","description":"Draw a card.\nIron Man triggers, putting a +1/+1 counter on Pensive Professor.\nPensive Professor triggers, causing you to draw a card.\nRepeat from step 2.","uses":[{"name":"Pensive Professor","zoneLocations":["B"]},{"name":"Iron Man, Armored Avenger","zoneLocations":["B"]}]}

@@ -1,0 +1,1 @@
+{"id":"2084-2979","manaNeeded":"{1}{U}","description":"Activate Patchwork Crawler using Mirror-Mad Phantasm's ability by paying {1}{U}, causing you to shuffle Patchwork Crawler into your library and mill all cards from your library.","uses":[{"name":"Patchwork Crawler","zoneLocations":["B"]},{"name":"Mirror-Mad Phantasm","zoneLocations":["E"],"cardState":"by Patchwork Crawler"}]}

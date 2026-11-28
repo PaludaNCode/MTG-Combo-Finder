@@ -1,0 +1,1 @@
+{"id":"1024-5364","manaNeeded":"{3}{W}{U}{B}{R}{G}","notablePrerequisites":"You control at least one land.\nYou control at least one creature.","description":"Cast Coalition Victory by paying {3}{W}{U}{B}{R}{G}, causing you to win the game.","uses":[{"name":"Leyline of the Guildpact","zoneLocations":["B"]},{"name":"Coalition Victory","zoneLocations":["H"]}]}

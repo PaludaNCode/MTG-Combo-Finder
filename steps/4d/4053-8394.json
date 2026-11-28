@@ -1,0 +1,1 @@
+{"id":"4053-8394","description":"All damage that would be dealt to you is replaced by adding that many depletion counters to Force Bubble.\nThose counters cannot be placed on you or permanents you control due to Solemnity.","uses":[{"name":"Solemnity","zoneLocations":["B"]},{"name":"Force Bubble","zoneLocations":["B"]}]}

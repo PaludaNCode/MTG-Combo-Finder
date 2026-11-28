@@ -1,0 +1,1 @@
+{"id":"2191-4944","manaNeeded":"{1}{W}{W}","description":"Cast Martyrdom by paying {1}{W}{W}, targeting any creature you control.\nActivate the creature by paying {0}.\nCrackdown Construct triggers, giving itself +1/+1 until end of turn.\nRepeat from step 2.","uses":[{"name":"Crackdown Construct","zoneLocations":["B"]},{"name":"Martyrdom","zoneLocations":["H"]}]}

@@ -1,0 +1,1 @@
+{"id":"507-3031","description":"When an opponent casts a card from their hand, Possibility Storm will exile it.\nThey can not cast any cards from Possibility Storm because the exiled cards are not cast from their hand.","uses":[{"name":"Possibility Storm","zoneLocations":["B"]},{"name":"Drannith Magistrate","zoneLocations":["B"]}]}

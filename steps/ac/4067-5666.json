@@ -1,0 +1,1 @@
+{"id":"4067-5666","notablePrerequisites":"You've paid or lost four or more {E} this turn","description":"Activate Izzet Generatorium by tapping it, causing you to draw a card.\nActivate Mind Over Matter by discarding a card, untapping Izzet Generatorium.\nRepeat.","uses":[{"name":"Mind Over Matter","zoneLocations":["B"]},{"name":"Izzet Generatorium","zoneLocations":["B"]}]}

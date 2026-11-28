@@ -1,0 +1,1 @@
+{"id":"4385-4893-5231","manaNeeded":"{1}","description":"Activate Sliver Queen by paying {1}, creating a 1/1 Sliver creature token.\nActivate Thermopod's second ability by sacrificing the Sliver token, adding {R}.\nRepeat.","uses":[{"name":"Sliver Queen","zoneLocations":["B"]},{"name":"Thermopod","zoneLocations":["B"]},{"name":"Training Grounds","zoneLocations":["B"]}]}

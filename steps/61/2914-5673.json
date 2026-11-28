@@ -1,0 +1,1 @@
+{"id":"2914-5673","description":"Because Harbinger of the Seas causes all nonbasic lands to be Islands, and Choke prevents Islands from untapping during their controller's untap steps, nonbasic lands do not untap during their controller's untap steps.","uses":[{"name":"Harbinger of the Seas","zoneLocations":["B"]},{"name":"Choke","zoneLocations":["B"]}]}

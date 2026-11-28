@@ -1,0 +1,1 @@
+{"id":"2199-8030","description":"Activate Frenetic Efreet an arbitrarily large number of times by paying {0}.\nResolve a Frenetic Efreet ability, flipping a coin.\nChira triggers, putting a +1/+1 counter on it and creating a tapped Treasure token.\nRepeat from step 2.","uses":[{"name":"Chira, All In","zoneLocations":["B"]},{"name":"Frenetic Efreet","zoneLocations":["B"]}]}
